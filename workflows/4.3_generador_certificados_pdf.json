@@ -1,0 +1,76 @@
+{
+  "name": "Modulo 4.3: Generador de Certificados On-Demand",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "solicitud-certificado",
+        "options": {}
+      },
+      "id": "webhook-whatsapp-request",
+      "name": "Peticion del Padre",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "alumnos",
+        "filters": {
+          "telefono_familiar": "={{$json.remoteJid || $json.data.key.remoteJid}}"
+        }
+      },
+      "id": "get-student-data",
+      "name": "Obtener Datos Alumno",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [340, 300]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "html": "=<html><head><style>body { font-family: Arial, sans-serif; padding: 36px; text-align: center; } .header { font-size: 24px; color: #0f172a; margin-bottom: 24px; }</style></head><body><div class=\"header\">Certificado Escolar</div><p>Certificamos que <b>{{$json.nombre}} {{$json.apellidos}}</b>, con ID {{$json.id_alumno}}, se encuentra matriculado para el periodo escolar vigente.</p><p>Emitido el {{$now.toFormat('dd/MM/yyyy HH:mm')}}.</p></body></html>",
+        "options": {
+          "fileName": "Certificado_{{$json.nombre}}_{{$json.apellidos}}.pdf"
+        }
+      },
+      "id": "generate-pdf-node",
+      "name": "Generar PDF",
+      "type": "n8n-nodes-base.htmlToPdf",
+      "typeVersion": 1,
+      "position": [580, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMedia",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono_familiar}}",
+        "mediaType": "document",
+        "caption": "Adjunto encontrara el certificado solicitado oficialmente por el centro."
+      },
+      "id": "deliver-pdf",
+      "name": "Entregar PDF",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [820, 300]
+    }
+  ],
+  "connections": {
+    "Peticion del Padre": {
+      "main": [[{ "node": "Obtener Datos Alumno", "type": "main", "index": 0 }]]
+    },
+    "Obtener Datos Alumno": {
+      "main": [[{ "node": "Generar PDF", "type": "main", "index": 0 }]]
+    },
+    "Generar PDF": {
+      "main": [[{ "node": "Entregar PDF", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

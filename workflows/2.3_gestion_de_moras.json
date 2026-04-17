@@ -1,0 +1,123 @@
+{
+  "name": "Modulo 2.3: Gestion de Moras y Recordatorios de Pago",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "schedule-daily-check",
+      "name": "Check Diario 8:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [100, 280]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "filters": {
+          "estado": "Pendiente"
+        }
+      },
+      "id": "get-overdue-payments",
+      "name": "Obtener Morosos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [320, 280]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{Boolean($env.N8N_SCHOOL_AUTOMATIC_LATE_FEES || true)}}",
+              "value2": true
+            }
+          ],
+          "number": [
+            {
+              "value1": "={{$now.diff($json.fecha_limite).as('days')}}",
+              "operation": "larger",
+              "value2": "={{Number($env.N8N_SCHOOL_LATE_FEE_GRACE_DAYS || 5)}}"
+            }
+          ]
+        }
+      },
+      "id": "should-apply-late-fee",
+      "name": "Aplicar Mora?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [560, 280]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "columnToMatch": "id_pago",
+        "valueToMatch": "={{$json.id_pago}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "monto",
+              "value": "={{$json.monto * (1 + (Number($env.N8N_SCHOOL_LATE_FEE_PERCENTAGE || 5) / 100))}}"
+            },
+            {
+              "column": "recargo_mora",
+              "value": "Activo"
+            }
+          ]
+        }
+      },
+      "id": "apply-late-fee-sheets",
+      "name": "Actualizar Monto con Mora",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono}}",
+        "text": "=Aviso de recargo por mora.\n\nEl pago de {{$json.concepto}} para {{$json.alumno_nombre}} ha vencido.\nSe ha aplicado un recargo del {{$env.N8N_SCHOOL_LATE_FEE_PERCENTAGE || 5}}%.\n\nNuevo monto: {{$json.monto * (1 + (Number($env.N8N_SCHOOL_LATE_FEE_PERCENTAGE || 5) / 100))}} {{$env.N8N_SCHOOL_CURRENCY || 'DOP'}}."
+      },
+      "id": "notify-late-fee",
+      "name": "Notificar Recargo",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1040, 200]
+    }
+  ],
+  "connections": {
+    "Check Diario 8:00": {
+      "main": [[{ "node": "Obtener Morosos", "type": "main", "index": 0 }]]
+    },
+    "Obtener Morosos": {
+      "main": [[{ "node": "Aplicar Mora?", "type": "main", "index": 0 }]]
+    },
+    "Aplicar Mora?": {
+      "main": [
+        [{ "node": "Actualizar Monto con Mora", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Actualizar Monto con Mora": {
+      "main": [[{ "node": "Notificar Recargo", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

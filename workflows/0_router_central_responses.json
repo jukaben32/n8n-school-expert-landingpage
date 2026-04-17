@@ -1,0 +1,113 @@
+{
+  "name": "ROUTER: Central de Respuestas WhatsApp (v2)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "central-responses",
+        "options": {}
+      },
+      "id": "webhook-central",
+      "name": "Webhook Central",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "central-responses"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst data = input.data || {};\nconst message = data.message || {};\nconst messageContent = message.content || message.extendedTextMessage || {};\nconst buttonId = messageContent.buttonResponse?.buttonId || null;\nconst conversation = (message.conversation || messageContent.text || '').toLowerCase().trim();\nconst remoteJid = data.key?.remoteJid || null;\nlet action = null;\nlet targetPath = null;\nlet reference = null;\n\nif (buttonId) {\n  if (buttonId.startsWith('justify_absence_')) {\n    action = 'justify_absence';\n    targetPath = 'recepcion-justificacion';\n    reference = buttonId.replace('justify_absence_', '');\n  } else if (buttonId.startsWith('approve_payment_')) {\n    action = 'approve_payment';\n    targetPath = 'comprobante-recepcion';\n    reference = buttonId.replace('approve_payment_', '');\n  } else if (buttonId.startsWith('reject_payment_')) {\n    action = 'reject_payment';\n    targetPath = 'comprobante-recepcion';\n    reference = buttonId.replace('reject_payment_', '');\n  } else if (buttonId.startsWith('request_bank_details_')) {\n    action = 'request_bank_details';\n    targetPath = 'payment-events';\n    reference = buttonId.replace('request_bank_details_', '');\n  } else if (buttonId.startsWith('authorize_yes_')) {\n    action = 'authorize_yes';\n    targetPath = 'respuesta-autorizacion';\n    reference = buttonId.replace('authorize_yes_', '');\n  } else if (buttonId.startsWith('authorize_no_')) {\n    action = 'authorize_no';\n    targetPath = 'respuesta-autorizacion';\n    reference = buttonId.replace('authorize_no_', '');\n  } else if (/^\\d+$/.test(buttonId)) {\n    action = 'confirm_notification_read';\n    targetPath = 'confirmacion-lectura';\n    reference = buttonId;\n  }\n} else if (conversation.includes('certificado')) {\n  action = 'request_certificate';\n  targetPath = 'solicitud-certificado';\n} else if (conversation.includes('portal')) {\n  action = 'request_portal_link';\n  targetPath = 'solicitud-portal-padre';\n} else if (conversation.includes('menu')) {\n  action = 'request_menu';\n  targetPath = 'buzon-notas-padres';\n} else if (conversation.includes('ayuda') || conversation.includes('toki')) {\n  action = 'toki_query';\n  targetPath = 'toki-webhook';\n}\n\nreturn [{ json: { action, targetPath, reference, remoteJid } }];"
+      },
+      "id": "parse-action",
+      "name": "Parsear Accion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeError": "error"
+          },
+          "conditions": [
+            {
+              "id": "has-target",
+              "condition": "string.isNotEmpty",
+              "leftValue": "={{$json.targetPath}}",
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "id": "check-valid-action",
+      "name": "Accion Valida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [580, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{($env.N8N_BASE_WEBHOOK_URL || '').replace(/\\/$/, '') + '/' + $json.targetPath}}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "={{$json.action}}"
+            },
+            {
+              "name": "reference",
+              "value": "={{$json.reference}}"
+            },
+            {
+              "name": "remoteJid",
+              "value": "={{$json.remoteJid}}"
+            }
+          ]
+        }
+      },
+      "id": "forward-action",
+      "name": "Reenviar a Modulo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [820, 220]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.remoteJid}}",
+        "text": "No pudimos identificar su solicitud. Escriba AYUDA para recibir asistencia."
+      },
+      "id": "notify-unknown",
+      "name": "Notificar Solicitud Desconocida",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [820, 380]
+    }
+  ],
+  "connections": {
+    "Webhook Central": {
+      "main": [[{ "node": "Parsear Accion", "type": "main", "index": 0 }]]
+    },
+    "Parsear Accion": {
+      "main": [[{ "node": "Accion Valida?", "type": "main", "index": 0 }]]
+    },
+    "Accion Valida?": {
+      "main": [
+        [{ "node": "Reenviar a Modulo", "type": "main", "index": 0 }],
+        [{ "node": "Notificar Solicitud Desconocida", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

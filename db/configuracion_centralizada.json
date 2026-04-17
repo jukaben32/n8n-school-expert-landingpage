@@ -1,0 +1,39 @@
+{
+  "descripcion": "Mapa de variables requeridas para desplegar n8n-school-expert",
+  "version": "2.0.0",
+  "fecha_actualizacion": "2026-04-08",
+  "variables_entorno": {
+    "N8N_SCHOOL_SPREADSHEET_ID": "Google Spreadsheet principal del proyecto",
+    "EVOLUTION_INSTANCE_NAME": "Nombre de la instancia Evolution API",
+    "N8N_BASE_WEBHOOK_URL": "URL base de webhooks publicada por n8n, por ejemplo https://n8n.midominio.com/webhook",
+    "N8N_SCHOOL_CURRENCY": "Moneda operativa, por ejemplo DOP",
+    "N8N_SCHOOL_BANK_NAME": "Nombre del banco",
+    "N8N_SCHOOL_BANK_ACCOUNT": "Numero de cuenta",
+    "N8N_SCHOOL_BANK_ACCOUNT_TYPE": "Tipo de cuenta",
+    "N8N_SCHOOL_BANK_BENEFICIARY": "Beneficiario legal",
+    "N8N_SCHOOL_ACCOUNTANT_JID": "WhatsApp del contable",
+    "N8N_SCHOOL_MENU_BROADCAST_JID": "Destino del menu diario",
+    "N8N_SCHOOL_PORTAL_BASE_URL": "Base URL del portal familiar",
+    "N8N_SCHOOL_CONTRACT_TEMPLATE_URL": "URL de la plantilla PDF para firma digital"
+  },
+  "sheets_requeridos": [
+    "alumnos",
+    "asistencias",
+    "autorizaciones",
+    "comunicaciones",
+    "matriculas",
+    "menu_comedor",
+    "pagos"
+  ],
+  "convenciones": {
+    "botones_whatsapp": [
+      "justify_absence_<id_alumno>",
+      "approve_payment_<id_pago>",
+      "reject_payment_<id_pago>",
+      "request_bank_details_<id_pago>",
+      "authorize_yes_<id_autorizacion>",
+      "authorize_no_<id_autorizacion>"
+    ],
+    "router_webhook": "central-responses"
+  }
+}

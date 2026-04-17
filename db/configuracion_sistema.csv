@@ -1,0 +1,12 @@
+parametro,valor,descripcion
+stripe_enabled,true,Activa o desactiva el botón de pago por Stripe
+bank_transfer_enabled,true,Activa o desactiva la opción de transferencia bancaria
+automatic_late_fees,true,Si es true; el sistema suma el recargo tras la fecha límite automáticamente
+late_fee_percentage,5,Porcentaje de recargo por mora (ej: 5%)
+late_fee_grace_days,5,Días de gracia tras el vencimiento antes de aplicar la mora
+banco_nombre,Banco de Reservas (Banreservas),Nombre del banco del colegio
+banco_cuenta,123456789,Número de cuenta para transferencias
+banco_tipo_cuenta,Corriente,Tipo de cuenta
+banco_beneficiario,Colegio Digital Dominicano,Nombre legal del centro
+moneda,DOP,Pesos Dominicanos
+notificar_contable_ws,34600000000,Número de WhatsApp del contable para validar transferencias

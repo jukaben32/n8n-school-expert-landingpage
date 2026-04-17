@@ -1,0 +1,92 @@
+{
+  "name": "Modulo 5.1: Difusion de Menu y Agenda Hibrida",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "trigger-daily-830am",
+      "name": "Menu Diario 8:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [100, 200]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "menu_comedor",
+        "filters": {
+          "dia_semana": "={{$now.toFormat('cccc')}}"
+        }
+      },
+      "id": "get-daily-menu",
+      "name": "Obtener Menu Hoy",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [320, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$env.N8N_SCHOOL_MENU_BROADCAST_JID}}",
+        "text": "=Menu del dia - {{$now.toFormat('dd/MM/yyyy')}}\n\nPlato 1: {{$json.plato_1}}\nPlato 2: {{$json.plato_2}}\nPostre: {{$json.postre}}\n\nAlergenos: {{$json.alergenos || 'Revisar ficha del alumno'}}"
+      },
+      "id": "send-menu",
+      "name": "Enviar Menu",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [560, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "buzon-notas-padres",
+        "options": {}
+      },
+      "id": "webhook-parent-notes",
+      "name": "Recibir Nota Rapida Padres",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 520]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.data.key.remoteJid}}",
+        "text": "Se ha recibido su nota y el profesorado ha sido notificado para tenerlo en cuenta durante el dia de hoy."
+      },
+      "id": "confirm-parent-note",
+      "name": "Confirmar Nota al Padre",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [340, 520]
+    }
+  ],
+  "connections": {
+    "Menu Diario 8:30": {
+      "main": [[{ "node": "Obtener Menu Hoy", "type": "main", "index": 0 }]]
+    },
+    "Obtener Menu Hoy": {
+      "main": [[{ "node": "Enviar Menu", "type": "main", "index": 0 }]]
+    },
+    "Recibir Nota Rapida Padres": {
+      "main": [[{ "node": "Confirmar Nota al Padre", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>n8n-school-expert | Propuesta digital para Gran Manantial de Sabiduria</title>
+  <meta name="description" content="Propuesta de landing para Gran Manantial de Sabiduria: comunicación con familias, asistencia, pagos, portal familiar y automatización escolar con una experiencia clara y moderna." />
+  <meta name="theme-color" content="#1a5f7a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="GM Sabiduria" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="n8n-school-expert | Propuesta digital para Gran Manantial de Sabiduria" />
+  <meta property="og:description" content="Una propuesta para fortalecer la comunicación entre el colegio y las familias con una experiencia escolar más clara, cercana y ordenada." />
+  <meta property="og:image" content="./icon-512.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="n8n-school-expert | Propuesta digital para Gran Manantial de Sabiduria" />
+  <meta name="twitter:description" content="Comunicación escolar, portal familiar y automatización práctica para un colegio más conectado con sus familias." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#1a5f7a',
+              light: '#159895',
+              dark: '#123f52'
+            },
+            accent: {
+              DEFAULT: '#4f9cf9',
+              light: '#83b8ff',
+              dark: '#296fc7'
+            },
+            surface: {
+              DEFAULT: '#f4f7f6',
+              dark: '#0f172a'
+            }
+          },
+          boxShadow: {
+            soft: '0 20px 40px rgba(15, 23, 42, 0.08)',
+            glow: '0 24px 60px rgba(26, 95, 122, 0.18)'
+          },
+          backgroundImage: {
+            hero: 'radial-gradient(circle at top left, rgba(79, 156, 249, 0.24), transparent 35%), radial-gradient(circle at bottom right, rgba(21, 152, 149, 0.22), transparent 30%)'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100">
+  <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-slate-900 focus:shadow-lg dark:focus:bg-slate-900 dark:focus:text-white">
+    Saltar al contenido principal
+  </a>
+
+  <header class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <a href="#inicio" class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">n8n-school-expert</p>
+          <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Gran Manantial de Sabiduria</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-3 lg:hidden">
+        <button
+          id="theme-toggle-mobile"
+          type="button"
+          class="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-accent-light dark:hover:text-accent-light"
+          aria-label="Cambiar modo de color"
+        >Modo</button>
+        <button
+          id="menu-toggle"
+          type="button"
+          class="rounded-full border border-slate-200 p-2 text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-slate-700 dark:text-slate-200"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          aria-label="Abrir menú principal"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <nav class="hidden items-center gap-8 lg:flex" aria-label="Principal">
+        <a href="#encaje" class="text-sm font-medium text-slate-600 transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-slate-300 dark:hover:text-accent-light">Encaje</a>
+        <a href="#modulos" class="text-sm font-medium text-slate-600 transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-slate-300 dark:hover:text-accent-light">Módulos</a>
+        <a href="#portal" class="text-sm font-medium text-slate-600 transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-slate-300 dark:hover:text-accent-light">Portal familiar</a>
+        <a href="#faq" class="text-sm font-medium text-slate-600 transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-slate-300 dark:hover:text-accent-light">FAQ</a>
+        <button
+          id="theme-toggle-desktop"
+          type="button"
+          class="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-accent-light dark:hover:text-accent-light"
+          aria-label="Cambiar modo de color"
+        >Modo</button>
+        <a href="#contacto" class="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:bg-accent dark:text-slate-950 dark:hover:bg-accent-light dark:focus-visible:ring-offset-slate-950">
+          Solicitar demo
+        </a>
+      </nav>
+    </div>
+
+    <div id="mobile-menu" class="hidden border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-950 lg:hidden">
+      <nav class="flex flex-col gap-3" aria-label="Móvil">
+        <a href="#encaje" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-primary dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-accent-light">Encaje</a>
+        <a href="#modulos" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-primary dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-accent-light">Módulos</a>
+        <a href="#portal" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-primary dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-accent-light">Portal familiar</a>
+        <a href="#faq" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-primary dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-accent-light">FAQ</a>
+        <a href="#contacto" class="mt-2 inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-dark dark:bg-accent dark:text-slate-950 dark:hover:bg-accent-light">
+          Solicitar demo
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <section id="inicio" class="relative overflow-hidden bg-hero">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-primary-dark/20 dark:via-slate-950 dark:to-accent/10"></div>
+      <div class="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-24">
+        <div class="max-w-3xl">
+          <p class="mb-4 inline-flex rounded-full border border-primary/20 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary shadow-sm dark:border-accent/30 dark:bg-slate-900/80 dark:text-accent-light">
+            Propuesta digital para Gran Manantial de Sabiduria
+          </p>
+          <h1 class="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">
+            Una experiencia escolar más clara para dirección, secretaría y familias.
+          </h1>
+          <p class="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
+            <strong>n8n-school-expert</strong> propone una forma más ordenada de gestionar comunicación, asistencia, pagos, autorizaciones, documentos y portal familiar, con un lenguaje cercano y sin complicar el día a día del colegio.
+          </p>
+
+          <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+            <a href="#contacto" class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-4 text-base font-semibold text-white shadow-glow transition hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:bg-accent dark:text-slate-950 dark:hover:bg-accent-light dark:focus-visible:ring-offset-slate-950">
+              Solicitar demo
+            </a>
+            <a href="#modulos" class="inline-flex items-center justify-center rounded-full border border-slate-300 px-6 py-4 text-base font-semibold text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-accent-light dark:hover:text-accent-light">
+              Ver módulos
+            </a>
+          </div>
+
+          <dl class="mt-10 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+              <dt class="text-sm text-slate-500 dark:text-slate-400">Para dirección</dt>
+              <dd class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Más trazabilidad</dd>
+            </div>
+            <div class="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+              <dt class="text-sm text-slate-500 dark:text-slate-400">Para secretaría</dt>
+              <dd class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Menos carga repetitiva</dd>
+            </div>
+            <div class="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+              <dt class="text-sm text-slate-500 dark:text-slate-400">Para familias</dt>
+              <dd class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Más claridad diaria</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="space-y-5">
+          <div class="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-glow dark:border-slate-800 dark:bg-slate-900/90">
+            <div class="mb-6 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Vista general</p>
+                <h2 class="mt-2 text-xl font-bold text-slate-900 dark:text-white">Panel operativo del colegio</h2>
+              </div>
+              <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary dark:bg-accent/10 dark:text-accent-light">Listo para presentar</span>
+            </div>
+
+            <!-- Vista conceptual para mostrar el valor del sistema -->
+            <div class="grid gap-4 sm:grid-cols-2">
+              <article class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Comunicados</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white">Lectura confirmada</p>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Ayuda a saber qué familias ya vieron un aviso y cuáles requieren seguimiento.</p>
+              </article>
+              <article class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Secretaría</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white">Menos tareas manuales</p>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Certificados, recordatorios y respuestas frecuentes con una experiencia más ágil.</p>
+              </article>
+              <article class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Asistencia</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white">Alertas oportunas</p>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Las familias reciben avisos más claros sobre ausencias, retrasos y seguimiento.</p>
+              </article>
+              <article class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Portal familiar</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white">Acceso desde el móvil</p>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Consulta de pagos, agenda y documentos desde un acceso seguro y simple.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <article class="rounded-3xl border border-primary/10 bg-primary/5 p-5 dark:border-accent/10 dark:bg-slate-900">
+              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Dirección</p>
+              <h3 class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Más visibilidad de procesos</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Comunicación, asistencia y trámites con más orden y mejor seguimiento.</p>
+            </article>
+            <article class="rounded-3xl border border-primary/10 bg-primary/5 p-5 dark:border-accent/10 dark:bg-slate-900">
+              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">PWA</p>
+              <h3 class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Instalable como app web</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">La landing quedará lista para instalarse como aplicación ligera en dispositivos compatibles.</p>
+              <button id="install-app-button" type="button" class="mt-4 hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark dark:bg-accent dark:text-slate-950 dark:hover:bg-accent-light">
+                Instalar app
+              </button>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="encaje" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Por qué encaja</p>
+        <h2 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">Una propuesta pensada para un colegio que quiere comunicar mejor sin perder cercanía humana.</h2>
+        <p class="mt-4 text-lg text-slate-600 dark:text-slate-300">
+          La idea es usar tecnología útil, visible para el equipo del colegio y fácil de entender para las familias, manteniendo un tono institucional, claro y moderno.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-6 lg:grid-cols-3">
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary dark:text-accent-light">Qué gana dirección</p>
+          <h3 class="mt-3 text-2xl font-black text-slate-900 dark:text-white">Más control y más claridad operativa</h3>
+          <ul class="mt-4 space-y-3 text-slate-600 dark:text-slate-300">
+            <li>Seguimiento más visible de comunicados y procesos clave.</li>
+            <li>Menor dispersión entre tareas, respuestas y documentos.</li>
+            <li>Una propuesta más fácil de presentar y justificar internamente.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary dark:text-accent-light">Qué gana secretaría</p>
+          <h3 class="mt-3 text-2xl font-black text-slate-900 dark:text-white">Menos fricción en el día a día</h3>
+          <ul class="mt-4 space-y-3 text-slate-600 dark:text-slate-300">
+            <li>Menos llamadas y seguimientos repetitivos.</li>
+            <li>Mejor respuesta a dudas frecuentes y solicitudes comunes.</li>
+            <li>Un proceso más ordenado para autorizaciones, certificados y avisos.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary dark:text-accent-light">Qué gana la familia</p>
+          <h3 class="mt-3 text-2xl font-black text-slate-900 dark:text-white">Más confianza y mejor acceso a la información</h3>
+          <ul class="mt-4 space-y-3 text-slate-600 dark:text-slate-300">
+            <li>Mensajes más claros y más fáciles de seguir.</li>
+            <li>Acceso simple a agenda, pagos, asistencia y documentos.</li>
+            <li>Una relación más fluida con el colegio.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="modulos" class="bg-white py-16 dark:bg-slate-900/40">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl">
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Módulos del sistema</p>
+          <h2 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">Una solución conectada para los procesos más importantes del colegio.</h2>
+          <p class="mt-4 text-lg text-slate-600 dark:text-slate-300">
+            Cada módulo está pensado para mejorar la operación interna y fortalecer la relación con las familias sin volver más complejo el uso diario.
+          </p>
+        </div>
+
+        <div class="mt-10 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Comunicación inteligente</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Avisos por WhatsApp, confirmación de lectura y respuestas guiadas para que la información importante no se pierda.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Pagos y cobros escolares</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Seguimiento de recibos, pagos digitales y validaciones más ordenadas para mejorar la visibilidad administrativa.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Asistencia y alertas</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Avisos de ausencia, retrasos y seguimiento oportuno para reforzar seguridad y tranquilidad familiar.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Secretaría y documentos</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Certificados, expedientes y procesos documentales con una experiencia más ágil y menos dependiente del papel.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Agenda, comedor y autorizaciones</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Información útil del día a día escolar con respuestas simples para las familias y menos fricción operativa.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Portal familiar seguro</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Consulta de asistencia, pagos, agenda y documentos desde un acceso directo seguro y fácil de abrir en el móvil.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="portal" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Portal familiar y PWA</p>
+          <h2 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">Una experiencia pensada para que las familias accedan desde el móvil con menos fricción.</h2>
+          <p class="mt-4 text-lg text-slate-600 dark:text-slate-300">
+            La propuesta contempla una experiencia web que puede sentirse como app: acceso rápido, instalación ligera y una ruta clara para consultar información útil del colegio.
+          </p>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-3">
+          <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary dark:text-accent-light">Paso 1</p>
+            <h3 class="mt-3 text-xl font-bold text-slate-900 dark:text-white">Se envía un acceso seguro</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">La familia recibe un acceso simple para entrar a su panel sin una experiencia complicada.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary dark:text-accent-light">Paso 2</p>
+            <h3 class="mt-3 text-xl font-bold text-slate-900 dark:text-white">Se consulta lo importante</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">Agenda, pagos, asistencia y documentos en una vista más clara y más accesible desde el móvil.</p>
+          </article>
+          <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary dark:text-accent-light">Paso 3</p>
+            <h3 class="mt-3 text-xl font-bold text-slate-900 dark:text-white">Puede instalarse como app web</h3>
+            <p class="mt-3 text-slate-600 dark:text-slate-300">En dispositivos compatibles, la landing podrá añadirse a la pantalla de inicio como PWA básica.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-gradient-to-br from-primary to-primary-dark py-16 text-white dark:from-slate-900 dark:to-primary-dark">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl">
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-white/70">Resultados operativos</p>
+          <h2 class="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Una propuesta pensada para mejorar la experiencia escolar de forma integral.</h2>
+        </div>
+
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <article class="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur">
+            <h3 class="text-lg font-bold">Menos llamadas repetitivas</h3>
+            <p class="mt-3 text-sm leading-7 text-white/80">Secretaría gana tiempo al reducir consultas rutinarias y seguimientos manuales.</p>
+          </article>
+          <article class="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur">
+            <h3 class="text-lg font-bold">Más trazabilidad</h3>
+            <p class="mt-3 text-sm leading-7 text-white/80">La comunicación importante queda mejor registrada y con seguimiento más claro.</p>
+          </article>
+          <article class="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur">
+            <h3 class="text-lg font-bold">Trámites más ágiles</h3>
+            <p class="mt-3 text-sm leading-7 text-white/80">Autorizaciones, documentos y solicitudes se gestionan con menos fricción para el colegio y las familias.</p>
+          </article>
+          <article class="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur">
+            <h3 class="text-lg font-bold">Más confianza diaria</h3>
+            <p class="mt-3 text-sm leading-7 text-white/80">Las familias sienten que el colegio comunica mejor y responde con mayor orden y cercanía.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Preguntas frecuentes</p>
+        <h2 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">Respuestas claras para presentar la propuesta con confianza.</h2>
+      </div>
+
+      <div class="mt-10 space-y-4">
+        <details class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition open:shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <summary class="cursor-pointer list-none text-left text-lg font-semibold text-slate-900 focus-visible:outline-none dark:text-white">¿Las familias necesitan instalar una aplicación?</summary>
+          <p class="mt-4 text-slate-600 dark:text-slate-300">No necesariamente. La propuesta contempla una experiencia sencilla desde el móvil y un portal familiar accesible mediante un enlace seguro. Además, esta landing quedará preparada como PWA básica para su instalación en dispositivos compatibles.</p>
+        </details>
+
+        <details class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition open:shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <summary class="cursor-pointer list-none text-left text-lg font-semibold text-slate-900 focus-visible:outline-none dark:text-white">¿Cómo recibirán los padres los avisos del colegio?</summary>
+          <p class="mt-4 text-slate-600 dark:text-slate-300">Los mensajes importantes se entregan por un canal directo y familiar para ellos, con lenguaje claro y opciones de confirmación cuando sea necesario.</p>
+        </details>
+
+        <details class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition open:shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <summary class="cursor-pointer list-none text-left text-lg font-semibold text-slate-900 focus-visible:outline-none dark:text-white">¿Se puede consultar asistencia, agenda o información de pagos?</summary>
+          <p class="mt-4 text-slate-600 dark:text-slate-300">Sí. El enfoque del sistema es ofrecer a las familias una vista más clara de la información importante del día a día escolar.</p>
+        </details>
+
+        <details class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition open:shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <summary class="cursor-pointer list-none text-left text-lg font-semibold text-slate-900 focus-visible:outline-none dark:text-white">¿Qué papel cumple Toki dentro de la solución?</summary>
+          <p class="mt-4 text-slate-600 dark:text-slate-300">Toki actúa como asistente virtual para resolver dudas frecuentes, orientar a las familias y facilitar el primer nivel de atención del colegio.</p>
+        </details>
+
+        <details class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition open:shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <summary class="cursor-pointer list-none text-left text-lg font-semibold text-slate-900 focus-visible:outline-none dark:text-white">¿El formulario de esta landing ya envía datos reales?</summary>
+          <p class="mt-4 text-slate-600 dark:text-slate-300">Todavía no. En esta fase quedará validado y preparado para conectarlo más adelante a un backend, por ejemplo mediante n8n o un endpoint propio.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="contacto" class="bg-white py-16 dark:bg-slate-900/40">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid gap-8 rounded-[2rem] border border-slate-200 bg-slate-50 p-8 shadow-glow lg:grid-cols-[0.9fr_1.1fr] lg:p-10 dark:border-slate-800 dark:bg-slate-950">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-primary dark:text-accent-light">Solicitar demo</p>
+            <h2 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">Deje sus datos y preparemos una demostración adaptada al colegio.</h2>
+            <p class="mt-4 text-lg text-slate-600 dark:text-slate-300">
+              Este formulario queda listo para conectarlo más adelante a un backend. Por ahora validará los datos localmente y servirá como base para una integración futura con n8n u otro servicio.
+            </p>
+
+            <div class="mt-8 grid gap-4 sm:grid-cols-2">
+              <article class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ideal para</h3>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Dirección general, coordinación académica, secretaría y responsables de innovación escolar.</p>
+              </article>
+              <article class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Próxima conexión</h3>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">El siguiente paso natural sería conectarlo a un webhook de n8n para recibir y clasificar los leads automáticamente.</p>
+              </article>
+            </div>
+          </div>
+
+          <!-- Formulario visual completo y validado en cliente, listo para backend futuro -->
+          <form id="demo-form" novalidate class="rounded-3xl bg-white p-6 shadow-soft dark:bg-slate-900">
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div class="sm:col-span-2">
+                <label for="nombre" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Nombre completo</label>
+                <input id="nombre" name="nombre" type="text" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+              </div>
+              <div>
+                <label for="cargo" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Cargo o rol</label>
+                <input id="cargo" name="cargo" type="text" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+              </div>
+              <div>
+                <label for="colegio" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Nombre del colegio</label>
+                <input id="colegio" name="colegio" type="text" required value="Gran Manantial de Sabiduria" class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+              </div>
+              <div>
+                <label for="email" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Correo institucional</label>
+                <input id="email" name="email" type="email" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+              </div>
+              <div>
+                <label for="telefono" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Teléfono</label>
+                <input id="telefono" name="telefono" type="tel" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+              </div>
+              <div>
+                <label for="alumnos" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Número aproximado de alumnos</label>
+                <input id="alumnos" name="alumnos" type="number" min="1" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+              </div>
+              <div>
+                <label for="interes" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Interés principal</label>
+                <select id="interes" name="interes" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white">
+                  <option value="">Seleccione una opción</option>
+                  <option value="comunicacion">Comunicación con familias</option>
+                  <option value="pagos">Pagos y cobros</option>
+                  <option value="asistencia">Asistencia y alertas</option>
+                  <option value="portal">Portal familiar</option>
+                  <option value="completo">Automatización completa</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label for="mensaje" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Mensaje</label>
+                <textarea id="mensaje" name="mensaje" rows="5" required class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white" placeholder="Cuéntenos qué le gustaría mejorar primero en el colegio."></textarea>
+              </div>
+            </div>
+
+            <div id="form-feedback" class="mt-5 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p class="text-sm text-slate-500 dark:text-slate-400">Esta versión valida datos localmente y queda preparada para conectarse después a backend.</p>
+              <button type="submit" class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-4 text-base font-semibold text-white transition hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:bg-accent dark:text-slate-950 dark:hover:bg-accent-light dark:focus-visible:ring-offset-slate-950">
+                Validar formulario
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-slate-100 py-8 dark:border-slate-800 dark:bg-slate-950">
+    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+      <div>
+        <p class="text-sm font-semibold text-slate-900 dark:text-white">n8n-school-expert</p>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Propuesta para Gran Manantial de Sabiduria</p>
+      </div>
+      <nav class="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400" aria-label="Legal">
+        <a href="#" class="transition hover:text-primary dark:hover:text-accent-light">Privacidad</a>
+        <a href="#" class="transition hover:text-primary dark:hover:text-accent-light">Términos</a>
+        <a href="#contacto" class="transition hover:text-primary dark:hover:text-accent-light">Contacto</a>
+      </nav>
+      <p class="text-sm text-slate-500 dark:text-slate-500">© <span id="current-year"></span> Gran Manantial de Sabiduria</p>
+    </div>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Las familias necesitan instalar una aplicación?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No necesariamente. La propuesta contempla una experiencia sencilla desde el móvil y un portal familiar accesible mediante un enlace seguro. Además, esta landing quedará preparada como PWA básica para su instalación en dispositivos compatibles."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo recibirán los padres los avisos del colegio?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Los mensajes importantes se entregan por un canal directo y familiar para ellos, con lenguaje claro y opciones de confirmación cuando sea necesario."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Se puede consultar asistencia, agenda o información de pagos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. El enfoque del sistema es ofrecer a las familias una vista más clara de la información importante del día a día escolar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué papel cumple Toki dentro de la solución?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Toki actúa como asistente virtual para resolver dudas frecuentes, orientar a las familias y facilitar el primer nivel de atención del colegio."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿El formulario de esta landing ya envía datos reales?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Todavía no. En esta fase quedará validado y preparado para conectarlo más adelante a un backend, por ejemplo mediante n8n o un endpoint propio."
+          }
+        }
+      ]
+    }
+  </script>
+
+  <script>
+    // Menú móvil simple para pantallas pequeñas.
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    menuToggle?.addEventListener('click', () => {
+      const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+      menuToggle.setAttribute('aria-expanded', String(!isExpanded));
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    mobileMenu?.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        menuToggle.setAttribute('aria-expanded', 'false');
+        mobileMenu.classList.add('hidden');
+      });
+    });
+
+    // Sistema de tema con tres estados: claro, oscuro y sistema.
+    const themeButtons = [
+      document.getElementById('theme-toggle-desktop'),
+      document.getElementById('theme-toggle-mobile')
+    ].filter(Boolean);
+
+    const themeModes = ['system', 'light', 'dark'];
+    const root = document.documentElement;
+
+    function getStoredTheme() {
+      return localStorage.getItem('theme-mode') || 'system';
+    }
+
+    function applyTheme(mode) {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const useDark = mode === 'dark' || (mode === 'system' && prefersDark);
+      root.classList.toggle('dark', useDark);
+
+      const labels = {
+        system: 'Modo: sistema',
+        light: 'Modo: claro',
+        dark: 'Modo: oscuro'
+      };
+
+      themeButtons.forEach((button) => {
+        button.textContent = labels[mode];
+        button.setAttribute('aria-label', labels[mode]);
+      });
+    }
+
+    function cycleTheme() {
+      const current = getStoredTheme();
+      const nextIndex = (themeModes.indexOf(current) + 1) % themeModes.length;
+      const nextTheme = themeModes[nextIndex];
+      localStorage.setItem('theme-mode', nextTheme);
+      applyTheme(nextTheme);
+    }
+
+    themeButtons.forEach((button) => button.addEventListener('click', cycleTheme));
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (getStoredTheme() === 'system') {
+        applyTheme('system');
+      }
+    });
+
+    applyTheme(getStoredTheme());
+
+    // Validación local del formulario, dejando lista la estructura para backend futuro.
+    const demoForm = document.getElementById('demo-form');
+    const formFeedback = document.getElementById('form-feedback');
+
+    function setFieldState(field, isValid) {
+      field.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-200');
+      if (!isValid) {
+        field.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-200');
+      }
+    }
+
+    demoForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const fields = Array.from(demoForm.querySelectorAll('input, select, textarea'));
+      const errors = [];
+
+      fields.forEach((field) => {
+        const value = field.value.trim();
+        let valid = true;
+
+        if (field.hasAttribute('required') && !value) {
+          valid = false;
+        }
+
+        if (valid && field.type === 'email') {
+          valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        }
+
+        if (!valid) {
+          const label = demoForm.querySelector(`label[for="${field.id}"]`)?.textContent || field.name;
+          errors.push(label);
+        }
+
+        setFieldState(field, valid);
+      });
+
+      formFeedback.classList.remove('hidden', 'border-red-200', 'bg-red-50', 'text-red-700', 'border-green-200', 'bg-green-50', 'text-green-700', 'dark:border-red-900', 'dark:bg-red-950/40', 'dark:text-red-300', 'dark:border-green-900', 'dark:bg-green-950/40', 'dark:text-green-300');
+
+      if (errors.length > 0) {
+        formFeedback.classList.add('border-red-200', 'bg-red-50', 'text-red-700', 'dark:border-red-900', 'dark:bg-red-950/40', 'dark:text-red-300');
+        formFeedback.innerHTML = `<strong>Revise estos campos:</strong> ${errors.join(', ')}.`;
+        return;
+      }
+
+      formFeedback.classList.add('border-green-200', 'bg-green-50', 'text-green-700', 'dark:border-green-900', 'dark:bg-green-950/40', 'dark:text-green-300');
+      formFeedback.innerHTML = '<strong>Formulario validado correctamente.</strong> Esta versión todavía no envía datos a un backend, pero ya está preparada para conectarse después a n8n o a otro servicio.';
+    });
+
+    // Registro de service worker para la PWA mínima.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {
+          // Si falla el registro, la landing sigue funcionando normal.
+        });
+      });
+    }
+
+    // Soporte opcional para mostrar el botón de instalación si el navegador lo permite.
+    let deferredInstallPrompt = null;
+    const installButton = document.getElementById('install-app-button');
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installButton?.classList.remove('hidden');
+    });
+
+    installButton?.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installButton.classList.add('hidden');
+    });
+
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

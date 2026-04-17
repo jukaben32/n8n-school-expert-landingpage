@@ -1,0 +1,16 @@
+# Estructura del Cuadro de Mando (KPIs)
+# Gran Manantial de Sabiduría
+
+Este archivo define las métricas que n8n enviará al Dashboard para su visualización.
+
+kpi_id,nombre_indicador,valor_actual,meta_mensual,unidad,categoria
+K-001,Recaudación Total (DOP),1250000,1500000,Moneda,Finanzas
+K-002,Tasa de Asistencia Hoy,94.8,98,Porcentaje,Seguridad
+K-003,Circulares Leídas (%),82,100,Porcentaje,Comunicación
+K-004,Contratos Matrícula (Firmados),42,50,Cantidad,Secretaría
+K-005,Incidencias Comedor (Hoy),2,0,Cantidad,Vida Escolar
+K-006,Retrasos Acumulados (Alumnos),5,10,Alumnos,Asistencia
+K-007,Consultas Bot Toki (Exitosas),124,150,Interacciones,Soporte
+
+# Notas para n8n:
+# Cada noche a las 23:59, el workflow 'Generar Reporte Diario' actualiza estas celdas.

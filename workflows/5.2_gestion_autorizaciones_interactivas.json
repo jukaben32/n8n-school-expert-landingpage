@@ -1,0 +1,160 @@
+{
+  "name": "Modulo 5.2: Gestion de Autorizaciones Interactivas con PDF",
+  "nodes": [
+    {
+      "parameters": {
+        "poll": true,
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "autorizaciones",
+        "options": {}
+      },
+      "id": "trigger-new-permission",
+      "name": "Nueva Solicitud de Permiso",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [100, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendButton",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono_familiar}}",
+        "text": "=Solicitud de autorizacion.\n\nActividad: {{$json.evento_nombre}}\nFecha: {{$json.evento_fecha}}\nDetalles: {{$json.evento_detalles}}\n\nComo tutor de {{$json.alumno_nombre}}, indique su decision.",
+        "buttons": [
+          {
+            "displayText": "Si, Autorizo",
+            "buttonType": "quickReply",
+            "value": "authorize_yes_{{$json.id_autorizacion}}"
+          },
+          {
+            "displayText": "No, No Autorizo",
+            "buttonType": "quickReply",
+            "value": "authorize_no_{{$json.id_autorizacion}}"
+          }
+        ]
+      },
+      "id": "request-permission",
+      "name": "Solicitar Permiso",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [340, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "respuesta-autorizacion",
+        "options": {}
+      },
+      "id": "webhook-perm-response",
+      "name": "Webhook: Respuesta Autorizacion",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 560]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst action = body.action || null;\nconst idAutorizacion = body.reference || null;\nconst decision = action === 'authorize_yes' ? 'Autorizado' : 'No autorizado';\nreturn [{ json: { id_autorizacion: idAutorizacion, decision } }];"
+      },
+      "id": "parse-authorization",
+      "name": "Parsear Respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 560]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "autorizaciones",
+        "filters": {
+          "id_autorizacion": "={{$json.id_autorizacion}}"
+        }
+      },
+      "id": "find-authorization",
+      "name": "Buscar Autorizacion",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [580, 560]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "autorizaciones",
+        "columnToMatch": "id_autorizacion",
+        "valueToMatch": "={{$json.id_autorizacion}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "estado",
+              "value": "={{$node[\"Parsear Respuesta\"].json.decision}}"
+            },
+            {
+              "column": "fecha_respuesta",
+              "value": "={{$now}}"
+            }
+          ]
+        }
+      },
+      "id": "update-authorization-sheet",
+      "name": "Actualizar Autorizacion",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [820, 560]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "html": "=<html><head><style>body { font-family: Arial, sans-serif; padding: 32px; } .stamp { border: 2px solid #0f766e; padding: 8px 14px; display: inline-block; margin-top: 20px; }</style></head><body><h2>Autorizacion Escolar Digital</h2><p>Tutor: <b>{{$json.tutor_nombre}}</b></p><p>Alumno: <b>{{$json.alumno_nombre}}</b></p><p>Actividad: <b>{{$json.evento_nombre}}</b></p><p>Decision: <b>{{$node[\"Parsear Respuesta\"].json.decision}}</b></p><p>Fecha: {{$now.toFormat('dd/MM/yyyy HH:mm')}}</p><div class=\"stamp\">{{$node[\"Parsear Respuesta\"].json.decision}}</div></body></html>",
+        "options": {
+          "fileName": "Autorizacion_{{$json.id_autorizacion}}.pdf"
+        }
+      },
+      "id": "generate-permission-pdf",
+      "name": "Generar PDF de Permiso",
+      "type": "n8n-nodes-base.htmlToPdf",
+      "typeVersion": 1,
+      "position": [1060, 560]
+    },
+    {
+      "parameters": {
+        "fileName": "Autorizacion_{{$json.id_autorizacion}}.pdf",
+        "parents": [
+          "={{$json.drive_folder_id}}"
+        ],
+        "options": {}
+      },
+      "id": "drive-upload-perm",
+      "name": "Archivar Permiso en Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [1300, 560]
+    }
+  ],
+  "connections": {
+    "Nueva Solicitud de Permiso": {
+      "main": [[{ "node": "Solicitar Permiso", "type": "main", "index": 0 }]]
+    },
+    "Webhook: Respuesta Autorizacion": {
+      "main": [[{ "node": "Parsear Respuesta", "type": "main", "index": 0 }]]
+    },
+    "Parsear Respuesta": {
+      "main": [[{ "node": "Buscar Autorizacion", "type": "main", "index": 0 }]]
+    },
+    "Buscar Autorizacion": {
+      "main": [[{ "node": "Actualizar Autorizacion", "type": "main", "index": 0 }]]
+    },
+    "Actualizar Autorizacion": {
+      "main": [[{ "node": "Generar PDF de Permiso", "type": "main", "index": 0 }]]
+    },
+    "Generar PDF de Permiso": {
+      "main": [[{ "node": "Archivar Permiso en Drive", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "name": "Modulo 1.1: Bot Asistente Toki (FAQ)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "toki-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Evolution API",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{String($json.data.key.fromMe)}}",
+              "operation": "equal",
+              "value2": "false"
+            }
+          ]
+        }
+      },
+      "id": "filter-incoming",
+      "name": "Filtrar Mensaje Entrante",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "faq_context",
+              "value": "Horario general: jornada escolar en horario regular de manana. Pagos: se atienden por enlace de pago o transferencia validada por el colegio. Certificados: pueden solicitarse por WhatsApp. Portal familiar: acceso temporal por enlace seguro. Si una respuesta no esta confirmada, se debe remitir a Secretaria."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-faq",
+      "name": "Contexto FAQ",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [560, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "systemMessage": "=Eres Toki, el asistente virtual oficial del colegio. Responde de forma breve, formal y util.\n\nBase de conocimiento:\n{{$json.faq_context}}\n\nReglas:\n1. Si la informacion no esta confirmada, indique que Secretaria dara seguimiento.\n2. Trate siempre de Usted.\n3. No invente politicas ni precios."
+        }
+      },
+      "id": "ai-agent",
+      "name": "AI Assistant Toki",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$node[\"Webhook Evolution API\"].json.data.key.remoteJid}}",
+        "text": "={{$json.output}}"
+      },
+      "id": "evolution-api-reply",
+      "name": "Enviar Respuesta WhatsApp",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1040, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Evolution API": {
+      "main": [[{ "node": "Filtrar Mensaje Entrante", "type": "main", "index": 0 }]]
+    },
+    "Filtrar Mensaje Entrante": {
+      "main": [
+        [{ "node": "Contexto FAQ", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Contexto FAQ": {
+      "main": [[{ "node": "AI Assistant Toki", "type": "main", "index": 0 }]]
+    },
+    "AI Assistant Toki": {
+      "main": [[{ "node": "Enviar Respuesta WhatsApp", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

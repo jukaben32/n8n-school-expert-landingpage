@@ -1,0 +1,270 @@
+{
+  "name": "Modulo 2.1: Sistema de Cobro Hibrido (Stripe + Transferencia)",
+  "nodes": [
+    {
+      "parameters": {
+        "poll": true,
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "options": {}
+      },
+      "id": "trigger-pending-payments",
+      "name": "Pagos Pendientes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [100, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.estado}}",
+              "operation": "equal",
+              "value2": "Pendiente"
+            }
+          ]
+        }
+      },
+      "id": "if-payment-pending",
+      "name": "Es Pago Pendiente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [320, 220]
+    },
+    {
+      "parameters": {
+        "resource": "paymentLink",
+        "operation": "create",
+        "amount": "={{Number($json.monto) * 100}}",
+        "currency": "={{$env.N8N_SCHOOL_CURRENCY || 'DOP'}}",
+        "lineItems": [
+          {
+            "priceData": {
+              "productData": {
+                "name": "={{$json.concepto}} - {{$json.alumno_nombre}}"
+              }
+            }
+          }
+        ]
+      },
+      "id": "stripe-generate-link",
+      "name": "Crear Link de Stripe",
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "position": [560, 120],
+      "credentials": {
+        "stripeApi": {
+          "id": "ID_STRIPE_CREDENTIALS",
+          "name": "Stripe account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "columnToMatch": "id_pago",
+        "valueToMatch": "={{$json.id_pago}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "stripe_url",
+              "value": "={{$node[\"Crear Link de Stripe\"].json.url}}"
+            },
+            {
+              "column": "ultimo_envio_cobro",
+              "value": "={{$now}}"
+            }
+          ]
+        }
+      },
+      "id": "update-payment-link",
+      "name": "Guardar Link en Pago",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [800, 120]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendButton",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono}}",
+        "text": "=Estimada familia, el recibo de {{$json.concepto}} para {{$json.alumno_nombre}} esta listo.\n\nMonto: {{$json.monto}} {{$env.N8N_SCHOOL_CURRENCY || 'DOP'}}",
+        "buttons": [
+          {
+            "displayText": "Pagar con Tarjeta",
+            "buttonType": "url",
+            "url": "={{$node[\"Crear Link de Stripe\"].json.url}}"
+          },
+          {
+            "displayText": "Ver Datos de Transferencia",
+            "buttonType": "quickReply",
+            "value": "request_bank_details_{{$json.id_pago}}"
+          }
+        ]
+      },
+      "id": "offer-payment-methods",
+      "name": "Ofrecer Metodos de Pago",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1040, 120]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-events",
+        "options": {}
+      },
+      "id": "payment-events-webhook",
+      "name": "Webhook: Eventos de Pago",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 620]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst action = body.action || body.event || null;\nconst reference = body.reference || body.data?.object?.metadata?.id_pago || body.id_pago || null;\nconst remoteJid = body.remoteJid || body.data?.key?.remoteJid || null;\nconst stripeStatus = body.type || body.status || null;\n\nlet normalizedAction = action;\nif (!normalizedAction && stripeStatus === 'checkout.session.completed') normalizedAction = 'stripe_paid';\nif (action && action.startsWith('request_bank_details')) normalizedAction = 'request_bank_details';\n\nreturn [{ json: { action: normalizedAction, id_pago: reference, remoteJid } }];"
+      },
+      "id": "normalize-payment-event",
+      "name": "Normalizar Evento de Pago",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 620]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "filters": {
+          "id_pago": "={{$json.id_pago}}"
+        }
+      },
+      "id": "get-payment-by-id",
+      "name": "Buscar Pago por ID",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [580, 620]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Normalizar Evento de Pago\"].json.action}}",
+              "operation": "equal",
+              "value2": "stripe_paid"
+            }
+          ]
+        }
+      },
+      "id": "if-stripe-paid",
+      "name": "Pago Stripe Exitoso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [820, 620]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "columnToMatch": "id_pago",
+        "valueToMatch": "={{$json.id_pago}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "estado",
+              "value": "Pagado"
+            },
+            {
+              "column": "fecha_pago",
+              "value": "={{$now}}"
+            },
+            {
+              "column": "metodo_pago",
+              "value": "Stripe"
+            }
+          ]
+        }
+      },
+      "id": "mark-paid-in-sheet",
+      "name": "Marcar Pago en Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1060, 520]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono}}",
+        "text": "=Pago recibido correctamente para {{$json.alumno_nombre}}.\n\nConcepto: {{$json.concepto}}\nMonto: {{$json.monto}} {{$env.N8N_SCHOOL_CURRENCY || 'DOP'}}\n\nGracias."
+      },
+      "id": "notify-family-paid",
+      "name": "Notificar Pago Confirmado",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1300, 520]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$node[\"Normalizar Evento de Pago\"].json.remoteJid || $json.telefono}}",
+        "text": "=Datos para transferencia bancaria:\nBanco: {{$env.N8N_SCHOOL_BANK_NAME}}\nCuenta: {{$env.N8N_SCHOOL_BANK_ACCOUNT}}\nTipo: {{$env.N8N_SCHOOL_BANK_ACCOUNT_TYPE}}\nBeneficiario: {{$env.N8N_SCHOOL_BANK_BENEFICIARY}}\n\nCuando realice la transferencia, envie el comprobante por este mismo canal."
+      },
+      "id": "send-bank-details",
+      "name": "Enviar Datos Bancarios",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1060, 720]
+    }
+  ],
+  "connections": {
+    "Pagos Pendientes": {
+      "main": [[{ "node": "Es Pago Pendiente?", "type": "main", "index": 0 }]]
+    },
+    "Es Pago Pendiente?": {
+      "main": [
+        [{ "node": "Crear Link de Stripe", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Crear Link de Stripe": {
+      "main": [[{ "node": "Guardar Link en Pago", "type": "main", "index": 0 }]]
+    },
+    "Guardar Link en Pago": {
+      "main": [[{ "node": "Ofrecer Metodos de Pago", "type": "main", "index": 0 }]]
+    },
+    "Webhook: Eventos de Pago": {
+      "main": [[{ "node": "Normalizar Evento de Pago", "type": "main", "index": 0 }]]
+    },
+    "Normalizar Evento de Pago": {
+      "main": [[{ "node": "Buscar Pago por ID", "type": "main", "index": 0 }]]
+    },
+    "Buscar Pago por ID": {
+      "main": [[{ "node": "Pago Stripe Exitoso?", "type": "main", "index": 0 }]]
+    },
+    "Pago Stripe Exitoso?": {
+      "main": [
+        [{ "node": "Marcar Pago en Sheet", "type": "main", "index": 0 }],
+        [{ "node": "Enviar Datos Bancarios", "type": "main", "index": 0 }]
+      ]
+    },
+    "Marcar Pago en Sheet": {
+      "main": [[{ "node": "Notificar Pago Confirmado", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "name": "Modulo 2.2: Validacion de Comprobantes Bancarios",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "comprobante-recepcion",
+        "options": {}
+      },
+      "id": "webhook-whatsapp-media",
+      "name": "Recepcion de Evento de Transferencia",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst action = body.action || null;\nconst reference = body.reference || null;\nconst remoteJid = body.remoteJid || body.data?.key?.remoteJid || null;\nconst imageCaption = body.data?.message?.imageMessage?.caption || '';\nconst text = body.data?.message?.conversation || imageCaption || '';\n\nlet mode = 'receipt';\nif (action === 'approve_payment' || action === 'reject_payment') mode = 'decision';\n\nlet idPago = reference;\nif (!idPago && text) {\n  const match = text.match(/PAGO[-_\\s:]*(\\w+)/i);\n  if (match) idPago = match[1];\n}\n\nreturn [{ json: { mode, action, id_pago: idPago, remoteJid, text } }];"
+      },
+      "id": "normalize-transfer-event",
+      "name": "Normalizar Evento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 320]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "filters": {
+          "id_pago": "={{$json.id_pago}}"
+        }
+      },
+      "id": "find-payment",
+      "name": "Buscar Pago",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [580, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Normalizar Evento\"].json.mode}}",
+              "operation": "equal",
+              "value2": "decision"
+            }
+          ]
+        }
+      },
+      "id": "if-decision",
+      "name": "Es Decision del Contable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [820, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Normalizar Evento\"].json.action}}",
+              "operation": "equal",
+              "value2": "approve_payment"
+            }
+          ]
+        }
+      },
+      "id": "if-approved",
+      "name": "Pago Aprobado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1060, 220]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "columnToMatch": "id_pago",
+        "valueToMatch": "={{$json.id_pago}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "estado",
+              "value": "PendienteValidacion"
+            },
+            {
+              "column": "fecha_comprobante",
+              "value": "={{$now}}"
+            },
+            {
+              "column": "comprobante_observacion",
+              "value": "={{$node[\"Normalizar Evento\"].json.text}}"
+            }
+          ]
+        }
+      },
+      "id": "mark-awaiting-review",
+      "name": "Marcar Pendiente de Validacion",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1060, 420]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendButton",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$env.N8N_SCHOOL_ACCOUNTANT_JID}}",
+        "text": "=Nuevo comprobante de pago.\n\nFamilia: {{$json.familia_nombre}}\nAlumno: {{$json.alumno_nombre}}\nConcepto: {{$json.concepto}}\nMonto: {{$json.monto}}\nID pago: {{$json.id_pago}}\n\nRevise el comprobante y confirme.",
+        "buttons": [
+          {
+            "displayText": "Aprobar Pago",
+            "buttonType": "quickReply",
+            "value": "approve_payment_{{$json.id_pago}}"
+          },
+          {
+            "displayText": "Rechazar Pago",
+            "buttonType": "quickReply",
+            "value": "reject_payment_{{$json.id_pago}}"
+          }
+        ]
+      },
+      "id": "notify-accountant",
+      "name": "Notificar al Contable",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1300, 420]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "columnToMatch": "id_pago",
+        "valueToMatch": "={{$json.id_pago}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "estado",
+              "value": "Pagado"
+            },
+            {
+              "column": "fecha_pago",
+              "value": "={{$now}}"
+            },
+            {
+              "column": "metodo_pago",
+              "value": "Transferencia"
+            }
+          ]
+        }
+      },
+      "id": "mark-transfer-approved",
+      "name": "Marcar Transferencia Aprobada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1300, 140]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono}}",
+        "text": "=Hemos validado correctamente su transferencia.\n\nConcepto: {{$json.concepto}}\nMonto: {{$json.monto}}\n\nGracias."
+      },
+      "id": "notify-approved-family",
+      "name": "Notificar Transferencia Aprobada",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1540, 140]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "pagos",
+        "columnToMatch": "id_pago",
+        "valueToMatch": "={{$json.id_pago}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "estado",
+              "value": "Rechazado"
+            },
+            {
+              "column": "observacion_revision",
+              "value": "Rechazado por revision manual"
+            }
+          ]
+        }
+      },
+      "id": "mark-transfer-rejected",
+      "name": "Marcar Transferencia Rechazada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1300, 260]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono}}",
+        "text": "=No pudimos validar su comprobante para {{$json.concepto}}.\n\nPor favor envie un comprobante legible o contacte a secretaria."
+      },
+      "id": "notify-rejected-family",
+      "name": "Notificar Transferencia Rechazada",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1540, 260]
+    }
+  ],
+  "connections": {
+    "Recepcion de Evento de Transferencia": {
+      "main": [[{ "node": "Normalizar Evento", "type": "main", "index": 0 }]]
+    },
+    "Normalizar Evento": {
+      "main": [[{ "node": "Buscar Pago", "type": "main", "index": 0 }]]
+    },
+    "Buscar Pago": {
+      "main": [[{ "node": "Es Decision del Contable?", "type": "main", "index": 0 }]]
+    },
+    "Es Decision del Contable?": {
+      "main": [
+        [{ "node": "Pago Aprobado?", "type": "main", "index": 0 }],
+        [{ "node": "Marcar Pendiente de Validacion", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pago Aprobado?": {
+      "main": [
+        [{ "node": "Marcar Transferencia Aprobada", "type": "main", "index": 0 }],
+        [{ "node": "Marcar Transferencia Rechazada", "type": "main", "index": 0 }]
+      ]
+    },
+    "Marcar Pendiente de Validacion": {
+      "main": [[{ "node": "Notificar al Contable", "type": "main", "index": 0 }]]
+    },
+    "Marcar Transferencia Aprobada": {
+      "main": [[{ "node": "Notificar Transferencia Aprobada", "type": "main", "index": 0 }]]
+    },
+    "Marcar Transferencia Rechazada": {
+      "main": [[{ "node": "Notificar Transferencia Rechazada", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

@@ -1,0 +1,441 @@
+{
+  "name": "Modulo 1.2: Notificacion Certificada (Auditoria de Lectura)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "confirmacion-lectura",
+        "options": {}
+      },
+      "id": "webhook-receipt",
+      "name": "Recepcion de Confirmacion",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst reference = body.reference || body.data?.message?.content?.buttonResponse?.buttonId || null;\nconst remoteJid = body.remoteJid || body.data?.key?.remoteJid || null;\n\nif (!reference) throw new Error('No se recibio referencia de confirmacion');\n\nreturn [{ json: { id_notificacion: reference, remoteJid, timestamp_confirmacion: new Date().toISOString() } }];"
+      },
+      "id": "parse-confirmation",
+      "name": "Parsear Confirmacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DE_TU_SPREADSHEET",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "comunicaciones",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha_lectura": "={{$json.timestamp_confirmacion}}",
+            "status": "Leido"
+          }
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id_notificacion",
+              "value": "={{$json.id_notificacion}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "update-receipt-sheets",
+      "name": "Actualizar Auditoria",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        600,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8nsophia.duckdns.org/message/sendText/CRM_clinica_Duckdns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$vars.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{$json.remoteJid}}\",\n  \"textMessage\": {\n    \"text\": \"Gracias! Tu confirmacion de lectura ha sido registrada correctamente.\"\n  }\n}"
+      },
+      "id": "ack-parent-confirmed",
+      "name": "Confirmar al Padre",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        850,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger-daily",
+      "name": "Trigger Diario 8am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "readRows",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DE_TU_SPREADSHEET",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "comunicaciones",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "column": "status",
+              "condition": "notEqual",
+              "value": "Leido"
+            },
+            {
+              "column": "intentos",
+              "condition": "smallerThan",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-pending",
+      "name": "Obtener Pendientes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        350,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first().json;\nconst intentos = parseInt(row.intentos || '0');\nconst nuevoIntento = intentos + 1;\n\nlet mensaje = '';\n\nif (nuevoIntento === 1) {\n  mensaje = `Estimado padre/madre,\\n\\nTe compartimos la siguiente circular escolar:\\n\\n${row.mensaje}\\n\\nPor favor confirma su recepcion presionando el boton.`;\n} else if (nuevoIntento === 2) {\n  mensaje = `Recordatorio: Notamos que aun no has confirmado la circular:\\n\\n\"${row.titulo || 'Comunicado escolar'}\"\\n\\nTu confirmacion es importante para nuestros registros. Por favor presiona el boton.`;\n} else if (nuevoIntento === 3) {\n  mensaje = `AVISO IMPORTANTE: Es necesaria tu confirmacion de la circular:\\n\\n\"${row.titulo || 'Comunicado escolar'}\"\\n\\nEste es el ultimo recordatorio automatico. Si no confirmas, Secretaria se pondra en contacto contigo.`;\n}\n\nreturn [{ json: { ...row, intentos: nuevoIntento, mensaje_envio: mensaje } }];"
+      },
+      "id": "build-message",
+      "name": "Construir Mensaje por Intento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8nsophia.duckdns.org/message/sendButtons/CRM_clinica_Duckdns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$vars.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{$json.telefono}}\",\n  \"buttonsMessage\": {\n    \"title\": \"Notificacion Escolar\",\n    \"description\": \"{{$json.mensaje_envio}}\",\n    \"footer\": \"Colegio Digital - Notificacion Certificada\",\n    \"buttons\": [\n      {\n        \"buttonText\": \"Confirmar Recepcion\",\n        \"buttonId\": \"{{$json.id_notificacion}}\"\n      }\n    ]\n  }\n}"
+      },
+      "id": "send-circular",
+      "name": "Enviar Circular con Boton",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DE_TU_SPREADSHEET",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "comunicaciones",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "intentos": "={{$json.intentos}}",
+            "ultimo_intento": "={{$now}}"
+          }
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id_notificacion",
+              "value": "={{$json.id_notificacion}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "update-intentos",
+      "name": "Actualizar Contador Intentos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeError": "error"
+          },
+          "conditions": [
+            {
+              "id": "max-intentos",
+              "leftValue": "={{$json.intentos}}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        }
+      },
+      "id": "check-max-intentos",
+      "name": "Llego al Maximo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8nsophia.duckdns.org/message/sendText/CRM_clinica_Duckdns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$vars.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{$vars.SECRETARIA_JID}}\",\n  \"textMessage\": {\n    \"text\": \"ALERTA - Padre sin confirmar lectura:\\n\\nNombre: {{$json.nombre_padre}}\\nTelefono: {{$json.telefono}}\\nCircular: {{$json.titulo}}\\nID: {{$json.id_notificacion}}\\nUltimo intento: {{$json.ultimo_intento}}\\n\\nSe han realizado 3 intentos sin exito. Por favor contactar manualmente.\"\n  }\n}"
+      },
+      "id": "notify-secretary",
+      "name": "Notificar a Secretaria",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1600,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DE_TU_SPREADSHEET",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "comunicaciones",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Escalado a Secretaria",
+            "fecha_escalado": "={{$now}}"
+          }
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id_notificacion",
+              "value": "={{$json.id_notificacion}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mark-escalated",
+      "name": "Marcar como Escalado",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1600,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Recepcion de Confirmacion": {
+      "main": [
+        [
+          {
+            "node": "Parsear Confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear Confirmacion": {
+      "main": [
+        [
+          {
+            "node": "Actualizar Auditoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Auditoria": {
+      "main": [
+        [
+          {
+            "node": "Confirmar al Padre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Diario 8am": {
+      "main": [
+        [
+          {
+            "node": "Obtener Pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Pendientes": {
+      "main": [
+        [
+          {
+            "node": "Construir Mensaje por Intento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Mensaje por Intento": {
+      "main": [
+        [
+          {
+            "node": "Enviar Circular con Boton",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Circular con Boton": {
+      "main": [
+        [
+          {
+            "node": "Actualizar Contador Intentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Contador Intentos": {
+      "main": [
+        [
+          {
+            "node": "Llego al Maximo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llego al Maximo?": {
+      "main": [
+        [
+          {
+            "node": "Notificar a Secretaria",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Marcar como Escalado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

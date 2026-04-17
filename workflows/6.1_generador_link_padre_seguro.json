@@ -1,0 +1,101 @@
+{
+  "name": "Modulo 6.1: Generador de Enlaces Seguros al Portal del Padre (PWA)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "solicitud-portal-padre",
+        "options": {}
+      },
+      "id": "webhook-query-portal",
+      "name": "Webhook: Peticion Portal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "alumnos",
+        "filters": {
+          "telefono_familiar": "={{$json.remoteJid || $json.data.key.remoteJid}}"
+        }
+      },
+      "id": "get-student-by-phone",
+      "name": "Identificar Alumno Tutor",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [340, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first().json;\nconst token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');\nconst expiration = new Date(Date.now() + 60 * 60 * 1000).toISOString();\nconst baseUrl = $env.N8N_SCHOOL_PORTAL_BASE_URL || 'https://portal.example.com';\nreturn [{ json: { ...row, token, token_expiration: expiration, portal_url: `${baseUrl.replace(/\\/$/, '')}/auth?token=${token}` } }];"
+      },
+      "id": "generate-secure-token",
+      "name": "Generar Token de Seguridad",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "alumnos",
+        "columnToMatch": "id_alumno",
+        "valueToMatch": "={{$json.id_alumno}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "portal_token",
+              "value": "={{$json.token}}"
+            },
+            {
+              "column": "portal_token_exp",
+              "value": "={{$json.token_expiration}}"
+            }
+          ]
+        }
+      },
+      "id": "store-token-sheets",
+      "name": "Almacenar Token",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [820, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono_familiar}}",
+        "text": "=Acceso seguro al portal del padre.\n\nFamilia de {{$json.alumno_nombre || $json.nombre}}, aqui tiene su enlace privado:\n\n{{$json.portal_url}}\n\nEste enlace caduca en 60 minutos."
+      },
+      "id": "send-portal-link",
+      "name": "Entregar Link de Acceso",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1060, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Peticion Portal": {
+      "main": [[{ "node": "Identificar Alumno Tutor", "type": "main", "index": 0 }]]
+    },
+    "Identificar Alumno Tutor": {
+      "main": [[{ "node": "Generar Token de Seguridad", "type": "main", "index": 0 }]]
+    },
+    "Generar Token de Seguridad": {
+      "main": [[{ "node": "Almacenar Token", "type": "main", "index": 0 }]]
+    },
+    "Almacenar Token": {
+      "main": [[{ "node": "Entregar Link de Acceso", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

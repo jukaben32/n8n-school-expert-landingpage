@@ -1,0 +1,161 @@
+{
+  "name": "Módulo 4.1: Automación de Expediente y Estructura Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "poll": true,
+        "spreadsheetId": "ID_DE_TU_SPREADSHEET",
+        "sheetName": "alumnos",
+        "options": {}
+      },
+      "id": "trigger-new-student",
+      "name": "Nuevo Alumno en Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "name": "={{$json.nombre}} {{$json.apellidos}}",
+        "parents": [
+          "ID_CARPETA_EXPEDIENTES_2026"
+        ],
+        "options": {}
+      },
+      "id": "drive-create-student-folder",
+      "name": "Crear Carpeta Alumno",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [350, 300]
+    },
+    {
+      "parameters": {
+        "name": "01_Personal",
+        "parents": [
+          "={{$json.id}}"
+        ],
+        "options": {}
+      },
+      "id": "drive-create-sub-personal",
+      "name": "Sub-Carpeta Personal",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [600, 150]
+    },
+    {
+      "parameters": {
+        "name": "02_Legal",
+        "parents": [
+          "={{$node[\"Crear Carpeta Alumno\"].json.id}}"
+        ],
+        "options": {}
+      },
+      "id": "drive-create-sub-legal",
+      "name": "Sub-Carpeta Legal",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [600, 250]
+    },
+    {
+      "parameters": {
+        "name": "03_Academico",
+        "parents": [
+          "={{$node[\"Crear Carpeta Alumno\"].json.id}}"
+        ],
+        "options": {}
+      },
+      "id": "drive-create-sub-academic",
+      "name": "Sub-Carpeta Académica",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [600, 350]
+    },
+    {
+      "parameters": {
+        "name": "04_Salud",
+        "parents": [
+          "={{$node[\"Crear Carpeta Alumno\"].json.id}}"
+        ],
+        "options": {}
+      },
+      "id": "drive-create-sub-health",
+      "name": "Sub-Carpeta Salud",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [600, 450]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "ID_DE_TU_SPREADSHEET",
+        "sheetName": "alumnos",
+        "columnToMatch": "id_alumno",
+        "valueToMatch": "={{$node[\"Nuevo Alumno en Sheet\"].json.id_alumno}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "drive_url_root",
+              "value": "={{$node[\"Crear Carpeta Alumno\"].json.webViewLink}}"
+            }
+          ]
+        }
+      },
+      "id": "update-student-sheet-drive",
+      "name": "Vincular Drive en Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Nuevo Alumno en Sheet": {
+      "main": [
+        [
+          {
+            "node": "Crear Carpeta Alumno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Carpeta Alumno": {
+      "main": [
+        [
+          {
+            "node": "Sub-Carpeta Personal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sub-Carpeta Legal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sub-Carpeta Académica",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sub-Carpeta Salud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-Carpeta Salud": {
+      "main": [
+        [
+          {
+            "node": "Vincular Drive en Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

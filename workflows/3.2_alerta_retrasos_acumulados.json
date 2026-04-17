@@ -1,0 +1,96 @@
+{
+  "name": "Módulo 3.2: Alerta de Retrasos Acumulados (Regla de 3)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "interval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-weekly-check",
+      "name": "Check Semanal de Impuntualidad",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "ID_DE_TU_SPREADSHEET",
+        "sheetName": "asistencias",
+        "filters": {
+          "estado": "L"
+        }
+      },
+      "id": "get-all-lates",
+      "name": "Obtener Todas las Tardanzas",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const counts = {};\nconst studentsWithLateFees = [];\n\nfor (const item of items) {\n  const studentId = item.json.id_alumno;\n  counts[studentId] = (counts[studentId] || 0) + 1;\n\n  if (counts[studentId] === 3) {\n    studentsWithLateFees.push({\n       json: {\n          ...item.json,\n          total_lates: 3\n       }\n    });\n  }\n}\n\nreturn studentsWithLateFees;"
+      },
+      "id": "logic-counter-3",
+      "name": "Contador de Incidencias (Regla 3)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [550, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "CENTRO_ESCOLAR",
+        "number": "={{$json.telefono_familiar}}",
+        "text": "=🗓️ *Aviso de Seguimiento de Puntualidad*\n\nEstimada familia, [Nombre] ha acumulado 3 llegadas tarde durante el periodo actual.\n\nLe recordamos la importancia de la puntualidad para el inicio efectivo de la jornada escolar. Por favor, aseguren la llegada al centro antes de las 9:00 AM."
+      },
+      "id": "evolution-api-notify-reiterated-late",
+      "name": "Notificar Infracción por Recargo",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Check Semanal de Impuntualidad": {
+      "main": [
+        [
+          {
+            "node": "Obtener Todas las Tardanzas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Todas las Tardanzas": {
+      "main": [
+        [
+          {
+            "node": "Contador de Incidencias (Regla 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contador de Incidencias (Regla 3)": {
+      "main": [
+        [
+          {
+            "node": "Notificar Infracción por Recargo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

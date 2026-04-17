@@ -1,0 +1,10 @@
+id_familia,tutor_1_nombre,tutor_1_telefono,tutor_1_email,idioma_preferente,consentimiento_gdpr,whatsapp_status
+FAM-001,Juan Pérez,34600000001,juan@email.com,Esp,Sí,Activo
+FAM-002,María García,34600000002,maria@email.com,Esp,Sí,Activo
+FAM-003,John Doe,34600000003,john@email.com,Eng,No,Inactivo
+
+id_alumno,id_familia,nombre,apellidos,curso,clase,observaciones_medicas
+ALU-001,FAM-001,Mateo,Pérez García,1° Primaria,A,Alergia al gluten
+ALU-002,FAM-001,Lucía,Pérez García,3° Infantil,B,Ninguna
+ALU-003,FAM-002,Sofía,García López,2° Primaria,C,Dieta sin lactosa
+ALU-004,FAM-003,James,Doe Smith,6° Primaria,A,Ninguna

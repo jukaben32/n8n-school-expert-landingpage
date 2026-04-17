@@ -1,0 +1,126 @@
+{
+  "name": "Modulo 4.2: Firma Digital Legal (Contratos de Matricula)",
+  "nodes": [
+    {
+      "parameters": {
+        "poll": true,
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "matriculas",
+        "options": {}
+      },
+      "id": "trigger-new-contract",
+      "name": "Nueva Matricula",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [100, 280]
+    },
+    {
+      "parameters": {
+        "resource": "signatureRequest",
+        "operation": "create",
+        "title": "Contrato de Matricula {{$json.alumno_nombre}}",
+        "subject": "Firma del Contrato Escolar",
+        "message": "Hola {{$json.tutor_nombre}}, por favor firme el contrato oficial de matricula.",
+        "signers": [
+          {
+            "name": "={{$json.tutor_nombre}}",
+            "email_address": "={{$json.tutor_email}}"
+          }
+        ],
+        "files": [
+          {
+            "mappingMode": "defineBelow",
+            "value": "={{$env.N8N_SCHOOL_CONTRACT_TEMPLATE_URL}}"
+          }
+        ],
+        "metadata": {
+          "values": [
+            {
+              "key": "alumno_id",
+              "value": "={{$json.id_alumno}}"
+            },
+            {
+              "key": "alumno_nombre",
+              "value": "={{$json.alumno_nombre}}"
+            },
+            {
+              "key": "drive_folder_id",
+              "value": "={{$json.drive_folder_id}}"
+            },
+            {
+              "key": "telefono",
+              "value": "={{$json.telefono_familiar}}"
+            }
+          ]
+        }
+      },
+      "id": "dropbox-sign-request",
+      "name": "Solicitar Firma",
+      "type": "n8n-nodes-base.dropboxSign",
+      "typeVersion": 1,
+      "position": [380, 280],
+      "credentials": {
+        "dropboxSignApi": {
+          "id": "ID_CREDENTIALS_SIGN",
+          "name": "Dropbox Sign account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dropbox-sign-webhook",
+        "options": {}
+      },
+      "id": "webhook-signed-callback",
+      "name": "Webhook: Contrato Firmado",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 560]
+    },
+    {
+      "parameters": {
+        "fileContent": "={{$json.data.signature_request.files_url}}",
+        "fileName": "Contrato_Matricula_{{$json.data.signature_request.metadata.alumno_id}}.pdf",
+        "parents": [
+          "={{$json.data.signature_request.metadata.drive_folder_id}}"
+        ],
+        "options": {}
+      },
+      "id": "drive-upload-signed",
+      "name": "Archivar en Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [380, 560]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendText",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.data.signature_request.metadata.telefono}}",
+        "text": "=Contrato formalizado correctamente para {{$json.data.signature_request.metadata.alumno_nombre}}. El documento ya esta archivado en su expediente digital."
+      },
+      "id": "notify-signed",
+      "name": "Notificar Firma a Familia",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [640, 560]
+    }
+  ],
+  "connections": {
+    "Nueva Matricula": {
+      "main": [[{ "node": "Solicitar Firma", "type": "main", "index": 0 }]]
+    },
+    "Webhook: Contrato Firmado": {
+      "main": [[{ "node": "Archivar en Drive", "type": "main", "index": 0 }]]
+    },
+    "Archivar en Drive": {
+      "main": [[{ "node": "Notificar Firma a Familia", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

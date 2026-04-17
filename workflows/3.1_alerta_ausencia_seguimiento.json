@@ -1,0 +1,129 @@
+{
+  "name": "Modulo 3.1: Alerta de Ausencia y Autogestion de Justificacion",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "trigger-915am",
+      "name": "Barrido Diario 9:15",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [100, 200]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "asistencias",
+        "filters": {
+          "estado": "A"
+        }
+      },
+      "id": "get-absents",
+      "name": "Obtener Ausentes Hoy",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [320, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendButton",
+        "instanceName": "={{$env.EVOLUTION_INSTANCE_NAME || 'CENTRO_ESCOLAR'}}",
+        "number": "={{$json.telefono_familiar}}",
+        "text": "=Aviso de seguridad escolar.\n\n{{$json.alumno_nombre || $json.nombre}} no ha sido registrado en clase hoy.\n\nPor favor, indique el motivo de la ausencia respondiendo a este mensaje o pulse el boton.",
+        "buttons": [
+          {
+            "displayText": "Justificar Ausencia",
+            "buttonType": "quickReply",
+            "value": "justify_absence_{{$json.id_alumno}}"
+          }
+        ]
+      },
+      "id": "absence-alert",
+      "name": "Alerta de Seguridad",
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [560, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "recepcion-justificacion",
+        "options": {}
+      },
+      "id": "webhook-justification",
+      "name": "Webhook: Recibir Justificacion",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst reference = body.reference || null;\nconst motivo = body.data?.message?.conversation || body.data?.message?.imageMessage?.caption || 'Justificacion recibida por WhatsApp';\nreturn [{ json: { id_alumno: reference, motivo } }];"
+      },
+      "id": "parse-justification",
+      "name": "Parsear Justificacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 520]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "spreadsheetId": "={{$env.N8N_SCHOOL_SPREADSHEET_ID}}",
+        "sheetName": "asistencias",
+        "columnToMatch": "id_alumno",
+        "valueToMatch": "={{$json.id_alumno}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": [
+            {
+              "column": "estado",
+              "value": "J"
+            },
+            {
+              "column": "motivo",
+              "value": "={{$json.motivo}}"
+            },
+            {
+              "column": "fecha_justificacion",
+              "value": "={{$now}}"
+            }
+          ]
+        }
+      },
+      "id": "update-justified-sheets",
+      "name": "Actualizar Asistencia Justificada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [580, 520]
+    }
+  ],
+  "connections": {
+    "Barrido Diario 9:15": {
+      "main": [[{ "node": "Obtener Ausentes Hoy", "type": "main", "index": 0 }]]
+    },
+    "Obtener Ausentes Hoy": {
+      "main": [[{ "node": "Alerta de Seguridad", "type": "main", "index": 0 }]]
+    },
+    "Webhook: Recibir Justificacion": {
+      "main": [[{ "node": "Parsear Justificacion", "type": "main", "index": 0 }]]
+    },
+    "Parsear Justificacion": {
+      "main": [[{ "node": "Actualizar Asistencia Justificada", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

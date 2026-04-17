@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gran Manantial de Sabiduría</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #1a5f7a; --secondary: #159895; --accent: #eb455f; --light: #f4f7f6; --dark: #333; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--light); margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .logo-text h1 { margin: 0; color: var(--primary); font-size: 1.5em; }
+        .logo-text p { margin: 0; font-size: 0.8em; color: #666; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); }
+        .stat-card h3 { margin: 0; font-size: 0.9em; color: #777; text-transform: uppercase; }
+        .stat-card .value { font-size: 1.8em; font-weight: bold; margin: 10px 0; color: var(--primary); }
+        .stat-card .trend { font-size: 0.85em; color: green; }
+        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); min-height: 300px; }
+        .recent-activity { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .activity-item { padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; font-weight: bold; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo-text">
+                <h1>Panel de Control Dashboard 2.0</h1>
+                <p>Gran Manantial de Sabiduría - Inteligencia de Gestión</p>
+            </div>
+            <div class="date-now">1 de Abril, 2026</div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Recaudación Mensual</h3>
+                <div class="value">RD$ 1.250.000</div>
+                <div class="trend">▲ 12% vs mes anterior</div>
+            </div>
+            <div class="stat-card">
+                <h3>Asistencia Hoy</h3>
+                <div class="value">94.8%</div>
+                <div class="trend" style="color:red">▼ 1.2% (Pico de gripe)</div>
+            </div>
+            <div class="stat-card">
+                <h3>Circular: "Paseo al Zoo"</h3>
+                <div class="value">82% Leído</div>
+                <div class="trend">64 de 78 padres confirmados</div>
+            </div>
+            <div class="stat-card">
+                <h3>Matrícula Digital</h3>
+                <div class="value">42 / 50</div>
+                <div class="trend">Contratos firmados legalmente</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="chart-container">
+                <canvas id="financeChart"></canvas>
+            </div>
+            <div class="recent-activity">
+                <h3>Alertas del Bot Toki</h3>
+                <div class="activity-item">
+                    <span class="badge badge-success">Pago</span> Familia Pérez: Transferencia validada RD$25,000.
+                </div>
+                <div class="activity-item">
+                    <span class="badge badge-warning">Seguridad</span> Luis M. (3-Primaria): Alerta de ausencia enviada.
+                </div>
+                <div class="activity-item">
+                    <span class="badge badge-success">Secretaría</span> Certificado de Escolaridad generado (Juan D.).
+                </div>
+                <div class="activity-item">
+                    <span class="badge badge-warning">Comedor</span> Cambio de menú: Alergia detectada (Mateo G.).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('financeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Flujo de Caja Mensual (RD$)',
+                    data: [800000, 950000, 1100000, 1250000, 1400000, 1350000],
+                    borderColor: '#1a5f7a',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(26, 95, 122, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    </script>
+</body>
+</html>
