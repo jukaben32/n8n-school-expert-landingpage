@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* ===================================================
+   SCHOOLOS — Paleta de colores corporativa
+   Extraída de la landing page original n8n-school-expert
+   primary: #1a5f7a | accent: #4f9cf9
+   =================================================== */
+
+:root {
+  /* Colores de superficie */
+  --background: #f4f7f6;
+  --foreground: #1e293b;
+
+  /* Paleta primaria */
+  --primary:        #1a5f7a;
+  --primary-light:  #159895;
+  --primary-dark:   #123f52;
+
+  /* Paleta de acento */
+  --accent:         #4f9cf9;
+  --accent-light:   #83b8ff;
+  --accent-dark:    #296fc7;
+
+  /* Sombras */
+  --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 24px 60px rgba(26, 95, 122, 0.18);
+}
+
+@theme inline {
+  --color-background:    var(--background);
+  --color-foreground:    var(--foreground);
+  --color-primary:       var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark:  var(--primary-dark);
+  --color-accent:        var(--accent);
+  --color-accent-light:  var(--accent-light);
+  --color-accent-dark:   var(--accent-dark);
+  --font-sans:           var(--font-inter);
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+  }
+}
+
+/* Estilos base */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 999px; }

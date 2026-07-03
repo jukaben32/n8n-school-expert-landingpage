@@ -1,0 +1,136 @@
+'use client'
+
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+// Íconos SVG compactos
+const icons = {
+  home: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
+    </svg>
+  ),
+  students: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+    </svg>
+  ),
+  attendance: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+    </svg>
+  ),
+  messages: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+    </svg>
+  ),
+  payments: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+    </svg>
+  ),
+  logout: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+    </svg>
+  ),
+}
+
+// Definición de rutas según rol
+const navByRole: Record<string, { href: string; label: string; icon: keyof typeof icons }[]> = {
+  guardian: [
+    { href: '/dashboard/portal-familiar', label: 'Inicio', icon: 'home' },
+    { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
+    { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
+  ],
+  teacher: [
+    { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
+    { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+  ],
+  default: [
+    { href: '/dashboard/secretaria',      label: 'Panel', icon: 'home' },
+    { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
+    { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
+    { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
+  ],
+}
+
+interface SidebarProps {
+  role: string
+  schoolName: string
+}
+
+/**
+ * Sidebar — Navegación lateral del dashboard.
+ * Adapta los ítems de menú según el rol del usuario.
+ */
+export default function Sidebar({ role, schoolName }: SidebarProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const navItems = navByRole[role] ?? navByRole.default
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  return (
+    <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
+
+      {/* Logo del colegio */}
+      <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422A12.083 12.083 0 0121 13c0 4.418-3.582 8-8 8S5 17.418 5 13c0-.935.164-1.832.463-2.668L12 14z" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light">SchoolOS</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{schoolName}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Ítems de navegación */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menú principal">
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.href)
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                isActive
+                  ? 'bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent-light'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              {icons[item.icon]}
+              {item.label}
+            </a>
+          )
+        })}
+      </nav>
+
+      {/* Botón cerrar sesión */}
+      <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800">
+        <button
+          id="sidebar-logout-btn"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition"
+        >
+          {icons.logout}
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+  )
+}
