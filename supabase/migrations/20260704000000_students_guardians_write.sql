@@ -12,6 +12,7 @@
 -- =========================================================================
 
 -- ── students: alta/edición para staff del mismo colegio ─────────────────
+drop policy if exists "students_staff_write" on students;
 create policy "students_staff_write" on students
 for all using (
     school_id in (
@@ -22,6 +23,7 @@ for all using (
 );
 
 -- ── guardians: lectura y gestión para staff del colegio ──────────────────
+drop policy if exists "guardians_staff_all" on guardians;
 create policy "guardians_staff_all" on guardians
 for all using (
     school_id in (
@@ -32,6 +34,7 @@ for all using (
 );
 
 -- ── guardians: cada tutor puede leer y actualizar su propio registro ─────
+drop policy if exists "guardians_own_read" on guardians;
 create policy "guardians_own_read" on guardians
 for select using (
     id in (
@@ -40,6 +43,7 @@ for select using (
     )
 );
 
+drop policy if exists "guardians_own_update" on guardians;
 create policy "guardians_own_update" on guardians
 for update using (
     id in (
