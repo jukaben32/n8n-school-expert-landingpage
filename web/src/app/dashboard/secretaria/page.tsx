@@ -28,17 +28,33 @@ export default async function SecretariaPage() {
     redirect('/dashboard/portal-familiar')
   }
 
+  // Rango del mes en curso, para el conteo de comunicados publicados
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
   // Métricas básicas
-  const [{ count: totalStudents }, { count: totalFamilies }] = await Promise.all([
+  const [
+    { count: totalStudents },
+    { count: totalFamilies },
+    { count: messagesThisMonth },
+    { count: pendingInvoices },
+  ] = await Promise.all([
     supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', profile?.school_id ?? ''),
     supabase.from('families').select('*', { count: 'exact', head: true }).eq('school_id', profile?.school_id ?? ''),
+    supabase.from('messages').select('*', { count: 'exact', head: true })
+      .eq('school_id', profile?.school_id ?? '')
+      .gte('published_at', startOfMonth)
+      .not('published_at', 'is', null),
+    supabase.from('invoices').select('*', { count: 'exact', head: true })
+      .eq('school_id', profile?.school_id ?? '')
+      .in('status', ['pendiente', 'vencido']),
   ])
 
   const metrics = [
     { label: 'Estudiantes inscritos', value: totalStudents ?? 0, icon: '🎒', color: 'text-primary dark:text-accent-light' },
     { label: 'Familias registradas',  value: totalFamilies ?? 0, icon: '👨‍👩‍👧', color: 'text-primary dark:text-accent-light' },
-    { label: 'Comunicados este mes',  value: '—', icon: '📬', color: 'text-slate-500' },
-    { label: 'Pagos pendientes',      value: '—', icon: '💳', color: 'text-slate-500' },
+    { label: 'Comunicados este mes',  value: messagesThisMonth ?? 0, icon: '📬', color: 'text-primary dark:text-accent-light' },
+    { label: 'Pagos pendientes',      value: pendingInvoices ?? 0, icon: '💳', color: 'text-primary dark:text-accent-light' },
   ]
 
   return (

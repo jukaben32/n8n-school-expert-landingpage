@@ -11,7 +11,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  * 3. Redirigir al dashboard si el usuario ya está autenticado
  *    e intenta acceder a /login o /registro.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
