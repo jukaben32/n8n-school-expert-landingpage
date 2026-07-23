@@ -21,9 +21,9 @@
   --accent-light:   #83b8ff;
   --accent-dark:    #296fc7;
 
-  /* Sombras */
-  --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 24px 60px rgba(26, 95, 122, 0.18);
+  /* Sombras (valores base; ver @theme inline para exponerlas como utilidades) */
+  --shadow-soft-value: 0 20px 40px rgba(15, 23, 42, 0.08);
+  --shadow-glow-value: 0 24px 60px rgba(26, 95, 122, 0.18);
 }
 
 @theme inline {
@@ -36,6 +36,10 @@
   --color-accent-light:  var(--accent-light);
   --color-accent-dark:   var(--accent-dark);
   --font-sans:           var(--font-inter);
+
+  /* Namespace --shadow-* registra las utilidades shadow-soft / shadow-glow */
+  --shadow-soft: var(--shadow-soft-value);
+  --shadow-glow: var(--shadow-glow-value);
 }
 
 /* Modo oscuro */
