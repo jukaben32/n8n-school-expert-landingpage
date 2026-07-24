@@ -31,6 +31,13 @@ export default async function DashboardLayout({
   const role = profile?.role ?? 'guardian'
   const { schoolId, isViewingOtherSchool, schoolName: overrideSchoolName } = await getActiveSchool(role, profile?.school_id ?? '')
 
+  // Leads nuevos sin atender, solo relevante para el súper administrador
+  let newLeadsCount = 0
+  if (role === 'super_admin') {
+    const { count } = await supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'nuevo')
+    newLeadsCount = count ?? 0
+  }
+
   // Obtener el nombre del colegio en una consulta separada si tenemos school_id
   let schoolName = overrideSchoolName ?? 'Mi Colegio'
   if (!overrideSchoolName && schoolId) {
@@ -45,7 +52,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar de navegación lateral */}
-      <Sidebar role={isViewingOtherSchool ? 'director' : role} schoolName={schoolName} />
+      <Sidebar role={isViewingOtherSchool ? 'director' : role} schoolName={schoolName} newLeadsCount={newLeadsCount} />
 
       {/* Área principal */}
       <div className="flex flex-col flex-1 overflow-hidden">

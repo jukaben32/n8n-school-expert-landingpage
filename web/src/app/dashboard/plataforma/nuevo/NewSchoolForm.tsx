@@ -16,10 +16,15 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, '')
 }
 
-export default function NewSchoolForm() {
+interface NewSchoolFormProps {
+  initialName?: string
+  leadId?: string
+}
+
+export default function NewSchoolForm({ initialName, leadId }: NewSchoolFormProps) {
   const router = useRouter()
-  const [name, setName] = useState('')
-  const [subdomain, setSubdomain] = useState('')
+  const [name, setName] = useState(initialName ?? '')
+  const [subdomain, setSubdomain] = useState(initialName ? slugify(initialName) : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,15 +37,22 @@ export default function NewSchoolForm() {
     }
     setSaving(true)
     const supabase = createClient()
-    const { error: dbError } = await supabase.from('schools').insert({
-      name: name.trim(),
-      subdomain: subdomain.trim() || slugify(name),
-    })
-    if (dbError) {
-      setError(dbError.message.includes('duplicate') ? 'Ya existe un colegio con ese subdominio.' : 'No se pudo crear el colegio.')
+    const { data: school, error: dbError } = await supabase
+      .from('schools')
+      .insert({ name: name.trim(), subdomain: subdomain.trim() || slugify(name) })
+      .select('id')
+      .single()
+
+    if (dbError || !school) {
+      setError(dbError?.message.includes('duplicate') ? 'Ya existe un colegio con ese subdominio.' : 'No se pudo crear el colegio.')
       setSaving(false)
       return
     }
+
+    if (leadId) {
+      await supabase.from('leads').update({ status: 'convertido', converted_school_id: school.id }).eq('id', leadId)
+    }
+
     router.push('/dashboard/plataforma')
     router.refresh()
   }

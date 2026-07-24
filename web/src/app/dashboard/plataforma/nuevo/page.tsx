@@ -7,7 +7,12 @@ export const metadata: Metadata = {
   title: 'Nuevo Colegio — SchoolOS',
 }
 
-export default async function NuevoColegioPage() {
+export default async function NuevoColegioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ school_name?: string; lead_id?: string }>
+}) {
+  const { school_name, lead_id } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -29,10 +34,10 @@ export default async function NuevoColegioPage() {
           Nuevo Colegio
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Registra un nuevo colegio en la plataforma.
+          {lead_id ? 'Confirmando los datos del lead antes de crear el colegio.' : 'Registra un nuevo colegio en la plataforma.'}
         </p>
       </div>
-      <NewSchoolForm />
+      <NewSchoolForm initialName={school_name} leadId={lead_id} />
     </div>
   )
 }

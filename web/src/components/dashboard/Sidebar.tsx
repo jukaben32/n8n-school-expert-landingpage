@@ -114,13 +114,14 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
 interface SidebarProps {
   role: string
   schoolName: string
+  newLeadsCount?: number
 }
 
 /**
  * Sidebar — Navegación lateral del dashboard.
  * Adapta los ítems de menú según el rol del usuario.
  */
-export default function Sidebar({ role, schoolName }: SidebarProps) {
+export default function Sidebar({ role, schoolName, newLeadsCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const navItems = navByRole[role] ?? navByRole.default
@@ -167,7 +168,12 @@ export default function Sidebar({ role, schoolName }: SidebarProps) {
               }`}
             >
               {icons[item.icon]}
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === '/dashboard/plataforma/leads' && newLeadsCount > 0 && (
+                <span className="rounded-full bg-coral text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {newLeadsCount}
+                </span>
+              )}
             </a>
           )
         })}
