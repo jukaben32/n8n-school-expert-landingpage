@@ -21,6 +21,7 @@ export type Module =
   | 'secretaria'
   | 'estudiantes' | 'estudiantes_nuevo'
   | 'familias'
+  | 'personal'
   | 'tesoreria' | 'pagos'
   | 'comunicados' | 'comunicados_nuevo'
   | 'asistencia' | 'asistencia_registrar'
@@ -28,7 +29,7 @@ export type Module =
   | 'academia_gestionar' // crear lecciones + ver progreso
 
 const FULL_ACCESS: Module[] = [
-  'secretaria', 'estudiantes', 'estudiantes_nuevo', 'familias',
+  'secretaria', 'estudiantes', 'estudiantes_nuevo', 'familias', 'personal',
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar',
 ]
