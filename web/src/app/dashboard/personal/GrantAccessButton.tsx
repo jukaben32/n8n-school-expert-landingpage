@@ -1,0 +1,74 @@
+'use client'
+
+import { useState } from 'react'
+import { inviteStaffAccess } from './actions'
+
+const roleOptions = [
+  { value: 'director', label: 'Director' },
+  { value: 'school_admin', label: 'Administrador de colegio' },
+  { value: 'teacher', label: 'Docente' },
+  { value: 'finance', label: 'Finanzas' },
+  { value: 'reception', label: 'Recepción' },
+]
+
+export default function GrantAccessButton({ staffId, suggestedRole }: { staffId: string; suggestedRole: string }) {
+  const [open, setOpen] = useState(false)
+  const [role, setRole] = useState(roleOptions.some((r) => r.value === suggestedRole) ? suggestedRole : 'teacher')
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [message, setMessage] = useState<string | null>(null)
+
+  async function handleInvite() {
+    setStatus('sending')
+    const result = await inviteStaffAccess(staffId, role)
+    setStatus(result.ok ? 'sent' : 'error')
+    setMessage(result.message)
+  }
+
+  if (status === 'sent') {
+    return <p className="text-xs font-semibold text-green-600 dark:text-green-400">✓ {message}</p>
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+      >
+        Dar acceso al sistema
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        disabled={status === 'sending'}
+        className="text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        {roleOptions.map((r) => (
+          <option key={r.value} value={r.value}>{r.label}</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={handleInvite}
+        disabled={status === 'sending'}
+        className="text-xs font-semibold rounded-lg bg-primary text-white px-3 py-1.5 disabled:opacity-50"
+      >
+        {status === 'sending' ? 'Enviando...' : 'Enviar invitación'}
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        disabled={status === 'sending'}
+        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+      >
+        Cancelar
+      </button>
+      {status === 'error' && <p className="w-full text-xs text-red-600 dark:text-red-400">{message}</p>}
+    </div>
+  )
+}

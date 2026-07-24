@@ -20,7 +20,7 @@ export default function RecuperarContrasenaPage() {
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/login` : undefined,
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/actualizar-contrasena` : undefined,
       });
       if (error) throw error;
       setStatus("done");

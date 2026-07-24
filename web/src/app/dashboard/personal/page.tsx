@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
+import GrantAccessButton from './GrantAccessButton'
 
 export const metadata: Metadata = {
   title: 'Personal — SchoolOS',
@@ -63,6 +64,14 @@ export default async function PersonalPage() {
     .order('last_name', { ascending: true })
 
   const staff = (staffRaw ?? []) as StaffRow[]
+
+  const { data: linkedProfiles } = await supabase
+    .from('users_profiles')
+    .select('staff_id')
+    .eq('school_id', schoolId)
+    .not('staff_id', 'is', null)
+  const staffWithAccess = new Set((linkedProfiles ?? []).map((p) => p.staff_id as string))
+
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
 
   return (
@@ -97,6 +106,14 @@ export default async function PersonalPage() {
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.email} {s.phone ? `· ${s.phone}` : ''}</p>
                 </div>
                 <p className="text-xs text-slate-400 dark:text-slate-500 shrink-0">Desde {formatDate(s.hire_date)}</p>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                {staffWithAccess.has(s.id) ? (
+                  <p className="text-xs font-semibold text-green-600 dark:text-green-400">✓ Tiene acceso al sistema</p>
+                ) : (
+                  <GrantAccessButton staffId={s.id} suggestedRole={s.role} />
+                )}
               </div>
 
               {(s.degree_title || s.alma_mater || s.specialty) && (
