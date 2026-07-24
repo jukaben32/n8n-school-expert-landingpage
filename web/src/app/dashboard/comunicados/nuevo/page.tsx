@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import NewMessageForm from './NewMessageForm'
@@ -21,6 +22,8 @@ export default async function NuevoComunicadoPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'comunicados_nuevo')) {
     redirect('/dashboard/comunicados')
   }
@@ -36,7 +39,7 @@ export default async function NuevoComunicadoPage() {
         </p>
       </div>
 
-      <NewMessageForm schoolId={profile.school_id} authorProfileId={profile.id} />
+      <NewMessageForm schoolId={schoolId} authorProfileId={profile.id} />
     </div>
   )
 }

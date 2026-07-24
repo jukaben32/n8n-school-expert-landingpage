@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
@@ -31,6 +32,8 @@ export default async function FamiliasPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'familias')) {
     redirect('/dashboard/portal-familiar')
   }
@@ -42,7 +45,7 @@ export default async function FamiliasPage() {
       students(id),
       guardians(id, first_name, last_name, phone, is_primary)
     `)
-    .eq('school_id', profile!.school_id)
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('name', { ascending: true })
 

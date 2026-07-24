@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
@@ -38,6 +39,8 @@ export default async function EstudiantesPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'estudiantes')) {
     redirect('/dashboard/portal-familiar')
   }
@@ -45,7 +48,7 @@ export default async function EstudiantesPage() {
   const { data: studentsRaw } = await supabase
     .from('students')
     .select('id, first_name, last_name, birth_date, enrollment_status, families(name)')
-    .eq('school_id', profile!.school_id)
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('last_name', { ascending: true })
 

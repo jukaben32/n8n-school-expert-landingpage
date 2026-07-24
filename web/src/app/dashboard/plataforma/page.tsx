@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { enterSchool } from './actions'
 
 export const metadata: Metadata = {
   title: 'Plataforma — SchoolOS',
@@ -82,15 +83,23 @@ export default async function PlataformaPage() {
                   <p className="font-semibold text-slate-900 dark:text-white truncate">{school.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">/{school.subdomain}</p>
                 </div>
-                <div className="flex gap-4 shrink-0 text-center">
-                  <div>
+                <div className="flex gap-4 shrink-0 items-center">
+                  <div className="text-center">
                     <p className="text-lg font-black text-primary dark:text-accent-light">{c?.students ?? 0}</p>
                     <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Estudiantes</p>
                   </div>
-                  <div>
+                  <div className="text-center">
                     <p className="text-lg font-black text-primary dark:text-accent-light">{c?.staff ?? 0}</p>
                     <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Staff</p>
                   </div>
+                  <form action={enterSchool.bind(null, school.id)}>
+                    <button
+                      type="submit"
+                      className="rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition whitespace-nowrap"
+                    >
+                      Entrar como director
+                    </button>
+                  </form>
                 </div>
               </div>
             )

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 
@@ -24,6 +25,8 @@ export default async function SecretariaPage() {
     .eq('auth_id', user.id)
     .single()
 
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+
   if (profile && !canAccess(profile.role, 'secretaria')) {
     redirect('/dashboard')
   }
@@ -39,14 +42,14 @@ export default async function SecretariaPage() {
     { count: messagesThisMonth },
     { count: pendingInvoices },
   ] = await Promise.all([
-    supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', profile?.school_id ?? ''),
-    supabase.from('families').select('*', { count: 'exact', head: true }).eq('school_id', profile?.school_id ?? ''),
+    supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
+    supabase.from('families').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('messages').select('*', { count: 'exact', head: true })
-      .eq('school_id', profile?.school_id ?? '')
+      .eq('school_id', schoolId)
       .gte('published_at', startOfMonth)
       .not('published_at', 'is', null),
     supabase.from('invoices').select('*', { count: 'exact', head: true })
-      .eq('school_id', profile?.school_id ?? '')
+      .eq('school_id', schoolId)
       .in('status', ['pendiente', 'vencido']),
   ])
 

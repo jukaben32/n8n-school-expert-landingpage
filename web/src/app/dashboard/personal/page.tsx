@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 
@@ -48,6 +49,8 @@ export default async function PersonalPage() {
     .eq('auth_id', user.id)
     .single()
 
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+
   if (!profile || !canAccess(profile.role, 'personal')) {
     redirect('/dashboard')
   }
@@ -55,7 +58,7 @@ export default async function PersonalPage() {
   const { data: staffRaw } = await supabase
     .from('staff')
     .select('id, first_name, last_name, email, phone, role, hire_date, education_level, degree_title, alma_mater, specialty')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('last_name', { ascending: true })
 

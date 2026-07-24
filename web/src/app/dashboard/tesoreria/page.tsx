@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
@@ -23,6 +24,8 @@ export default async function TesoreriaPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'tesoreria')) {
     redirect('/dashboard/pagos')
   }
@@ -34,7 +37,7 @@ export default async function TesoreriaPage() {
       id, description, total_amount, due_date, status, ncf, paid_at,
       families(id, guardians(first_name, last_name))
     `)
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(10)
@@ -62,7 +65,7 @@ export default async function TesoreriaPage() {
   const { data: monthPaymentsRaw } = await supabase
     .from('payments')
     .select('amount_paid')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .gte('paid_at', startOfMonth.toISOString())
 
   const monthPayments = (monthPaymentsRaw ?? []) as { amount_paid: number }[]

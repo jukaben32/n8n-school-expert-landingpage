@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import NewStaffForm from './NewStaffForm'
@@ -19,6 +20,8 @@ export default async function NuevoPersonalPage() {
     .eq('auth_id', user.id)
     .single()
 
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+
   if (!profile || !canAccess(profile.role, 'personal')) {
     redirect('/dashboard')
   }
@@ -33,7 +36,7 @@ export default async function NuevoPersonalPage() {
           Datos de contacto y ficha profesional.
         </p>
       </div>
-      <NewStaffForm schoolId={profile.school_id} />
+      <NewStaffForm schoolId={schoolId} />
     </div>
   )
 }

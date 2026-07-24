@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
@@ -34,12 +35,13 @@ export default async function ReportesPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'reportes')) {
     redirect('/dashboard/secretaria')
   }
 
-  const schoolId = profile.school_id
-  const thirtyDaysAgo = new Date()
+    const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
 

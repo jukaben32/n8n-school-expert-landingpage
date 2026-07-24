@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import AttendanceForm from './AttendanceForm'
@@ -23,6 +24,8 @@ export default async function RegistrarAsistenciaPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'asistencia_registrar')) {
     redirect('/dashboard/portal-familiar')
   }
@@ -31,7 +34,7 @@ export default async function RegistrarAsistenciaPage() {
   const { data: students } = await supabase
     .from('students')
     .select('id, first_name, last_name')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('last_name', { ascending: true })
 
@@ -52,7 +55,7 @@ export default async function RegistrarAsistenciaPage() {
         students={students ?? []}
         defaultDate={today}
         recorderProfileId={profile.id}
-        schoolId={profile.school_id}
+        schoolId={schoolId}
       />
     </div>
   )

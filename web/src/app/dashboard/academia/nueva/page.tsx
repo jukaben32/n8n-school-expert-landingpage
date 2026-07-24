@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import NewLessonForm from './NewLessonForm'
@@ -18,13 +19,15 @@ export default async function NuevaLeccionPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'academia_gestionar')) {
     redirect('/dashboard/academia')
   }
 
   const [{ data: subjects }, { data: gradeLevels }] = await Promise.all([
-    supabase.from('subjects').select('id, name').eq('school_id', profile.school_id).order('name'),
-    supabase.from('grade_levels').select('id, name').eq('school_id', profile.school_id).order('sort_order'),
+    supabase.from('subjects').select('id, name').eq('school_id', schoolId).order('name'),
+    supabase.from('grade_levels').select('id, name').eq('school_id', schoolId).order('sort_order'),
   ])
 
   return (
@@ -39,7 +42,7 @@ export default async function NuevaLeccionPage() {
       </div>
 
       <NewLessonForm
-        schoolId={profile.school_id}
+        schoolId={schoolId}
         authorProfileId={profile.id}
         subjects={subjects ?? []}
         gradeLevels={gradeLevels ?? []}

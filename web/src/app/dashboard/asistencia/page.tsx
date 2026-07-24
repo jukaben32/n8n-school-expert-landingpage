@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
@@ -30,6 +31,8 @@ export default async function AsistenciaPage() {
     .eq('auth_id', user.id)
     .single()
 
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+
   const isStaff = ['director', 'school_admin', 'teacher', 'reception', 'super_admin']
     .includes(profile?.role ?? '')
 
@@ -42,7 +45,7 @@ export default async function AsistenciaPage() {
     const { data } = await supabase
       .from('attendance')
       .select('id, date, status, notified_at, students(first_name, last_name)')
-      .eq('school_id', profile?.school_id ?? '')
+      .eq('school_id', schoolId)
       .eq('date', today)
       .order('created_at', { ascending: false })
 

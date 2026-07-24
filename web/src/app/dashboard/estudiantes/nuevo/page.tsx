@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import NewStudentForm from './NewStudentForm'
@@ -23,6 +24,8 @@ export default async function NuevoEstudiantePage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'estudiantes_nuevo')) {
     redirect('/dashboard/estudiantes')
   }
@@ -30,7 +33,7 @@ export default async function NuevoEstudiantePage() {
   const { data: families } = await supabase
     .from('families')
     .select('id, name')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('name', { ascending: true })
 
@@ -46,7 +49,7 @@ export default async function NuevoEstudiantePage() {
       </div>
 
       <NewStudentForm
-        schoolId={profile.school_id}
+        schoolId={schoolId}
         families={families ?? []}
       />
     </div>

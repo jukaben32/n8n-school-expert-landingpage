@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import NewPaymentForm from './NewPaymentForm'
@@ -19,6 +20,8 @@ export default async function CobrarPage() {
     .eq('auth_id', user.id)
     .single()
 
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+
   if (!profile || !canAccess(profile.role, 'tesoreria')) {
     redirect('/dashboard')
   }
@@ -26,7 +29,7 @@ export default async function CobrarPage() {
   const { data: invoicesRaw } = await supabase
     .from('invoices')
     .select('id, description, total_amount, due_date, status, families(name)')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .in('status', ['pendiente', 'vencido'])
     .is('deleted_at', null)
     .order('due_date', { ascending: true })
@@ -47,7 +50,7 @@ export default async function CobrarPage() {
           Marca una factura como pagada al recibir el cobro.
         </p>
       </div>
-      <NewPaymentForm schoolId={profile.school_id} receivedBy={profile.id} invoices={invoices} />
+      <NewPaymentForm schoolId={schoolId} receivedBy={profile.id} invoices={invoices} />
     </div>
   )
 }

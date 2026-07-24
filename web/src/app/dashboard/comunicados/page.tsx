@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import MessageCard from '@/components/comunicados/MessageCard'
 
@@ -26,6 +27,8 @@ export default async function ComunicadosPage() {
     .eq('auth_id', user.id)
     .single()
 
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+
   const isStaff = ['director', 'school_admin', 'teacher', 'reception', 'finance', 'super_admin']
     .includes(profile?.role ?? '')
 
@@ -37,7 +40,7 @@ export default async function ComunicadosPage() {
       author:users_profiles!author_id(id),
       reads:message_reads(user_id)
     `)
-    .eq('school_id', profile?.school_id ?? '')
+    .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('published_at', { ascending: false })
 

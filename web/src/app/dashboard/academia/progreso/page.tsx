@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
@@ -32,6 +33,8 @@ export default async function ProgresoAcademiaPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'academia_gestionar')) {
     redirect('/dashboard/academia')
   }
@@ -39,7 +42,7 @@ export default async function ProgresoAcademiaPage() {
   const { data: attemptsRaw } = await supabase
     .from('quiz_attempts')
     .select('id, score, max_score, completed_at, lessons(title, subjects(name)), students(first_name, last_name)')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .not('completed_at', 'is', null)
     .order('completed_at', { ascending: false })
     .limit(100)
@@ -47,7 +50,7 @@ export default async function ProgresoAcademiaPage() {
   const { count: lessonsCount } = await supabase
     .from('lessons')
     .select('id', { count: 'exact', head: true })
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
 
   const attempts = (attemptsRaw ?? []) as unknown as AttemptRow[]
   const lowScoreThreshold = 0.6
