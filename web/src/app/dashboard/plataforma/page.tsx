@@ -31,7 +31,7 @@ export default async function PlataformaPage() {
     redirect('/dashboard/secretaria')
   }
 
-  const { data: schoolsRaw } = await supabase
+  const { data: schoolsRaw, error: schoolsError } = await supabase
     .from('schools')
     .select('id, name, subdomain, created_at')
     .order('created_at', { ascending: false })
@@ -69,6 +69,13 @@ export default async function PlataformaPage() {
           + Nuevo colegio
         </Link>
       </div>
+
+      {schoolsError && (
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <p className="font-semibold">No se pudo cargar la lista de colegios.</p>
+          <p className="mt-1 font-mono text-xs">{schoolsError.message}</p>
+        </div>
+      )}
 
       {schools.length > 0 ? (
         <div className="grid gap-3">
