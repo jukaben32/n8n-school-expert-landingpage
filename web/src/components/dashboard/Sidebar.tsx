@@ -81,6 +81,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
   ],
   super_admin: [
     { href: '/dashboard/plataforma',      label: 'Plataforma', icon: 'plataforma' },
+    { href: '/dashboard/plataforma/leads', label: 'Leads', icon: 'messages' },
     { href: '/dashboard/secretaria',      label: 'Mi colegio', icon: 'home' },
     { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
     { href: '/dashboard/reportes',        label: 'Reportes', icon: 'reports' },

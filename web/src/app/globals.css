@@ -21,6 +21,17 @@
   --accent-light:   #83b8ff;
   --accent-dark:    #296fc7;
 
+  /* Landing pública — paleta ampliada
+     ink/paper crean el ritmo oscuro↔cálido de la landing (sistema↔personas);
+     coral y gold son acentos cálidos nuevos, deliberadamente distintos del
+     terracota-sobre-crema genérico: aquí conviven con fondos oscuros y
+     retoman el rosa de la mochila 🎒 que ya usa Estudiantes en el dashboard. */
+  --ink:            #081720;
+  --ink-raised:     #0f2530;
+  --paper:          #f6f2e9;
+  --coral:          #ff6b5b;
+  --gold:           #f0b429;
+
   /* Sombras (valores base; ver @theme inline para exponerlas como utilidades) */
   --shadow-soft-value: 0 20px 40px rgba(15, 23, 42, 0.08);
   --shadow-glow-value: 0 24px 60px rgba(26, 95, 122, 0.18);
@@ -35,7 +46,14 @@
   --color-accent:        var(--accent);
   --color-accent-light:  var(--accent-light);
   --color-accent-dark:   var(--accent-dark);
+  --color-ink:           var(--ink);
+  --color-ink-raised:    var(--ink-raised);
+  --color-paper:         var(--paper);
+  --color-coral:         var(--coral);
+  --color-gold:          var(--gold);
   --font-sans:           var(--font-inter);
+  --font-display:        var(--font-display);
+  --font-mono:           var(--font-mono);
 
   /* Namespace --shadow-* registra las utilidades shadow-soft / shadow-glow */
   --shadow-soft: var(--shadow-soft-value);
@@ -67,3 +85,18 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 999px; }
+
+/* Cascada de roles (landing) — un punto viaja por la línea que conecta
+   Dirección → Secretaría → Familia, para visualizar cómo un mismo evento
+   cambia de forma según quién lo ve. */
+@keyframes travel {
+  0%   { left: 0%;   opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+.animate-travel { animation: travel 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-travel { animation: none; left: 50%; opacity: 1; }
+}
