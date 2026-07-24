@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
@@ -47,8 +48,7 @@ export default async function AcademiaPage() {
   if (!profile) redirect('/login')
 
   // Staff/profesor: los mandamos a las herramientas de gestión, no a la vista de alumno
-  const staffRoles = ['director', 'school_admin', 'teacher', 'super_admin']
-  if (staffRoles.includes(profile.role)) {
+  if (canAccess(profile?.role, 'academia_gestionar')) {
     redirect('/dashboard/academia/progreso')
   }
 

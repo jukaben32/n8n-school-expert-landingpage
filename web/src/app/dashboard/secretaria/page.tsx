@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { canAccess } from '@/lib/permissions'
 
 export const metadata: Metadata = {
   title: 'Secretaría — SchoolOS',
@@ -23,9 +24,8 @@ export default async function SecretariaPage() {
     .eq('auth_id', user.id)
     .single()
 
-  const allowedRoles = ['director', 'school_admin', 'finance', 'reception', 'super_admin']
-  if (profile && !allowedRoles.includes(profile.role)) {
-    redirect('/dashboard/portal-familiar')
+  if (profile && !canAccess(profile.role, 'secretaria')) {
+    redirect('/dashboard')
   }
 
   // Rango del mes en curso, para el conteo de comunicados publicados

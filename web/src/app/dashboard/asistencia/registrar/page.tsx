@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import AttendanceForm from './AttendanceForm'
 
@@ -22,9 +23,7 @@ export default async function RegistrarAsistenciaPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
-
-  const staffRoles = ['director', 'school_admin', 'teacher', 'reception', 'super_admin']
-  if (!profile || !staffRoles.includes(profile.role)) {
+  if (!profile || !canAccess(profile.role, 'asistencia_registrar')) {
     redirect('/dashboard/portal-familiar')
   }
 

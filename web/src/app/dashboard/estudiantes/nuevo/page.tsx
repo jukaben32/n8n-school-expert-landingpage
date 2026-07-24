@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import NewStudentForm from './NewStudentForm'
 
@@ -22,9 +23,7 @@ export default async function NuevoEstudiantePage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
-
-  const staffRoles = ['director', 'school_admin', 'reception', 'super_admin']
-  if (!profile || !staffRoles.includes(profile.role)) {
+  if (!profile || !canAccess(profile.role, 'estudiantes_nuevo')) {
     redirect('/dashboard/estudiantes')
   }
 

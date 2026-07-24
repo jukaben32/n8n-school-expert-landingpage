@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
@@ -22,9 +23,7 @@ export default async function TesoreriaPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
-
-  const staffRoles = ['director', 'school_admin', 'finance', 'reception', 'super_admin']
-  if (!profile || !staffRoles.includes(profile.role)) {
+  if (!profile || !canAccess(profile.role, 'tesoreria')) {
     redirect('/dashboard/pagos')
   }
 

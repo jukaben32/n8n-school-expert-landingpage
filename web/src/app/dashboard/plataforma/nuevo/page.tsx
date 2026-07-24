@@ -1,42 +1,38 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
-import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
-import NewMessageForm from './NewMessageForm'
+import NewSchoolForm from './NewSchoolForm'
 
 export const metadata: Metadata = {
-  title: 'Nuevo Comunicado — SchoolOS',
+  title: 'Nuevo Colegio — SchoolOS',
 }
 
-/**
- * Página de creación de comunicados — Solo para staff.
- */
-export default async function NuevoComunicadoPage() {
+export default async function NuevoColegioPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('id, role, school_id')
+    .select('role')
     .eq('auth_id', user.id)
     .single()
-  if (!profile || !canAccess(profile.role, 'comunicados_nuevo')) {
-    redirect('/dashboard/comunicados')
+
+  if (profile?.role !== 'super_admin') {
+    redirect('/dashboard/secretaria')
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-lg mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Nuevo Comunicado
+          Nuevo Colegio
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Redacta un aviso para las familias del colegio.
+          Registra un nuevo colegio en la plataforma.
         </p>
       </div>
-
-      <NewMessageForm schoolId={profile.school_id} authorProfileId={profile.id} />
+      <NewSchoolForm />
     </div>
   )
 }

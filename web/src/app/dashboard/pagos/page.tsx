@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
@@ -39,8 +40,7 @@ export default async function PagosPage() {
     .single()
 
   // Staff redirige al módulo de tesorería
-  const staffRoles = ['director', 'school_admin', 'finance', 'reception', 'super_admin']
-  if (profile && staffRoles.includes(profile.role)) {
+  if (profile && canAccess(profile?.role, 'pagos')) {
     redirect('/dashboard/tesoreria')
   }
 

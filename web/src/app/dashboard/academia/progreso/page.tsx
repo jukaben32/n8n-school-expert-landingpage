@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
@@ -31,9 +32,7 @@ export default async function ProgresoAcademiaPage() {
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
-
-  const staffRoles = ['director', 'school_admin', 'teacher', 'super_admin']
-  if (!profile || !staffRoles.includes(profile.role)) {
+  if (!profile || !canAccess(profile.role, 'academia_gestionar')) {
     redirect('/dashboard/academia')
   }
 

@@ -28,9 +28,9 @@ export default async function DashboardPage() {
     teacher:      '/dashboard/asistencia',
     director:     '/dashboard/secretaria',
     school_admin: '/dashboard/secretaria',
-    finance:      '/dashboard/secretaria',
-    reception:    '/dashboard/secretaria',
-    super_admin:  '/dashboard/secretaria',
+    finance:      '/dashboard/tesoreria',
+    reception:    '/dashboard/estudiantes',
+    super_admin:  '/dashboard/plataforma',
   }
 
   redirect(roleRoutes[role] ?? '/dashboard/portal-familiar')
