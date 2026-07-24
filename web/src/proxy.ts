@@ -40,9 +40,13 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Rutas públicas que NO requieren autenticación
-  const publicRoutes = ['/', '/login', '/registro', '/recuperar-contrasena']
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  // Rutas públicas que NO requieren autenticación.
+  // OJO: '/' se compara con igualdad exacta, nunca con startsWith, porque
+  // TODA ruta empieza con '/' — usarlo en el .some(startsWith) de abajo
+  // volvía "pública" cualquier ruta del sitio (incluido /dashboard/*),
+  // desactivando por completo la protección del middleware.
+  const publicPrefixRoutes = ['/login', '/registro', '/recuperar-contrasena']
+  const isPublicRoute = pathname === '/' || publicPrefixRoutes.some(route => pathname.startsWith(route))
 
   // Si el usuario no está autenticado y quiere acceder a una ruta protegida
   if (!user && !isPublicRoute) {
