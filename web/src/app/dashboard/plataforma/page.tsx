@@ -51,6 +51,35 @@ export default async function PlataformaPage() {
   )
   const countsBySchool = new Map(counts.map((c) => [c.schoolId, c]))
 
+  // Métricas de toda la red -- sin filtrar por colegio, el bypass de
+  // is_super_admin() en cada tabla es justo lo que hace esto posible.
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+
+  const [
+    { count: totalStudents },
+    { count: totalStaff },
+    { data: paidInvoices },
+    { count: messagesThisMonth },
+  ] = await Promise.all([
+    supabase.from('students').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('staff').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('invoices').select('total_amount').eq('status', 'pagado').gte('paid_at', startOfMonth.toISOString()),
+    supabase.from('messages').select('id', { count: 'exact', head: true }).not('published_at', 'is', null).gte('published_at', startOfMonth.toISOString()),
+  ])
+
+  const revenueThisMonth = (paidInvoices ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
+  const formatDOP = (amount: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount)
+
+  const networkStats = [
+    { label: 'Colegios afiliados', value: schools.length },
+    { label: 'Estudiantes en total', value: totalStudents ?? 0 },
+    { label: 'Personal en total', value: totalStaff ?? 0 },
+    { label: 'Cobrado este mes', value: formatDOP(revenueThisMonth) },
+    { label: 'Comunicados este mes', value: messagesThisMonth ?? 0 },
+  ]
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -68,6 +97,16 @@ export default async function PlataformaPage() {
         >
           + Nuevo colegio
         </Link>
+      </div>
+
+      {/* Resumen de toda la red */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {networkStats.map((s) => (
+          <div key={s.label} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <p className="text-xl font-black text-primary dark:text-accent-light truncate">{s.value}</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">{s.label}</p>
+          </div>
+        ))}
       </div>
 
       {schoolsError && (
