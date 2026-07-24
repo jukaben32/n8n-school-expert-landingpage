@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 /**
  * Dashboard Home — Redirige según el rol del usuario:
  * - guardian    → /dashboard/portal-familiar
+ * - student     → /dashboard/academia
  * - teacher     → /dashboard/asistencia
  * - director / school_admin / finance / reception → /dashboard/secretaria
  */
@@ -23,6 +24,7 @@ export default async function DashboardPage() {
   // Redirección según el rol
   const roleRoutes: Record<string, string> = {
     guardian:     '/dashboard/portal-familiar',
+    student:      '/dashboard/academia',
     teacher:      '/dashboard/asistencia',
     director:     '/dashboard/secretaria',
     school_admin: '/dashboard/secretaria',
