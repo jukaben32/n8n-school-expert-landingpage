@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
@@ -70,7 +71,7 @@ export default async function EstudiantesPage() {
             {students.length} estudiante{students.length !== 1 ? 's' : ''} registrado{students.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <a
+        <Link
           id="btn-nuevo-estudiante"
           href="/dashboard/estudiantes/nuevo"
           className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
@@ -79,7 +80,7 @@ export default async function EstudiantesPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           Nuevo estudiante
-        </a>
+        </Link>
       </div>
 
       {/* Tabla de estudiantes */}
@@ -98,7 +99,9 @@ export default async function EstudiantesPage() {
               {students.map((s) => (
                 <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                   <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                    {s.last_name}, {s.first_name}
+                    <Link href={`/dashboard/estudiantes/${s.id}`} className="block">
+                      {s.last_name}, {s.first_name}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                     {s.families?.name ?? '—'}

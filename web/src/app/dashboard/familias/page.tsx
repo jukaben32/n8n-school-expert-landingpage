@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
@@ -70,9 +71,10 @@ export default async function FamiliasPage() {
           {families.map((f) => {
             const primary = f.guardians?.find((g) => g.is_primary) ?? f.guardians?.[0]
             return (
-              <div
+              <Link
+                href={`/dashboard/familias/${f.id}`}
                 key={f.id}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between gap-4"
+                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between gap-4 hover:border-primary/40 transition"
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-900 dark:text-white truncate">{f.name}</p>
@@ -90,7 +92,7 @@ export default async function FamiliasPage() {
                     <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Tutores</p>
                   </div>
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>
