@@ -4,6 +4,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import SchoolConfigForm from './SchoolConfigForm'
+import ExportDataButton from './ExportDataButton'
 
 export const metadata: Metadata = {
   title: 'Configuración del colegio — SchoolOS',
@@ -45,6 +46,7 @@ export default async function ColegioConfigPage() {
         </p>
       </div>
       <SchoolConfigForm school={school} />
+      <ExportDataButton schoolSubdomain={school.subdomain} />
     </div>
   )
 }

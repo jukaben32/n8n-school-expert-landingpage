@@ -377,6 +377,9 @@ export default function Home() {
             <span className="font-display text-sm text-white/70">SchoolOS</span>
           </div>
           <p className="text-xs text-white/35 font-mono">Plataforma para redes y colegios afiliados</p>
+          <Link href="/terminos" className="text-xs text-white/50 hover:text-white/80 transition font-mono">
+            Tus datos son tuyos →
+          </Link>
         </div>
       </footer>
     </div>

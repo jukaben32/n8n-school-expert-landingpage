@@ -8,8 +8,10 @@
  * o un descuido. Este archivo es la única fuente de verdad.
  *
  * NOTA: esto controla la experiencia (qué ve la persona, a dónde se
- * le redirige). La protección real de los datos sigue viviendo en las
- * políticas de RLS de Supabase -- este archivo no reemplaza eso.
+ * le redirige). Desde la migración 016, las políticas de RLS de
+ * Supabase también están alineadas con esta misma matriz -- así que
+ * esto ya no es solo una capa de interfaz, es la fuente de verdad de
+ * ambos lados.
  */
 
 export type Role =
