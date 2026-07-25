@@ -27,11 +27,13 @@ export type Module =
   | 'asistencia' | 'asistencia_registrar'
   | 'reportes'
   | 'academia_gestionar' // crear lecciones + ver progreso
+  | 'configuracion_colegio'
 
 const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'familias', 'personal',
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar',
+  'configuracion_colegio',
 ]
 
 /** Qué módulos puede ver/usar cada rol de staff. */
