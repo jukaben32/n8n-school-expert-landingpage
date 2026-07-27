@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import StudentCard from '@/components/portal/StudentCard'
 import SummaryBadge from '@/components/portal/SummaryBadge'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — SchoolOS',
@@ -32,7 +33,7 @@ export default async function PortalFamiliarPage() {
   }
 
   // Obtener los estudiantes vinculados a este guardian
-  const { data: students } = profile?.guardian_id
+  const { data: students, error: studentsError } = profile?.guardian_id
     ? await supabase
         .from('student_guardians')
         .select(`
@@ -43,10 +44,11 @@ export default async function PortalFamiliarPage() {
           )
         `)
         .eq('guardian_id', profile.guardian_id)
-    : { data: [] }
+    : { data: [], error: null }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      <QueryErrorBanner errors={[{ label: 'tus hijos', error: studentsError }]} />
 
       {/* Encabezado */}
       <div>

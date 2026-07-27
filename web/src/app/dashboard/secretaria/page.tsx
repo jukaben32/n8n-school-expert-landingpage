@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Secretaría — SchoolOS',
@@ -39,10 +40,10 @@ export default async function SecretariaPage() {
 
   // Métricas básicas
   const [
-    { count: totalStudents },
-    { count: totalFamilies },
-    { count: messagesThisMonth },
-    { count: pendingInvoices },
+    { count: totalStudents, error: studentsCountError },
+    { count: totalFamilies, error: familiesCountError },
+    { count: messagesThisMonth, error: messagesCountError },
+    { count: pendingInvoices, error: invoicesCountError },
   ] = await Promise.all([
     supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('families').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
@@ -64,6 +65,12 @@ export default async function SecretariaPage() {
 
   return (
     <div className="space-y-8">
+      <QueryErrorBanner errors={[
+        { label: 'estudiantes', error: studentsCountError },
+        { label: 'familias', error: familiesCountError },
+        { label: 'comunicados', error: messagesCountError },
+        { label: 'pagos pendientes', error: invoicesCountError },
+      ]} />
 
       {/* Encabezado */}
       <div>
