@@ -117,22 +117,49 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
         })
         if (linkError) throw linkError
       } else {
-        const { error: studentError } = await supabase.from('students').insert({
-          school_id: schoolId,
-          family_id: targetFamilyId,
-          first_name: firstName,
-          last_name: lastName,
-          birth_date: birthDate,
-          gender: gender || null,
-          enrollment_status: enrollmentStatus,
-        })
-        if (studentError) throw studentError
+        const { data: newStudent, error: studentError } = await supabase
+          .from('students')
+          .insert({
+            school_id: schoolId,
+            family_id: targetFamilyId,
+            first_name: firstName,
+            last_name: lastName,
+            birth_date: birthDate,
+            gender: gender || null,
+            enrollment_status: enrollmentStatus,
+          })
+          .select('id')
+          .single()
+        if (studentError || !newStudent) throw studentError ?? new Error('No se pudo crear el estudiante.')
+
+        // Vincular con el tutor principal de la familia existente -- este
+        // paso faltaba por completo en este modo (no era intermitente).
+        const { data: primaryGuardian } = await supabase
+          .from('guardians')
+          .select('id, relationship')
+          .eq('family_id', targetFamilyId)
+          .eq('is_primary', true)
+          .maybeSingle()
+
+        if (primaryGuardian) {
+          const { error: linkError } = await supabase.from('student_guardians').insert({
+            student_id: newStudent.id,
+            guardian_id: primaryGuardian.id,
+            relationship: primaryGuardian.relationship ?? 'tutor_legal',
+            is_primary: true,
+          })
+          if (linkError) throw linkError
+        }
       }
 
       router.push('/dashboard/estudiantes')
       router.refresh()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ocurrió un error al guardar. Intenta de nuevo.'
+      const message =
+        err instanceof Error
+          ? err.message
+          : (err as { message?: string })?.message || 'Ocurrió un error al guardar. Intenta de nuevo.'
+      console.error('[nuevo estudiante]', err)
       setError(message)
       setSaving(false)
     }

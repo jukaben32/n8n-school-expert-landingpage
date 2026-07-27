@@ -104,11 +104,35 @@ exportación de datos).
    nunca se ha probado un webhook de asistencia disparándose de
    verdad en esta sesión. Revisar si algún día se activa esa
    integración.
-8. **(Sin resolver aún)** Al crear un estudiante nuevo, el flujo parece
-   estar creando la familia pero fallando al crear el registro del
-   estudiante en sí — quedaron 2 familias huérfanas sin estudiantes.
-   Pendiente de diagnosticar con el error real de la consola del
-   navegador.
+8. **Recursión infinita de RLS entre `students` y `student_guardians`**
+   — diagnosticado por Claude Code con evidencia real (llamada REST
+   directa con JWT de una usuaria de producción): `HTTP 500`, código
+   Postgres `42P17 infinite recursion detected in policy for relation
+   students`. Causa: `students_read` (migración 001) consulta
+   `student_guardians` para el caso "soy guardian de este
+   estudiante"; las políticas de `student_guardians` (migración 014)
+   consultan de vuelta a `students`. Ciclo A→B→A, mismo patrón que el
+   bug de `users_profiles` de la migración 009. El paso 3 del alta de
+   estudiante (`students.insert().select()`) disparaba el ciclo y
+   fallaba siempre, así que el paso 4 (vincular al tutor) nunca se
+   alcanzaba. Fix en la migración 018: función `student_school_id()`
+   `security definer` que resuelve el colegio del estudiante sin
+   volver a pasar por las policies de `students`, rompiendo el ciclo.
+9. **Modo "Familia existente" en el alta de estudiante nunca vinculaba
+   al tutor** — a diferencia del bug anterior, este no era
+   intermitente: al código simplemente le faltaba el paso de insertar
+   en `student_guardians` en esa rama del formulario (sí lo hacía en
+   el modo "Familia nueva"). Corregido en el mismo commit: vincula
+   automáticamente con el tutor principal (`is_primary = true`) de la
+   familia elegida.
+10. **Los errores de Postgrest no son instancias de `Error`** — el
+    manejo de errores en varios formularios (`NewStudentForm.tsx` era
+    uno) hacía `err instanceof Error ? err.message : 'mensaje
+    genérico'`, y como los errores que devuelve Supabase son objetos
+    planos (`{ message, code, ... }`), esa comprobación siempre caía
+    al mensaje genérico -- ocultando el error real exactamente en los
+    casos donde más hacía falta verlo. Revisar este patrón si aparece
+    en otros formularios que aún no se hayan auditado.
 
 ## Convenciones de trabajo
 
@@ -155,4 +179,4 @@ exportación de datos).
    manual (el monto se escribe a mano en Tesorería), no hay ninguna regla
    automática de descuento por cantidad de hermanos. Pendiente de construir
    si se decide priorizar.
-9. Bug sin resolver de alta de estudiante (ver punto 7 de la sección de bugs).
+9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).
