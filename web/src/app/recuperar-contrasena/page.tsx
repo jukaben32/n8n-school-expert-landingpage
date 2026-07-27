@@ -29,7 +29,9 @@ export default function RecuperarContrasenaPage() {
       );
     } catch (err) {
       setStatus("error");
-      setMsg("No pudimos enviar el correo. Verifica el email o inténtalo más tarde.");
+      const supaError = err as { message?: string };
+      console.error('[recuperar-contrasena]', err);
+      setMsg(supaError?.message || "No pudimos enviar el correo. Verifica el email o inténtalo más tarde.");
     }
   }
 
