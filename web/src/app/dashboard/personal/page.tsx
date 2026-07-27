@@ -56,7 +56,7 @@ export default async function PersonalPage() {
     redirect('/dashboard')
   }
 
-  const { data: staffRaw } = await supabase
+  const { data: staffRaw, error: staffError } = await supabase
     .from('staff')
     .select('id, first_name, last_name, email, phone, role, hire_date, education_level, degree_title, alma_mater, specialty')
     .eq('school_id', schoolId)
@@ -90,6 +90,13 @@ export default async function PersonalPage() {
           + Agregar personal
         </Link>
       </div>
+
+      {staffError && (
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <p className="font-semibold">No se pudo cargar la lista de personal.</p>
+          <p className="mt-1 font-mono text-xs">{staffError.message}</p>
+        </div>
+      )}
 
       {staff.length > 0 ? (
         <div className="grid gap-3">

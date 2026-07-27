@@ -39,7 +39,7 @@ export default async function FamiliasPage() {
     redirect('/dashboard/portal-familiar')
   }
 
-  const { data: familiesRaw } = await supabase
+  const { data: familiesRaw, error: familiesError } = await supabase
     .from('families')
     .select(`
       id, name, billing_email, billing_phone,
@@ -66,6 +66,13 @@ export default async function FamiliasPage() {
       </div>
 
       {/* Lista de familias */}
+      {familiesError && (
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <p className="font-semibold">No se pudo cargar la lista de familias.</p>
+          <p className="mt-1 font-mono text-xs">{familiesError.message}</p>
+        </div>
+      )}
+
       {families.length > 0 ? (
         <div className="grid gap-3">
           {families.map((f) => {

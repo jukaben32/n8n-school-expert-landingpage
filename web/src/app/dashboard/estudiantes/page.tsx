@@ -46,7 +46,7 @@ export default async function EstudiantesPage() {
     redirect('/dashboard/portal-familiar')
   }
 
-  const { data: studentsRaw } = await supabase
+  const { data: studentsRaw, error: studentsError } = await supabase
     .from('students')
     .select('id, first_name, last_name, birth_date, enrollment_status, families(name)')
     .eq('school_id', schoolId)
@@ -84,6 +84,13 @@ export default async function EstudiantesPage() {
       </div>
 
       {/* Tabla de estudiantes */}
+      {studentsError && (
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <p className="font-semibold">No se pudo cargar la lista de estudiantes.</p>
+          <p className="mt-1 font-mono text-xs">{studentsError.message}</p>
+        </div>
+      )}
+
       {students.length > 0 ? (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           <table className="w-full text-sm text-left">
