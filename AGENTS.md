@@ -134,6 +134,31 @@ exportación de datos).
     casos donde más hacía falta verlo. Revisar este patrón si aparece
     en otros formularios que aún no se hayan auditado.
 
+11. **Auditoría completa de errores silenciados en las 27 páginas del
+    dashboard** — el patrón "la consulta ignora `error` y lo trata
+    igual que lista vacía" (encontrado antes en Plataforma) resultó
+    ser sistémico, no aislado: estaba presente en prácticamente todas
+    las páginas de `web/src/app/dashboard/**/page.tsx`. Se creó
+    `src/components/dashboard/QueryErrorBanner.tsx` (componente
+    reutilizable) y se aplicó en todas -- cada consulta ahora captura
+    su `error` y lo muestra en una caja roja visible si falla, en vez
+    de fallar en silencio disfrazado de "no hay datos". La consulta al
+    propio perfil (`profileError`, presente en las 27) se registra en
+    consola en vez de mostrar banner, ya que un fallo ahí normalmente
+    ya redirige a `/login` por los checks de `!profile` existentes.
+    Nota de proceso: la corrección automatizada (script) introdujo 3
+    bugs propios en el camino, todos detectados por `tsc` y corregidos
+    antes de subir: JSX con dos elementos raíz en
+    `academia/[id]/page.tsx` (el `return` de esa página es un solo
+    componente, no un `<div>` contenedor), una variable declarada
+    dentro de un bloque `if` y usada fuera de su alcance en
+    `pagos/page.tsx`, y un banner insertado en un `return` temprano de
+    `academia/page.tsx` que ocurre *antes* de que esas variables
+    existan. Ninguno de los tres llegó a subirse sin corregir --
+    quedan como recordatorio de que una corrección automatizada a
+    escala todavía necesita revisión con el compilador antes de
+    confiar en ella.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

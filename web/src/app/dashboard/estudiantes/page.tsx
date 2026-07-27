@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Estudiantes — SchoolOS',
@@ -35,11 +36,13 @@ export default async function EstudiantesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'estudiantes')) {
@@ -60,6 +63,7 @@ export default async function EstudiantesPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'los estudiantes', error: studentsError }]} />
 
       {/* Encabezado */}
       <div className="flex items-center justify-between">

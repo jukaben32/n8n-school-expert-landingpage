@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { enterSchool } from './actions'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Plataforma — SchoolOS',
@@ -21,11 +22,13 @@ export default async function PlataformaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('role')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   if (profile?.role !== 'super_admin') {
     redirect('/dashboard/secretaria')
@@ -60,7 +63,7 @@ export default async function PlataformaPage() {
   const [
     { count: totalStudents },
     { count: totalStaff },
-    { data: paidInvoices },
+    { data: paidInvoices, error: paidInvoicesError },
     { count: messagesThisMonth },
   ] = await Promise.all([
     supabase.from('students').select('id', { count: 'exact', head: true }).is('deleted_at', null),
@@ -82,6 +85,7 @@ export default async function PlataformaPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'los colegios', error: schoolsError }, { label: 'los cobros', error: paidInvoicesError }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">

@@ -4,6 +4,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import AttendanceForm from './AttendanceForm'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Registrar Asistencia — SchoolOS',
@@ -19,11 +20,13 @@ export default async function RegistrarAsistenciaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'asistencia_registrar')) {
@@ -31,7 +34,7 @@ export default async function RegistrarAsistenciaPage() {
   }
 
   // Cargar estudiantes inscritos del colegio
-  const { data: students } = await supabase
+  const { data: students, error: studentsError } = await supabase
     .from('students')
     .select('id, first_name, last_name')
     .eq('school_id', schoolId)
@@ -42,6 +45,7 @@ export default async function RegistrarAsistenciaPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'los estudiantes', error: studentsError }]} />
       <div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
           Registrar Asistencia

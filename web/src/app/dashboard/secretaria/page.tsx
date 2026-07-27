@@ -19,11 +19,13 @@ export default async function SecretariaPage() {
   if (!user) redirect('/login')
 
   // Obtener el school_id del perfil
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('school_id, role')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
 

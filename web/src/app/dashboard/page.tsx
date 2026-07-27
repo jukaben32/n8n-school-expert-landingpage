@@ -13,11 +13,13 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('role')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const role = profile?.role ?? 'guardian'
 

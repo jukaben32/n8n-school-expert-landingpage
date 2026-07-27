@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Academia — SchoolOS',
@@ -39,11 +40,13 @@ export default async function AcademiaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id, student_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   if (!profile) redirect('/login')
 
@@ -64,14 +67,14 @@ export default async function AcademiaPage() {
     )
   }
 
-  const { data: enrollment } = await supabase
+  const { data: enrollment, error: enrollmentError } = await supabase
     .from('enrollments')
     .select('grade_level_id')
     .eq('student_id', profile.student_id)
     .eq('status', 'inscrito')
     .maybeSingle()
 
-  const [{ data: lessonsRaw }, { data: attemptsRaw }, { data: points }, { data: earnedBadgesRaw }] = await Promise.all([
+  const [{ data: lessonsRaw, error: lessonsRawError }, { data: attemptsRaw, error: attemptsRawError }, { data: points, error: pointsError }, { data: earnedBadgesRaw, error: earnedBadgesRawError }] = await Promise.all([
     enrollment?.grade_level_id
       ? supabase
           .from('lessons')
@@ -79,7 +82,7 @@ export default async function AcademiaPage() {
           .eq('grade_level_id', enrollment.grade_level_id)
           .eq('is_published', true)
           .order('sort_order', { ascending: true })
-      : Promise.resolve({ data: [] as LessonRow[] }),
+      : Promise.resolve({ data: [] as LessonRow[], error: null }),
     supabase.from('quiz_attempts').select('lesson_id, score, max_score, completed_at').eq('student_id', profile.student_id),
     supabase.from('student_points').select('total_points, current_streak_days, longest_streak_days').eq('student_id', profile.student_id).maybeSingle(),
     supabase.from('student_badges').select('badge_id, badges(name, icon, description)').eq('student_id', profile.student_id),
@@ -92,6 +95,13 @@ export default async function AcademiaPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[
+        { label: 'tu inscripción', error: enrollmentError },
+        { label: 'las lecciones', error: lessonsRawError },
+        { label: 'tus intentos', error: attemptsRawError },
+        { label: 'tus puntos', error: pointsError },
+        { label: 'tus insignias', error: earnedBadgesRawError },
+      ]} />
 
       {/* Encabezado con gamificación */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-wrap items-center justify-between gap-4">

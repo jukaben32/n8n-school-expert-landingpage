@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Tesorería — SchoolOS',
@@ -19,11 +20,13 @@ export default async function TesoreriaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
   if (!profile || !canAccess(profile.role, 'tesoreria')) {
@@ -31,7 +34,7 @@ export default async function TesoreriaPage() {
   }
 
   // Cargar resumen de facturas
-  const { data: recentInvoicesRaw } = await supabase
+  const { data: recentInvoicesRaw, error: recentInvoicesRawError } = await supabase
     .from('invoices')
     .select(`
       id, description, total_amount, due_date, status, ncf, paid_at,
@@ -62,7 +65,7 @@ export default async function TesoreriaPage() {
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
   
-  const { data: monthPaymentsRaw } = await supabase
+  const { data: monthPaymentsRaw, error: monthPaymentsRawError } = await supabase
     .from('payments')
     .select('amount_paid')
     .eq('school_id', schoolId)
@@ -87,6 +90,7 @@ export default async function TesoreriaPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      <QueryErrorBanner errors={[{ label: 'las facturas', error: recentInvoicesRawError }, { label: 'los pagos del mes', error: monthPaymentsRawError }]} />
       {/* Encabezado */}
       <div className="flex items-center justify-between">
         <div>

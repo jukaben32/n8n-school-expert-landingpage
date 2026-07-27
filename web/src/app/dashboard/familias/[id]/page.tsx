@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Ficha de familia — SchoolOS',
@@ -22,11 +23,13 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const { schoolId } = await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')
 
@@ -34,7 +37,7 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
     redirect('/dashboard')
   }
 
-  const { data: family } = await supabase
+  const { data: family, error: familyError } = await supabase
     .from('families')
     .select('id, name, billing_email, billing_phone')
     .eq('id', id)
@@ -44,7 +47,7 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
 
   if (!family) notFound()
 
-  const [{ data: guardiansRaw }, { data: studentsRaw }, { data: invoicesRaw }] = await Promise.all([
+  const [{ data: guardiansRaw, error: guardiansRawError }, { data: studentsRaw, error: studentsRawError }, { data: invoicesRaw, error: invoicesRawError }] = await Promise.all([
     supabase.from('guardians').select('id, first_name, last_name, phone, email, relationship, is_primary').eq('family_id', id).order('is_primary', { ascending: false }),
     supabase.from('students').select('id, first_name, last_name, enrollment_status').eq('family_id', id).is('deleted_at', null),
     supabase.from('invoices').select('id, description, total_amount, status, due_date').eq('family_id', id).is('deleted_at', null).order('due_date', { ascending: false }),
@@ -63,6 +66,7 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'la familia', error: familyError }, { label: 'los tutores', error: guardiansRawError }, { label: 'los estudiantes', error: studentsRawError }, { label: 'las facturas', error: invoicesRawError }]} />
       <div>
         <Link href="/dashboard/familias" className="text-xs font-semibold text-slate-400 hover:text-primary dark:hover:text-accent-light transition">
           ← Familias

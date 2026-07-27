@@ -4,6 +4,7 @@ import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Estado de Cuenta — SchoolOS',
@@ -33,11 +34,13 @@ export default async function PagosPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id, guardian_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   // Staff redirige al módulo de tesorería
   if (profile && canAccess(profile?.role, 'pagos')) {
@@ -46,24 +49,26 @@ export default async function PagosPage() {
 
   // Obtener family_id del guardian
   let familyId: string | null = null
+  let guardianError: { message: string } | null = null
   if (profile?.guardian_id) {
-    const { data: guardian } = await supabase
+    const { data: guardian, error: gErr } = await supabase
       .from('guardians')
       .select('family_id')
       .eq('id', profile.guardian_id)
       .single()
+    guardianError = gErr
     familyId = guardian?.family_id ?? null
   }
 
   // Cargar facturas de la familia
-  const { data: invoicesRaw } = familyId
+  const { data: invoicesRaw, error: invoicesRawError } = familyId
     ? await supabase
         .from('invoices')
         .select('id, description, total_amount, due_date, status, ncf, paid_at, students(first_name, last_name)')
         .eq('family_id', familyId)
         .is('deleted_at', null)
         .order('due_date', { ascending: false })
-    : { data: [] }
+    : { data: [], error: null }
 
   const invoices = (invoicesRaw ?? []) as unknown as Invoice[]
 
@@ -86,6 +91,10 @@ export default async function PagosPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      <QueryErrorBanner errors={[
+        { label: 'tus datos', error: guardianError },
+        { label: 'tus facturas', error: invoicesRawError },
+      ]} />
 
       {/* Encabezado */}
       <div>

@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import EnrollmentStatusSelect from './EnrollmentStatusSelect'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Ficha del estudiante — SchoolOS',
@@ -24,11 +25,13 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const { schoolId } = await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')
 
@@ -36,7 +39,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
     redirect('/dashboard')
   }
 
-  const { data: student } = await supabase
+  const { data: student, error: studentError } = await supabase
     .from('students')
     .select('id, first_name, last_name, birth_date, gender, enrollment_status, family_id, families(id, name)')
     .eq('id', id)
@@ -52,10 +55,10 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
   const [
-    { data: enrollmentsRaw },
-    { data: attendanceRaw },
-    { data: attemptsRaw },
-    { data: points },
+    { data: enrollmentsRaw, error: enrollmentsRawError },
+    { data: attendanceRaw, error: attendanceRawError },
+    { data: attemptsRaw, error: attemptsRawError },
+    { data: points, error: pointsError },
   ] = await Promise.all([
     supabase.from('enrollments').select('id, status, enrollment_date, withdrawal_date, grade_levels(name)').eq('student_id', id).order('enrollment_date', { ascending: false }),
     supabase.from('attendance').select('status').eq('student_id', id).gte('date', thirtyDaysAgo.toISOString().split('T')[0]),
@@ -79,6 +82,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'el estudiante', error: studentError }, { label: 'el historial de inscripción', error: enrollmentsRawError }, { label: 'la asistencia', error: attendanceRawError }, { label: 'el progreso en academia', error: attemptsRawError }, { label: 'los puntos', error: pointsError }]} />
       <div>
         <Link href="/dashboard/estudiantes" className="text-xs font-semibold text-slate-400 hover:text-primary dark:hover:text-accent-light transition">
           ← Estudiantes

@@ -19,11 +19,13 @@ export default async function PortalFamiliarPage() {
   if (!user) redirect('/login')
 
   // Obtener el perfil del guardian (incluyendo role para verificar permisos)
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('role, guardian_id, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   if (profile?.role === 'school_admin' || profile?.role === 'director') {
     redirect('/dashboard/secretaria')

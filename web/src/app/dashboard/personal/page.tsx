@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Personal — SchoolOS',
@@ -44,11 +45,13 @@ export default async function PersonalPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
 
@@ -65,7 +68,7 @@ export default async function PersonalPage() {
 
   const staff = (staffRaw ?? []) as StaffRow[]
 
-  const { data: linkedProfiles } = await supabase
+  const { data: linkedProfiles, error: linkedProfilesError } = await supabase
     .from('users_profiles')
     .select('staff_id')
     .eq('school_id', schoolId)
@@ -76,6 +79,7 @@ export default async function PersonalPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'el personal', error: staffError }, { label: 'los accesos', error: linkedProfilesError }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Personal</h1>

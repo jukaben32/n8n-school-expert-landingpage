@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import MessageCard from '@/components/comunicados/MessageCard'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Comunicados — SchoolOS',
@@ -21,11 +22,13 @@ export default async function ComunicadosPage() {
   if (!user) redirect('/login')
 
   // Perfil del usuario
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
 
@@ -47,10 +50,11 @@ export default async function ComunicadosPage() {
   // Los guardians solo ven publicados
   if (!isStaff) query.not('published_at', 'is', null)
 
-  const { data: messages } = await query
+  const { data: messages, error: messagesError } = await query
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'los comunicados', error: messagesError }]} />
 
       {/* Encabezado */}
       <div className="flex items-center justify-between">

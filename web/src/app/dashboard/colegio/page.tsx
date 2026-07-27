@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import SchoolConfigForm from './SchoolConfigForm'
 import ExportDataButton from './ExportDataButton'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Configuración del colegio — SchoolOS',
@@ -15,11 +16,13 @@ export default async function ColegioConfigPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('role, school_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   if (!profile || !canAccess(profile.role, 'configuracion_colegio')) {
     redirect('/dashboard')
@@ -27,7 +30,7 @@ export default async function ColegioConfigPage() {
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
 
-  const { data: school } = await supabase
+  const { data: school, error: schoolError } = await supabase
     .from('schools')
     .select('id, name, subdomain, tagline, logo_url, address, phone, email')
     .eq('id', schoolId)
@@ -37,6 +40,7 @@ export default async function ColegioConfigPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'los datos del colegio', error: schoolError }]} />
       <div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
           Configuración del colegio

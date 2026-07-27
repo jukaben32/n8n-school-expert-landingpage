@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
+import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
   title: 'Asistencia — SchoolOS',
@@ -25,11 +26,13 @@ export default async function AsistenciaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('id, role, school_id, guardian_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
 
@@ -39,10 +42,11 @@ export default async function AsistenciaPage() {
   const today = new Date().toISOString().split('T')[0]
 
   let records: { id: string; date: string; status: string; student: { first_name: string; last_name: string } | null; notified_at: string | null }[] = []
+  let recordsError: { message: string } | null = null
 
   if (isStaff) {
     // Staff: registros de asistencia de HOY en este colegio
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('attendance')
       .select('id, date, status, notified_at, students(first_name, last_name)')
       .eq('school_id', schoolId)
@@ -50,28 +54,31 @@ export default async function AsistenciaPage() {
       .order('created_at', { ascending: false })
 
     records = ((data as unknown) as typeof records) ?? []
+    recordsError = error
   } else if (profile?.guardian_id) {
     // Guardian: historial de asistencia de sus hijos (últimos 30 días)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    const { data } = await supabase
+    const { data: studentIdsData } = await supabase
+      .from('student_guardians')
+      .select('student_id')
+      .eq('guardian_id', profile.guardian_id)
+
+    const { data, error } = await supabase
       .from('attendance')
       .select('id, date, status, notified_at, students(first_name, last_name)')
-      .in('student_id', (
-        await supabase
-          .from('student_guardians')
-          .select('student_id')
-          .eq('guardian_id', profile.guardian_id)
-      ).data?.map((r: { student_id: string }) => r.student_id) ?? [])
+      .in('student_id', studentIdsData?.map((r: { student_id: string }) => r.student_id) ?? [])
       .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
       .order('date', { ascending: false })
 
     records = ((data as unknown) as typeof records) ?? []
+    recordsError = error
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      <QueryErrorBanner errors={[{ label: 'la asistencia', error: recordsError }]} />
 
       {/* Encabezado */}
       <div className="flex items-center justify-between">
