@@ -16,9 +16,9 @@
 -- =========================================================================
 
 alter table schools
-  add column sibling_discount_min_children integer not null default 3
+  add column if not exists sibling_discount_min_children integer not null default 3
     check (sibling_discount_min_children >= 1),
-  add column sibling_discount_percent numeric(5,2) not null default 10.00
+  add column if not exists sibling_discount_percent numeric(5,2) not null default 10.00
     check (sibling_discount_percent >= 0 and sibling_discount_percent <= 100);
 
 comment on column schools.sibling_discount_min_children is
@@ -27,9 +27,9 @@ comment on column schools.sibling_discount_percent is
   'Porcentaje de descuento aplicado a la factura de un hijo que califica (0-100).';
 
 alter table invoices
-  add column discount_percent numeric(5,2) not null default 0
+  add column if not exists discount_percent numeric(5,2) not null default 0
     check (discount_percent >= 0 and discount_percent <= 100),
-  add column discount_amount numeric(12,2) not null default 0
+  add column if not exists discount_amount numeric(12,2) not null default 0
     check (discount_amount >= 0);
 
 comment on column invoices.discount_amount is
