@@ -1,19 +1,32 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 /**
  * Actualizar contraseña — pantalla común para dos flujos de Supabase Auth:
  * 1) Invitación (alguien recibe acceso por primera vez, admin.inviteUserByEmail)
  * 2) Recuperación (alguien olvidó su contraseña, resetPasswordForEmail)
- * En ambos casos, el enlace del correo redirige aquí con una sesión ya
- * activa (Supabase la crea al detectar el token en la URL); solo falta
- * pedir la contraseña nueva.
+ * En ambos casos, el enlace del correo trae un parámetro `?code=...` (flujo
+ * PKCE) que hay que intercambiar explícitamente por una sesión real -- no
+ * basta con asumir que Supabase ya la creó sola al cargar la página.
  */
-export default function ActualizarContrasenaPage() {
+export default function ActualizarContrasenaFallback() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-slate-950 dark:via-slate-900 dark:to-primary-dark/20">
+        <p className="text-sm text-slate-500 dark:text-slate-400">Cargando...</p>
+      </main>
+    }>
+      <ActualizarContrasenaPage />
+    </Suspense>
+  )
+}
+
+function ActualizarContrasenaPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [checkingSession, setCheckingSession] = useState(true)
   const [hasSession, setHasSession] = useState(false)
   const [password, setPassword] = useState('')
@@ -23,10 +36,22 @@ export default function ActualizarContrasenaPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const code = searchParams.get('code')
+
+    async function resolveSession() {
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        if (exchangeError) {
+          console.error('[actualizar-contrasena] exchangeCodeForSession', exchangeError)
+        }
+      }
+      const { data: { session } } = await supabase.auth.getSession()
       setHasSession(!!session)
       setCheckingSession(false)
-    })
+    }
+
+    resolveSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
