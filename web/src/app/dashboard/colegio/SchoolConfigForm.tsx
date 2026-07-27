@@ -13,6 +13,8 @@ interface School {
   address: string | null
   phone: string | null
   email: string | null
+  sibling_discount_min_children: number
+  sibling_discount_percent: number
 }
 
 const inputClass =
@@ -26,6 +28,8 @@ export default function SchoolConfigForm({ school }: { school: School }) {
   const [address, setAddress] = useState(school.address ?? '')
   const [phone, setPhone] = useState(school.phone ?? '')
   const [email, setEmail] = useState(school.email ?? '')
+  const [siblingMinChildren, setSiblingMinChildren] = useState(String(school.sibling_discount_min_children))
+  const [siblingPercent, setSiblingPercent] = useState(String(school.sibling_discount_percent))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +48,8 @@ export default function SchoolConfigForm({ school }: { school: School }) {
         address: address.trim() || null,
         phone: phone.trim() || null,
         email: email.trim() || null,
+        sibling_discount_min_children: Math.max(1, Number(siblingMinChildren) || 3),
+        sibling_discount_percent: Math.min(100, Math.max(0, Number(siblingPercent) || 0)),
       })
       .eq('id', school.id)
 
@@ -107,6 +113,44 @@ export default function SchoolConfigForm({ school }: { school: School }) {
             <label htmlFor="email" className={labelClass}>Correo de contacto</label>
             <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
           </div>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
+            Descuento por hermanos (Tesorería)
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="siblingMinChildren" className={labelClass}>A partir de qué hijo</label>
+              <input
+                id="siblingMinChildren"
+                type="number"
+                min="1"
+                step="1"
+                value={siblingMinChildren}
+                onChange={(e) => setSiblingMinChildren(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="siblingPercent" className={labelClass}>% de descuento</label>
+              <input
+                id="siblingPercent"
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={siblingPercent}
+                onChange={(e) => setSiblingPercent(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+            Ej. con 3 y 10%: una familia con 3+ hijos inscritos paga completo por el 1ro y 2do, y el 3ro en
+            adelante (ordenados por fecha de nacimiento) recibe 10% de descuento en su factura. Se aplica
+            automáticamente al generar la factura en Tesorería.
+          </p>
         </div>
 
         {error && (

@@ -171,6 +171,39 @@ exportación de datos).
     reales (revertidos con `ROLLBACK`) antes y después del fix.
     Corregido en la migración 019, mismo patrón que la 015 (leads).
 
+## Descuento por hermanos (Tesorería)
+
+**Regla de negocio** (confirmada con el usuario, no asumida): una familia con
+3 o más hijos con `enrollment_status = 'inscrito'` recibe un descuento **a
+partir del 3er hijo** — el 1ro y 2do (los mayores) pagan precio completo; el
+3ro en adelante recibe el descuento. El "orden" del hijo se calcula por fecha
+de nacimiento (`birth_date` ascendente), contando solo hermanos inscritos.
+Descuento por defecto: **10%**.
+
+**Configurabilidad**: por colegio (no fijo en código ni global de
+plataforma), en dos columnas nuevas de `schools`:
+`sibling_discount_min_children` (a partir de qué hijo, default `3`) y
+`sibling_discount_percent` (default `10.00`). Se editan desde
+`/dashboard/colegio` (`SchoolConfigForm.tsx`).
+
+**Implementación**:
+- `supabase/migrations/20260718000000_sibling_discount.sql`: las dos
+  columnas en `schools`; `discount_percent`/`discount_amount` en `invoices`;
+  función `calculate_sibling_discount(p_student_id uuid)` (`SECURITY
+  INVOKER`, respeta RLS) que calcula el rank del estudiante entre sus
+  hermanos inscritos y si califica.
+- `NewInvoiceForm.tsx`: al elegir un estudiante puntual (no "toda la
+  familia"), llama al RPC y muestra el resultado de forma explícita antes de
+  guardar — línea de "Descuento por hermanos (X%)" en el resumen de
+  totales, restándose del monto base antes de calcular el ITBIS. El
+  descuento NO aplica a facturas de "toda la familia".
+
+**Verificación real**: familia de prueba con 3 hijos inscritos (fechas de
+nacimiento distintas, borrada al terminar). El RPC devolvió el rank
+correcto y `qualifies=false/false/true`. Se generaron 2 facturas reales
+(hijo 1 y hijo 3, mismo monto base RD$5,000): hijo 1 → total sin cambios;
+hijo 3 → 10% de descuento, total RD$4,500.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -212,8 +245,6 @@ exportación de datos).
    propio. Voz (ElevenLabs) queda como extensión opcional posterior, y hay que
    decidir primero si lo que se quiere es generación de audio o llamadas
    telefónicas de verdad (son productos distintos).
-8. **Descuento automático a partir del Nº hijo** — hoy la facturación es
-   manual (el monto se escribe a mano en Tesorería), no hay ninguna regla
-   automática de descuento por cantidad de hermanos. Pendiente de construir
-   si se decide priorizar.
+8. ~~Descuento automático a partir del Nº hijo~~ — resuelto (ver
+   sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).
