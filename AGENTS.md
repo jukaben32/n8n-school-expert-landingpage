@@ -92,10 +92,23 @@ exportación de datos).
 6. **Mensajes de commit con backticks** (`` `algo` ``) se corrompen si el
    wrapper de shell los interpreta como sustitución de comandos — evitar
    backticks en mensajes de `git commit -m`.
-7. **(Sin resolver aún)** Al crear un estudiante nuevo, el flujo parece estar
-   creando la familia pero fallando al crear el registro del estudiante en sí
-   — quedaron 2 familias huérfanas sin estudiantes. Pendiente de diagnosticar
-   con el error real de la consola del navegador.
+7. **`net.http_post()` espera `body` como `jsonb`, no `text`** — la
+   migración 013 (correo de leads) convertía el body a texto (`::text`)
+   antes de pasarlo a `pg_net`, lo que hacía fallar la llamada con
+   `function net.http_post(...) does not exist` (el insert en `leads`
+   sí funcionaba; el error saltaba en el trigger de correo). Fix en la
+   migración 017: quitar el `::text`, dejar el body como jsonb.
+   **Sospecha sin confirmar:** el trigger de asistencia
+   (`20260702100000_attendance_webhook_trigger.sql`) usa el mismo
+   patrón con `::text` y probablemente tenga el mismo bug latente —
+   nunca se ha probado un webhook de asistencia disparándose de
+   verdad en esta sesión. Revisar si algún día se activa esa
+   integración.
+8. **(Sin resolver aún)** Al crear un estudiante nuevo, el flujo parece
+   estar creando la familia pero fallando al crear el registro del
+   estudiante en sí — quedaron 2 familias huérfanas sin estudiantes.
+   Pendiente de diagnosticar con el error real de la consola del
+   navegador.
 
 ## Convenciones de trabajo
 
