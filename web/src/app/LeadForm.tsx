@@ -10,6 +10,7 @@ const labelClass = 'block text-xs font-mono uppercase tracking-wider text-white/
 export default function LeadForm() {
   const [status, setStatus] = useState<'idle' | 'saving' | 'sent' | 'error'>('idle')
   const [sentEmail, setSentEmail] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -31,6 +32,7 @@ export default function LeadForm() {
     const message = String(formData.get('message') ?? '').trim()
 
     if (!schoolName || !contactName || !email) {
+      setErrorMessage('Completa al menos el colegio, tu nombre y tu correo.')
       setStatus('error')
       return
     }
@@ -48,7 +50,13 @@ export default function LeadForm() {
       message: message || null,
     })
     setSentEmail(email)
-    setStatus(error ? 'error' : 'sent')
+    if (error) {
+      console.error('[leads insert]', error)
+      setErrorMessage(`No se pudo guardar tu solicitud: ${error.message}`)
+      setStatus('error')
+    } else {
+      setStatus('sent')
+    }
   }
 
   if (status === 'sent') {
@@ -117,7 +125,7 @@ export default function LeadForm() {
 
       {status === 'error' && (
         <p role="alert" className="text-sm text-coral">
-          Completa al menos el colegio, tu nombre y tu correo. Si ya lo hiciste, intenta de nuevo en un momento.
+          {errorMessage}
         </p>
       )}
 
