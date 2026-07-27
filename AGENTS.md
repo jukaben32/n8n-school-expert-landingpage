@@ -159,6 +159,18 @@ exportación de datos).
     escala todavía necesita revisión con el compilador antes de
     confiar en ella.
 
+12. **Confirmado (ya no era sospecha): el trigger de asistencia tenía
+    el mismo bug de tipo de `pg_net`** que el de leads (`::text` en
+    vez de `jsonb` en el parámetro `body`) — y era más grave de lo
+    que sugería la sospecha original. El trigger es `AFTER INSERT`
+    sin manejo de excepción, así que el error de `pg_net`
+    (`function net.http_post(...) does not exist`, 42883) revertía el
+    **INSERT completo** de la tabla `attendance`. No era "el aviso
+    falla en silencio" -- era imposible registrar una ausencia o
+    tardanza en el sistema, punto. Confirmado con 3 inserts de prueba
+    reales (revertidos con `ROLLBACK`) antes y después del fix.
+    Corregido en la migración 019, mismo patrón que la 015 (leads).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
