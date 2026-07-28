@@ -353,6 +353,32 @@ validación de audio muy corto corta antes de gastar una llamada. **Pendiente**:
 repetir la prueba completa con audio real en cuanto cualquiera de las dos
 cuentas tenga saldo.
 
+## Quién paga cada servicio (decisión de negocio, no técnica)
+
+**A cargo de la plataforma (una sola cuenta, sirve a todos los colegios)**:
+Vercel, Supabase, el dominio de la app + su Resend (correos del sistema:
+invitaciones, recuperar contraseña), el dominio/Resend de leads, **y
+Anthropic + OpenAI (el asistente de IA)**.
+
+**A cargo de cada colegio (su propio gasto, nunca pasa por la plataforma)**:
+la comisión de Azul por transacción de tarjeta (el dinero va directo a la
+cuenta bancaria del colegio, así que Azul le cobra a él, no a la
+plataforma), y su propio remitente de Resend si algún día lo activan.
+
+**Decisión explícita sobre el costo de IA** (confirmada con el usuario, no
+asumida): aunque el costo de Anthropic/OpenAI SÍ crece según cuánto lo usen
+las familias de cada colegio (a diferencia de Vercel/Supabase, que cuestan
+casi lo mismo con 1 o 50 colegios), se decidió **no** medir ni facturar el
+uso de IA por colegio por ahora -- se absorbe dentro de lo que se le cobra
+al colegio por usar la plataforma. Esto es consistente con que hoy
+`ANTHROPIC_API_KEY`/`OPENAI_API_KEY` son variables de entorno únicas a
+nivel de plataforma, no configuración por colegio (no cambiar esto sin
+volver a decidirlo explícitamente con el usuario). Revisar esta decisión
+cuando haya varios colegios afiliados y la diferencia de uso entre ellos
+empiece a importar -- en ese momento, construir medición y facturación por
+colegio sería el camino natural (columna de uso acumulado, o límite
+configurable por colegio en vez de solo por familia).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
