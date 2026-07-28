@@ -204,6 +204,46 @@ correcto y `qualifies=false/false/true`. Se generaron 2 facturas reales
 (hijo 1 y hijo 3, mismo monto base RD$5,000): hijo 1 → total sin cambios;
 hijo 3 → 10% de descuento, total RD$4,500.
 
+## Asistente de IA (Portal Familiar) — "un solo cerebro, dos salidas"
+
+**Fase 1 — Widget interno (construido y verificado):**
+- `web/src/lib/ai/answerFamilyQuestion.ts`: núcleo reutilizable, sin
+  dependencia de cookies/sesión de Next.js — recibe la identidad ya
+  resuelta (`schoolId`/`familyId`/`guardianId`) y un mensaje. Usa
+  siempre el cliente `service_role` (nunca RLS puro) y filtra
+  explícitamente por `family_id`/`school_id` en cada consulta —
+  defensa en profundidad, para que el mismo código sea igual de
+  seguro con sesión (Fase 1) que sin ella (Fase 2, WhatsApp).
+- Modelo: `claude-haiku-4-5-20251001` (eficiente en costo, suficiente
+  para responder sobre datos ya estructurados).
+- Límite de uso: 30 preguntas por familia cada 24 horas (ventana
+  móvil, no día calendario).
+- `ANTHROPIC_API_KEY` — variable server-only, mismo tratamiento que
+  `SUPABASE_SERVICE_ROLE_KEY` (nunca en cliente, nunca commiteada).
+- Migración `20260719000000_ai_conversations.sql`: tabla
+  `ai_conversations` con columna `channel` (`'widget'|'whatsapp'`)
+  desde ya, para que la Fase 2 reutilice la misma tabla sin
+  migraciones nuevas. RLS: cada guardian lee solo las conversaciones
+  de su propia familia; **el personal del colegio no tiene ninguna
+  política de lectura sobre esta tabla, ni siquiera director** —
+  decisión de producto explícita (son conversaciones privadas de la
+  familia con el asistente).
+- `web/src/app/dashboard/portal-familiar/actions.ts`: único lugar de
+  la Fase 1 que resuelve la sesión (Server Actions
+  `sendFamilyChatMessage`/`getFamilyChatHistory`), delega en el
+  núcleo ya con la identidad resuelta.
+- `FamilyChatWidget.tsx`: chat embebido en Portal Familiar.
+
+**Fase 2 — WhatsApp/Twilio (documentado, NO construido):** un futuro
+endpoint (route handler) recibiría los mensajes entrantes de Twilio,
+resolvería `teléfono → guardian_id → family_id` explícitamente (sin
+sesión de Supabase, ya que WhatsApp no tiene JWT), y llamaría al
+mismo `answerFamilyQuestion()` con `channel: 'whatsapp'` — sin
+duplicar lógica de negocio. El usuario decidió empezar la
+implementación de WhatsApp vía Twilio (más rápido de activar) mientras
+se solicita el acceso real a la API de Meta en paralelo. Pendiente de
+construir cuando se priorice.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -236,15 +276,9 @@ hijo 3 → 10% de descuento, total RD$4,500.
    `NEXT_PUBLIC_SITE_URL`, verificar el dominio en Resend y actualizar
    `resend_from_address` en `private.app_settings`, considerar mover también
    el SMTP de Supabase Auth al mismo dominio.
-7. **Sistema de comunicación** (el más grande, dejado para el final a
-   propósito): arquitectura acordada es un solo "cerebro" de IA con acceso a
-   los datos del colegio (vía Claude), con dos salidas: (a) widget interno
-   para padres ya en el sistema — construible ya, sin dependencias externas;
-   (b) WhatsApp Business para leads y avisos externos — requiere verificación
-   de negocio con Meta (o vía Twilio/similar), depende de tener dominio
-   propio. Voz (ElevenLabs) queda como extensión opcional posterior, y hay que
-   decidir primero si lo que se quiere es generación de audio o llamadas
-   telefónicas de verdad (son productos distintos).
+7. **Sistema de comunicación** — Fase 1 (widget interno) construida y
+   verificada, Fase 2 (WhatsApp/Twilio) documentada abajo pero sin
+   construir todavía.
 8. ~~Descuento automático a partir del Nº hijo~~ — resuelto (ver
    sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).

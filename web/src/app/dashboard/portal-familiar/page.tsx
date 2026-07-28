@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import StudentCard from '@/components/portal/StudentCard'
 import SummaryBadge from '@/components/portal/SummaryBadge'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import FamilyChatWidget from '@/components/portal/FamilyChatWidget'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — SchoolOS',
@@ -104,6 +105,14 @@ export default async function PortalFamiliarPage() {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Asistente de IA -- "un solo cerebro, dos salidas" (ver AGENTS.md) */}
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
+          Asistente
+        </h2>
+        <FamilyChatWidget />
       </div>
     </div>
   )
