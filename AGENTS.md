@@ -282,6 +282,40 @@ después de este fix, el siguiente paso es repetir la prueba de `/sw.js`
 contra la URL real (para confirmar que el fix ya se desplegó) antes de
 seguir investigando otras causas.
 
+## Verificación real del asistente de IA — 3 de 4 puntos confirmados, 1 bloqueado por saldo de Anthropic
+
+Se probó el núcleo (`answerFamilyQuestion()`) directamente contra datos reales
+(familia "Del Rosario Casilla", `family_id e73dd850-b7ca-4691-bbcc-a0b2330e7601`,
+que en realidad tiene **3** estudiantes -- Daury, Darlyn y Moises Feliz --, no 2
+como se asumió antes de verificar).
+
+**Bug real encontrado y corregido**: `gatherFamilyContext()` armaba el estado de
+matrícula desde un join a `enrollments`, tabla vacía en datos reales -- el
+asistente siempre iba a decir "sin matrícula registrada" sin importar el
+estudiante. Corregido para leer `students.enrollment_status` directamente
+(mismo campo que ya usa `calculate_sibling_discount()`).
+
+**Resultado de la verificación**:
+1. ✅ Datos del contexto correctos y coinciden con la base real (nombres,
+   fechas, matrícula, facturas, asistencia, comunicados). ⚠️ No se pudo
+   confirmar la respuesta final en prosa del modelo: la cuenta de Anthropic no
+   tiene saldo (`credit balance is too low`, 400 en las 3 llamadas de prueba).
+2. ✅ Aislamiento entre familias confirmado **estructuralmente**, no solo por
+   instrucción del prompt: se probó con una familia/estudiante de prueba con
+   nombre deliberadamente distintivo, preguntando explícitamente por "otras
+   familias" -- ese nombre nunca aparece en el `contextText` armado para la
+   familia 1, porque `gatherFamilyContext()` filtra por `family_id` en la
+   consulta SQL misma, no depende de que el modelo "se porte bien".
+3. ✅ Límite de 30 mensajes/24h confirmado: corta antes de llamar a la API de
+   Anthropic (no gasta de más).
+4. ⚠️ Registro en `ai_conversations` no confirmado en vivo -- el insert solo
+   ocurre tras una respuesta exitosa, y las 3 pruebas fallaron antes de llegar
+   ahí por el mismo problema de saldo.
+
+**Pendiente**: recargar crédito en Plans & Billing de la consola de Anthropic
+para cerrar los puntos 1 y 4. Datos de prueba (familia temporal, filas
+sintéticas) ya fueron borrados -- no quedó nada sucio en producción.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

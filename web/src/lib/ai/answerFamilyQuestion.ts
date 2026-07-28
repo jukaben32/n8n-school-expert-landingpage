@@ -137,7 +137,7 @@ async function gatherFamilyContext(admin: AdminClient, schoolId: string, familyI
     admin.from('families').select('name').eq('id', familyId).eq('school_id', schoolId).single(),
     admin
       .from('students')
-      .select('id, first_name, last_name, birth_date, enrollments(status, grade_level_id)')
+      .select('id, first_name, last_name, birth_date, enrollment_status')
       .eq('family_id', familyId)
       .eq('school_id', schoolId)
       .is('deleted_at', null),
@@ -177,12 +177,7 @@ async function gatherFamilyContext(admin: AdminClient, schoolId: string, familyI
   const schoolName = schoolRes.data?.name ?? 'el colegio'
 
   const studentsText = (studentsRes.data ?? [])
-    .map((s) => {
-      type Enrollment = { status: string }
-      const enrollments = (s.enrollments as unknown as Enrollment[]) ?? []
-      const status = enrollments[0]?.status ?? 'sin matrícula registrada'
-      return `- ${s.first_name} ${s.last_name} (nacimiento: ${s.birth_date}, estado de matrícula: ${status})`
-    })
+    .map((s) => `- ${s.first_name} ${s.last_name} (nacimiento: ${s.birth_date}, estado de matrícula: ${s.enrollment_status})`)
     .join('\n') || 'No hay estudiantes registrados en esta familia.'
 
   const studentNameById = new Map((studentsRes.data ?? []).map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
