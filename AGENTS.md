@@ -379,6 +379,30 @@ empiece a importar -- en ese momento, construir medición y facturación por
 colegio sería el camino natural (columna de uso acumulado, o límite
 configurable por colegio en vez de solo por familia).
 
+## Tutores múltiples, edición de familia y catálogo de puestos ampliado
+
+**Tutores múltiples al crear un estudiante**: `NewStudentForm.tsx` (modo
+"Familia nueva") ya no asume un solo tutor -- permite agregar hasta 4
+(madre/padre/tutor legal/otro), el primero de la lista queda como tutor
+principal (`is_primary`). En modo "Familia existente", el estudiante nuevo
+se vincula ahora a **todos** los tutores ya registrados de esa familia
+(antes solo al principal) -- si la familia tiene madre y padre, un hermano
+nuevo queda ligado a ambos automáticamente.
+
+**Edición de familia**: `/dashboard/familias/[id]/editar` -- edita nombre y
+datos de facturación de la familia, y permite editar/agregar/quitar
+tutores. Quitar un tutor primero borra sus vínculos en `student_guardians`
+(la FK no tiene `ON DELETE CASCADE`) antes de borrar el registro en
+`guardians` -- si no se hace en ese orden, la eliminación falla por
+restricción de llave foránea.
+
+**Catálogo de puestos de personal ampliado** (migración 022): se agregaron
+Seguridad, Conserje, Auxiliar de Cafetería, Auxiliar de Limpieza, Portero,
+Secretaria, Secretaria Docente, Ayudante Docente, Administrador y
+Psicóloga -- valores en inglés en la base (`security`, `janitor`, etc.,
+consistentes con el resto del esquema), etiquetas en español en la
+interfaz (`roleLabels` en `personal/page.tsx`).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

@@ -11,16 +11,37 @@ interface NewStudentFormProps {
   families: Family[]
 }
 
+interface DraftGuardian {
+  key: string
+  firstName: string
+  lastName: string
+  phone: string
+  email: string
+  relationship: string
+}
+
 const inputClass =
   'w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
 
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'
 
+const relationshipLabels: Record<string, string> = {
+  madre: 'Madre', padre: 'Padre', tutor_legal: 'Tutor legal', otro: 'Otro',
+}
+
+function newGuardianDraft(relationship: string): DraftGuardian {
+  return { key: crypto.randomUUID(), firstName: '', lastName: '', phone: '', email: '', relationship }
+}
+
 /**
  * NewStudentForm — Formulario de alta de estudiante.
- * Modo "familia existente": solo crea el registro en `students`.
- * Modo "familia nueva": crea `families` + `guardians` (tutor principal)
- * + `students` + el vínculo en `student_guardians`, en ese orden.
+ * Modo "familia existente": solo crea el registro en `students`, vinculado
+ * al tutor principal ya existente de esa familia.
+ * Modo "familia nueva": crea `families` + uno o VARIOS `guardians` (madre,
+ * padre, tutor legal -- muchos niños viven con más de un responsable, o
+ * con un tutor que no es ninguno de los dos padres) + `students` + los
+ * vínculos correspondientes en `student_guardians`. El primero de la
+ * lista queda marcado como tutor principal (is_primary).
  */
 export default function NewStudentForm({ schoolId, families }: NewStudentFormProps) {
   const router = useRouter()
@@ -38,13 +59,23 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
   // Familia existente
   const [familyId, setFamilyId] = useState(families[0]?.id ?? '')
 
-  // Familia nueva + tutor principal
+  // Familia nueva + uno o varios tutores
   const [familyName, setFamilyName] = useState('')
-  const [guardianFirstName, setGuardianFirstName] = useState('')
-  const [guardianLastName, setGuardianLastName] = useState('')
-  const [guardianPhone, setGuardianPhone] = useState('')
-  const [guardianEmail, setGuardianEmail] = useState('')
-  const [guardianRelationship, setGuardianRelationship] = useState('madre')
+  const [guardians, setGuardians] = useState<DraftGuardian[]>([newGuardianDraft('madre')])
+
+  function updateGuardian(key: string, patch: Partial<DraftGuardian>) {
+    setGuardians((prev) => prev.map((g) => (g.key === key ? { ...g, ...patch } : g)))
+  }
+  function addGuardian() {
+    setGuardians((prev) => {
+      const used = new Set(prev.map((g) => g.relationship))
+      const next = !used.has('madre') ? 'madre' : !used.has('padre') ? 'padre' : 'tutor_legal'
+      return prev.length >= 4 ? prev : [...prev, newGuardianDraft(next)]
+    })
+  }
+  function removeGuardian(key: string) {
+    setGuardians((prev) => (prev.length <= 1 ? prev : prev.filter((g) => g.key !== key)))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -54,9 +85,17 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
       setError('Selecciona una familia.')
       return
     }
-    if (mode === 'new' && (!familyName || !guardianFirstName || !guardianLastName || !guardianPhone)) {
-      setError('Completa el nombre de la familia y los datos del tutor principal.')
-      return
+    if (mode === 'new') {
+      if (!familyName) {
+        setError('Completa el nombre de la familia.')
+        return
+      }
+      for (const g of guardians) {
+        if (!g.firstName || !g.lastName || !g.phone) {
+          setError('Completa nombre, apellido y teléfono de cada tutor agregado.')
+          return
+        }
+      }
     }
 
     setSaving(true)
@@ -75,22 +114,29 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
         if (familyError || !newFamily) throw familyError ?? new Error('No se pudo crear la familia.')
         targetFamilyId = newFamily.id
 
-        // 2. Crear el tutor principal
-        const { data: newGuardian, error: guardianError } = await supabase
-          .from('guardians')
-          .insert({
-            school_id: schoolId,
-            family_id: targetFamilyId,
-            first_name: guardianFirstName,
-            last_name: guardianLastName,
-            phone: guardianPhone,
-            email: guardianEmail || null,
-            relationship: guardianRelationship,
-            is_primary: true,
-          })
-          .select('id')
-          .single()
-        if (guardianError || !newGuardian) throw guardianError ?? new Error('No se pudo crear el tutor.')
+        // 2. Crear el/los tutor(es) -- el primero de la lista queda como
+        // tutor principal (is_primary), el resto se guarda igual pero sin
+        // esa marca.
+        const createdGuardians: { id: string; relationship: string; isPrimary: boolean }[] = []
+        for (let i = 0; i < guardians.length; i++) {
+          const g = guardians[i]
+          const { data: newGuardian, error: guardianError } = await supabase
+            .from('guardians')
+            .insert({
+              school_id: schoolId,
+              family_id: targetFamilyId,
+              first_name: g.firstName,
+              last_name: g.lastName,
+              phone: g.phone,
+              email: g.email || null,
+              relationship: g.relationship,
+              is_primary: i === 0,
+            })
+            .select('id')
+            .single()
+          if (guardianError || !newGuardian) throw guardianError ?? new Error('No se pudo crear un tutor.')
+          createdGuardians.push({ id: newGuardian.id, relationship: g.relationship, isPrimary: i === 0 })
+        }
 
         // 3. Crear el estudiante
         const { data: newStudent, error: studentError } = await supabase
@@ -108,13 +154,15 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
           .single()
         if (studentError || !newStudent) throw studentError ?? new Error('No se pudo crear el estudiante.')
 
-        // 4. Vincular estudiante <-> tutor
-        const { error: linkError } = await supabase.from('student_guardians').insert({
-          student_id: newStudent.id,
-          guardian_id: newGuardian.id,
-          relationship: guardianRelationship,
-          is_primary: true,
-        })
+        // 4. Vincular al estudiante con TODOS los tutores creados
+        const { error: linkError } = await supabase.from('student_guardians').insert(
+          createdGuardians.map((g) => ({
+            student_id: newStudent.id,
+            guardian_id: g.id,
+            relationship: g.relationship,
+            is_primary: g.isPrimary,
+          }))
+        )
         if (linkError) throw linkError
       } else {
         const { data: newStudent, error: studentError } = await supabase
@@ -132,22 +180,23 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
           .single()
         if (studentError || !newStudent) throw studentError ?? new Error('No se pudo crear el estudiante.')
 
-        // Vincular con el tutor principal de la familia existente -- este
-        // paso faltaba por completo en este modo (no era intermitente).
-        const { data: primaryGuardian } = await supabase
+        // Vincular con TODOS los tutores ya existentes de esa familia, no
+        // solo el principal -- si la familia tiene madre y padre
+        // registrados, el nuevo hermano debe quedar ligado a ambos.
+        const { data: existingGuardians } = await supabase
           .from('guardians')
-          .select('id, relationship')
+          .select('id, relationship, is_primary')
           .eq('family_id', targetFamilyId)
-          .eq('is_primary', true)
-          .maybeSingle()
 
-        if (primaryGuardian) {
-          const { error: linkError } = await supabase.from('student_guardians').insert({
-            student_id: newStudent.id,
-            guardian_id: primaryGuardian.id,
-            relationship: primaryGuardian.relationship ?? 'tutor_legal',
-            is_primary: true,
-          })
+        if (existingGuardians && existingGuardians.length > 0) {
+          const { error: linkError } = await supabase.from('student_guardians').insert(
+            existingGuardians.map((g) => ({
+              student_id: newStudent.id,
+              guardian_id: g.id,
+              relationship: g.relationship ?? 'tutor_legal',
+              is_primary: g.is_primary,
+            }))
+          )
           if (linkError) throw linkError
         }
       }
@@ -209,6 +258,9 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
             </select>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+              El estudiante quedará vinculado a todos los tutores ya registrados en esta familia.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -217,37 +269,62 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
               <input id="familyName" required value={familyName} onChange={(e) => setFamilyName(e.target.value)}
                 placeholder="Ej. Familia Pérez" className={inputClass} />
             </div>
+
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              Tutor principal
+              Padres / tutores — muchos estudiantes viven con más de uno
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="gFirstName" className={labelClass}>Nombre</label>
-                <input id="gFirstName" required value={guardianFirstName} onChange={(e) => setGuardianFirstName(e.target.value)} className={inputClass} />
+
+            {guardians.map((g, i) => (
+              <div key={g.key} className="rounded-xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                    {i === 0 ? 'Tutor principal' : `Tutor adicional ${i + 1}`}
+                  </span>
+                  {guardians.length > 1 && (
+                    <button type="button" onClick={() => removeGuardian(g.key)} className="text-xs text-red-500 hover:text-red-600">
+                      Quitar
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor={`gFirstName-${g.key}`} className={labelClass}>Nombre</label>
+                    <input id={`gFirstName-${g.key}`} required value={g.firstName} onChange={(e) => updateGuardian(g.key, { firstName: e.target.value })} className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor={`gLastName-${g.key}`} className={labelClass}>Apellido</label>
+                    <input id={`gLastName-${g.key}`} required value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor={`gPhone-${g.key}`} className={labelClass}>Teléfono</label>
+                    <input id={`gPhone-${g.key}`} required value={g.phone} onChange={(e) => updateGuardian(g.key, { phone: e.target.value })}
+                      placeholder="+1 809 000 0000" className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor={`gEmail-${g.key}`} className={labelClass}>Correo (opcional)</label>
+                    <input id={`gEmail-${g.key}`} type="email" value={g.email} onChange={(e) => updateGuardian(g.key, { email: e.target.value })} className={inputClass} />
+                  </div>
+                  <div className="col-span-2">
+                    <label htmlFor={`gRelationship-${g.key}`} className={labelClass}>Parentesco</label>
+                    <select id={`gRelationship-${g.key}`} value={g.relationship} onChange={(e) => updateGuardian(g.key, { relationship: e.target.value })} className={inputClass}>
+                      {Object.entries(relationshipLabels).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label htmlFor="gLastName" className={labelClass}>Apellido</label>
-                <input id="gLastName" required value={guardianLastName} onChange={(e) => setGuardianLastName(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="gPhone" className={labelClass}>Teléfono</label>
-                <input id="gPhone" required value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)}
-                  placeholder="+1 809 000 0000" className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="gEmail" className={labelClass}>Correo (opcional)</label>
-                <input id="gEmail" type="email" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} className={inputClass} />
-              </div>
-              <div className="col-span-2">
-                <label htmlFor="gRelationship" className={labelClass}>Parentesco</label>
-                <select id="gRelationship" value={guardianRelationship} onChange={(e) => setGuardianRelationship(e.target.value)} className={inputClass}>
-                  <option value="madre">Madre</option>
-                  <option value="padre">Padre</option>
-                  <option value="tutor_legal">Tutor legal</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </div>
-            </div>
+            ))}
+
+            {guardians.length < 4 && (
+              <button
+                type="button"
+                onClick={addGuardian}
+                className="w-full rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 py-2.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:border-primary/40 transition"
+              >
+                + Agregar otro padre/madre/tutor
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -90,6 +90,16 @@ export default function NewStaffForm({ schoolId }: NewStaffFormProps) {
               <option value="reception">Recepción</option>
               <option value="nurse">Enfermería</option>
               <option value="admin">Administración</option>
+              <option value="security">Seguridad</option>
+              <option value="janitor">Conserje</option>
+              <option value="cafeteria_assistant">Auxiliar de Cafetería</option>
+              <option value="cleaning_assistant">Auxiliar de Limpieza</option>
+              <option value="doorman">Portero</option>
+              <option value="secretary">Secretaria</option>
+              <option value="teaching_secretary">Secretaria Docente</option>
+              <option value="teaching_assistant">Ayudante Docente</option>
+              <option value="administrator">Administrador</option>
+              <option value="psychologist">Psicóloga</option>
             </select>
           </div>
         </div>
