@@ -316,6 +316,43 @@ estudiante. Corregido para leer `students.enrollment_status` directamente
 para cerrar los puntos 1 y 4. Datos de prueba (familia temporal, filas
 sintéticas) ya fueron borrados -- no quedó nada sucio en producción.
 
+## Nota de voz en el asistente de IA — transcripción con OpenAI
+
+**Proveedor y modelo**: `gpt-4o-mini-transcribe` de OpenAI -- verificado en la
+documentación oficial (no de memoria) el mismo día que se construyó. Es el
+modelo de transcripción más barato de OpenAI (~$0.003/min), acepta
+`webm`/`m4a` directo (los formatos que produce `MediaRecorder` en Chrome y
+Safari respectivamente) sin conversión de por medio. Se descartó
+reconocimiento de voz nativo del navegador (`SpeechRecognition`) a propósito,
+por soporte pobre en iPhone/Safari -- decisión tomada explícitamente con el
+usuario antes de construir, dado que buena parte de las familias entra desde
+iPhone.
+
+**"Un solo cerebro" aplicado también aquí**: `web/src/lib/ai/transcribeAudio.ts`
+sigue el mismo principio que `answerFamilyQuestion.ts` -- recibe bytes de
+audio crudos, sin sesión ni Next.js. Reutilizable por una futura Fase 2 de
+WhatsApp sin cambios.
+
+**Cómo queda conectado sin duplicar lógica**: `sendFamilyVoiceMessage(formData)`
+extrae el audio, llama a `transcribeAudio()`, y con el texto resultante llama
+literalmente a `sendFamilyChatMessage()` -- la misma tubería que ya usa el
+chat de texto (identidad, límite diario, núcleo). No hay una segunda copia de
+esa lógica.
+
+**Control de costo**: además del límite de 30 mensajes/24h ya existente
+(las notas de voz cuentan igual), tope de **60 segundos** de grabación
+(auto-stop en el cliente) y **10MB** en el servidor como defensa en
+profundidad.
+
+**Verificación real, parcial**: no se pudo confirmar la transcripción de un
+audio real hablado -- ni `OPENAI_API_KEY` ni `ANTHROPIC_API_KEY` tenían saldo
+al momento de construir esto. Sí se confirmó que `transcribeAudio()` arma
+correctamente la petición y llega al endpoint real de OpenAI (la respuesta es
+el error real de cuota agotada, no un error de conexión/formato), y que la
+validación de audio muy corto corta antes de gastar una llamada. **Pendiente**:
+repetir la prueba completa con audio real en cuanto cualquiera de las dos
+cuentas tenga saldo.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
