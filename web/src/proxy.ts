@@ -68,7 +68,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Aplica el middleware a todas las rutas excepto archivos estáticos y API de Next.js
-    '/((?!_next/static|_next/image|favicon.ico|icon.*|manifest.*).*)',
+    // Aplica el middleware a todas las rutas excepto archivos estáticos y API de Next.js.
+    // sw.js es crítico: es el "kill switch" que reemplaza el service worker atascado
+    // de la landing vieja (ver web/public/sw.js). Si el middleware lo intercepta y
+    // redirige a /login (como pasaba antes de este fix), el navegador nunca recibe
+    // JavaScript válido para ese registro -- el service worker viejo nunca se
+    // actualiza/autodestruye, y esa persona sigue viendo el contenido viejo para
+    // siempre, sin importar qué tan bien esté desplegado el sitio nuevo.
+    '/((?!_next/static|_next/image|favicon.ico|icon.*|manifest.*|sw\\.js).*)',
   ],
 }

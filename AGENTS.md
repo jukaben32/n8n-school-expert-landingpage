@@ -244,6 +244,44 @@ implementación de WhatsApp vía Twilio (más rápido de activar) mientras
 se solicita el acceso real a la API de Meta en paralelo. Pendiente de
 construir cuando se priorice.
 
+## "Vercel no muestra la landing nueva" — causa real: `/sw.js` bloqueado por el middleware de auth
+
+**No se asumió la causa** — se verificó con evidencia real antes de tocar nada:
+
+1. `curl` directo a la URL de producción (sin cookies, sin service worker de por
+   medio) devolvió `200` con el HTML de la landing **nueva** completo. Esto
+   descarta de raíz que el `Root Directory` de Vercel esté mal apuntado o que el
+   build esté roto — el servidor sirve el sitio correcto.
+2. `curl -D - .../sw.js` → **`307` a `/login?redirect=%2Fsw.js`**, en vez de
+   servir el JavaScript de `web/public/sw.js`. Causa: el `matcher` de
+   `web/src/proxy.ts` excluía `_next/static`, `favicon.ico`, `icon.*` y
+   `manifest.*`, pero **no `sw.js`** — cualquier petición a `/sw.js` sin sesión
+   caía en la protección de rutas y se redirigía a `/login`.
+
+**Por qué esto explica el síntoma**: cualquiera con el service worker viejo (de
+la landing `n8n-school-expert` original) todavía instalado depende de que su
+navegador pueda descargar `/sw.js` como JavaScript válido para detectar la
+actualización y activar el "kill switch" (ver `web/public/sw.js`). Como el
+middleware devolvía una redirección HTML a `/login` en vez de JS, esa persona
+seguía viendo contenido viejo cacheado **para siempre**, sin importar qué tan
+bien estuviera desplegado el sitio nuevo del lado del servidor.
+
+**Fix**: se agregó `sw\.js` al negative lookahead del `matcher` en
+`web/src/proxy.ts`. Verificado dos veces de forma independiente: primero por
+Claude Code contra producción real, y luego reproducido en este entorno con
+`next start` local + `curl localhost:.../sw.js` → `200`,
+`Content-Type: application/javascript`, contenido real del kill-switch.
+
+**Pendiente**: no hubo acceso al panel/API de Vercel en ninguna de las dos
+sesiones que investigaron esto, así que no se confirmó visualmente el
+`Root Directory` ni la lista completa de variables de entorno de
+`Production` (`ANTHROPIC_API_KEY` en particular, agregada recientemente para
+el asistente de IA -- sin ella el asistente falla en producción aunque la
+landing funcione perfecto). Si el usuario sigue viendo contenido viejo
+después de este fix, el siguiente paso es repetir la prueba de `/sw.js`
+contra la URL real (para confirmar que el fix ya se desplegó) antes de
+seguir investigando otras causas.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
