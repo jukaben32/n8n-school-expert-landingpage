@@ -40,8 +40,7 @@ export default async function PortalFamiliarPage() {
         .select(`
           relationship,
           students (
-            id, first_name, last_name, photo_url,
-            enrollments ( status, grade_level_id )
+            id, first_name, last_name, photo_url, enrollment_status
           )
         `)
         .eq('guardian_id', profile.guardian_id)
@@ -80,7 +79,7 @@ export default async function PortalFamiliarPage() {
               // Cast seguro usando unknown como intermediario
               type StudentShape = {
                 id: string; first_name: string; last_name: string;
-                photo_url: string | null; enrollments: { status: string }[]
+                photo_url: string | null; enrollment_status: string | null
               }
               const student = (sg.students as unknown) as StudentShape | null
               if (!student) return null
@@ -91,7 +90,7 @@ export default async function PortalFamiliarPage() {
                   firstName={student.first_name}
                   lastName={student.last_name}
                   photoUrl={student.photo_url}
-                  enrollmentStatus={student.enrollments?.[0]?.status ?? 'N/A'}
+                  enrollmentStatus={student.enrollment_status ?? 'N/A'}
                   relationship={sg.relationship}
                 />
               )
