@@ -1,6 +1,9 @@
 'use client'
 
+import PaymentActions from './PaymentActions'
+
 type InvoiceStatus = 'pendiente' | 'pagado' | 'vencido' | 'anulado'
+type ReceiptStatus = 'pendiente' | 'confirmado' | 'rechazado'
 
 interface InvoiceCardProps {
   invoice: {
@@ -13,6 +16,7 @@ interface InvoiceCardProps {
     paid_at: string | null
     students: { first_name: string; last_name: string } | null
   }
+  receiptStatus?: ReceiptStatus | null
 }
 
 const statusStyles = {
@@ -25,7 +29,7 @@ const statusStyles = {
 /**
  * InvoiceCard — Tarjeta individual para mostrar el detalle de una factura.
  */
-export default function InvoiceCard({ invoice }: InvoiceCardProps) {
+export default function InvoiceCard({ invoice, receiptStatus }: InvoiceCardProps) {
   const { description, total_amount, due_date, status, ncf, paid_at, students } = invoice
 
   const formatDOP = (amount: number) => {
@@ -87,9 +91,7 @@ export default function InvoiceCard({ invoice }: InvoiceCardProps) {
         </p>
         
         {status !== 'pagado' && status !== 'anulado' && (
-          <button className="text-xs font-semibold px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-full transition shadow-glow">
-            Pagar en línea
-          </button>
+          <PaymentActions invoiceId={invoice.id} pendingReceiptStatus={receiptStatus} />
         )}
       </div>
 

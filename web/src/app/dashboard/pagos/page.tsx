@@ -24,12 +24,29 @@ interface Invoice {
   students: { first_name: string; last_name: string } | null
 }
 
+const azulBannerCopy: Record<string, { text: string; tone: 'ok' | 'warn' | 'error' }> = {
+  aprobado: { text: '✓ Tu pago con tarjeta fue aprobado.', tone: 'ok' },
+  declinado: { text: 'El pago con tarjeta fue declinado. Puedes intentar de nuevo o pagar por transferencia.', tone: 'warn' },
+  cancelado: { text: 'Cancelaste el pago con tarjeta.', tone: 'warn' },
+  error: { text: 'No se pudo confirmar el resultado del pago. Si tu tarjeta fue cargada, contacta a secretaría.', tone: 'error' },
+}
+const bannerToneClass: Record<'ok' | 'warn' | 'error', string> = {
+  ok: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400',
+  warn: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400',
+  error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400',
+}
+
 /**
  * Página de Pagos — Portal Familiar
  * Muestra el estado de cuenta de la familia: facturas pendientes,
  * vencidas y pagadas con resumen del saldo total.
  */
-export default async function PagosPage() {
+export default async function PagosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ azul?: string }>
+}) {
+  const { azul } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -72,6 +89,22 @@ export default async function PagosPage() {
 
   const invoices = (invoicesRaw ?? []) as unknown as Invoice[]
 
+  // Último comprobante subido por factura (para no dejar que la familia
+  // suba dos veces mientras uno ya está en revisión, y para mostrar si
+  // uno fue rechazado).
+  const { data: receiptsRaw } = familyId
+    ? await supabase
+        .from('payment_receipts')
+        .select('invoice_id, status, created_at')
+        .eq('family_id', familyId)
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
+  const receiptStatusByInvoice = new Map<string, 'pendiente' | 'confirmado' | 'rechazado'>()
+  for (const r of (receiptsRaw ?? []) as { invoice_id: string; status: 'pendiente' | 'confirmado' | 'rechazado' }[]) {
+    if (!receiptStatusByInvoice.has(r.invoice_id)) receiptStatusByInvoice.set(r.invoice_id, r.status)
+  }
+
   // Calcular resumen financiero
   const totalPendiente = invoices
     .filter((i) => i.status === 'pendiente')
@@ -95,6 +128,12 @@ export default async function PagosPage() {
         { label: 'tus datos', error: guardianError },
         { label: 'tus facturas', error: invoicesRawError },
       ]} />
+
+      {azul && azulBannerCopy[azul] && (
+        <div role="status" className={`rounded-xl border px-4 py-3 text-sm ${bannerToneClass[azulBannerCopy[azul].tone]}`}>
+          {azulBannerCopy[azul].text}
+        </div>
+      )}
 
       {/* Encabezado */}
       <div>
@@ -121,7 +160,7 @@ export default async function PagosPage() {
           </h2>
           <div className="space-y-3">
             {pendientes.map((invoice) => (
-              <InvoiceCard key={invoice.id} invoice={invoice} />
+              <InvoiceCard key={invoice.id} invoice={invoice} receiptStatus={receiptStatusByInvoice.get(invoice.id)} />
             ))}
           </div>
         </section>

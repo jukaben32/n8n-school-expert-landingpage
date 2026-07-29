@@ -45,7 +45,14 @@ export async function proxy(request: NextRequest) {
   // TODA ruta empieza con '/' — usarlo en el .some(startsWith) de abajo
   // volvía "pública" cualquier ruta del sitio (incluido /dashboard/*),
   // desactivando por completo la protección del middleware.
-  const publicPrefixRoutes = ['/login', '/registro', '/recuperar-contrasena', '/actualizar-contrasena', '/colegio', '/terminos']
+  // /api/pagos/azul es el callback público de Azul (ver web/src/lib/payments/azul.ts):
+  // el navegador del cliente vuelve ahí después de pagar y puede no traer una
+  // sesión válida (cookies bloqueadas, sesión expirada durante el pago, etc.).
+  // La seguridad de esa ruta viene de verificar el AuthHash de la respuesta de
+  // Azul, no de la sesión -- si el middleware la tratara como protegida, un pago
+  // real aprobado podría perderse silenciosamente al redirigir a /login en vez
+  // de confirmar la factura (mismo tipo de bug que el de sw.js, ver más abajo).
+  const publicPrefixRoutes = ['/login', '/registro', '/recuperar-contrasena', '/actualizar-contrasena', '/colegio', '/terminos', '/api/pagos/azul']
   const isPublicRoute = pathname === '/' || publicPrefixRoutes.some(route => pathname.startsWith(route))
 
   // Si el usuario no está autenticado y quiere acceder a una ruta protegida

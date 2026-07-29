@@ -6,6 +6,8 @@ import { canAccess } from '@/lib/permissions'
 import SchoolConfigForm from './SchoolConfigForm'
 import ExportDataButton from './ExportDataButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import AzulSettingsForm from './AzulSettingsForm'
+import { getPaymentSettingsDisplay } from './paymentSettingsActions'
 
 export const metadata: Metadata = {
   title: 'Configuración del colegio — SchoolOS',
@@ -38,6 +40,8 @@ export default async function ColegioConfigPage() {
 
   if (!school) redirect('/dashboard')
 
+  const paymentSettings = await getPaymentSettingsDisplay()
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'los datos del colegio', error: schoolError }]} />
@@ -50,6 +54,7 @@ export default async function ColegioConfigPage() {
         </p>
       </div>
       <SchoolConfigForm school={school} />
+      {paymentSettings && <AzulSettingsForm initial={paymentSettings} />}
       <ExportDataButton schoolSubdomain={school.subdomain} />
     </div>
   )

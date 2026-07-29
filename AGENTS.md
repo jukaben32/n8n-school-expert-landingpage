@@ -403,6 +403,138 @@ Psicóloga -- valores en inglés en la base (`security`, `janitor`, etc.,
 consistentes con el resto del esquema), etiquetas en español en la
 interfaz (`roleLabels` en `personal/page.tsx`).
 
+### Pagos con Azul (por colegio) + Transferencia bancaria con comprobante (2026-07-28) — código completo, migración NO aplicada todavía
+
+**Decisión de arquitectura** (ya venía confirmada por el usuario, no se
+cuestionó): el dinero de cada colegio va directo a la cuenta bancaria de ESE
+colegio -- nunca a una cuenta centralizada de la plataforma. Cada colegio
+afiliado tiene sus propias credenciales de Azul en
+`private.school_payment_settings`, resueltas siempre por `school_id`
+explícito.
+
+**Investigación del método de integración con Azul** (PDF oficial
+"E-commerce AZUL", descargado el 2026-07-28 desde `dev.azul.com.do` --
+no de memoria): Azul ofrece dos métodos. Se usó **"Página de Pago AZUL"**
+(alojada por Azul), tal como pedía el mandato explícitamente, para evitar
+que nuestro servidor toque datos de tarjeta (alcance PCI). El navegador del
+cliente hace un `POST` HTML directo (campos `hidden`) a
+`https://pagos.azul.com.do/PaymentPage/Default.aspx` (producción) o
+`https://pruebas.azul.com.do/PaymentPage/` (pruebas); Azul redirige de
+vuelta con el resultado en el querystring.
+
+**Parte A -- Pago con tarjeta**:
+- `web/src/lib/payments/azul.ts`: núcleo. `buildAzulPaymentForm()` arma los
+  campos del formulario (incluye `AuthHash`, un HMAC-SHA512) y registra la
+  transacción en `azul_transactions` (nueva tabla) antes de devolverle el
+  formulario al navegador. `processAzulResult()` procesa el redirect de
+  vuelta de Azul.
+- **Regla de seguridad no negociable del mandato, implementada tal cual**:
+  nunca se marca una factura como pagada porque el navegador dice
+  "aprobada". `processAzulResult()` SIEMPRE recalcula el `AuthHash` de
+  respuesta con el `AuthKey` del colegio (que nunca viaja en la URL, solo
+  vive en `private.school_payment_settings`) y lo compara contra el que
+  mandó Azul. Si no coincide, se guarda como `status='error'` y NO se toca
+  `invoices` ni se inserta en `payments`, sin importar qué diga
+  `ResponseCode`. Fórmulas de hash (orden exacto de campos, confirmado en
+  el PDF oficial, sección "Manejo de la Autenticación"):
+  - Request: `MerchantId+MerchantName+MerchantType+CurrencyCode+OrderNumber+Amount+ITBIS+ApprovedUrl+DeclinedUrl+CancelUrl+UseCustomField1+CustomField1Label+CustomField1Value+UseCustomField2+CustomField2Label+CustomField2Value+AuthKey`, HMAC-SHA512 con `AuthKey` como llave.
+  - Response: `OrderNumber+Amount+AuthorizationCode+DateTime+ResponseCode+IsoCode+ResponseMessage+ErrorDescription+RRN+AuthKey`, mismo esquema.
+  - Se siguió el encoding UTF-16LE de los ejemplos oficiales en C#/PHP del
+    manual (no la nota genérica de "acepta UTF-8 o Unicode indistinto"),
+    para no arriesgar un mismatch que no se puede probar en vivo sin
+    credenciales reales.
+- `web/src/app/api/pagos/azul/resultado/route.ts`: ruta pública (Route
+  Handler, no Server Action -- Azul redirige el navegador del cliente, no
+  hay sesión de Next.js de por medio) que recibe el callback y llama a
+  `processAzulResult()`.
+- **Bug encontrado y corregido en el camino** (mismo patrón que el bug de
+  `/sw.js` documentado arriba): el matcher de `web/src/proxy.ts` no
+  excluía `/api/pagos/azul`, así que si la sesión del navegador estaba
+  vencida o las cookies bloqueadas justo al volver de Azul, el middleware
+  habría redirigido el callback a `/login` en vez de dejarlo procesar el
+  pago -- perdiendo silenciosamente la confirmación de un pago real
+  aprobado. Se agregó `/api/pagos/azul` a `publicPrefixRoutes`.
+- Botón "Pagar con tarjeta" en `PaymentActions.tsx` (dentro de
+  `InvoiceCard.tsx`, Portal Familiar → Pagos): llama a la Server Action
+  `startAzulPayment()`, arma un `<form>` oculto en el navegador con los
+  campos devueltos, y lo envía por `submit()` -- el servidor nuestro nunca
+  ve el número de tarjeta.
+- Credenciales por colegio: `web/src/app/dashboard/colegio/AzulSettingsForm.tsx`
+  (solo para `configuracion_colegio`, o sea director/school_admin/super_admin).
+  El `AuthKey` nunca se devuelve al navegador una vez guardado -- el campo
+  siempre aparece vacío, con un indicador "(ya configurada)"; dejarlo en
+  blanco al guardar conserva el valor existente.
+
+**Parte B -- Transferencia bancaria con comprobante**:
+- Bucket de Supabase Storage `comprobantes-pago`, **privado** (`public: false`).
+  A propósito no se agregó ninguna política de RLS sobre `storage.objects`
+  para `anon`/`authenticated`: TODO el acceso (subida y lectura) pasa por
+  Server Actions con el cliente `service_role`, después de validar el
+  permiso explícitamente en TypeScript -- mismo principio de defensa en
+  profundidad que `answerFamilyQuestion.ts`, en vez de políticas de RLS
+  basadas en parseo de rutas de Storage (más frágiles). Las lecturas usan
+  `createSignedUrl()` de corta duración (5 minutos), nunca una URL pública.
+- Flujo familia (`web/src/app/dashboard/pagos/actions.ts`,
+  `uploadPaymentReceipt()`): sube el archivo (JPG/PNG/WEBP/PDF, máx. 10MB)
+  y crea una fila en `payment_receipts` con `status='pendiente'`. Esto
+  **nunca** marca la factura como pagada -- solo es la palabra de la
+  familia, tal como pedía el mandato.
+- Flujo Tesorería (`web/src/app/dashboard/tesoreria/actions.ts` +
+  `/dashboard/tesoreria/comprobantes`): el staff ve los comprobantes
+  pendientes de su colegio, puede abrir el archivo (signed URL) y
+  confirmar o rechazar. Solo al **confirmar** se inserta en `payments` y
+  se marca la factura como pagada (si el monto cubre el total, mismo
+  criterio que ya usaba `NewPaymentForm.tsx` de Tesorería para pagos
+  manuales).
+- Permisos (RLS en `payment_receipts`): la familia solo ve/crea los
+  comprobantes de su propia familia; el staff de tesorería
+  (`super_admin`/`school_admin`/`director`/`finance` -- el mismo set de
+  roles que ya puede acceder al módulo `tesoreria` en
+  `web/src/lib/permissions.ts`) solo ve/confirma/rechaza los de su propio
+  colegio.
+
+**Estado real de la verificación -- ninguna de las dos partes se pudo
+probar en vivo todavía**, y hay que ser honesto sobre por qué: la
+migración `20260728010000_azul_payments_and_bank_transfers.sql` **no se
+pudo aplicar a producción en esta sesión**. Se intentó por dos vías:
+1. El conector de Supabase aparece "conectado" a nivel de cuenta
+   (`ListConnectors` → `connected: true`) pero no habilitado para este
+   chat específico (`enabledInChat: false`) -- se le pidió al usuario dos
+   veces habilitarlo (`AskUserQuestion`) sin respuesta.
+2. La API de administración de Supabase (`api.supabase.com`) devuelve
+   `401` sin un token de acceso, y no hay ninguno disponible en esta
+   sesión.
+
+Sin las tablas nuevas en producción, no se pudo probar de punta a punta ni
+la Parte A (no hay credenciales reales de Azul cargadas tampoco, ver
+mandato: "Gran Manantial de Sabiduría ya tiene cuenta comercial de Azul
+con credenciales de API reales" -- pero no se compartieron en esta sesión)
+ni la Parte B con un archivo real, como pedía explícitamente el mandato.
+
+**Lo que sí se verificó**: `tsc --noEmit`, `eslint` y `next build` limpios
+para los ~15 archivos nuevos/modificados; revisión manual del código de
+`azul.ts` contra el orden de campos exacto documentado en el PDF oficial
+para ambos hashes (request y response); el fix de `proxy.ts` sigue
+compilando y no rompe ninguna ruta pública existente.
+
+**Pendiente para cerrar esta tarea por completo**, en orden:
+1. Aplicar `supabase/migrations/20260728010000_azul_payments_and_bank_transfers.sql`
+   a producción (requiere acceso a Supabase que esta sesión no tiene).
+2. Verificación real de la Parte B con un PDF/imagen de prueba: crear
+   familia + factura de prueba, subir un comprobante real, confirmar que
+   `payment_receipts` se crea correctamente, que el signed URL de
+   Tesorería funciona, que `confirmReceipt()` marca la factura pagada e
+   inserta en `payments`, y que `rejectReceipt()` no toca nada de eso --
+   luego borrar todos los datos de prueba (mismo estándar de verificación
+   que el resto de esta sesión).
+3. Verificación de la Parte A: pedir al usuario las credenciales reales de
+   Azul de Gran Manantial de Sabiduría (Merchant ID, Merchant Name,
+   AuthKey, ambiente) para cargarlas en `/dashboard/colegio`, y hacer una
+   transacción de prueba real contra el ambiente de pruebas de Azul
+   (`https://pruebas.azul.com.do/PaymentPage/`) para confirmar que el
+   `AuthHash` que armamos es aceptado por Azul y que el callback marca la
+   factura como pagada de verdad.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
