@@ -44,7 +44,10 @@ export default async function ColegioConfigPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <QueryErrorBanner errors={[{ label: 'los datos del colegio', error: schoolError }]} />
+      <QueryErrorBanner errors={[
+        { label: 'los datos del colegio', error: schoolError },
+        { label: 'la configuración de pagos', error: paymentSettings.ok ? null : { message: paymentSettings.error ?? 'error desconocido' } },
+      ]} />
       <div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
           Configuración del colegio
@@ -54,7 +57,7 @@ export default async function ColegioConfigPage() {
         </p>
       </div>
       <SchoolConfigForm school={school} />
-      {paymentSettings && <AzulSettingsForm initial={paymentSettings} />}
+      {paymentSettings.ok && paymentSettings.data && <AzulSettingsForm initial={paymentSettings.data} />}
       <ExportDataButton schoolSubdomain={school.subdomain} />
     </div>
   )

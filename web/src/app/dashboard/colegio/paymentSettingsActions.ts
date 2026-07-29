@@ -20,6 +20,12 @@ export interface PaymentSettingsDisplay {
   hasAuthKey: boolean
 }
 
+export interface PaymentSettingsResult {
+  ok: boolean
+  data?: PaymentSettingsDisplay
+  error?: string
+}
+
 async function resolveSchoolAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,17 +45,22 @@ async function resolveSchoolAdmin() {
   return { ok: true as const, schoolId }
 }
 
-export async function getPaymentSettingsDisplay(): Promise<PaymentSettingsDisplay | null> {
+export async function getPaymentSettingsDisplay(): Promise<PaymentSettingsResult> {
   const admin = await resolveSchoolAdmin()
-  if (!admin.ok) return null
+  if (!admin.ok) return { ok: false, error: admin.error }
 
   const supabaseAdmin = createAdminClient()
   const { data, error } = await supabaseAdmin
     .rpc('get_school_payment_display', { p_school_id: admin.schoolId })
     .maybeSingle()
 
-  if (error || !data) {
-    return { merchantId: '', merchantName: '', merchantType: 'ECommerce', currencyCode: '$', environment: 'test', hasAuthKey: false }
+  if (error) {
+    console.error('[getPaymentSettingsDisplay]', error)
+    return { ok: false, error: `No se pudo cargar la configuración de pagos: ${error.message}` }
+  }
+
+  if (!data) {
+    return { ok: true, data: { merchantId: '', merchantName: '', merchantType: 'ECommerce', currencyCode: '$', environment: 'test', hasAuthKey: false } }
   }
 
   const row = data as {
@@ -62,12 +73,15 @@ export async function getPaymentSettingsDisplay(): Promise<PaymentSettingsDispla
   }
 
   return {
-    merchantId: row.azul_merchant_id ?? '',
-    merchantName: row.azul_merchant_name ?? '',
-    merchantType: row.azul_merchant_type ?? 'ECommerce',
-    currencyCode: row.azul_currency_code ?? '$',
-    environment: row.azul_environment === 'production' ? 'production' : 'test',
-    hasAuthKey: !!row.has_auth_key,
+    ok: true,
+    data: {
+      merchantId: row.azul_merchant_id ?? '',
+      merchantName: row.azul_merchant_name ?? '',
+      merchantType: row.azul_merchant_type ?? 'ECommerce',
+      currencyCode: row.azul_currency_code ?? '$',
+      environment: row.azul_environment === 'production' ? 'production' : 'test',
+      hasAuthKey: !!row.has_auth_key,
+    },
   }
 }
 
