@@ -705,10 +705,27 @@ array de resultados (uno por documento) usando Claude con visión.
 6. `npx tsc --noEmit`, `npm run lint` y `npm run build` limpios para todos
    los archivos nuevos/modificados (ver Convenciones de trabajo).
 
+**Actualización (misma tarea, sesión siguiente)**: el patch de esta sesión se
+aplicó a la rama `claude/credentials-setup-41e2xe` (`git am`, sin conflictos),
+con `tsc --noEmit`/`lint`/`build` limpios, y se subió a GitHub. La migración
+`20260731000000_ocr_document_extraction.sql` **ya se aplicó a producción**
+usando un Personal Access Token de Supabase (`sbp_...`, pegado por el usuario
+para este único uso, no guardado en el repo) contra la API de administración
+(`POST /v1/projects/{ref}/database/query`) -- el mismo bloqueo que
+documentaba el punto 4 de arriba (el conector MCP de Supabase de esta sesión
+también apuntaba al proyecto vacío `hwrtwylnhhobnharthsx`, no al real).
+Verificado con REST directo tras aplicar: `enrollment_form_scans` y
+`vendor_invoices` responden `200` (antes `404`), los buckets
+`fichas-inscripcion`/`facturas-proveedores` existen (`public=false`), y las 6
+columnas nuevas (`students.birth_place`/`grade_level`,
+`guardians.national_id`/`address`/`origin_province`/`nationality`) están en
+`information_schema.columns`. También se confirmó en Vercel (proyecto
+`n8n-school-expert-landingpage`, Root Directory `web`, como debía ser) que
+`ANTHROPIC_API_KEY` y `OPENAI_API_KEY` de producción ya están configuradas
+-- no hizo falta tocarlas para esta tarea.
+
 **Pendiente para cerrar esta tarea por completo**, en orden:
-1. Aplicar `supabase/migrations/20260731000000_ocr_document_extraction.sql`
-   a producción (necesita contraseña de Postgres, un token de la API de
-   administración de Supabase, o aplicación manual vía SQL Editor).
+1. ~~Aplicar la migración a producción~~ -- hecho y verificado (ver arriba).
 2. Verificación real de extracción con Claude: subir una ficha y una
    factura de prueba (ficticias) en cuanto haya `ANTHROPIC_API_KEY` con
    saldo, confirmar que el JSON extraído valida, crear un estudiante de
@@ -755,8 +772,7 @@ array de resultados (uno por documento) usando Claude con visión.
    sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).
 10. **Extracción OCR de fichas de inscripción y facturas de proveedores** —
-    código completo (núcleo, migración, ambas bandejas de revisión) y
-    verificado hasta donde el acceso de esta sesión lo permitió (ver sección
-    "Extracción OCR estructurada con Claude" más arriba). Pendiente: aplicar
-    la migración a producción, probar la llamada real a Claude con saldo, y
-    definir el mapeo de Alegra.
+    código en producción (rama `claude/credentials-setup-41e2xe`) y migración
+    ya aplicada y verificada (ver sección "Extracción OCR estructurada con
+    Claude" más arriba). Pendiente: probar la llamada real a Claude con una
+    ficha/factura de prueba, y definir el mapeo de Alegra.
