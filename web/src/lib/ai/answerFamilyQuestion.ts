@@ -133,7 +133,7 @@ interface FamilyContextError {
 
 async function gatherFamilyContext(admin: AdminClient, schoolId: string, familyId: string): Promise<FamilyContext | FamilyContextError> {
   const [schoolRes, familyRes, studentsRes, invoicesRes, messagesRes] = await Promise.all([
-    admin.from('schools').select('name').eq('id', schoolId).single(),
+    admin.from('schools').select('name, faq_document').eq('id', schoolId).single(),
     admin.from('families').select('name').eq('id', familyId).eq('school_id', schoolId).single(),
     admin
       .from('students')
@@ -207,7 +207,7 @@ Facturas de esta familia:
 ${invoicesText}
 
 Últimos comunicados generales del colegio:
-${messagesText}`
+${messagesText}${schoolRes.data?.faq_document ? `\n\nPreguntas frecuentes y políticas generales del colegio (aplican a todas las familias):\n${schoolRes.data.faq_document}` : ''}`
 
   return { ok: true, schoolName, contextText }
 }
@@ -221,6 +221,7 @@ Hablas con un padre/madre/tutor sobre SU PROPIA familia. Reglas estrictas:
 3. No das consejos médicos, legales ni psicológicos -- para eso remite al colegio directamente.
 4. Si la pregunta no se puede responder con los datos disponibles, dilo claramente y sugiere contactar a la secretaría del colegio.
 5. Responde en español, de forma breve, cálida y profesional.
+6. La sección "Preguntas frecuentes y políticas generales del colegio" (si aparece más abajo) es información pública del colegio, igual para todas las familias -- úsala para preguntas de horarios, uniforme, reglas, etc. No la confundas con los datos privados de esta familia en particular.
 
 DATOS DE LA FAMILIA:
 ${contextText}`

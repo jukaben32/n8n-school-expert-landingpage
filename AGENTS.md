@@ -535,6 +535,22 @@ compilando y no rompe ninguna ruta pública existente.
    `AuthHash` que armamos es aceptado por Azul y que el callback marca la
    factura como pagada de verdad.
 
+## Documento de preguntas frecuentes por colegio (asistente de IA)
+
+Columna `schools.faq_document` (migración 023) -- texto libre editable desde
+`/dashboard/colegio` (`SchoolConfigForm.tsx`) con horarios, política de
+uniforme, reglas generales, etc. -- todo lo que las familias preguntan
+seguido que NO vive en ninguna tabla estructurada. `gatherFamilyContext()`
+en `answerFamilyQuestion.ts` lo agrega al contexto de cada conversación,
+claramente etiquetado como "política general del colegio, igual para todas
+las familias" (distinto de los datos privados de esa familia en particular
+que ya arma el resto de la función) -- el system prompt instruye al modelo
+a usarlo solo para preguntas generales, no a confundirlo con datos privados.
+
+Costo: al ser texto que se envía en cada mensaje, un documento muy largo
+aumenta el costo por respuesta -- se avisa de esto en la propia interfaz de
+Configuración del colegio.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

@@ -15,6 +15,7 @@ interface School {
   email: string | null
   sibling_discount_min_children: number
   sibling_discount_percent: number
+  faq_document: string | null
 }
 
 const inputClass =
@@ -30,6 +31,7 @@ export default function SchoolConfigForm({ school }: { school: School }) {
   const [email, setEmail] = useState(school.email ?? '')
   const [siblingMinChildren, setSiblingMinChildren] = useState(String(school.sibling_discount_min_children))
   const [siblingPercent, setSiblingPercent] = useState(String(school.sibling_discount_percent))
+  const [faqDocument, setFaqDocument] = useState(school.faq_document ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,6 +52,7 @@ export default function SchoolConfigForm({ school }: { school: School }) {
         email: email.trim() || null,
         sibling_discount_min_children: Math.max(1, Number(siblingMinChildren) || 3),
         sibling_discount_percent: Math.min(100, Math.max(0, Number(siblingPercent) || 0)),
+        faq_document: faqDocument.trim() || null,
       })
       .eq('id', school.id)
 
@@ -150,6 +153,26 @@ export default function SchoolConfigForm({ school }: { school: School }) {
             Ej. con 3 y 10%: una familia con 3+ hijos inscritos paga completo por el 1ro y 2do, y el 3ro en
             adelante (ordenados por fecha de nacimiento) recibe 10% de descuento en su factura. Se aplica
             automáticamente al generar la factura en Tesorería.
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <label htmlFor="faqDocument" className={labelClass}>
+            Preguntas frecuentes del colegio (para el Asistente de IA)
+          </label>
+          <textarea
+            id="faqDocument"
+            rows={8}
+            value={faqDocument}
+            onChange={(e) => setFaqDocument(e.target.value)}
+            placeholder={'Ej.\n¿Cuál es el horario de entrada y salida?\nInicial: 7:25 a.m. - 11:50 a.m. ...\n\n¿Qué incluye el uniforme?\n...'}
+            className={`${inputClass} resize-y font-mono text-xs leading-relaxed`}
+          />
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+            Todo lo que escribas aquí (horarios, uniforme, cafetería, reglas generales) el Asistente de IA del
+            Portal Familiar lo usa junto con los datos reales de cada familia para responder — útil para las
+            preguntas que no dependen de datos de un estudiante en particular. Documentos muy largos aumentan
+            un poco el costo de cada respuesta del asistente.
           </p>
         </div>
 

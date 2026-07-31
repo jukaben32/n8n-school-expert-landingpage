@@ -34,7 +34,7 @@ export default async function ColegioConfigPage() {
 
   const { data: school, error: schoolError } = await supabase
     .from('schools')
-    .select('id, name, subdomain, tagline, logo_url, address, phone, email, sibling_discount_min_children, sibling_discount_percent')
+    .select('id, name, subdomain, tagline, logo_url, address, phone, email, sibling_discount_min_children, sibling_discount_percent, faq_document')
     .eq('id', schoolId)
     .single()
 
