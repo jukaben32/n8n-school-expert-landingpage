@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import NewSchoolForm from './NewSchoolForm'
 
 export const metadata: Metadata = {
-  title: 'Nuevo Colegio — SchoolOS',
+  title: 'Nuevo Colegio — MentorIApp',
 }
 
 export default async function NuevoColegioPage({

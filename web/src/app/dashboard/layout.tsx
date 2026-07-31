@@ -6,7 +6,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { exitSchoolView } from './plataforma/actions'
 
 /**
- * Layout del Dashboard — SchoolOS
+ * Layout del Dashboard — MentorIApp
  * Protege todas las rutas /dashboard/* exigiendo sesión activa.
  * Detecta el rol del usuario y pasa el contexto al resto de la UI.
  */

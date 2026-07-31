@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Progreso — Academia — SchoolOS',
+  title: 'Progreso — Academia — MentorIApp',
 }
 
 type AttemptRow = {

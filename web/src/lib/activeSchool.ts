@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
-export const ACTIVE_SCHOOL_COOKIE = 'schoolos_active_school'
+export const ACTIVE_SCHOOL_COOKIE = 'mentoriapp_active_school'
 
 /**
  * Devuelve el colegio "activo" para la sesión actual.

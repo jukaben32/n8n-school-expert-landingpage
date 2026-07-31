@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Asistencia — SchoolOS',
+  title: 'Asistencia — MentorIApp',
   description: 'Registro y seguimiento de asistencia estudiantil.',
 }
 

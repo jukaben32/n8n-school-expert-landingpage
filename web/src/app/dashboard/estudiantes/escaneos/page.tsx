@@ -7,7 +7,7 @@ import { listPendingEnrollmentScans } from './actions'
 import EnrollmentScansReview from './EnrollmentScansReview'
 
 export const metadata: Metadata = {
-  title: 'Escanear fichas de inscripción — SchoolOS',
+  title: 'Escanear fichas de inscripción — MentorIApp',
 }
 
 /**

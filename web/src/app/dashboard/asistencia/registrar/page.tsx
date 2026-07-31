@@ -7,7 +7,7 @@ import AttendanceForm from './AttendanceForm'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Registrar Asistencia — SchoolOS',
+  title: 'Registrar Asistencia — MentorIApp',
 }
 
 /**

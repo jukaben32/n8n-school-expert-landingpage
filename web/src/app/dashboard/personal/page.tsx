@@ -8,7 +8,7 @@ import GrantAccessButton from './GrantAccessButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Personal — SchoolOS',
+  title: 'Personal — MentorIApp',
   description: 'Personal y docentes del colegio, con su ficha profesional.',
 }
 

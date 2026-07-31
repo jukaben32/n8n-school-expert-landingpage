@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
  * createStudentWithFamily — único camino de creación de estudiante +
- * familia + tutor(es) en SchoolOS.
+ * familia + tutor(es) en MentorIApp.
  *
  * Antes esta lógica vivía solo dentro de NewStudentForm.tsx (componente de
  * cliente). Se extrajo aquí para que la bandeja de revisión de fichas

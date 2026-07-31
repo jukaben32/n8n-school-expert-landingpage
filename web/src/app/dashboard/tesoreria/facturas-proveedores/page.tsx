@@ -7,7 +7,7 @@ import { listPendingVendorInvoices } from './actions'
 import VendorInvoicesReview from './VendorInvoicesReview'
 
 export const metadata: Metadata = {
-  title: 'Facturas de proveedores — SchoolOS',
+  title: 'Facturas de proveedores — MentorIApp',
 }
 
 /**

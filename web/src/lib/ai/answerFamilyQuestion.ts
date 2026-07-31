@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
- * "Un solo cerebro, dos salidas" — núcleo del asistente de IA de SchoolOS.
+ * "Un solo cerebro, dos salidas" — núcleo del asistente de IA de MentorIApp.
  *
  * Esta función NO lee cookies ni sesión de Next.js -- recibe la identidad
  * ya resuelta (schoolId/familyId/guardianId) por quien la llama. Eso es
@@ -213,7 +213,7 @@ ${messagesText}${schoolRes.data?.faq_document ? `\n\nPreguntas frecuentes y pol�
 }
 
 function buildSystemPrompt(schoolName: string, contextText: string): string {
-  return `Eres el asistente virtual del Portal Familiar de ${schoolName}, un colegio que usa SchoolOS.
+  return `Eres el asistente virtual del Portal Familiar de ${schoolName}, un colegio que usa MentorIApp.
 
 Hablas con un padre/madre/tutor sobre SU PROPIA familia. Reglas estrictas:
 1. Solo puedes usar la información de la sección "DATOS DE LA FAMILIA" de abajo. No inventes datos que no estén ahí.

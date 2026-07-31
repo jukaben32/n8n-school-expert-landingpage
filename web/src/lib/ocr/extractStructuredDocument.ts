@@ -1,7 +1,7 @@
 import { PDFDocument } from 'pdf-lib'
 
 /**
- * extractStructuredDocument — núcleo OCR reutilizable de SchoolOS.
+ * extractStructuredDocument — núcleo OCR reutilizable de MentorIApp.
  *
  * Mismo principio que answerFamilyQuestion.ts (AGENTS.md, "un solo cerebro"):
  * una única función server-only, sin sesión ni Next.js, que ambos casos de

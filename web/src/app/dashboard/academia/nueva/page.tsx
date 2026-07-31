@@ -7,7 +7,7 @@ import NewLessonForm from './NewLessonForm'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Nueva Lección — SchoolOS',
+  title: 'Nueva Lección — MentorIApp',
 }
 
 export default async function NuevaLeccionPage() {

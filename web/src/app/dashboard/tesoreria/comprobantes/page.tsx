@@ -7,7 +7,7 @@ import { listPendingReceipts } from '../actions'
 import ReceiptsReview from './ReceiptsReview'
 
 export const metadata: Metadata = {
-  title: 'Comprobantes de transferencia — SchoolOS',
+  title: 'Comprobantes de transferencia — MentorIApp',
 }
 
 export default async function ComprobantesPage() {

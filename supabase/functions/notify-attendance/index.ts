@@ -1,5 +1,5 @@
 // =========================================================================
-// SchoolOS — Edge Function: notify-attendance
+// MentorIApp — Edge Function: notify-attendance
 // =========================================================================
 //
 // PROPÓSITO:

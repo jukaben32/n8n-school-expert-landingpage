@@ -7,7 +7,7 @@ import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Estado de Cuenta — SchoolOS',
+  title: 'Estado de Cuenta — MentorIApp',
   description: 'Consulta y gestiona los pagos escolares de tu familia.',
 }
 

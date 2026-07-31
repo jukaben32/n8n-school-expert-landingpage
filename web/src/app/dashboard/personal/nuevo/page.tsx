@@ -6,7 +6,7 @@ import { canAccess } from '@/lib/permissions'
 import NewStaffForm from './NewStaffForm'
 
 export const metadata: Metadata = {
-  title: 'Agregar Personal — SchoolOS',
+  title: 'Agregar Personal — MentorIApp',
 }
 
 export default async function NuevoPersonalPage() {

@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /**
- * Middleware de Autenticación — SchoolOS
+ * Middleware de Autenticación — MentorIApp
  *
  * Este middleware se ejecuta en CADA petición y se encarga de:
  * 1. Refrescar la sesión del usuario (tokens de Supabase Auth).

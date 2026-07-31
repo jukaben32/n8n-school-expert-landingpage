@@ -10,7 +10,7 @@ import AzulSettingsForm from './AzulSettingsForm'
 import { getPaymentSettingsDisplay } from './paymentSettingsActions'
 
 export const metadata: Metadata = {
-  title: 'Configuración del colegio — SchoolOS',
+  title: 'Configuración del colegio — MentorIApp',
 }
 
 export default async function ColegioConfigPage() {

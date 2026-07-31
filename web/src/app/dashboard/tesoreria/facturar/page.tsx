@@ -7,7 +7,7 @@ import NewInvoiceForm from './NewInvoiceForm'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Generar Factura — SchoolOS',
+  title: 'Generar Factura — MentorIApp',
 }
 
 export default async function FacturarPage() {

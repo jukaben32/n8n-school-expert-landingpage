@@ -4,12 +4,12 @@ import { redirect } from 'next/navigation'
 import LoginForm from './LoginForm'
 
 export const metadata: Metadata = {
-  title: 'Iniciar Sesión — SchoolOS',
+  title: 'Iniciar Sesión — MentorIApp',
   description: 'Accede al portal escolar de tu institución.',
 }
 
 /**
- * Página de Login — SchoolOS
+ * Página de Login — MentorIApp
  * Si el usuario ya tiene sesión activa, se redirige al dashboard.
  */
 export default async function LoginPage() {
@@ -31,7 +31,7 @@ export default async function LoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            SchoolOS
+            MentorIApp
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Portal escolar

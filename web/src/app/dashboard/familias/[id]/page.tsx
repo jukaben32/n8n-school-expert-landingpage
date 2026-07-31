@@ -7,7 +7,7 @@ import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Ficha de familia — SchoolOS',
+  title: 'Ficha de familia — MentorIApp',
 }
 
 const statusStyles: Record<string, string> = {

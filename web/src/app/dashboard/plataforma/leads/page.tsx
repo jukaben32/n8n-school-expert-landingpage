@@ -7,7 +7,7 @@ import LeadNotes from './LeadNotes'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Leads — Plataforma — SchoolOS',
+  title: 'Leads — Plataforma — MentorIApp',
 }
 
 type Lead = {

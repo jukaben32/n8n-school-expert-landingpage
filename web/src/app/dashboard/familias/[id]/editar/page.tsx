@@ -6,7 +6,7 @@ import { canAccess } from '@/lib/permissions'
 import EditFamilyForm from './EditFamilyForm'
 
 export const metadata: Metadata = {
-  title: 'Editar familia — SchoolOS',
+  title: 'Editar familia — MentorIApp',
 }
 
 export default async function EditarFamiliaPage({ params }: { params: Promise<{ id: string }> }) {

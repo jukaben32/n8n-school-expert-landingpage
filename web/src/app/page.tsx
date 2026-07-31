@@ -4,7 +4,7 @@ import EventCascade from './EventCascade'
 import LeadForm from './LeadForm'
 
 export const metadata: Metadata = {
-  title: 'SchoolOS — El colegio, ordenado. La familia, tranquila.',
+  title: 'MentorIApp — El colegio, ordenado. La familia, tranquila.',
   description:
     'Plataforma para redes y colegios afiliados: estudiantes, familias, tesorería, comunicados, asistencia y una Academia con video-lecciones y cuestionarios. Un sistema real, con un panel distinto para cada rol.',
 }
@@ -66,7 +66,7 @@ const results = [
 const faqs = [
   {
     q: '¿Las familias necesitan instalar algo?',
-    a: 'No. SchoolOS es una aplicación web: se entra desde el navegador del celular o la computadora, con su correo y contraseña, sin descargar nada.',
+    a: 'No. MentorIApp es una aplicación web: se entra desde el navegador del celular o la computadora, con su correo y contraseña, sin descargar nada.',
   },
   {
     q: '¿Cómo se enteran las familias de un comunicado nuevo?',
@@ -100,7 +100,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422A12.083 12.083 0 0121 13c0 4.418-3.582 8-8 8S5 17.418 5 13c0-.935.164-1.832.463-2.668L12 14z" />
               </svg>
             </span>
-            <span className="font-display font-semibold text-lg text-white tracking-tight">SchoolOS</span>
+            <span className="font-display font-semibold text-lg text-white tracking-tight">MentorIApp</span>
           </a>
           <div className="hidden md:flex items-center gap-7 font-mono text-xs uppercase tracking-wider text-white/60">
             <a href="#modulos" className="hover:text-white transition">Módulos</a>
@@ -374,7 +374,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
               </svg>
             </span>
-            <span className="font-display text-sm text-white/70">SchoolOS</span>
+            <span className="font-display text-sm text-white/70">MentorIApp</span>
           </div>
           <p className="text-xs text-white/35 font-mono">Plataforma para redes y colegios afiliados</p>
           <Link href="/terminos" className="text-xs text-white/50 hover:text-white/80 transition font-mono">

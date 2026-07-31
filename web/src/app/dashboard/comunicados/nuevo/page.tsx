@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import NewMessageForm from './NewMessageForm'
 
 export const metadata: Metadata = {
-  title: 'Nuevo Comunicado — SchoolOS',
+  title: 'Nuevo Comunicado — MentorIApp',
 }
 
 /**

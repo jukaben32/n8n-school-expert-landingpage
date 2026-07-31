@@ -8,7 +8,7 @@ import EnrollmentStatusSelect from './EnrollmentStatusSelect'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Ficha del estudiante — SchoolOS',
+  title: 'Ficha del estudiante — MentorIApp',
 }
 
 const attendanceLabels: Record<string, string> = {

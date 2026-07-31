@@ -150,7 +150,7 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0 }: Sidebar
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light">SchoolOS</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light">MentorIApp</p>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{schoolName}</p>
           </div>
         </div>

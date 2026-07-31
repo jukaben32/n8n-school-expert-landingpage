@@ -109,7 +109,7 @@ function ActualizarContrasenaPage() {
           Elige tu contraseña
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 text-center">
-          Con esto queda activa tu cuenta en SchoolOS.
+          Con esto queda activa tu cuenta en MentorIApp.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-white/70 dark:border-slate-800 rounded-3xl shadow-soft p-6">

@@ -6,7 +6,7 @@ import MessageCard from '@/components/comunicados/MessageCard'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Comunicados — SchoolOS',
+  title: 'Comunicados — MentorIApp',
   description: 'Comunicados del colegio con trazabilidad de lectura.',
 }
 

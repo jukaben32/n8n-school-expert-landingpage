@@ -7,7 +7,7 @@ import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import SchoolsComparisonTable, { type SchoolComparisonRow } from './SchoolsComparisonTable'
 
 export const metadata: Metadata = {
-  title: 'Plataforma — SchoolOS',
+  title: 'Plataforma — MentorIApp',
   description: 'Todos los colegios de la plataforma.',
 }
 
@@ -145,7 +145,7 @@ export default async function PlataformaPage() {
             Plataforma
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {schools.length} colegio{schools.length !== 1 ? 's' : ''} en SchoolOS
+            {schools.length} colegio{schools.length !== 1 ? 's' : ''} en MentorIApp
           </p>
         </div>
         <Link

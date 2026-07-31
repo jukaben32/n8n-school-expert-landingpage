@@ -1,4 +1,4 @@
-# SchoolOS — Sistema de Información Escolar (SIS Modular)
+# MentorIApp — Sistema de Información Escolar (SIS Modular)
 
 > **"Una experiencia escolar más clara para dirección, secretaría y familias."**
 > _Inspirado en la propuesta para Gran Manantial de Sabiduría. Potenciado con IA y Supabase._
@@ -7,7 +7,7 @@
 
 ## 🎯 Visión del Proyecto
 
-SchoolOS es un **SIS (Sistema de Información Escolar) multi-tenant**, construido con la premisa de que el software escolar debe ser:
+MentorIApp es un **SIS (Sistema de Información Escolar) multi-tenant**, construido con la premisa de que el software escolar debe ser:
 
 - **Claro para las familias:** portal móvil, avisos de asistencia y estado de cuenta en un clic.
 - **Ágil para secretaría:** menos tareas manuales, automatización inteligente (sin n8n).

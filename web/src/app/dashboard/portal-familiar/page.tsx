@@ -7,7 +7,7 @@ import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import FamilyChatWidget from '@/components/portal/FamilyChatWidget'
 
 export const metadata: Metadata = {
-  title: 'Portal Familiar — SchoolOS',
+  title: 'Portal Familiar — MentorIApp',
   description: 'Consulta asistencia, comunicados y pagos de tus hijos.',
 }
 

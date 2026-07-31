@@ -7,7 +7,7 @@ import NewPaymentForm from './NewPaymentForm'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Registrar Pago — SchoolOS',
+  title: 'Registrar Pago — MentorIApp',
 }
 
 export default async function CobrarPage() {

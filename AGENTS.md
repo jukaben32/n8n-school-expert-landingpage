@@ -1,4 +1,4 @@
-# SchoolOS — Contexto del proyecto (léeme primero)
+# MentorIApp — Contexto del proyecto (léeme primero)
 
 Este archivo existe porque el trabajo en este proyecto se hizo en una conversación
 larga de Claude (claude.ai), y no hay forma automática de trasladar esa memoria a
@@ -14,8 +14,10 @@ commit.
 
 Una plataforma multi-colegio ("SaaS" para colegios afiliados) construida sobre
 Next.js 16 (App Router) + Supabase (Postgres + Auth + RLS). El nombre del
-proyecto ("SchoolOS", repo `n8n-school-expert-landingpage`) está pendiente de
-cambiar — ver "Pendientes" abajo. El repo también contiene, en la raíz, un
+proyecto es **MentorIApp** (Mentoría + IA + App) — decidido el 2026-08-01,
+reemplazando "SchoolOS". El nombre del repositorio de GitHub sigue siendo
+`n8n-school-expert-landingpage` por ahora (renombrarlo es un paso aparte,
+sin prisa, no bloquea nada). El repo también contiene, en la raíz, un
 `index.html` estático de una propuesta comercial anterior (con menciones a
 WhatsApp/n8n) que **no es** el producto real — el producto real vive en `web/`.
 
@@ -760,6 +762,21 @@ se movió a una función auxiliar fuera del componente -- llamarlo
 directamente en el cuerpo del componente dispara la regla de pureza de
 React (mismo patrón ya documentado antes con `calculateAge`).
 
+## Hallazgo importante: existía un segundo `AGENTS.md` desactualizado
+
+`.agents/AGENTS.md` (del scaffold original, antes de que empezara este
+trabajo) era un documento **distinto** a este archivo -- con reglas
+arquitectónicas viejas y ya contradichas por decisiones reales tomadas
+después (en particular: mandaba usar Edge Functions con un patrón de "5
+bloques", exactamente el patrón que Claude Code citó la primera vez que
+construyó el módulo de OCR con una Edge Function, antes de que se
+corrigiera a Server Actions por el problema de Docker ya documentado
+arriba). Es decir, esa desincronización causó un problema real, no solo
+teórico. Se reemplazó su contenido por un puntero (`@../AGENTS.md`), mismo
+patrón que `CLAUDE.md` en la raíz y en `web/`, para que cualquier
+herramienta que lea `.agents/AGENTS.md` termine leyendo este documento real
+en vez de uno viejo y contradictorio.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -782,8 +799,14 @@ React (mismo patrón ya documentado antes con `calculateAge`).
 
 1. ~~Control de datos por colegio~~ — hecho (exportación + `/terminos`).
 2. ~~Landing dinámica por colegio afiliado~~ — hecho (`/colegio/[subdomain]`).
-3. Nombre nuevo para el proyecto (dejado a propósito para el final —
-   "SchoolOS" y "n8n-school-expert" ya no encajan con lo que esto es).
+3. ~~Nombre nuevo para el proyecto~~ — resuelto: **MentorIApp**
+   (Mentoría + IA + App). Se verificaron alternativas antes de decidir
+   ("Sophia" chocaba con dos empresas reales de edtech; "MentorIA" a
+   secas ya es una app existente y activa de asistente de IA para
+   universidades) -- "MentorIApp" con la "pp" final quedó como
+   suficientemente distinto, decisión del usuario asumiendo ese riesgo
+   menor conscientemente. Repo de GitHub sigue llamándose
+   `n8n-school-expert-landingpage` (renombrarlo es un paso aparte).
 4. ~~RLS por rol específico~~ — hecho.
 5. ~~Fichas de detalle de estudiante/familia~~ — hecho.
 6. **Dominio propio** — el usuario compra dos dominios en Hostinger (uno para

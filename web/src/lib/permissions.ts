@@ -1,5 +1,5 @@
 /**
- * Permisos por rol — SchoolOS
+ * Permisos por rol — MentorIApp
  *
  * Antes, cada página del dashboard definía su propio array de
  * "staffRoles" a mano, sin ninguna regla en común: un profesor podía

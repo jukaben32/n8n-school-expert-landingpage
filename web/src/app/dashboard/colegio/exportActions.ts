@@ -15,7 +15,7 @@ interface ExportResult {
  * Es la garantía real detrás de "tus datos son tuyos": cualquier
  * director puede llevarse toda la información de su colegio en
  * cualquier momento, sin depender de que alguien del equipo de
- * SchoolOS se la genere manualmente.
+ * MentorIApp se la genere manualmente.
  */
 export async function exportSchoolData(): Promise<ExportResult> {
   const supabase = await createClient()

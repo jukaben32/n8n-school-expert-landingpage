@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Tus datos son tuyos — SchoolOS',
-  description: 'Cómo protegemos y separamos los datos de cada colegio afiliado a SchoolOS.',
+  title: 'Tus datos son tuyos — MentorIApp',
+  description: 'Cómo protegemos y separamos los datos de cada colegio afiliado a MentorIApp.',
 }
 
 const commitments = [
@@ -17,11 +17,11 @@ const commitments = [
   },
   {
     title: 'Puedes irte cuando quieras',
-    text: 'Si decides dejar de usar SchoolOS, puedes exportar todo primero y luego pedir la eliminación completa de los datos de tu colegio. No hay período de permanencia forzado ni penalidad por salir.',
+    text: 'Si decides dejar de usar MentorIApp, puedes exportar todo primero y luego pedir la eliminación completa de los datos de tu colegio. No hay período de permanencia forzado ni penalidad por salir.',
   },
   {
     title: 'Acceso solo para quien tú autorices',
-    text: 'Solo las personas que tú invitas explícitamente (desde Personal, con el rol que tú elijas) pueden ver los datos de tu colegio. El equipo de SchoolOS no entra a revisar la información de un colegio salvo que tú lo pidas para soporte.',
+    text: 'Solo las personas que tú invitas explícitamente (desde Personal, con el rol que tú elijas) pueden ver los datos de tu colegio. El equipo de MentorIApp no entra a revisar la información de un colegio salvo que tú lo pidas para soporte.',
   },
 ]
 
@@ -36,7 +36,7 @@ export default function TerminosPage() {
           Tus datos son tuyos.
         </h1>
         <p className="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed">
-          Cada colegio afiliado a SchoolOS comparte la misma plataforma, pero eso no significa
+          Cada colegio afiliado a MentorIApp comparte la misma plataforma, pero eso no significa
           compartir datos. Esto es lo que garantizamos, en lenguaje simple, sin letra pequeña:
         </p>
 

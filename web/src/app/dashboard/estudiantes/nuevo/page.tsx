@@ -7,7 +7,7 @@ import NewStudentForm from './NewStudentForm'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Nuevo Estudiante — SchoolOS',
+  title: 'Nuevo Estudiante — MentorIApp',
 }
 
 /**

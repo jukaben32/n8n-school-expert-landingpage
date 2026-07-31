@@ -6,7 +6,7 @@ import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
-  title: 'Secretaría — SchoolOS',
+  title: 'Secretaría — MentorIApp',
   description: 'Panel de gestión escolar para el equipo administrativo.',
 }
 

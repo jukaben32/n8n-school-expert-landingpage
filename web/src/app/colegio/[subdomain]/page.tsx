@@ -27,10 +27,10 @@ async function getSchool(subdomain: string): Promise<SchoolPublic | null> {
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params
   const school = await getSchool(subdomain)
-  if (!school) return { title: 'Colegio no encontrado — SchoolOS' }
+  if (!school) return { title: 'Colegio no encontrado — MentorIApp' }
   return {
     title: `${school.name} — Portal escolar`,
-    description: school.tagline ?? `Portal escolar de ${school.name}, construido con SchoolOS.`,
+    description: school.tagline ?? `Portal escolar de ${school.name}, construido con MentorIApp.`,
   }
 }
 
@@ -91,7 +91,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
         )}
 
         <p className="mt-10 text-[11px] font-mono uppercase tracking-widest text-slate-300 dark:text-slate-600">
-          Construido con SchoolOS
+          Construido con MentorIApp
         </p>
       </div>
     </main>
