@@ -105,6 +105,9 @@ export default async function TesoreriaPage() {
           <a href="/dashboard/tesoreria/comprobantes" className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold px-5 py-2.5 transition">
             Comprobantes
           </a>
+          <a href="/dashboard/tesoreria/facturas-proveedores" className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold px-5 py-2.5 transition">
+            Facturas de proveedores
+          </a>
           <a href="/dashboard/tesoreria/facturar" className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold px-5 py-2.5 transition">
             Generar factura
           </a>

@@ -21,7 +21,7 @@ export type Role =
 
 export type Module =
   | 'secretaria'
-  | 'estudiantes' | 'estudiantes_nuevo'
+  | 'estudiantes' | 'estudiantes_nuevo' | 'estudiantes_escaneos'
   | 'familias'
   | 'personal'
   | 'tesoreria' | 'pagos'
@@ -32,7 +32,7 @@ export type Module =
   | 'configuracion_colegio'
 
 const FULL_ACCESS: Module[] = [
-  'secretaria', 'estudiantes', 'estudiantes_nuevo', 'familias', 'personal',
+  'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar',
   'configuracion_colegio',
@@ -50,7 +50,7 @@ const ROLE_MODULES: Record<Role, Module[]> = {
 
   // Recepción: la puerta de entrada -- estudiantes, familias, avisos,
   // asistencia. No maneja tesorería ni contenido de Academia.
-  reception: ['estudiantes', 'estudiantes_nuevo', 'familias', 'comunicados', 'comunicados_nuevo', 'asistencia', 'asistencia_registrar'],
+  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'asistencia', 'asistencia_registrar'],
 
   // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, reportes,
   // y solo lectura de familias para facturar. No toca estudiantes,

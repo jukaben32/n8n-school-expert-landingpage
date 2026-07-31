@@ -2,12 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { submitNewStudent } from './actions'
 
 interface Family { id: string; name: string }
 
 interface NewStudentFormProps {
-  schoolId: string
   families: Family[]
 }
 
@@ -43,7 +42,7 @@ function newGuardianDraft(relationship: string): DraftGuardian {
  * vínculos correspondientes en `student_guardians`. El primero de la
  * lista queda marcado como tutor principal (is_primary).
  */
-export default function NewStudentForm({ schoolId, families }: NewStudentFormProps) {
+export default function NewStudentForm({ families }: NewStudentFormProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'existing' | 'new'>(families.length > 0 ? 'existing' : 'new')
   const [saving, setSaving] = useState(false)
@@ -99,119 +98,32 @@ export default function NewStudentForm({ schoolId, families }: NewStudentFormPro
     }
 
     setSaving(true)
-    const supabase = createClient()
 
-    try {
-      let targetFamilyId = familyId
-
-      if (mode === 'new') {
-        // 1. Crear la familia
-        const { data: newFamily, error: familyError } = await supabase
-          .from('families')
-          .insert({ school_id: schoolId, name: familyName })
-          .select('id')
-          .single()
-        if (familyError || !newFamily) throw familyError ?? new Error('No se pudo crear la familia.')
-        targetFamilyId = newFamily.id
-
-        // 2. Crear el/los tutor(es) -- el primero de la lista queda como
-        // tutor principal (is_primary), el resto se guarda igual pero sin
-        // esa marca.
-        const createdGuardians: { id: string; relationship: string; isPrimary: boolean }[] = []
-        for (let i = 0; i < guardians.length; i++) {
-          const g = guardians[i]
-          const { data: newGuardian, error: guardianError } = await supabase
-            .from('guardians')
-            .insert({
-              school_id: schoolId,
-              family_id: targetFamilyId,
-              first_name: g.firstName,
-              last_name: g.lastName,
+    const student = { firstName, lastName, birthDate, gender: gender || null, enrollmentStatus }
+    const result =
+      mode === 'new'
+        ? await submitNewStudent({
+            mode: 'new',
+            student,
+            familyName,
+            guardians: guardians.map((g) => ({
+              firstName: g.firstName,
+              lastName: g.lastName,
               phone: g.phone,
               email: g.email || null,
-              relationship: g.relationship,
-              is_primary: i === 0,
-            })
-            .select('id')
-            .single()
-          if (guardianError || !newGuardian) throw guardianError ?? new Error('No se pudo crear un tutor.')
-          createdGuardians.push({ id: newGuardian.id, relationship: g.relationship, isPrimary: i === 0 })
-        }
-
-        // 3. Crear el estudiante
-        const { data: newStudent, error: studentError } = await supabase
-          .from('students')
-          .insert({
-            school_id: schoolId,
-            family_id: targetFamilyId,
-            first_name: firstName,
-            last_name: lastName,
-            birth_date: birthDate,
-            gender: gender || null,
-            enrollment_status: enrollmentStatus,
+              relationship: g.relationship as 'madre' | 'padre' | 'tutor_legal' | 'otro',
+            })),
           })
-          .select('id')
-          .single()
-        if (studentError || !newStudent) throw studentError ?? new Error('No se pudo crear el estudiante.')
+        : await submitNewStudent({ mode: 'existing', student, familyId })
 
-        // 4. Vincular al estudiante con TODOS los tutores creados
-        const { error: linkError } = await supabase.from('student_guardians').insert(
-          createdGuardians.map((g) => ({
-            student_id: newStudent.id,
-            guardian_id: g.id,
-            relationship: g.relationship,
-            is_primary: g.isPrimary,
-          }))
-        )
-        if (linkError) throw linkError
-      } else {
-        const { data: newStudent, error: studentError } = await supabase
-          .from('students')
-          .insert({
-            school_id: schoolId,
-            family_id: targetFamilyId,
-            first_name: firstName,
-            last_name: lastName,
-            birth_date: birthDate,
-            gender: gender || null,
-            enrollment_status: enrollmentStatus,
-          })
-          .select('id')
-          .single()
-        if (studentError || !newStudent) throw studentError ?? new Error('No se pudo crear el estudiante.')
-
-        // Vincular con TODOS los tutores ya existentes de esa familia, no
-        // solo el principal -- si la familia tiene madre y padre
-        // registrados, el nuevo hermano debe quedar ligado a ambos.
-        const { data: existingGuardians } = await supabase
-          .from('guardians')
-          .select('id, relationship, is_primary')
-          .eq('family_id', targetFamilyId)
-
-        if (existingGuardians && existingGuardians.length > 0) {
-          const { error: linkError } = await supabase.from('student_guardians').insert(
-            existingGuardians.map((g) => ({
-              student_id: newStudent.id,
-              guardian_id: g.id,
-              relationship: g.relationship ?? 'tutor_legal',
-              is_primary: g.is_primary,
-            }))
-          )
-          if (linkError) throw linkError
-        }
-      }
-
-      router.push('/dashboard/estudiantes')
-      router.refresh()
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : (err as { message?: string })?.message || 'Ocurrió un error al guardar. Intenta de nuevo.'
-      console.error('[nuevo estudiante]', err)
-      setError(message)
+    if (!result.ok) {
+      setError(result.error ?? 'Ocurrió un error al guardar. Intenta de nuevo.')
       setSaving(false)
+      return
     }
+
+    router.push('/dashboard/estudiantes')
+    router.refresh()
   }
 
   return (

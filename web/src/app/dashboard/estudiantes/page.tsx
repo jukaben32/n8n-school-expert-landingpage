@@ -75,16 +75,30 @@ export default async function EstudiantesPage() {
             {students.length} estudiante{students.length !== 1 ? 's' : ''} registrado{students.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <Link
-          id="btn-nuevo-estudiante"
-          href="/dashboard/estudiantes/nuevo"
-          className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Nuevo estudiante
-        </Link>
+        <div className="flex gap-2">
+          {canAccess(profile.role, 'estudiantes_escaneos') && (
+            <Link
+              id="btn-escanear-fichas"
+              href="/dashboard/estudiantes/escaneos"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/30 text-primary dark:text-accent-light dark:border-accent/30 text-sm font-semibold px-5 py-2.5 transition hover:bg-primary/5 dark:hover:bg-accent/10"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15M4.5 9h15M4.5 15h15" />
+              </svg>
+              Escanear fichas
+            </Link>
+          )}
+          <Link
+            id="btn-nuevo-estudiante"
+            href="/dashboard/estudiantes/nuevo"
+            className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Nuevo estudiante
+          </Link>
+        </div>
       </div>
 
       {/* Tabla de estudiantes */}

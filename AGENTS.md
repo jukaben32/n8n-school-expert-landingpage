@@ -551,6 +551,171 @@ Costo: al ser texto que se envía en cada mensaje, un documento muy largo
 aumenta el costo por respuesta -- se avisa de esto en la propia interfaz de
 Configuración del colegio.
 
+## Extracción OCR estructurada con Claude (visión) — fichas de inscripción y facturas de proveedores
+
+**Contexto del mandato**: el colegio piloto tiene fichas físicas de inscripción
+ya llenas a mano y clases empiezan en ~2 semanas -- alguien tendría que
+teclearlas a mano, estudiante por estudiante. En paralelo se pidió lo mismo
+para facturas de proveedores (con sync a Alegra). Un solo núcleo de código
+sirve a los dos casos, siguiendo el mismo principio que
+`answerFamilyQuestion.ts` ("un solo cerebro"): una función server-only, sin
+sesión, reutilizada por ambos.
+
+### Núcleo compartido: `web/src/lib/ocr/extractStructuredDocument.ts`
+
+Recibe un archivo (o varios) + un JSON schema de qué extraer, y devuelve un
+array de resultados (uno por documento) usando Claude con visión.
+
+- **Modelo: `claude-sonnet-5`**, no Haiku (a diferencia del asistente de IA).
+  Decisión explícita: aquí la precisión importa más que el costo -- estos
+  datos alimentan matrícula real y facturas reales, no una conversación.
+- **`thinking` deshabilitado** -- es una extracción de un solo turno sobre un
+  documento ya dado, no se beneficia de razonamiento extendido, y ahorra
+  costo/latencia.
+- **Structured outputs** (`output_config.format` con `json_schema`) --
+  garantiza JSON válido en vez de parsear texto libre. Cada schema usa
+  `anyOf: [{type:'string'},{type:'null'}]` en vez de `type: ['string','null']`
+  para los campos opcionales (anyOf está explícitamente documentado como
+  soportado; el array de tipos no se pudo confirmar en vivo -- ver
+  "Verificación real" abajo).
+- **Sigue fetch crudo a la API de Anthropic**, no el SDK oficial -- mismo
+  patrón que `answerFamilyQuestion.ts` y `lib/payments/azul.ts`, para no
+  introducir una segunda forma de hablar con Anthropic en este proyecto.
+- **Dos formas de recibir documentos**:
+  1. `{ kind: 'files', documents: [...] }` -- varios archivos sueltos, cada
+     uno UN documento independiente (llamadas paralelas, máx. 3 a la vez).
+  2. `{ kind: 'multiPagePdf', base64 }` -- un solo PDF multi-página se
+     **divide con `pdf-lib`** (JS puro, sin dependencias nativas -- seguro en
+     el entorno serverless de Vercel) en N PDFs de una sola página, cada uno
+     procesado como documento independiente. Así una página con letra
+     ilegible no contamina el resultado de las demás, y cada página tiene su
+     propia confianza/error. Se descartó pedirle a Claude que devuelva un
+     array cruzando todas las páginas en una sola llamada -- separar la
+     llamada por página da mejor precisión y aislamiento de errores.
+- **Regla de seguridad no negociable**: esta función NUNCA crea ni aprueba
+  nada en la base de datos -- solo devuelve JSON. El registro final siempre
+  pasa por una bandeja de revisión humana (ver los dos casos abajo).
+
+### Caso 1: Fichas de inscripción de estudiantes (URGENTE)
+
+- Migración `20260731000000_ocr_document_extraction.sql`: tabla
+  `enrollment_form_scans` (RLS: `reception`/`director`/`school_admin`/
+  `super_admin`, mismo set que el módulo `estudiantes_nuevo` en
+  `permissions.ts` más `reception`), bucket privado `fichas-inscripcion`
+  (sin políticas de `storage.objects` -- todo el acceso pasa por Server
+  Actions con `service_role`, mismo principio que `comprobantes-pago`).
+- La ficha física pide más campos de los que el alta manual capturaba. Se
+  reutilizaron columnas jsonb ya existentes (`students.medical_notes`,
+  `students.emergency_contact`) y `students.student_code` (matrícula) --
+  y se agregaron las que faltaban: `students.birth_place`,
+  `students.grade_level` (curso, texto libre, no depende de
+  `academic_structure`), y en `guardians`: `national_id` (cédula),
+  `address`, `origin_province`, `nationality`.
+- **`web/src/lib/students/createStudentWithFamily.ts`**: la lógica de
+  creación de estudiante+familia+tutor(es) vivía SOLO dentro de
+  `NewStudentForm.tsx` (componente de cliente, llamaba a Supabase
+  directamente desde el navegador). Se extrajo a esta función server-side
+  compartida, y `NewStudentForm.tsx` se convirtió para llamar a una Server
+  Action (`estudiantes/nuevo/actions.ts` → `submitNewStudent`) que a su vez
+  llama a esta función -- así el alta manual y la confirmación de fichas
+  escaneadas usan exactamente el mismo camino de creación, sin dos caminos
+  que puedan divergir (tal como pedía el mandato).
+- **`web/src/app/dashboard/estudiantes/escaneos/`**: página + Server Actions
+  (`uploadEnrollmentScans`, `listPendingEnrollmentScans`,
+  `getEnrollmentScanSignedUrl`, `confirmEnrollmentScan`,
+  `rejectEnrollmentScan`) + `EnrollmentScansReview.tsx` (subida en dos modos
+  -- archivos sueltos o un PDF multi-página -- y bandeja de revisión donde el
+  staff corrige cada campo antes de confirmar). `confirmEnrollmentScan`
+  **siempre** llama a `createStudentWithFamily()` con los valores que el
+  staff corrigió en pantalla, nunca con `extracted_data` directamente. Modo
+  de creación fijo en "familia nueva" (crear estudiante desde una ficha
+  escaneada asume un ingreso nuevo, no vincular con familia existente --
+  decisión de alcance para no complicar la bandeja con búsqueda de familias).
+- Nav: botón "Escanear fichas" en `/dashboard/estudiantes` junto a "Nuevo
+  estudiante", nuevo módulo `estudiantes_escaneos` en `permissions.ts`.
+
+### Caso 2: Facturas de proveedores → Alegra
+
+- Migración: tabla `vendor_invoices` (RLS: mismo set de roles que ya tiene
+  el módulo `tesoreria` -- `finance`/`director`/`school_admin`/
+  `super_admin`), bucket privado `facturas-proveedores`.
+- **`web/src/app/dashboard/tesoreria/facturas-proveedores/`**: mismo patrón
+  que las fichas (subida en dos modos, bandeja de revisión editable,
+  aprobar/rechazar). Al aprobar, se corrigen los campos en pantalla y se
+  intenta sincronizar con Alegra.
+- **`web/src/lib/accounting/alegra.ts`**: **a propósito queda como stub que
+  documenta la llamada pendiente**, no bloquea el resto del flujo (tal como
+  pidió el mandato). Un "bill" de Alegra necesita un `contactId` numérico y
+  un `categoryId`/`accountId` numérico -- no el RNC ni el texto libre de
+  categoría que extrae Claude. El mapeo RNC→contacto y categoría→cuenta
+  contable queda pendiente de definir con el usuario. Si `ALEGRA_EMAIL`/
+  `ALEGRA_TOKEN` no están configurados, o el mapeo no está resuelto, la
+  factura queda **igual aprobada** (`vendor_invoices.status = 'aprobado'`)
+  pero con `alegra_sync_status = 'error'` y el mensaje explicando por qué --
+  nunca falla en silencio ni bloquea la aprobación.
+
+### Verificación real hecha en esta sesión
+
+1. ✅ **División de PDF multi-página con `pdf-lib`** -- probado con un PDF
+   sintético de 4 páginas generado en el momento (sin datos reales): el
+   split produjo 4 PDFs independientes, cada uno cargado de vuelta con
+   `pdf-lib` y confirmado como un documento de exactamente 1 página. Esta
+   es la pieza más nueva/riesgosa del núcleo (nadie en el equipo había usado
+   `pdf-lib` antes en este proyecto) y quedó verificada con código real, no
+   solo revisada.
+2. ⚠️ **Llamada real a Claude (extracción de visión) -- NO probada.** Esta
+   sesión no tuvo una `ANTHROPIC_API_KEY` con saldo disponible (mismo
+   bloqueo que sesiones anteriores con el asistente de IA). Se revisó
+   manualmente que el payload (`document`/`image` content block,
+   `output_config.format` con `json_schema`) coincide con la documentación
+   oficial de PDF support y structured outputs. **Pendiente**: subir una
+   ficha/factura de prueba real en cuanto haya una API key con saldo, y
+   confirmar que el JSON devuelto valida contra el schema y que
+   `additionalProperties:false` + `anyOf` para campos nulos no rompe la
+   validación estricta de Anthropic (no se pudo confirmar en vivo).
+3. ⚠️ **Migración SQL -- escrita pero NO aplicada a producción.** Mismo
+   patrón que la migración de Azul (ver sección de pagos más abajo): no
+   hubo forma de ejecutar DDL contra la base real en esta sesión. Se
+   necesita una de estas tres cosas para cerrar esto: la contraseña de
+   Postgres (para `psql` directo), un Personal Access Token de la API de
+   administración de Supabase, o que el usuario pegue
+   `supabase/migrations/20260731000000_ocr_document_extraction.sql` en el
+   SQL Editor del panel de Supabase manualmente.
+4. **Nota operativa importante, descubierta esta sesión**: el conector MCP
+   de Supabase de esta sesión de Claude Code está enlazado a un proyecto
+   **vacío y distinto** (`hwrtwylnhhobnharthsx`, "Bcasilla's Project", 0
+   tablas) -- NO al proyecto real de SchoolOS. Se confirmó cuál es el
+   proyecto real (`fssjgpqisfnmnkavsyld`) con una llamada REST directa
+   usando las claves `anon`/`service_role` que el usuario compartió: existe
+   el colegio "Gran Manantial de Sabiduría", 4 estudiantes reales, y
+   `enrollment_form_scans` efectivamente no existe todavía (confirma que la
+   migración de este documento no se aplicó). **Cualquier sesión futura que
+   use las herramientas MCP de Supabase debe verificar primero con
+   `list_tables` que el proyecto conectado tiene las tablas esperadas
+   (`schools`, `students`, etc.) antes de confiar en `apply_migration` --
+   si devuelve una lista vacía, es el proyecto equivocado, no una base
+   nueva.**
+5. ✅ Nunca se crea nada sin pasar por la bandeja de revisión -- confirmado
+   por lectura de código: `uploadEnrollmentScans`/`uploadVendorInvoices`
+   solo insertan en las tablas de bandeja (`status = 'pendiente'`); la única
+   ruta que crea un estudiante es `confirmEnrollmentScan` → 
+   `createStudentWithFamily()`, y la única ruta que aprueba una factura es
+   `approveVendorInvoice`, ambas requieren una acción explícita del staff
+   con el registro ya visible en pantalla.
+6. `npx tsc --noEmit`, `npm run lint` y `npm run build` limpios para todos
+   los archivos nuevos/modificados (ver Convenciones de trabajo).
+
+**Pendiente para cerrar esta tarea por completo**, en orden:
+1. Aplicar `supabase/migrations/20260731000000_ocr_document_extraction.sql`
+   a producción (necesita contraseña de Postgres, un token de la API de
+   administración de Supabase, o aplicación manual vía SQL Editor).
+2. Verificación real de extracción con Claude: subir una ficha y una
+   factura de prueba (ficticias) en cuanto haya `ANTHROPIC_API_KEY` con
+   saldo, confirmar que el JSON extraído valida, crear un estudiante de
+   prueba de punta a punta y borrarlo.
+3. Definir con el usuario el mapeo RNC→contacto y categoría→cuenta contable
+   de Alegra para completar `web/src/lib/accounting/alegra.ts`.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -589,3 +754,9 @@ Configuración del colegio.
 8. ~~Descuento automático a partir del Nº hijo~~ — resuelto (ver
    sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).
+10. **Extracción OCR de fichas de inscripción y facturas de proveedores** —
+    código completo (núcleo, migración, ambas bandejas de revisión) y
+    verificado hasta donde el acceso de esta sesión lo permitió (ver sección
+    "Extracción OCR estructurada con Claude" más arriba). Pendiente: aplicar
+    la migración a producción, probar la llamada real a Claude con saldo, y
+    definir el mapeo de Alegra.

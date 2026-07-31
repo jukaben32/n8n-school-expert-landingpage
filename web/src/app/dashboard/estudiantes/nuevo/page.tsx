@@ -53,7 +53,6 @@ export default async function NuevoEstudiantePage() {
       </div>
 
       <NewStudentForm
-        schoolId={schoolId}
         families={families ?? []}
       />
     </div>
