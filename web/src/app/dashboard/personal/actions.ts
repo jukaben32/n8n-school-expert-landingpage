@@ -9,6 +9,20 @@ import { getActiveSchool } from '@/lib/activeSchool'
 const LOGIN_ROLES = ['school_admin', 'director', 'teacher', 'finance', 'reception'] as const
 type LoginRole = (typeof LOGIN_ROLES)[number]
 
+// Jerarquía para impedir que un payload manipulado (o un bug en la UI)
+// le pida al servidor asignar un rol de más peso que el del propio
+// invitador. super_admin no es un rol invitable desde aquí (no está en
+// LOGIN_ROLES) pero se incluye para poder comparar contra el rol de
+// quien invita.
+const ROLE_RANK: Record<string, number> = {
+  super_admin: 4,
+  school_admin: 3,
+  director: 3,
+  teacher: 1,
+  finance: 1,
+  reception: 1,
+}
+
 interface InviteResult {
   ok: boolean
   message: string
@@ -42,6 +56,15 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
     return { ok: false, message: 'No tienes permiso para invitar personal.' }
   }
 
+  // El invitador nunca puede otorgar un rol de más peso que el suyo propio
+  // -- se valida aquí, en el servidor, contra el rol ya resuelto de la
+  // sesión (profile.role), nunca contra algo que venga del cliente.
+  if ((ROLE_RANK[loginRole] ?? 0) > (ROLE_RANK[profile.role] ?? 0)) {
+    return { ok: false, message: 'No puedes asignar un rol de acceso superior al tuyo.' }
+  }
+
+  // schoolId sale del perfil del invitador ya resuelto en el servidor --
+  // nunca de un parámetro que venga del cliente (esta función no acepta uno).
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
 
   const { data: staff } = await supabase
@@ -74,13 +97,19 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
 
   let authId = invited?.user?.id
 
-  // Si el correo ya tenía una cuenta de Auth (ej. ya es tutor en otro
-  // colegio), inviteUserByEmail falla -- se reusa esa cuenta en vez de
-  // tratarlo como error.
+  // Marca si la cuenta de Auth se creó en ESTA llamada -- es la única que
+  // se puede revertir de forma segura si algo falla después. Si el correo
+  // ya tenía cuenta (ej. ya es tutor en otro colegio) y se reusa, esa
+  // cuenta es de otra persona/flujo y jamás debe tocarse ni borrarse aquí.
+  const authAccountCreatedHere = Boolean(invited?.user?.id)
+
+  // Si el correo ya tenía una cuenta de Auth, inviteUserByEmail falla --
+  // se reusa esa cuenta en vez de tratarlo como error.
   if (inviteError || !authId) {
     const isAlreadyRegistered = inviteError?.message?.toLowerCase().includes('already been registered')
     if (!isAlreadyRegistered) {
-      return { ok: false, message: `No se pudo invitar: ${inviteError?.message ?? 'error desconocido'}` }
+      console.error('[inviteStaffAccess] fallo inviteUserByEmail', { staffId, email: staff.email, error: inviteError })
+      return { ok: false, message: 'No se pudo enviar la invitación. Intenta de nuevo en unos minutos.' }
     }
     const { data: usersList } = await admin.auth.admin.listUsers()
     const existingUser = usersList?.users.find((u) => u.email?.toLowerCase() === staff.email.toLowerCase())
@@ -90,7 +119,13 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  // Con el cliente admin (service_role) a propósito: users_profiles no
+  // tiene ninguna policy de INSERT (ver AGENTS.md) -- correcto, porque la
+  // única vía de creación válida es esta, server-side, ya autorizada
+  // arriba. Todo lo que antes bloqueaba RLS ahora se valida en este
+  // Server Action (permiso del invitador, jerarquía de rol, school_id
+  // resuelto en servidor, staff_id del mismo colegio).
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId,
     school_id: schoolId,
     staff_id: staffId,
@@ -98,7 +133,40 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   })
 
   if (profileError) {
-    return { ok: false, message: `El correo se invitó, pero no se pudo vincular el perfil: ${profileError.message}` }
+    console.error('[inviteStaffAccess] fallo el insert de perfil', { staffId, authId, schoolId, loginRole, error: profileError })
+
+    // Compensación, no transacción real: si la cuenta de Auth se creó
+    // aquí mismo, se revierte para no dejar un usuario con credenciales
+    // y sin perfil. Si la cuenta ya existía de antes, no se toca.
+    if (authAccountCreatedHere) {
+      const { error: deleteError } = await admin.auth.admin.deleteUser(authId)
+
+      if (deleteError) {
+        // El rollback también falló: queda un usuario de Auth huérfano de
+        // verdad. No se silencia -- se deja constancia explícita en
+        // audit_logs (tabla ya existente, con RLS y lectura de solo
+        // administradores) además del log de consola, para que sea
+        // rastreable después de que este request termine.
+        console.error('[inviteStaffAccess] fallo tambien el rollback (deleteUser) -- usuario de auth huerfano', {
+          authId, staffId, schoolId, deleteError,
+        })
+        await admin.from('audit_logs').insert({
+          school_id: schoolId,
+          user_id: user.id,
+          action: 'invite_rollback_failed',
+          table_name: 'users_profiles',
+          record_id: staffId,
+          before_state: { auth_id: authId, staff_id: staffId, attempted_role: loginRole },
+          after_state: { profile_error: profileError.message, delete_error: deleteError.message },
+        })
+        return {
+          ok: false,
+          message: `No se pudo completar la invitación y quedó un usuario a medias. Contacta soporte con este id: ${authId}`,
+        }
+      }
+    }
+
+    return { ok: false, message: 'No se pudo completar la invitación. Intenta de nuevo.' }
   }
 
   revalidatePath('/dashboard/personal')
