@@ -733,6 +733,33 @@ columnas nuevas (`students.birth_place`/`grade_level`,
 3. Definir con el usuario el mapeo RNC→contacto y categoría→cuenta contable
    de Alegra para completar `web/src/lib/accounting/alegra.ts`.
 
+## Métricas ampliadas — Panel del Director + Plataforma (comparación entre colegios)
+
+Pensado para cuando el usuario maneje 8-10 colegios afiliados, no solo uno.
+
+**Panel de Secretaría/Director** (`secretaria/page.tsx`) — ampliado de 4
+tarjetas básicas a 4 categorías: Financiero (cobrado del mes, pendiente,
+vencido -- basado en `invoices.status`, no hay todavía mora escalonada por
+mes, esa migración de mensualidades quedó pendiente de una tarea anterior,
+ver roadmap), Académico (% asistencia últimos 7 días, % de estudiantes
+inscritos con al menos un intento de Academia este mes), Comunicación
+(comunicados leídos vs. enviados este mes, via `message_reads`), y uso del
+Asistente de IA (preguntas de familias en los últimos 7 días, via
+`ai_conversations`).
+
+**Plataforma** (`plataforma/page.tsx` + `SchoolsComparisonTable.tsx`,
+cliente) — la lista de colegios pasó de tarjetas simples a una tabla
+ordenable por columna (clic en el encabezado): estudiantes, staff, %
+morosidad (vencido / (vencido+pendiente) de facturas abiertas), asistencia
+promedio de los últimos 30 días, y uso del asistente de IA en la última
+semana. Una consulta por colegio (aceptable con pocos colegios; revisar si
+se vuelve lento con muchos más afiliados).
+
+Nota técnica: en ambos archivos, el cálculo de fechas relativas (`Date.now()`)
+se movió a una función auxiliar fuera del componente -- llamarlo
+directamente en el cuerpo del componente dispara la regla de pureza de
+React (mismo patrón ya documentado antes con `calculateAge`).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

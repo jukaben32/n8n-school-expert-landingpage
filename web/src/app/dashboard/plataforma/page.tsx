@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { enterSchool } from './actions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import SchoolsComparisonTable, { type SchoolComparisonRow } from './SchoolsComparisonTable'
 
 export const metadata: Metadata = {
   title: 'Plataforma — SchoolOS',
@@ -11,6 +12,13 @@ export const metadata: Metadata = {
 }
 
 type SchoolRow = { id: string; name: string; subdomain: string; created_at: string }
+
+function daysAgoDate(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+}
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+}
 
 /**
  * Plataforma — Solo para super_admin.
@@ -41,18 +49,63 @@ export default async function PlataformaPage() {
 
   const schools = (schoolsRaw ?? []) as SchoolRow[]
 
-  // Conteos por colegio (una consulta por colegio; la plataforma normalmente
-  // maneja pocos colegios, así que esto es aceptable para el MVP)
+  // Conteos y métricas comparativas por colegio (una consulta por colegio;
+  // la plataforma normalmente maneja pocos colegios, así que esto es
+  // aceptable para el MVP -- revisar si el rendimiento se vuelve un
+  // problema real con muchos más colegios afiliados).
+  const thirtyDaysAgo = daysAgoDate(30)
+  const sevenDaysAgoIso = daysAgoIso(7)
+
   const counts = await Promise.all(
     schools.map(async (school) => {
-      const [{ count: students }, { count: staffCount }] = await Promise.all([
-        supabase.from('students').select('id', { count: 'exact', head: true }).eq('school_id', school.id),
-        supabase.from('staff').select('id', { count: 'exact', head: true }).eq('school_id', school.id),
+      const [
+        { count: students },
+        { count: staffCount },
+        { data: pendingRows },
+        { data: overdueRows },
+        { data: attendanceMonth },
+        { count: aiMessagesWeek },
+      ] = await Promise.all([
+        supabase.from('students').select('id', { count: 'exact', head: true }).eq('school_id', school.id).is('deleted_at', null),
+        supabase.from('staff').select('id', { count: 'exact', head: true }).eq('school_id', school.id).is('deleted_at', null),
+        supabase.from('invoices').select('total_amount').eq('school_id', school.id).eq('status', 'pendiente').is('deleted_at', null),
+        supabase.from('invoices').select('total_amount').eq('school_id', school.id).eq('status', 'vencido').is('deleted_at', null),
+        supabase.from('attendance').select('status').eq('school_id', school.id).gte('date', thirtyDaysAgo),
+        supabase.from('ai_conversations').select('*', { count: 'exact', head: true }).eq('school_id', school.id).eq('role', 'user').gte('created_at', sevenDaysAgoIso),
       ])
-      return { schoolId: school.id, students: students ?? 0, staff: staffCount ?? 0 }
+
+      const pendienteSum = (pendingRows ?? []).reduce((s, i) => s + Number(i.total_amount), 0)
+      const vencidoSum = (overdueRows ?? []).reduce((s, i) => s + Number(i.total_amount), 0)
+      const morosidadPercent = pendienteSum + vencidoSum > 0 ? Math.round((vencidoSum / (pendienteSum + vencidoSum)) * 100) : 0
+
+      const attendanceTotal = (attendanceMonth ?? []).length
+      const attendancePresent = (attendanceMonth ?? []).filter((a) => a.status === 'presente').length
+      const asistenciaPercent = attendanceTotal > 0 ? Math.round((attendancePresent / attendanceTotal) * 100) : null
+
+      return {
+        schoolId: school.id,
+        students: students ?? 0,
+        staff: staffCount ?? 0,
+        morosidadPercent,
+        asistenciaPercent,
+        aiMessagesWeek: aiMessagesWeek ?? 0,
+      }
     })
   )
   const countsBySchool = new Map(counts.map((c) => [c.schoolId, c]))
+  const comparisonRows: SchoolComparisonRow[] = schools.map((school) => {
+    const c = countsBySchool.get(school.id)
+    return {
+      id: school.id,
+      name: school.name,
+      subdomain: school.subdomain,
+      students: c?.students ?? 0,
+      staff: c?.staff ?? 0,
+      morosidadPercent: c?.morosidadPercent ?? 0,
+      asistenciaPercent: c?.asistenciaPercent ?? null,
+      aiMessagesWeek: c?.aiMessagesWeek ?? 0,
+    }
+  })
 
   // Métricas de toda la red -- sin filtrar por colegio, el bypass de
   // is_super_admin() en cada tabla es justo lo que hace esto posible.
@@ -121,40 +174,7 @@ export default async function PlataformaPage() {
       )}
 
       {schools.length > 0 ? (
-        <div className="grid gap-3">
-          {schools.map((school) => {
-            const c = countsBySchool.get(school.id)
-            return (
-              <div
-                key={school.id}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between gap-4"
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white truncate">{school.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">/{school.subdomain}</p>
-                </div>
-                <div className="flex gap-4 shrink-0 items-center">
-                  <div className="text-center">
-                    <p className="text-lg font-black text-primary dark:text-accent-light">{c?.students ?? 0}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Estudiantes</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-lg font-black text-primary dark:text-accent-light">{c?.staff ?? 0}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Staff</p>
-                  </div>
-                  <form action={enterSchool.bind(null, school.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition whitespace-nowrap"
-                    >
-                      Entrar como director
-                    </button>
-                  </form>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <SchoolsComparisonTable schools={comparisonRows} enterSchoolAction={enterSchool} />
       ) : (
         <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🏫</p>
