@@ -5,6 +5,7 @@ import StudentCard from '@/components/portal/StudentCard'
 import SummaryBadge from '@/components/portal/SummaryBadge'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import FamilyChatWidget from '@/components/portal/FamilyChatWidget'
+import VoiceCallWidget from '@/components/portal/VoiceCallWidget'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — MentorIApp',
@@ -107,11 +108,12 @@ export default async function PortalFamiliarPage() {
       </div>
 
       {/* Asistente de IA -- "un solo cerebro, dos salidas" (ver AGENTS.md) */}
-      <div>
+      <div className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
           Asistente
         </h2>
         <FamilyChatWidget />
+        <VoiceCallWidget />
       </div>
     </div>
   )

@@ -246,6 +246,83 @@ implementación de WhatsApp vía Twilio (más rápido de activar) mientras
 se solicita el acceso real a la API de Meta en paralelo. Pendiente de
 construir cuando se priorice.
 
+## Llamada de voz en vivo (Portal Familiar) — WebRTC realtime, distinta de la nota de voz
+
+Construida el 2026-08-01 por Claude Code, en la misma sesión donde se hizo el
+mismo tipo de widget para un proyecto hermano (real-estate-multi-ai-agent-saas)
+-- por eso los endpoints de OpenAI ya venían verificados de primera mano.
+
+**Qué es y qué NO es**: esto es una llamada de voz en vivo, dos vías, en tiempo
+real por WebRTC (el padre habla, el asistente contesta hablando, sin botón de
+grabar/enviar) -- **distinta** de la "nota de voz" que ya existía (grabar hasta
+60s → transcribir con `gpt-4o-mini-transcribe` → responder por texto). Las dos
+conviven en Portal Familiar, en tarjetas separadas (`FamilyChatWidget` y
+`VoiceCallWidget`).
+
+**Sigue "un solo cerebro" reutilizando piezas existentes, no duplicándolas**:
+- `gatherFamilyContext()` (antes privada de `answerFamilyQuestion.ts`, ahora
+  exportada) arma el mismo contexto familiar que ya usa el chat de texto --
+  mismos datos, mismas reglas de aislamiento por `family_id`/`school_id`.
+- `checkDailyLimit()` (extraída de dentro de `answerFamilyQuestion()`, ahora
+  función exportada) es el mismo tope de 30 turnos/24h, compartido entre chat,
+  nota de voz y llamada -- los tres canales insertan en `ai_conversations` con
+  `role='user'`, así que cuentan contra el mismo límite. Una sola llamada
+  puede generar varios turnos de golpe (no se prorratea "1 llamada = 1
+  turno") -- aceptado para esta primera versión, revisar si en la práctica
+  bloquea a una familia antes de tiempo.
+- `resolveGuardianIdentity()` sigue siendo el único lugar que toca la sesión
+  de Next.js -- igual que el resto de Portal Familiar.
+
+**Piezas nuevas**:
+- `web/src/lib/ai/startVoiceCallSession.ts` -- núcleo sin sesión (recibe
+  `schoolId`/`familyId` ya resueltos), arma las instrucciones de voz y
+  mintea el token efímero de OpenAI.
+- `web/src/lib/ai/logVoiceCallTranscript.ts` -- guarda el transcript completo
+  en `ai_conversations` (channel `'voice'`, nuevo -- ver migración
+  `20260801020000_ai_conversations_voice_channel.sql`, amplía el `check` de
+  la columna `channel`). Se llama una sola vez al colgar: el navegador
+  acumula los turnos en memoria durante la llamada (no hay "sesión viva" del
+  lado del servidor de la que leer turno por turno).
+- `web/src/app/dashboard/portal-familiar/actions.ts`: dos Server Actions
+  nuevas, `startFamilyVoiceCallSession()`/`logFamilyVoiceCall()`, mismo
+  patrón que `sendFamilyChatMessage()`.
+- `web/src/hooks/useFamilyVoiceCall.ts` + `web/src/components/portal/VoiceCallWidget.tsx`
+  -- cliente WebRTC (estado local con `useState`, no hay store global en este
+  proyecto) y la tarjeta de UI, mismo estilo visual que `FamilyChatWidget`.
+
+**Endpoints de OpenAI usados (verificados contra la API real el 2026-08-01,
+no de memoria/documentación vieja -- OpenAI retiró su API beta de Realtime)**:
+- `POST /v1/realtime/client_secrets` para el token efímero -- reemplaza a
+  `/v1/realtime/sessions` (retirado, ahora 404). El body va anidado bajo
+  `session`, con `voice` en `session.audio.output.voice` y `turn_detection`
+  en `session.audio.input.turn_detection` (antes eran campos planos).
+- `POST /v1/realtime/calls` para el intercambio SDP de WebRTC -- reemplaza a
+  `POST /v1/realtime?model=...` (ahora responde
+  `400 beta_api_shape_disabled`). Ya no hace falta el parámetro `?model=`
+  porque el modelo queda fijado en el token efímero.
+
+**No usa "tools" (function calling)**: a diferencia del proyecto hermano de
+bienes raíces (que sí necesita tools porque el catálogo de propiedades es
+grande), aquí el contexto completo de la familia (hijos, asistencia,
+facturas, comunicados) cabe entero en las `instructions` de la sesión, igual
+que ya hace el chat de texto -- más simple, sin relay de tool-calls que
+mantener.
+
+**Pendiente de verificar en este entorno (NO se pudo confirmar en esta
+sesión)**:
+1. La migración del `channel` está escrita pero **no aplicada** -- este
+   entorno no tenía credenciales del proyecto de Supabase de MentorIApp.
+   Correr `supabase db push` (o aplicarla manualmente) antes de probar.
+2. No se hizo ninguna llamada real de punta a punta contra `OPENAI_API_KEY`
+   de este proyecto -- solo se verificaron los endpoints/formas de petición
+   contra la API de OpenAI en general (con una key de otro proyecto). Dado
+   el historial de saldo en cero de las cuentas de Anthropic/OpenAI de este
+   proyecto (ver sección de la nota de voz más abajo), confirmar saldo antes
+   de probar.
+3. `tsc --noEmit`, `npm run lint` y `npm run build` sí se corrieron limpios
+   en este entorno -- sin errores nuevos, las únicas advertencias son
+   preexistentes en archivos no tocados por este cambio.
+
 ## "Vercel no muestra la landing nueva" — causa real: `/sw.js` bloqueado por el middleware de auth
 
 **No se asumió la causa** — se verificó con evidencia real antes de tocar nada:

@@ -23,6 +23,32 @@ const MAX_MESSAGE_LENGTH = 2000
 const DAILY_MESSAGE_LIMIT = 30
 const HISTORY_TURNS = 8
 
+/**
+ * Límite de 30 turnos de usuario por familia cada 24h (ventana móvil),
+ * compartido por todos los canales que escriben en ai_conversations
+ * (chat de texto, nota de voz transcrita, y la llamada en vivo de
+ * voiceCallSession.ts) -- cuentan contra el mismo tope porque todos
+ * insertan aquí con role='user'. Exportado para no duplicar esta
+ * consulta en cada núcleo nuevo.
+ */
+export async function checkDailyLimit(admin: ReturnType<typeof createAdminClient>, familyId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { count: usageCount, error: usageError } = await admin
+    .from('ai_conversations')
+    .select('id', { count: 'exact', head: true })
+    .eq('family_id', familyId)
+    .eq('role', 'user')
+    .gte('created_at', since)
+
+  if (usageError) {
+    return { ok: false, error: 'No se pudo verificar el límite de uso del asistente.' }
+  }
+  if ((usageCount ?? 0) >= DAILY_MESSAGE_LIMIT) {
+    return { ok: false, error: `Se alcanzó el límite de ${DAILY_MESSAGE_LIMIT} preguntas por día para esta familia. Intenta de nuevo mañana.` }
+  }
+  return { ok: true }
+}
+
 export type ChatChannel = 'widget' | 'whatsapp'
 
 export interface AnswerFamilyQuestionInput {
@@ -58,20 +84,8 @@ export async function answerFamilyQuestion(input: AnswerFamilyQuestionInput): Pr
   // las últimas 24 horas (ventana móvil, no "día calendario", para no
   // depender de la zona horaria del colegio). Cuenta solo turnos del
   // usuario, no las respuestas del asistente.
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const { count: usageCount, error: usageError } = await admin
-    .from('ai_conversations')
-    .select('id', { count: 'exact', head: true })
-    .eq('family_id', familyId)
-    .eq('role', 'user')
-    .gte('created_at', since)
-
-  if (usageError) {
-    return { ok: false, error: 'No se pudo verificar el límite de uso del asistente.' }
-  }
-  if ((usageCount ?? 0) >= DAILY_MESSAGE_LIMIT) {
-    return { ok: false, error: `Se alcanzó el límite de ${DAILY_MESSAGE_LIMIT} preguntas por día para esta familia. Intenta de nuevo mañana.` }
-  }
+  const limitCheck = await checkDailyLimit(admin, familyId)
+  if (!limitCheck.ok) return limitCheck
 
   const [context, history] = await Promise.all([
     gatherFamilyContext(admin, schoolId, familyId),
@@ -121,17 +135,19 @@ async function fetchRecentHistory(admin: AdminClient, familyId: string, channel:
   return rows.reverse().map((r) => ({ role: r.role, content: r.content }))
 }
 
-interface FamilyContext {
+export interface FamilyContext {
   ok: true
   schoolName: string
   contextText: string
 }
-interface FamilyContextError {
+export interface FamilyContextError {
   ok: false
   error: string
 }
 
-async function gatherFamilyContext(admin: AdminClient, schoolId: string, familyId: string): Promise<FamilyContext | FamilyContextError> {
+// Exportada para que voiceCallSession.ts arme las mismas "instructions"
+// que el chat de texto sin repetir estas 5 consultas.
+export async function gatherFamilyContext(admin: AdminClient, schoolId: string, familyId: string): Promise<FamilyContext | FamilyContextError> {
   const [schoolRes, familyRes, studentsRes, invoicesRes, messagesRes] = await Promise.all([
     admin.from('schools').select('name, faq_document').eq('id', schoolId).single(),
     admin.from('families').select('name').eq('id', familyId).eq('school_id', schoolId).single(),
