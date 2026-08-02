@@ -952,6 +952,52 @@ inserts/updates correspondientes. `editar/page.tsx` actualizado para traer
 `national_id` en su `select`. No hizo falta ninguna migración nueva -- la
 columna ya existía, solo faltaba exponerla en la interfaz.
 
+## Acceso de tutores sin correo (común en RD) + PWA por colegio
+
+**Acceso sin correo**: muchos padres en RD tienen celular/WhatsApp pero no
+usan correo -- `inviteGuardianAccess()` requería correo sí o sí. Ahora, si
+`guardian.email` es nulo, `familias/actions.ts` usa una rama distinta
+(`createPhoneBasedAccess`): crea la cuenta directo con
+`admin.auth.admin.createUser()` usando `{telefono}@mentoriapp.local` como
+identificador (dominio que nunca se usa para enviar nada) y una contraseña
+temporal generada al momento (`generateTempPassword()`, evita caracteres
+ambiguos 0/O/1/l/I). Como la inscripción ya es presencial, el colegio
+entrega esas credenciales en papel ahí mismo -- no depende de que el padre
+revise un correo que quizás nunca usa. `GrantGuardianAccessButton.tsx`
+muestra las credenciales en pantalla tras crear el acceso (con instrucción
+de "entregar en persona"), y `EnrollmentScansReview.tsx` hace lo mismo justo
+después de confirmar una ficha OCR (ya no filtra por
+`.not('email', 'is', null)` -- ahora ofrece ambos caminos según corresponda).
+Si el teléfono ya tenía una cuenta creada así (ej. otro hijo con la misma
+madre), se reusa la cuenta con una contraseña nueva en vez de fallar.
+
+**PWA por colegio** ("la puerta de entrada a la landing del colegio", pedido
+explícito del usuario): cada colegio afiliado obtiene su propio ícono/nombre
+al usar "Agregar a pantalla de inicio" desde el celular del padre.
+- `web/src/app/colegio/[subdomain]/manifest.webmanifest/route.ts`: manifiesto
+  dinámico, uno por colegio -- nombre/tagline reales del colegio,
+  `start_url`/`scope` apuntando a `/colegio/[subdomain]`, ícono del colegio
+  (`logo_url`) si ya lo cargó, con los íconos de MentorIApp
+  (`web/public/icons/`) como respaldo si no.
+- `generateMetadata()` en `colegio/[subdomain]/page.tsx` conecta el
+  manifiesto + `appleWebApp` (nombre/ícono para iPhone, que no sigue el
+  manifest de la misma forma que Android/Chrome).
+- **A propósito, sin ningún service worker todavía** -- ya se vivió el
+  problema real de `/sw.js` bloqueado por el middleware documentado más
+  arriba; un manifest + metadatos correctos ya permite instalar sin ese
+  riesgo. Si se quiere que funcione offline de verdad, es un paso aparte,
+  con mucho más cuidado.
+- Íconos de respaldo de MentorIApp generados con Pillow (birrete de
+  graduación simple, color primario `#1a5f7a`) en `web/public/icons/` --
+  los del repo raíz (`icon-192.png` etc., del scaffold original) están
+  **muertos**, Vercel nunca los sirve porque el Root Directory es `web/`.
+
+**Pendiente real, sin resolver**: Gran Manantial de Sabiduría todavía no
+configuró su landing (`/dashboard/colegio` -- logo, tagline, mensaje de
+bienvenida) al momento de escribir esto -- el usuario lo hará en persona el
+próximo lunes. Hasta entonces, su manifiesto usa los íconos de respaldo de
+MentorIApp, no un logo propio.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

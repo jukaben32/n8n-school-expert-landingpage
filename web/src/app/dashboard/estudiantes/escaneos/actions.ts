@@ -29,8 +29,8 @@ interface ActionResult {
 }
 
 interface ConfirmScanResult extends ActionResult {
-  /** Tutores recién creados con correo, para ofrecer "Dar acceso al sistema" justo después de confirmar -- ver EnrollmentScansReview.tsx. */
-  guardiansToInvite?: { id: string; name: string; email: string }[]
+  /** Tutores recién creados, para ofrecer "Dar acceso al sistema" justo después de confirmar -- ver EnrollmentScansReview.tsx. */
+  guardiansToInvite?: { id: string; name: string; email: string | null }[]
 }
 
 async function resolveScanStaff() {
@@ -241,20 +241,20 @@ export async function confirmEnrollmentScan(scanId: string, input: SubmitNewStud
     })
     .eq('id', scanId)
 
-  // Tutores recién creados que tienen correo -- para ofrecerle a recepción
-  // "Dar acceso al sistema" en el mismo momento, sin tener que ir aparte a
-  // la ficha de familia (ver AGENTS.md, pendiente que se cerró aquí).
-  let guardiansToInvite: { id: string; name: string; email: string }[] = []
+  // Todos los tutores recién creados -- con o sin correo -- para ofrecerle
+  // a recepción "Dar acceso al sistema" en el mismo momento, sin tener que
+  // ir aparte a la ficha de familia (ver AGENTS.md, pendiente que se cerró
+  // aquí). Sin correo, el botón crea acceso por teléfono en vez de invitar.
+  let guardiansToInvite: { id: string; name: string; email: string | null }[] = []
   if (result.guardianIds.length > 0) {
     const { data: guardianRows } = await supabase
       .from('guardians')
       .select('id, first_name, last_name, email')
       .in('id', result.guardianIds)
-      .not('email', 'is', null)
     guardiansToInvite = (guardianRows ?? []).map((g) => ({
       id: g.id as string,
       name: `${g.first_name} ${g.last_name}`,
-      email: g.email as string,
+      email: g.email as string | null,
     }))
   }
 

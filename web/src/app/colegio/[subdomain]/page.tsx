@@ -31,6 +31,15 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
   return {
     title: `${school.name} — Portal escolar`,
     description: school.tagline ?? `Portal escolar de ${school.name}, construido con MentorIApp.`,
+    manifest: `/colegio/${subdomain}/manifest.webmanifest`,
+    appleWebApp: {
+      capable: true,
+      title: school.name,
+      statusBarStyle: 'black-translucent',
+    },
+    icons: {
+      apple: school.logo_url || '/icons/icon-192.png',
+    },
   }
 }
 

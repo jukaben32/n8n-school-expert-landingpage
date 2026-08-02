@@ -97,13 +97,15 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [confirmError, setConfirmError] = useState<string | null>(null)
-  const [pendingInvites, setPendingInvites] = useState<{ id: string; name: string; email: string }[]>([])
+  const [pendingInvites, setPendingInvites] = useState<{ id: string; name: string; email: string | null }[]>([])
   const [inviteStatus, setInviteStatus] = useState<Record<string, 'idle' | 'sending' | 'sent' | 'error'>>({})
+  const [inviteCredentials, setInviteCredentials] = useState<Record<string, { username: string; password: string }>>({})
 
   async function handleInviteGuardian(guardianId: string) {
     setInviteStatus((prev) => ({ ...prev, [guardianId]: 'sending' }))
     const result = await inviteGuardianAccess(guardianId)
     setInviteStatus((prev) => ({ ...prev, [guardianId]: result.ok ? 'sent' : 'error' }))
+    if (result.credentials) setInviteCredentials((prev) => ({ ...prev, [guardianId]: result.credentials! }))
   }
 
   async function refreshScans() {
@@ -259,21 +261,27 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
           </p>
           <div className="space-y-2">
             {pendingInvites.map((g) => (
-              <div key={g.id} className="flex items-center justify-between text-sm bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5">
+              <div key={g.id} className="flex items-center justify-between text-sm bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 gap-3">
                 <div>
                   <p className="font-medium text-slate-700 dark:text-slate-200">{g.name}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">{g.email}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{g.email ?? 'Sin correo — acceso por teléfono'}</p>
                 </div>
-                {inviteStatus[g.id] === 'sent' ? (
-                  <p className="text-xs font-semibold text-green-600 dark:text-green-400">✓ Invitado</p>
+                {inviteStatus[g.id] === 'sent' && inviteCredentials[g.id] ? (
+                  <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-right shrink-0">
+                    <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 mb-1">Entrega en persona:</p>
+                    <p className="text-[11px] font-mono text-slate-700 dark:text-slate-200">{inviteCredentials[g.id].username}</p>
+                    <p className="text-[11px] font-mono text-slate-700 dark:text-slate-200">{inviteCredentials[g.id].password}</p>
+                  </div>
+                ) : inviteStatus[g.id] === 'sent' ? (
+                  <p className="text-xs font-semibold text-green-600 dark:text-green-400 shrink-0">✓ Invitado</p>
                 ) : (
                   <button
                     type="button"
                     onClick={() => handleInviteGuardian(g.id)}
                     disabled={inviteStatus[g.id] === 'sending'}
-                    className="text-xs font-semibold text-primary dark:text-accent-light hover:underline disabled:opacity-50"
+                    className="text-xs font-semibold text-primary dark:text-accent-light hover:underline disabled:opacity-50 shrink-0"
                   >
-                    {inviteStatus[g.id] === 'sending' ? 'Enviando...' : inviteStatus[g.id] === 'error' ? 'Reintentar' : 'Dar acceso al sistema'}
+                    {inviteStatus[g.id] === 'sending' ? 'Enviando...' : inviteStatus[g.id] === 'error' ? 'Reintentar' : g.email ? 'Dar acceso al sistema' : 'Crear acceso (sin correo)'}
                   </button>
                 )}
               </div>
