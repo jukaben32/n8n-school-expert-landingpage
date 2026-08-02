@@ -19,6 +19,7 @@ export default function VoiceCallWidget() {
         <div>
           <p className="text-sm font-semibold text-slate-900 dark:text-white">Llamada de voz en vivo</p>
           <p className="text-xs text-slate-400 dark:text-slate-500">Habla directo con el asistente sobre tus hijos, pagos o asistencia</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">El colegio puede revisar el registro de esta llamada.</p>
         </div>
       </div>
 

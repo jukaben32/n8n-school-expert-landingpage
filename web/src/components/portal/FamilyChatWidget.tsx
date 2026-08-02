@@ -157,6 +157,7 @@ export default function FamilyChatWidget() {
         <div>
           <p className="text-sm font-semibold text-slate-900 dark:text-white">Asistente familiar</p>
           <p className="text-xs text-slate-400 dark:text-slate-500">Pregunta sobre tus hijos, pagos o asistencia</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">El colegio puede revisar esta conversación.</p>
         </div>
       </div>
 

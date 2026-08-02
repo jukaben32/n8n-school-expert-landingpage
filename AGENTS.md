@@ -854,6 +854,43 @@ patrón que `CLAUDE.md` en la raíz y en `web/`, para que cualquier
 herramienta que lea `.agents/AGENTS.md` termine leyendo este documento real
 en vez de uno viejo y contradictorio.
 
+## Decisión REVERTIDA: el colegio ahora sí puede ver las conversaciones del asistente
+
+La migración 019 (ver sección del Asistente de IA más arriba) decía
+explícitamente: *"el personal del colegio no tiene ninguna política de
+lectura sobre esta tabla, ni siquiera director"*. El 2026-08, al construir
+el visor para la llamada de voz en vivo, el usuario **confirmó
+explícitamente que quiere revertir esa decisión** -- director/school_admin/
+super_admin sí pueden verlas ahora, **con la condición de avisarle al padre
+en la propia interfaz** (no en letra pequeña de términos, en el widget
+mismo) que el colegio puede revisar la conversación.
+
+**Implementación**:
+- Migración `20260802000000_ai_conversations_staff_read.sql`: política nueva
+  de `select` para `super_admin`/`school_admin`/`director` -- **no**
+  `teacher`/`finance`/`reception` (las conversaciones pueden tocar temas
+  financieros o de salud de la familia; se restringió al mismo nivel que
+  Personal/Configuración del colegio, no a todo el staff). Ajustar si el
+  usuario decide lo contrario.
+- `/dashboard/asistente-ia`: lista de familias con actividad (conteo de
+  preguntas, última actividad, qué canales usó), ordenadas por más reciente.
+- `/dashboard/asistente-ia/[familyId]`: transcript completo de esa familia,
+  cronológico, con separador visual por canal.
+- `FamilyChatWidget.tsx` y `VoiceCallWidget.tsx`: aviso visible ("El colegio
+  puede revisar esta conversación") debajo del título de cada widget --
+  cumple la condición del usuario, no es solo una política escrita.
+- Nuevo módulo `asistente_ia` en `permissions.ts`, mismo `FULL_ACCESS` que
+  `configuracion_colegio`.
+
+**Limitación conocida, sin resolver**: la nota de voz grabada (transcrita con
+Whisper) y el chat escrito **comparten el mismo `channel = 'widget'`** en la
+base de datos -- no hay forma de distinguir en el visor si un mensaje del
+padre fue tecleado o hablado y transcrito. Solo la llamada en vivo
+(`channel = 'voice'`) es distinguible. Si en algún momento importa saber
+cuál fue cuál, hace falta agregar un campo/canal separado para la nota de
+voz (hoy no lo tiene, ver sección "Nota de voz en el asistente de IA" más
+arriba -- reutiliza `sendFamilyChatMessage` tal cual, sin marca de origen).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -903,3 +940,11 @@ en vez de uno viejo y contradictorio.
     ya aplicada y verificada (ver sección "Extracción OCR estructurada con
     Claude" más arriba). Pendiente: probar la llamada real a Claude con una
     ficha/factura de prueba, y definir el mapeo de Alegra.
+11. **Llamada de voz en vivo + visor de conversaciones para el colegio** —
+    código verificado (`tsc`/`lint`/`build` limpios) y fusionado a `main`,
+    pero **las 2 migraciones nuevas todavía no se han aplicado a
+    producción** (`20260801020000_ai_conversations_voice_channel.sql` y
+    `20260802000000_ai_conversations_staff_read.sql`) -- correr
+    `supabase db push`. Pendiente también: probar la llamada de voz real
+    (necesita `OPENAI_API_KEY` con saldo) y confirmar que el visor
+    `/dashboard/asistente-ia` muestra los datos correctamente.
