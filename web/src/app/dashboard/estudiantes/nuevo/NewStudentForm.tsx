@@ -17,6 +17,7 @@ interface DraftGuardian {
   phone: string
   email: string
   relationship: string
+  nationalId: string
 }
 
 const inputClass =
@@ -29,7 +30,7 @@ const relationshipLabels: Record<string, string> = {
 }
 
 function newGuardianDraft(relationship: string): DraftGuardian {
-  return { key: crypto.randomUUID(), firstName: '', lastName: '', phone: '', email: '', relationship }
+  return { key: crypto.randomUUID(), firstName: '', lastName: '', phone: '', email: '', relationship, nationalId: '' }
 }
 
 /**
@@ -112,6 +113,7 @@ export default function NewStudentForm({ families }: NewStudentFormProps) {
               phone: g.phone,
               email: g.email || null,
               relationship: g.relationship as 'madre' | 'padre' | 'tutor_legal' | 'otro',
+              nationalId: g.nationalId || null,
             })),
           })
         : await submitNewStudent({ mode: 'existing', student, familyId })
@@ -215,6 +217,11 @@ export default function NewStudentForm({ families }: NewStudentFormProps) {
                   <div>
                     <label htmlFor={`gEmail-${g.key}`} className={labelClass}>Correo (opcional)</label>
                     <input id={`gEmail-${g.key}`} type="email" value={g.email} onChange={(e) => updateGuardian(g.key, { email: e.target.value })} className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor={`gNationalId-${g.key}`} className={labelClass}>Cédula (opcional)</label>
+                    <input id={`gNationalId-${g.key}`} value={g.nationalId} onChange={(e) => updateGuardian(g.key, { nationalId: e.target.value })}
+                      placeholder="000-0000000-0" className={inputClass} />
                   </div>
                   <div className="col-span-2">
                     <label htmlFor={`gRelationship-${g.key}`} className={labelClass}>Parentesco</label>

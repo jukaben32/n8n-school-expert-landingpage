@@ -28,6 +28,11 @@ interface ActionResult {
   error?: string
 }
 
+interface ConfirmScanResult extends ActionResult {
+  /** Tutores recién creados con correo, para ofrecer "Dar acceso al sistema" justo después de confirmar -- ver EnrollmentScansReview.tsx. */
+  guardiansToInvite?: { id: string; name: string; email: string }[]
+}
+
 async function resolveScanStaff() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -202,7 +207,7 @@ function confidenceOf(data: Record<string, unknown> | null): number | null {
  * mismo createStudentWithFamily() que el formulario manual. Nunca usa
  * extracted_data directamente.
  */
-export async function confirmEnrollmentScan(scanId: string, input: SubmitNewStudentInput): Promise<ActionResult> {
+export async function confirmEnrollmentScan(scanId: string, input: SubmitNewStudentInput): Promise<ConfirmScanResult> {
   const staff = await resolveScanStaff()
   if (!staff.ok) return { ok: false, error: staff.error }
 
@@ -236,9 +241,26 @@ export async function confirmEnrollmentScan(scanId: string, input: SubmitNewStud
     })
     .eq('id', scanId)
 
+  // Tutores recién creados que tienen correo -- para ofrecerle a recepción
+  // "Dar acceso al sistema" en el mismo momento, sin tener que ir aparte a
+  // la ficha de familia (ver AGENTS.md, pendiente que se cerró aquí).
+  let guardiansToInvite: { id: string; name: string; email: string }[] = []
+  if (result.guardianIds.length > 0) {
+    const { data: guardianRows } = await supabase
+      .from('guardians')
+      .select('id, first_name, last_name, email')
+      .in('id', result.guardianIds)
+      .not('email', 'is', null)
+    guardiansToInvite = (guardianRows ?? []).map((g) => ({
+      id: g.id as string,
+      name: `${g.first_name} ${g.last_name}`,
+      email: g.email as string,
+    }))
+  }
+
   revalidatePath('/dashboard/estudiantes/escaneos')
   revalidatePath('/dashboard/estudiantes')
-  return { ok: true }
+  return { ok: true, guardiansToInvite }
 }
 
 export async function rejectEnrollmentScan(scanId: string, reason: string): Promise<ActionResult> {

@@ -11,6 +11,7 @@ import {
 } from './actions'
 import type { SubmitNewStudentInput } from '../nuevo/actions'
 import type { GuardianRelationship } from '@/lib/students/createStudentWithFamily'
+import { inviteGuardianAccess } from '../../familias/actions'
 
 const inputClass =
   'w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -96,6 +97,14 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [confirmError, setConfirmError] = useState<string | null>(null)
+  const [pendingInvites, setPendingInvites] = useState<{ id: string; name: string; email: string }[]>([])
+  const [inviteStatus, setInviteStatus] = useState<Record<string, 'idle' | 'sending' | 'sent' | 'error'>>({})
+
+  async function handleInviteGuardian(guardianId: string) {
+    setInviteStatus((prev) => ({ ...prev, [guardianId]: 'sending' }))
+    const result = await inviteGuardianAccess(guardianId)
+    setInviteStatus((prev) => ({ ...prev, [guardianId]: result.ok ? 'sent' : 'error' }))
+  }
 
   async function refreshScans() {
     setScans(await listPendingEnrollmentScans())
@@ -222,6 +231,9 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
     }
     setScans((prev) => prev.filter((s) => s.id !== scan.id))
     setOpenScanId(null)
+    if (result.guardiansToInvite && result.guardiansToInvite.length > 0) {
+      setPendingInvites((prev) => [...prev, ...result.guardiansToInvite!])
+    }
   }
 
   async function handleReject(scanId: string) {
@@ -239,6 +251,44 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
 
   return (
     <div className="space-y-6">
+      {/* Tutores recién creados listos para invitar */}
+      {pendingInvites.length > 0 && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 p-5 space-y-3">
+          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+            ✓ Estudiante(s) creado(s) — dale acceso al Portal Familiar a sus tutores
+          </p>
+          <div className="space-y-2">
+            {pendingInvites.map((g) => (
+              <div key={g.id} className="flex items-center justify-between text-sm bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5">
+                <div>
+                  <p className="font-medium text-slate-700 dark:text-slate-200">{g.name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{g.email}</p>
+                </div>
+                {inviteStatus[g.id] === 'sent' ? (
+                  <p className="text-xs font-semibold text-green-600 dark:text-green-400">✓ Invitado</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleInviteGuardian(g.id)}
+                    disabled={inviteStatus[g.id] === 'sending'}
+                    className="text-xs font-semibold text-primary dark:text-accent-light hover:underline disabled:opacity-50"
+                  >
+                    {inviteStatus[g.id] === 'sending' ? 'Enviando...' : inviteStatus[g.id] === 'error' ? 'Reintentar' : 'Dar acceso al sistema'}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setPendingInvites([])}
+            className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          >
+            Ocultar
+          </button>
+        </div>
+      )}
+
       {/* Subida */}
       <form onSubmit={handleUpload} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4">
         <div className="flex gap-2">

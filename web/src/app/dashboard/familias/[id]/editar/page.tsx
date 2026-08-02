@@ -39,7 +39,7 @@ export default async function EditarFamiliaPage({ params }: { params: Promise<{ 
 
   const { data: guardiansRaw } = await supabase
     .from('guardians')
-    .select('id, first_name, last_name, phone, email, relationship, is_primary')
+    .select('id, first_name, last_name, phone, email, relationship, is_primary, national_id')
     .eq('family_id', id)
     .order('is_primary', { ascending: false })
 

@@ -12,6 +12,7 @@ interface Guardian {
   email: string | null
   relationship: string
   is_primary: boolean
+  national_id: string | null
 }
 
 interface Family {
@@ -30,6 +31,7 @@ interface EditableGuardian {
   email: string
   relationship: string
   isPrimary: boolean
+  nationalId: string
 }
 
 const inputClass =
@@ -44,11 +46,12 @@ function fromExisting(g: Guardian): EditableGuardian {
   return {
     id: g.id, key: g.id, firstName: g.first_name, lastName: g.last_name,
     phone: g.phone, email: g.email ?? '', relationship: g.relationship, isPrimary: g.is_primary,
+    nationalId: g.national_id ?? '',
   }
 }
 
 function newDraft(): EditableGuardian {
-  return { key: crypto.randomUUID(), firstName: '', lastName: '', phone: '', email: '', relationship: 'tutor_legal', isPrimary: false }
+  return { key: crypto.randomUUID(), firstName: '', lastName: '', phone: '', email: '', relationship: 'tutor_legal', isPrimary: false, nationalId: '' }
 }
 
 export default function EditFamilyForm({ schoolId, family, initialGuardians }: { schoolId: string; family: Family; initialGuardians: Guardian[] }) {
@@ -116,6 +119,7 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
           .update({
             first_name: g.firstName, last_name: g.lastName, phone: g.phone,
             email: g.email || null, relationship: g.relationship, is_primary: g.isPrimary,
+            national_id: g.nationalId || null,
           })
           .eq('id', g.id as string)
         if (updateError) throw updateError
@@ -132,6 +136,7 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
             .insert({
               school_id: schoolId, family_id: family.id, first_name: g.firstName, last_name: g.lastName,
               phone: g.phone, email: g.email || null, relationship: g.relationship, is_primary: g.isPrimary,
+              national_id: g.nationalId || null,
             })
             .select('id')
             .single()
@@ -211,6 +216,11 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
               <div>
                 <label htmlFor={`em-${g.key}`} className={labelClass}>Correo (opcional)</label>
                 <input id={`em-${g.key}`} type="email" value={g.email} onChange={(e) => updateGuardian(g.key, { email: e.target.value })} className={inputClass} />
+              </div>
+              <div>
+                <label htmlFor={`ni-${g.key}`} className={labelClass}>Cédula (opcional)</label>
+                <input id={`ni-${g.key}`} value={g.nationalId} onChange={(e) => updateGuardian(g.key, { nationalId: e.target.value })}
+                  placeholder="000-0000000-0" className={inputClass} />
               </div>
               <div className="col-span-2">
                 <label htmlFor={`rel-${g.key}`} className={labelClass}>Parentesco</label>

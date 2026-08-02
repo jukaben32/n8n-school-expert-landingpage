@@ -922,6 +922,36 @@ con este mismo botón. Sería natural ofrecer el botón de invitar justo ahí
 también, en el mismo flujo de confirmación -- no se hizo en esta tarea por no
 mezclar alcance.
 
+## Invitación de tutores extendida a la bandeja de OCR + campo de cédula en formularios manuales
+
+**Invitación desde la bandeja de OCR**: cerraba el pendiente que quedó anotado
+al construir `inviteGuardianAccess` -- confirmar una ficha escaneada
+(`/dashboard/estudiantes/escaneos`) ya no deja al tutor sin acceso hasta que
+alguien vaya aparte a la ficha de familia.
+- `createStudentWithFamily()` ahora devuelve `guardianIds: string[]` en el
+  resultado exitoso (antes solo `studentId`/`familyId`) -- para ambos modos
+  (`new` y `existing`).
+- `confirmEnrollmentScan()` usa esos IDs para traer nombre/correo de los
+  tutores recién creados y devolverlos como `guardiansToInvite`.
+- `EnrollmentScansReview.tsx` muestra una tarjeta justo después de confirmar
+  con un botón "Dar acceso al sistema" por cada tutor con correo -- mismo
+  botón, mismo `inviteGuardianAccess()`.
+- **Se movió `inviteGuardianAccess` de `familias/[id]/actions.ts` a
+  `familias/actions.ts`** (un nivel más arriba, compartido) para que tanto
+  la ficha de familia como la bandeja de OCR puedan importarla sin duplicar
+  la función. Si se vuelve a necesitar desde un tercer lugar, ya está en la
+  ubicación correcta para eso.
+
+**Campo de cédula en los formularios manuales**: la columna
+`guardians.national_id` ya existía desde el OCR de fichas (migración 20260731),
+pero solo la bandeja de revisión de fichas la exponía -- los formularios
+manuales (`NewStudentForm.tsx` en modo "Familia nueva", y
+`EditFamilyForm.tsx`) no la pedían. Se agregó el campo "Cédula (opcional)" en
+ambos, incluido en las interfaces `DraftGuardian`/`EditableGuardian` y en los
+inserts/updates correspondientes. `editar/page.tsx` actualizado para traer
+`national_id` en su `select`. No hizo falta ninguna migración nueva -- la
+columna ya existía, solo faltaba exponerla en la interfaz.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

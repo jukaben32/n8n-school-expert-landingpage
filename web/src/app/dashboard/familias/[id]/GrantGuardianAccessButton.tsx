@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { inviteGuardianAccess } from './actions'
+import { inviteGuardianAccess } from '../actions'
 
 export default function GrantGuardianAccessButton({ guardianId, hasEmail }: { guardianId: string; hasEmail: boolean }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')

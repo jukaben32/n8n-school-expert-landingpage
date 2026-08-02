@@ -50,7 +50,7 @@ export type CreateStudentWithFamilyInput =
   | { mode: 'existing'; schoolId: string; student: StudentFieldsInput; familyId: string }
 
 export type CreateStudentWithFamilyResult =
-  | { ok: true; studentId: string; familyId: string }
+  | { ok: true; studentId: string; familyId: string; guardianIds: string[] }
   | { ok: false; error: string }
 
 function buildStudentRow(schoolId: string, familyId: string, student: StudentFieldsInput) {
@@ -137,7 +137,7 @@ export async function createStudentWithFamily(
     )
     if (linkError) return { ok: false, error: linkError.message }
 
-    return { ok: true, studentId, familyId }
+    return { ok: true, studentId, familyId, guardianIds: createdGuardians.map((g) => g.id) }
   }
 
   // mode === 'existing' -- se vincula con TODOS los tutores ya registrados
@@ -169,5 +169,5 @@ export async function createStudentWithFamily(
     if (linkError) return { ok: false, error: linkError.message }
   }
 
-  return { ok: true, studentId, familyId: input.familyId }
+  return { ok: true, studentId, familyId: input.familyId, guardianIds: (existingGuardians ?? []).map((g) => g.id as string) }
 }
