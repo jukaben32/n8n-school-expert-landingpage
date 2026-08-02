@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import GrantGuardianAccessButton from './GrantGuardianAccessButton'
 
 export const metadata: Metadata = {
   title: 'Ficha de familia — MentorIApp',
@@ -55,6 +56,11 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
 
   type Guardian = { id: string; first_name: string; last_name: string; phone: string; email: string | null; relationship: string; is_primary: boolean }
   const guardians = (guardiansRaw ?? []) as Guardian[]
+
+  const { data: linkedGuardianProfiles, error: linkedGuardianProfilesError } = guardians.length
+    ? await supabase.from('users_profiles').select('guardian_id').in('guardian_id', guardians.map((g) => g.id))
+    : { data: [], error: null }
+  const guardiansWithAccess = new Set((linkedGuardianProfiles ?? []).map((p) => p.guardian_id as string))
   type StudentRow = { id: string; first_name: string; last_name: string; enrollment_status: string | null }
   const students = (studentsRaw ?? []) as StudentRow[]
   type Invoice = { id: string; description: string; total_amount: number; status: string; due_date: string }
@@ -66,7 +72,7 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <QueryErrorBanner errors={[{ label: 'la familia', error: familyError }, { label: 'los tutores', error: guardiansRawError }, { label: 'los estudiantes', error: studentsRawError }, { label: 'las facturas', error: invoicesRawError }]} />
+      <QueryErrorBanner errors={[{ label: 'la familia', error: familyError }, { label: 'los tutores', error: guardiansRawError }, { label: 'los estudiantes', error: studentsRawError }, { label: 'las facturas', error: invoicesRawError }, { label: 'los accesos', error: linkedGuardianProfilesError }]} />
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/dashboard/familias" className="text-xs font-semibold text-slate-400 hover:text-primary dark:hover:text-accent-light transition">
@@ -148,6 +154,11 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
                   </p>
                   <p className="text-xs text-slate-400 dark:text-slate-500">{g.relationship} · {g.phone}{g.email ? ` · ${g.email}` : ''}</p>
                 </div>
+                {guardiansWithAccess.has(g.id) ? (
+                  <p className="text-[10px] font-semibold text-green-600 dark:text-green-400 shrink-0">✓ Tiene acceso</p>
+                ) : (
+                  <GrantGuardianAccessButton guardianId={g.id} hasEmail={!!g.email} />
+                )}
               </div>
             ))}
           </div>

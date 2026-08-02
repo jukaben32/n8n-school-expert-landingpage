@@ -891,6 +891,37 @@ cuál fue cuál, hace falta agregar un campo/canal separado para la nota de
 voz (hoy no lo tiene, ver sección "Nota de voz en el asistente de IA" más
 arriba -- reutiliza `sendFamilyChatMessage` tal cual, sin marca de origen).
 
+## Invitación de acceso para tutores (Portal Familiar) — cierra una brecha real
+
+**Brecha encontrada, no una decisión de diseño**: hasta esta tarea, un padre
+solo podía obtener acceso al Portal Familiar de la misma forma manual usada
+para probar (crear el usuario de Auth a mano en Supabase, vincularlo por
+SQL). No existía ningún camino automático -- ni auto-registro desde la
+landing del colegio, ni invitación por correo, a diferencia de Personal, que
+sí tiene su propio flujo (`inviteStaffAccess`, ver más arriba) desde hace
+semanas. El usuario lo notó al intentar probar la llamada de voz y preguntar
+"¿cómo entra un padre?".
+
+**Implementación**: `dashboard/familias/[id]/actions.ts` →
+`inviteGuardianAccess(guardianId)`, **copia casi literal de
+`inviteStaffAccess`** (mismo patrón de `admin.inviteUserByEmail` +
+`redirectTo: /actualizar-contrasena` + reutilizar la cuenta de Auth si el
+correo ya existía) -- la única diferencia real es que el rol de login
+siempre es `'guardian'` (no hay que elegir uno como sí pasa con Personal).
+Botón "Dar acceso al sistema" en cada tutor de `/dashboard/familias/[id]`,
+mismo patrón visual que `GrantAccessButton.tsx` de Personal. Si el tutor no
+tiene correo cargado, el botón se reemplaza por un aviso ("Sin correo") en
+vez de fallar silenciosamente al invitar.
+
+**Pendiente, mencionado pero no resuelto en esta tarea**: no hay ningún
+enlace de "conviértete en familia" en la ficha de inscripción por OCR
+(`/dashboard/estudiantes/escaneos`) -- cuando se confirma una ficha escaneada
+y se crea el estudiante/familia/tutor, el tutor sigue sin acceso hasta que
+alguien del colegio entre a la ficha de familia y le dé acceso manualmente
+con este mismo botón. Sería natural ofrecer el botón de invitar justo ahí
+también, en el mismo flujo de confirmación -- no se hizo en esta tarea por no
+mezclar alcance.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
