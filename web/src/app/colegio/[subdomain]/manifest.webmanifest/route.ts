@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getWebsiteSettings } from '@/lib/websiteSettings'
 
 /**
  * Manifiesto de PWA dinámico, uno distinto por colegio -- "la puerta de
@@ -20,13 +21,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ subdoma
   const supabase = await createClient()
   const { data: school } = await supabase
     .from('schools_public')
-    .select('name, tagline, logo_url')
+    .select('name, tagline, logo_url, website_settings')
     .eq('subdomain', subdomain)
     .maybeSingle()
 
   if (!school) {
     return NextResponse.json({ error: 'Colegio no encontrado' }, { status: 404 })
   }
+
+  const website = getWebsiteSettings(school.website_settings)
 
   // Si el colegio ya cargó su propio logo, se usa como ícono principal
   // (sizes "any" porque no controlamos las dimensiones reales de una URL
@@ -43,12 +46,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ subdoma
   const manifest = {
     name: school.name,
     short_name: school.name.length > 20 ? school.name.slice(0, 17) + '...' : school.name,
-    description: school.tagline ?? `Portal escolar de ${school.name}, en MentorIApp.`,
+    description: website.hero_subtitle || school.tagline || `Portal escolar de ${school.name}, en MentorIApp.`,
     start_url: `/colegio/${subdomain}`,
     scope: `/colegio/${subdomain}`,
     display: 'standalone',
-    background_color: '#0a1628',
-    theme_color: '#1a5f7a',
+    background_color: website.primary_color,
+    theme_color: website.primary_color,
     icons,
   }
 

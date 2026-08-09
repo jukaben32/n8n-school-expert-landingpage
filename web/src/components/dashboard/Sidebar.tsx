@@ -66,6 +66,12 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
     </svg>
   ),
+  whatsapp: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.75c-4.556 0-8.25 3.42-8.25 7.636 0 1.896.756 3.636 2.003 4.97L5.25 20.25l4.003-1.159A9.24 9.24 0 0012 16.623c4.556 0 8.25-3.42 8.25-7.637S16.556 3.75 12 3.75z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75c.16 1.095.59 2.126 1.248 2.99.71.94 1.664 1.695 2.764 2.186.454.202.972.15 1.377-.144l.78-.57a.75.75 0 01.846-.024l1.031.62a.75.75 0 01.309.909c-.365 1.016-1.406 1.662-2.483 1.472-1.682-.299-3.245-1.203-4.44-2.428-1.196-1.226-2.06-2.808-2.44-4.542-.244-1.116.42-2.26 1.5-2.65l1.107-.4a.75.75 0 01.903.314l.564.942a.75.75 0 01-.11.92l-.74.74z" />
+    </svg>
+  ),
   logout: (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
@@ -117,6 +123,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/reportes',        label: 'Reportes', icon: 'reports' },
     { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
+    { href: '/dashboard/whatsapp',        label: 'WhatsApp', icon: 'whatsapp' },
     { href: '/dashboard/colegio',         label: 'Configuración', icon: 'configuracion' },
   ],
 }

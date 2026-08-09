@@ -29,6 +29,7 @@ export type Module =
   | 'asistencia' | 'asistencia_registrar'
   | 'reportes'
   | 'academia_gestionar' // crear lecciones + ver progreso
+  | 'whatsapp' // configuración del canal WhatsApp / Evolution API
   | 'configuracion_colegio'
   | 'asistente_ia' // ver conversaciones del asistente de IA con las familias
 
@@ -36,6 +37,7 @@ const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar',
+  'whatsapp',
   'configuracion_colegio', 'asistente_ia',
 ]
 
