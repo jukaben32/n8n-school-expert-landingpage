@@ -1071,3 +1071,16 @@ MentorIApp, no un logo propio.
 - Si no hay un nombre de colegio disponible, usa `MentorIA` como respaldo.
 - No volver a usar el remitente viejo `schoolos.app`; el correo debe salir
   del dominio verificado `resendcegmas.com`.
+
+## Revision Vercel (2026-08-10)
+
+- En esta revision, la cuenta Vercel accesible desde la sesion solo expone el
+  proyecto `micheline-v2-beautera-w72i` en estado `READY`.
+- Ese proyecto visible no muestra dominio propio asignado; solo URLs
+  `vercel.app` en esta comprobacion.
+- No aparecio aun un proyecto publico del colegio para validar una landing
+  final.
+- La landing del colegio sigue pendiente del generador de sitio web que ya
+  mejoramos; no debe tratarse como publica todavia.
+- La app si mantiene su landing publica aparte, asi que no hay que mezclar
+  ambos flujos ni asumir que el colegio ya tiene home publico.
