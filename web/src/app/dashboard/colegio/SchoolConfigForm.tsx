@@ -3,18 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { buildWebsiteSettings, getWebsiteSettings } from '@/lib/websiteSettings'
 
 interface School {
   id: string
-  name: string
-  subdomain: string
-  tagline: string | null
-  logo_url: string | null
   address: string | null
   phone: string | null
   email: string | null
-  settings: Record<string, unknown> | null
   sibling_discount_min_children: number
   sibling_discount_percent: number
   faq_document: string | null
@@ -26,20 +20,9 @@ const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300
 
 export default function SchoolConfigForm({ school }: { school: School }) {
   const router = useRouter()
-  const websiteSettings = getWebsiteSettings(school.settings)
-  const currentSettings = school.settings && typeof school.settings === 'object' && !Array.isArray(school.settings)
-    ? school.settings
-    : {}
-  const [tagline, setTagline] = useState(school.tagline ?? '')
-  const [logoUrl, setLogoUrl] = useState(school.logo_url ?? '')
   const [address, setAddress] = useState(school.address ?? '')
   const [phone, setPhone] = useState(school.phone ?? '')
   const [email, setEmail] = useState(school.email ?? '')
-  const [heroTitle, setHeroTitle] = useState(websiteSettings.hero_title || school.name)
-  const [heroSubtitle, setHeroSubtitle] = useState(websiteSettings.hero_subtitle || school.tagline || '')
-  const [ctaLabel, setCtaLabel] = useState(websiteSettings.cta_label)
-  const [primaryColor, setPrimaryColor] = useState(websiteSettings.primary_color)
-  const [accentColor, setAccentColor] = useState(websiteSettings.accent_color)
   const [siblingMinChildren, setSiblingMinChildren] = useState(String(school.sibling_discount_min_children))
   const [siblingPercent, setSiblingPercent] = useState(String(school.sibling_discount_percent))
   const [faqDocument, setFaqDocument] = useState(school.faq_document ?? '')
@@ -56,21 +39,9 @@ export default function SchoolConfigForm({ school }: { school: School }) {
     const { error: dbError } = await supabase
       .from('schools')
       .update({
-        tagline: tagline.trim() || null,
-        logo_url: logoUrl.trim() || null,
         address: address.trim() || null,
         phone: phone.trim() || null,
         email: email.trim() || null,
-        settings: {
-          ...currentSettings,
-          website: buildWebsiteSettings({
-            hero_title: heroTitle.trim(),
-            hero_subtitle: heroSubtitle.trim(),
-            cta_label: ctaLabel.trim(),
-            primary_color: primaryColor.trim(),
-            accent_color: accentColor.trim(),
-          }),
-        },
         sibling_discount_min_children: Math.max(1, Number(siblingMinChildren) || 3),
         sibling_discount_percent: Math.min(100, Math.max(0, Number(siblingPercent) || 0)),
         faq_document: faqDocument.trim() || null,
@@ -89,110 +60,7 @@ export default function SchoolConfigForm({ school }: { school: School }) {
 
   return (
     <div className="space-y-4">
-      {/* Vista previa / enlace a la landing pública */}
-      <div className="rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 p-4 flex items-center justify-between gap-4 flex-wrap">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary dark:text-accent-light mb-1">Tu página pública</p>
-          <p className="text-sm text-slate-600 dark:text-slate-300 truncate font-mono">/colegio/{school.subdomain}</p>
-        </div>
-        <a
-          href={`/colegio/${school.subdomain}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 text-xs font-semibold rounded-full bg-primary text-white px-4 py-2 shadow-glow hover:bg-primary-dark transition"
-        >
-          Ver página →
-        </a>
-      </div>
-
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4">
-        <div>
-          <label htmlFor="tagline" className={labelClass}>Mensaje de bienvenida</label>
-          <input
-            id="tagline"
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            placeholder="Ej. Formando a los líderes del mañana desde 1998."
-            className={inputClass}
-            maxLength={140}
-          />
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Aparece debajo del nombre de tu colegio en la landing pública.</p>
-        </div>
-
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
-            Sitio web público
-          </p>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 mb-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary dark:text-accent-light">Vista previa</p>
-            <p className="text-sm font-black text-slate-900 dark:text-white mt-1">{heroTitle || school.name}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{heroSubtitle || 'Personaliza este texto para la landing pública del colegio.'}</p>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label htmlFor="heroTitle" className={labelClass}>Título principal</label>
-              <input
-                id="heroTitle"
-                value={heroTitle}
-                onChange={(e) => setHeroTitle(e.target.value)}
-                placeholder={`Ej. ${school.name}`}
-                className={inputClass}
-                maxLength={90}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="heroSubtitle" className={labelClass}>Subtítulo del sitio</label>
-              <textarea
-                id="heroSubtitle"
-                rows={3}
-                value={heroSubtitle}
-                onChange={(e) => setHeroSubtitle(e.target.value)}
-                placeholder="Ej. Conecta a las familias con comunicados, pagos y asistencia desde un solo lugar."
-                className={`${inputClass} resize-y`}
-              />
-            </div>
-            <div>
-              <label htmlFor="ctaLabel" className={labelClass}>Texto del botón</label>
-              <input
-                id="ctaLabel"
-                value={ctaLabel}
-                onChange={(e) => setCtaLabel(e.target.value)}
-                placeholder="Ej. Iniciar sesión"
-                className={inputClass}
-                maxLength={40}
-              />
-            </div>
-            <div>
-              <label htmlFor="primaryColor" className={labelClass}>Color principal</label>
-              <input
-                id="primaryColor"
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1"
-              />
-            </div>
-            <div>
-              <label htmlFor="accentColor" className={labelClass}>Color acento</label>
-              <input
-                id="accentColor"
-                type="color"
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1"
-              />
-            </div>
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-            Estos valores alimentan la landing pública del colegio en <span className="font-mono">/colegio/{school.subdomain}</span>.
-          </p>
-        </div>
-
-        <div>
-          <label htmlFor="logoUrl" className={labelClass}>Logo (link a una imagen)</label>
-          <input id="logoUrl" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." className={inputClass} />
-        </div>
-
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label htmlFor="address" className={labelClass}>Dirección</label>

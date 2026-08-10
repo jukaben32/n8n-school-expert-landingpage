@@ -72,6 +72,13 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75c.16 1.095.59 2.126 1.248 2.99.71.94 1.664 1.695 2.764 2.186.454.202.972.15 1.377-.144l.78-.57a.75.75 0 01.846-.024l1.031.62a.75.75 0 01.309.909c-.365 1.016-1.406 1.662-2.483 1.472-1.682-.299-3.245-1.203-4.44-2.428-1.196-1.226-2.06-2.808-2.44-4.542-.244-1.116.42-2.26 1.5-2.65l1.107-.4a.75.75 0 01.903.314l.564.942a.75.75 0 01-.11.92l-.74.74z" />
     </svg>
   ),
+  website: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25A8.25 8.25 0 1012 3.75a8.25 8.25 0 000 16.5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.75c2.25 2.016 3.375 4.5 3.375 8.25S14.25 17.984 12 20.25c-2.25-2.266-3.375-4.75-3.375-8.25S9.75 5.766 12 3.75z" />
+    </svg>
+  ),
   logout: (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
@@ -124,6 +131,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/reportes',        label: 'Reportes', icon: 'reports' },
     { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
     { href: '/dashboard/whatsapp',        label: 'WhatsApp', icon: 'whatsapp' },
+    { href: '/dashboard/website',         label: 'Sitio Web', icon: 'website' },
     { href: '/dashboard/colegio',         label: 'Configuración', icon: 'configuracion' },
   ],
 }

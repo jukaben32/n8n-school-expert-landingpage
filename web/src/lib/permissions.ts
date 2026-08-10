@@ -30,6 +30,7 @@ export type Module =
   | 'reportes'
   | 'academia_gestionar' // crear lecciones + ver progreso
   | 'whatsapp' // configuración del canal WhatsApp / Evolution API
+  | 'website' // constructor del sitio público del colegio
   | 'configuracion_colegio'
   | 'asistente_ia' // ver conversaciones del asistente de IA con las familias
 
@@ -38,6 +39,7 @@ const FULL_ACCESS: Module[] = [
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar',
   'whatsapp',
+  'website',
   'configuracion_colegio', 'asistente_ia',
 ]
 

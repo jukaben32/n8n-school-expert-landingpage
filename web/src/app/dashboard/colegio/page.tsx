@@ -34,7 +34,7 @@ export default async function ColegioConfigPage() {
 
   const { data: school, error: schoolError } = await supabase
     .from('schools')
-    .select('id, name, subdomain, tagline, logo_url, address, phone, email, settings, sibling_discount_min_children, sibling_discount_percent, faq_document')
+    .select('id, address, phone, email, sibling_discount_min_children, sibling_discount_percent, faq_document')
     .eq('id', schoolId)
     .single()
 
@@ -53,7 +53,7 @@ export default async function ColegioConfigPage() {
           Configuración del colegio
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Esta información aparece en la página pública de bienvenida de tu colegio.
+          Esta sección conserva los datos operativos del colegio, los pagos y la base que usa el asistente.
         </p>
       </div>
       <SchoolConfigForm school={school} />
