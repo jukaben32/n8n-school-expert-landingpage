@@ -1074,13 +1074,10 @@ MentorIApp, no un logo propio.
 
 ## Revision Vercel (2026-08-10)
 
-- En esta revision, la cuenta Vercel accesible desde la sesion solo expone el
-  proyecto `micheline-v2-beautera-w72i` en estado `READY`.
-- Ese proyecto visible no muestra dominio propio asignado; solo URLs
-  `vercel.app` en esta comprobacion.
-- No aparecio aun un proyecto publico del colegio para validar una landing
-  final.
-- La landing del colegio sigue pendiente del generador de sitio web que ya
-  mejoramos; no debe tratarse como publica todavia.
-- La app si mantiene su landing publica aparte, asi que no hay que mezclar
-  ambos flujos ni asumir que el colegio ya tiene home publico.
+- La validacion de Vercel para este proyecto de escuela sigue separada de la
+  app principal y debe revisarse sobre el proyecto correcto cuando toque
+  publicar la landing del colegio.
+- La landing publica del colegio sigue pendiente del generador de sitio web
+  que ya mejoramos; no debe asumirse publicada todavia.
+- La app principal mantiene su landing aparte, asi que ambos flujos siguen
+  aislados y no deben mezclarse.
