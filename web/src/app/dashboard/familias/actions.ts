@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { getPublicSiteUrl } from '@/lib/siteUrl'
 
 interface InviteResult {
   ok: boolean
@@ -101,7 +102,10 @@ async function inviteByEmail(
   guardian: GuardianRow,
   schoolId: string
 ): Promise<InviteResult> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const siteUrl = getPublicSiteUrl()
+  if (!siteUrl) {
+    return { ok: false, message: 'Falta configurar NEXT_PUBLIC_SITE_URL en produccion.' }
+  }
 
   const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(guardian.email!, {
     redirectTo: `${siteUrl}/actualizar-contrasena`,

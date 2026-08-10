@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveGuardianIdentity } from '@/lib/auth/resolveGuardianIdentity'
 import { buildAzulPaymentForm, type AzulPaymentForm } from '@/lib/payments/azul'
+import { getPublicSiteUrl } from '@/lib/siteUrl'
 
 const RECEIPT_BUCKET = 'comprobantes-pago'
 const MAX_RECEIPT_BYTES = 10 * 1024 * 1024 // 10MB
@@ -26,7 +27,7 @@ export async function startAzulPayment(invoiceId: string): Promise<StartAzulPaym
   const identity = await resolveGuardianIdentity()
   if (!identity.ok) return { ok: false, error: identity.error }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  const siteUrl = getPublicSiteUrl()
   if (!siteUrl) return { ok: false, error: 'Falta configurar NEXT_PUBLIC_SITE_URL.' }
 
   return buildAzulPaymentForm({

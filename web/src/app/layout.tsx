@@ -28,7 +28,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MentorIApp — Sistema de Gestión Escolar",
+  title: "MentorIA — Sistema de Gestión Escolar",
   description:
     "Una experiencia escolar más clara para dirección, secretaría y familias. Trazabilidad, comunicados inteligentes y portal familiar.",
   keywords: ["gestión escolar", "portal familiar", "asistencia", "pagos", "comunicados"],

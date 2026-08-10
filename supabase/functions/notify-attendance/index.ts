@@ -22,6 +22,13 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
+const PLATFORM_NAME = 'MentorIA'
+
+function getSchoolOrPlatformName(value: string | null | undefined): string {
+  const clean = typeof value === 'string' ? value.trim() : ''
+  return clean || PLATFORM_NAME
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tipos
 // ─────────────────────────────────────────────────────────────────────────────
@@ -132,7 +139,7 @@ Deno.serve(async (req: Request) => {
     first_name: student.first_name,
     last_name: student.last_name,
     guardians: (guardians as Guardian[]) ?? [],
-    school_name: school?.name ?? 'el colegio',
+    school_name: getSchoolOrPlatformName(school?.name),
   }
 
   if (context.guardians.length === 0) {
@@ -199,6 +206,17 @@ El tono debe ser profesional pero empático. No uses emojis. No incluyas saludos
   const whatsappToken = Deno.env.get('WHATSAPP_API_TOKEN')
   const whatsappPhoneId = Deno.env.get('WHATSAPP_PHONE_ID')
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
+  const { data: resendFromAddressSetting, error: resendSettingError } = await supabase
+    .schema('private')
+    .rpc('get_app_setting', { setting_key: 'resend_from_address' })
+
+  if (resendSettingError) {
+    console.warn('No se pudo leer resend_from_address desde private.app_settings:', resendSettingError.message)
+  }
+  const resendFromAddress =
+    (typeof resendFromAddressSetting === 'string' && resendFromAddressSetting.trim()) ||
+    Deno.env.get('RESEND_FROM_ADDRESS')?.trim() ||
+    'onboarding@resend.dev'
 
   if (whatsappToken && whatsappPhoneId && primaryGuardian.phone) {
     // ── WhatsApp (Meta Cloud API) ──
@@ -241,7 +259,7 @@ El tono debe ser profesional pero empático. No uses emojis. No incluyas saludos
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: `${context.school_name} <notificaciones@schoolos.app>`,
+          from: `${context.school_name} <${resendFromAddress}>`,
           to: [primaryGuardian.email],
           subject: `Aviso de asistencia — ${context.first_name} ${context.last_name}`,
           text: aiMessage,

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildPortalBrandLine, getSchoolOrPlatformName } from '@/lib/branding'
 import { checkDailyLimit, gatherFamilyContext } from './answerFamilyQuestion'
 
 /**
@@ -53,7 +54,7 @@ export async function startVoiceCallSession(input: StartVoiceCallSessionInput): 
   const context = await gatherFamilyContext(admin, schoolId, familyId)
   if (!context.ok) return { ok: false, error: context.error }
 
-  const instructions = buildVoiceInstructions(context.schoolName, context.contextText)
+  const instructions = buildVoiceInstructions(getSchoolOrPlatformName(context.schoolName), context.contextText)
 
   let openaiResponse: Response
   try {
@@ -101,7 +102,7 @@ export async function startVoiceCallSession(input: StartVoiceCallSessionInput): 
 }
 
 function buildVoiceInstructions(schoolName: string, contextText: string): string {
-  return `Eres el asistente de voz del Portal Familiar de ${schoolName}, un colegio que usa MentorIApp. Estás en una llamada telefónica en vivo con un padre/madre/tutor -- responde de forma breve, cálida y conversacional (esto es una llamada, no un chat escrito).
+  return `Eres el asistente de voz del Portal Familiar de ${buildPortalBrandLine(schoolName)}. Estás en una llamada telefónica en vivo con un padre/madre/tutor -- responde de forma breve, cálida y conversacional (esto es una llamada, no un chat escrito).
 
 Reglas estrictas:
 1. Solo puedes usar la información de la sección "DATOS DE LA FAMILIA" de abajo. No inventes datos que no estén ahí.

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PLATFORM_NAME } from '@/lib/branding'
 import { createClient } from '@/lib/supabase/server'
 import { getWebsiteSettings } from '@/lib/websiteSettings'
 
@@ -29,11 +30,11 @@ async function getSchool(subdomain: string): Promise<SchoolPublic | null> {
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params
   const school = await getSchool(subdomain)
-  if (!school) return { title: 'Colegio no encontrado — MentorIApp' }
+  if (!school) return { title: 'Colegio no encontrado — MentorIA' }
   const website = getWebsiteSettings(school.website_settings)
   return {
     title: `${school.name} — Portal escolar`,
-    description: website.hero_subtitle || school.tagline || `Portal escolar de ${school.name}, construido con MentorIApp.`,
+    description: website.hero_subtitle || school.tagline || `Portal escolar de ${school.name}, construido con ${PLATFORM_NAME}.`,
     themeColor: website.primary_color,
     manifest: `/colegio/${subdomain}/manifest.webmanifest`,
     appleWebApp: {
@@ -135,7 +136,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
         )}
 
         <p className="mt-10 text-[11px] font-mono uppercase tracking-widest text-slate-400">
-          Construido con MentorIApp
+          Construido con {PLATFORM_NAME}
         </p>
       </div>
     </main>

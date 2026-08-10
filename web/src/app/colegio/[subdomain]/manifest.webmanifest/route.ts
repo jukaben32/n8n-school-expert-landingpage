@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { PLATFORM_NAME } from '@/lib/branding'
 import { createClient } from '@/lib/supabase/server'
 import { getWebsiteSettings } from '@/lib/websiteSettings'
 
@@ -33,7 +34,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ subdoma
 
   // Si el colegio ya cargó su propio logo, se usa como ícono principal
   // (sizes "any" porque no controlamos las dimensiones reales de una URL
-  // externa). Los íconos de MentorIApp quedan siempre como respaldo, para
+  // externa). Los íconos de MentorIA quedan siempre como respaldo, para
   // que la instalación nunca se vea rota si el colegio no ha subido logo
   // todavía (como Gran Manantial de Sabiduría, al momento de escribir esto).
   const icons = [
@@ -46,7 +47,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ subdoma
   const manifest = {
     name: school.name,
     short_name: school.name.length > 20 ? school.name.slice(0, 17) + '...' : school.name,
-    description: website.hero_subtitle || school.tagline || `Portal escolar de ${school.name}, en MentorIApp.`,
+    description: website.hero_subtitle || school.tagline || `Portal escolar de ${school.name}, en ${PLATFORM_NAME}.`,
     start_url: `/colegio/${subdomain}`,
     scope: `/colegio/${subdomain}`,
     display: 'standalone',

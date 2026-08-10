@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { getPublicSiteUrl } from '@/lib/siteUrl'
 
 const LOGIN_ROLES = ['school_admin', 'director', 'teacher', 'finance', 'reception'] as const
 type LoginRole = (typeof LOGIN_ROLES)[number]
@@ -65,7 +66,10 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   }
 
   const admin = createAdminClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const siteUrl = getPublicSiteUrl()
+  if (!siteUrl) {
+    return { ok: false, message: 'Falta configurar NEXT_PUBLIC_SITE_URL en produccion.' }
+  }
 
   const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(staff.email, {
     redirectTo: `${siteUrl}/actualizar-contrasena`,

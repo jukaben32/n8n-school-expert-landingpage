@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildPortalBrandLine, getSchoolOrPlatformName } from '@/lib/branding'
 
 /**
  * "Un solo cerebro, dos salidas" — núcleo del asistente de IA de MentorIApp.
@@ -190,7 +191,7 @@ export async function gatherFamilyContext(admin: AdminClient, schoolId: string, 
         .limit(30)
     : { data: [] as { student_id: string; date: string; status: string }[] }
 
-  const schoolName = schoolRes.data?.name ?? 'el colegio'
+  const schoolName = getSchoolOrPlatformName(schoolRes.data?.name)
 
   const studentsText = (studentsRes.data ?? [])
     .map((s) => `- ${s.first_name} ${s.last_name} (nacimiento: ${s.birth_date}, estado de matrícula: ${s.enrollment_status})`)
@@ -229,7 +230,7 @@ ${messagesText}${schoolRes.data?.faq_document ? `\n\nPreguntas frecuentes y pol�
 }
 
 function buildSystemPrompt(schoolName: string, contextText: string): string {
-  return `Eres el asistente virtual del Portal Familiar de ${schoolName}, un colegio que usa MentorIApp.
+  return `Eres el asistente virtual del Portal Familiar de ${buildPortalBrandLine(schoolName)}.
 
 Hablas con un padre/madre/tutor sobre SU PROPIA familia. Reglas estrictas:
 1. Solo puedes usar la información de la sección "DATOS DE LA FAMILIA" de abajo. No inventes datos que no estén ahí.

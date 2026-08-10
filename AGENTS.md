@@ -1055,3 +1055,19 @@ MentorIApp, no un logo propio.
     `supabase db push`. Pendiente también: probar la llamada de voz real
     (necesita `OPENAI_API_KEY` con saldo) y confirmar que el visor
     `/dashboard/asistente-ia` muestra los datos correctamente.
+### Dominios confirmados
+
+- App / producciÃ³n: `educacionmanantial.com`
+- Resend / remitente: `resendcegmas.com`
+- `NEXT_PUBLIC_SITE_URL` en producciÃ³n debe apuntar a
+  `https://educacionmanantial.com`.
+- `resend_from_address` debe usar un correo verificado del dominio
+  `resendcegmas.com` para el colegio Gran Manantial de SabidurÃ­a.
+
+## Branding de comunicaciones
+
+- En correos, prompts y textos públicos usa primero el nombre del colegio
+  cuando exista.
+- Si no hay un nombre de colegio disponible, usa `MentorIA` como respaldo.
+- No volver a usar el remitente viejo `schoolos.app`; el correo debe salir
+  del dominio verificado `resendcegmas.com`.
