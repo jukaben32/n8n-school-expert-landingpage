@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube, Linkedin, Music2 } from 'lucide-react'
 import { PLATFORM_NAME } from '@/lib/branding'
 import { createClient } from '@/lib/supabase/server'
 import { getWebsiteSettings, type SchoolWebsiteSettings } from '@/lib/websiteSettings'
+import InquiryForm from './InquiryForm'
 
 type SchoolPublic = {
   id: string
@@ -65,22 +67,76 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
 
 function SocialLinks({ website }: { website: SchoolWebsiteSettings }) {
   const links = [
-    { url: website.socialFacebook, label: 'Facebook' },
-    { url: website.socialInstagram, label: 'Instagram' },
-    { url: website.socialYoutube, label: 'YouTube' },
-    { url: website.socialTiktok, label: 'TikTok' },
-    { url: website.socialLinkedin, label: 'LinkedIn' },
-  ].filter((l) => l.url)
+    { url: website.socialFacebook, label: 'Facebook', icon: Facebook },
+    { url: website.socialInstagram, label: 'Instagram', icon: Instagram },
+    { url: website.socialYoutube, label: 'YouTube', icon: Youtube },
+    { url: website.socialTiktok, label: 'TikTok', icon: Music2 },
+    { url: website.socialLinkedin, label: 'LinkedIn', icon: Linkedin },
+  ].filter((l): l is { url: string; label: string; icon: typeof Facebook } => Boolean(l.url))
   if (!links.length) return null
   return (
-    <div className="flex items-center justify-center gap-4 flex-wrap">
+    <div className="flex items-center justify-center gap-3 flex-wrap">
       {links.map((l) => (
-        <a key={l.label} href={l.url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline">
-          {l.label}
+        <a
+          key={l.label}
+          href={l.url}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={l.label}
+          className="grid h-9 w-9 place-items-center rounded-full text-white transition hover:-translate-y-0.5"
+          style={{ backgroundColor: website.primaryColor }}
+        >
+          <l.icon className="h-4 w-4" />
         </a>
       ))}
     </div>
   )
+}
+
+function ContactRow({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: typeof Phone
+  label: string
+  value: string
+  accent: string
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="grid place-items-center w-9 h-9 rounded-lg shrink-0" style={{ backgroundColor: `${accent}1A`, color: accent }}>
+        <Icon className="w-4 h-4" />
+      </span>
+      <div>
+        <p className="text-[11px] uppercase tracking-wide text-slate-400">{label}</p>
+        <p className="font-medium text-slate-800 whitespace-pre-line">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+// Convierte un enlace normal de Google Maps (o uno ya de /maps/embed) en una
+// URL que sí puede vivir en un <iframe> -- si no es reconocible, lo trata
+// como una dirección de búsqueda de todos modos. Mantiene solo el caso
+// común (a diferencia de la referencia no intenta parsear coordenadas
+// DMS sueltas -- un colegio simplemente pega el enlace que Google le dio).
+function normalizeMapEmbedUrl(rawValue: string | undefined): string | null {
+  const value = rawValue?.trim()
+  if (!value) return null
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const url = new URL(value)
+      const isGoogleMap = url.hostname.toLowerCase().includes('google.') || url.hostname === 'maps.app.goo.gl' || url.hostname === 'goo.gl'
+      const isEmbed = url.pathname.includes('/maps/embed') || url.searchParams.get('output') === 'embed'
+      if (isGoogleMap && isEmbed) return value
+      if (!isGoogleMap) return value
+    } catch {
+      // sigue abajo, lo trata como texto de búsqueda
+    }
+  }
+  return `https://maps.google.com/maps?q=${encodeURIComponent(value)}&output=embed`
 }
 
 export default async function SchoolLandingPage({ params }: { params: Promise<{ subdomain: string }> }) {
@@ -105,6 +161,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
   }
 
   const { services, team, testimonials, faqs } = await getWebsiteLists(school.id)
+  const mapEmbedUrl = normalizeMapEmbedUrl(website.contactMapsUrl)
 
   const heroTitle = website.heroTitle || school.name
   const heroSubtitle = website.heroSubtitle || school.tagline || 'Bienvenido al portal escolar. Inicia sesión para ver comunicados, asistencia, pagos y más.'
@@ -277,32 +334,43 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
       )}
 
       {/* Contacto */}
-      <section id="contacto" className="bg-slate-50 py-16 px-4 text-center">
-        {(school.address || school.phone || school.email || website.contactHours) && (
-          <div className="mx-auto max-w-md rounded-3xl border bg-white/80 backdrop-blur px-6 py-5 text-xs text-slate-500 shadow-[0_20px_50px_rgba(15,23,42,0.06)]" style={{ borderColor: `${primaryColor}18` }}>
-            <p className="font-semibold uppercase tracking-[0.25em] mb-2" style={{ color: primaryColor }}>Datos de contacto</p>
-            {school.address && <p>{school.address}</p>}
-            <p className="mt-1">
-              {school.phone && <span>{school.phone}</span>}
-              {school.phone && school.email && <span> · </span>}
-              {school.email && <span>{school.email}</span>}
-            </p>
-            {website.contactHours && <p className="mt-1">{website.contactHours}</p>}
-            {website.contactMapsUrl && (
-              <a href={website.contactMapsUrl} target="_blank" rel="noreferrer" className="inline-block mt-2 underline font-semibold" style={{ color: primaryColor }}>
-                Ver mapa
-              </a>
-            )}
+      <section id="contacto" className="bg-slate-50 py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] mb-2 text-center" style={{ color: primaryColor }}>
+            Contáctanos
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 text-center mb-10">Hablemos</h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              {school.phone && <ContactRow icon={Phone} label="Teléfono" value={school.phone} accent={primaryColor} />}
+              {school.email && <ContactRow icon={Mail} label="Correo" value={school.email} accent={primaryColor} />}
+              {school.address && <ContactRow icon={MapPin} label="Dirección" value={school.address} accent={primaryColor} />}
+              {website.contactHours && <ContactRow icon={Clock} label="Horario" value={website.contactHours} accent={primaryColor} />}
+
+              {mapEmbedUrl && (
+                <div className="rounded-2xl overflow-hidden min-h-[220px] bg-slate-200">
+                  <iframe src={mapEmbedUrl} className="w-full h-full min-h-[220px] border-0" loading="lazy" title="Ubicación" />
+                </div>
+              )}
+            </div>
+
+            <InquiryForm schoolId={school.id} primaryColor={primaryColor} />
           </div>
-        )}
-
-        <div className="mt-6">
-          <SocialLinks website={website} />
         </div>
-
-        {website.footerTagline && <p className="mt-6 text-sm text-slate-500">{website.footerTagline}</p>}
-        <p className="mt-10 text-[11px] font-mono uppercase tracking-widest text-slate-400">Construido con {PLATFORM_NAME}</p>
       </section>
+
+      {/* Footer */}
+      <footer className="px-6 sm:px-10 py-10 border-t border-slate-100 text-center text-xs text-slate-500">
+        <div className="flex flex-col items-center gap-4">
+          <SocialLinks website={website} />
+          <div>
+            <p className="mb-1">{website.footerTagline || `Portal escolar de ${school.name}.`}</p>
+            <p>© {new Date().getFullYear()} {school.name}. Todos los derechos reservados.</p>
+          </div>
+          <p className="mt-2 text-[11px] font-mono uppercase tracking-widest text-slate-400">Construido con {PLATFORM_NAME}</p>
+        </div>
+      </footer>
     </main>
   )
 }

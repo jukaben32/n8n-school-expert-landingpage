@@ -3,10 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
-import SchoolConfigForm from './SchoolConfigForm'
-import ExportDataButton from './ExportDataButton'
+import ConfigTabs from './ConfigTabs'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
-import AzulSettingsForm from './AzulSettingsForm'
 import { getPaymentSettingsDisplay } from './paymentSettingsActions'
 
 export const metadata: Metadata = {
@@ -34,7 +32,7 @@ export default async function ColegioConfigPage() {
 
   const { data: school, error: schoolError } = await supabase
     .from('schools')
-    .select('id, subdomain, address, phone, email, sibling_discount_min_children, sibling_discount_percent, faq_document')
+    .select('id, name, tagline, subdomain, address, phone, email, sibling_discount_min_children, sibling_discount_percent, faq_document')
     .eq('id', schoolId)
     .single()
 
@@ -56,9 +54,7 @@ export default async function ColegioConfigPage() {
           Esta sección conserva los datos operativos del colegio, los pagos y la base que usa el asistente.
         </p>
       </div>
-      <SchoolConfigForm school={school} />
-      {paymentSettings.ok && paymentSettings.data && <AzulSettingsForm initial={paymentSettings.data} />}
-      <ExportDataButton schoolSubdomain={school.subdomain} />
+      <ConfigTabs school={school} paymentSettings={paymentSettings.ok ? paymentSettings.data ?? null : null} />
     </div>
   )
 }

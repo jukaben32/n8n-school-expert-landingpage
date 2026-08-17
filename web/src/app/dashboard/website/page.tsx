@@ -6,6 +6,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { getWebsiteSettings } from '@/lib/websiteSettings'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import SchoolWebsiteForm from './SchoolWebsiteForm'
+import InquiriesPanel from './InquiriesPanel'
 
 export const metadata: Metadata = {
   title: 'Sitio Web — MentorIApp',
@@ -32,13 +33,14 @@ export default async function WebsitePage() {
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
 
-  const [{ data: school, error: schoolError }, { data: services }, { data: teamMembers }, { data: testimonials }, { data: faqs }] =
+  const [{ data: school, error: schoolError }, { data: services }, { data: teamMembers }, { data: testimonials }, { data: faqs }, { data: inquiries }] =
     await Promise.all([
       supabase.from('schools').select('id, name, subdomain, tagline, logo_url, address, phone, email, settings').eq('id', schoolId).single(),
       supabase.from('website_services').select('*').eq('school_id', schoolId).order('sort_order'),
       supabase.from('website_team_members').select('*').eq('school_id', schoolId).order('sort_order'),
       supabase.from('website_testimonials').select('*').eq('school_id', schoolId).order('sort_order'),
       supabase.from('website_faqs').select('*').eq('school_id', schoolId).order('sort_order'),
+      supabase.from('website_inquiries').select('id, name, phone, email, message, status, created_at').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(50),
     ])
 
   if (!school) redirect('/dashboard')
@@ -62,6 +64,8 @@ export default async function WebsitePage() {
           . Hero, historia, programas, personal destacado, testimonios y preguntas frecuentes.
         </p>
       </div>
+
+      <InquiriesPanel initialInquiries={inquiries ?? []} />
 
       <SchoolWebsiteForm
         school={school}

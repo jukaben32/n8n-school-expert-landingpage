@@ -236,3 +236,22 @@ export async function uploadWebsitePhotoAction(formData: FormData): Promise<Uplo
   const { data: publicUrlData } = admin.storage.from(WEBSITE_PHOTOS_BUCKET).getPublicUrl(path)
   return { ok: true, url: publicUrlData.publicUrl }
 }
+
+const INQUIRY_STATUSES = new Set(['nuevo', 'contactado', 'descartado'])
+
+export async function updateInquiryStatusAction(inquiryId: string, status: string): Promise<ActionResult> {
+  const resolved = await resolveSchoolAdmin()
+  if (!resolved.ok) return { ok: false, error: resolved.error }
+  if (!INQUIRY_STATUSES.has(status)) return { ok: false, error: 'Estado inválido.' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('website_inquiries')
+    .update({ status })
+    .eq('id', inquiryId)
+    .eq('school_id', resolved.schoolId)
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/dashboard/website')
+  return { ok: true }
+}
