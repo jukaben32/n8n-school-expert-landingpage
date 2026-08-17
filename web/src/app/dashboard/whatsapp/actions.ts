@@ -109,3 +109,26 @@ export async function toggleWhatsappEnabledAction(isEnabled: boolean): Promise<A
   revalidatePath('/dashboard/whatsapp')
   return { ok: true, connection }
 }
+
+// Evolution API no expone de forma confiable el número ya vinculado tras
+// escanear el QR (ni siquiera el proyecto de referencia lo resuelve --
+// también le queda "Número aún no sincronizado" sin rellenar). En vez de
+// adivinar el endpoint/formato exacto contra un servicio que no se puede
+// probar en vivo desde aquí, el colegio simplemente confirma su propio
+// número -- lo sabe de memoria, es el celular que usó para escanear.
+export async function updateWhatsappPhoneNumberAction(phoneNumber: string): Promise<ActionResult> {
+  const resolved = await resolveSchoolAdmin()
+  if (!resolved.ok) return { ok: false, error: resolved.error }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('whatsapp_connections')
+    .update({ phone_number: phoneNumber.trim() || null })
+    .eq('school_id', resolved.schoolId)
+    .select('id, school_id, provider, assistant_name, phone_number, instance_name, instance_token, status, is_enabled, created_at, updated_at')
+    .single()
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/dashboard/whatsapp')
+  return { ok: true, connection: data }
+}

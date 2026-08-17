@@ -6,6 +6,7 @@ import SummaryBadge from '@/components/portal/SummaryBadge'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import FamilyChatWidget from '@/components/portal/FamilyChatWidget'
 import VoiceCallWidget from '@/components/portal/VoiceCallWidget'
+import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — MentorIApp',
@@ -46,6 +47,13 @@ export default async function PortalFamiliarPage() {
         `)
         .eq('guardian_id', profile.guardian_id)
     : { data: [], error: null }
+
+  // Mismo botón flotante de WhatsApp que el sitio público -- schools_public
+  // ya expone solo lo necesario (número + si está realmente activo), nunca
+  // whatsapp_connections directo.
+  const { data: school } = profile?.school_id
+    ? await supabase.from('schools_public').select('name, whatsapp_active, whatsapp_phone_number').eq('id', profile.school_id).maybeSingle()
+    : { data: null }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -115,6 +123,13 @@ export default async function PortalFamiliarPage() {
         <FamilyChatWidget />
         <VoiceCallWidget />
       </div>
+
+      {school?.whatsapp_active && school.whatsapp_phone_number && (
+        <FloatingWhatsAppButton
+          phoneNumber={school.whatsapp_phone_number}
+          message="Hola, tengo una pregunta"
+        />
+      )}
     </div>
   )
 }

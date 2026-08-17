@@ -7,6 +7,7 @@ import {
   disconnectWhatsappAction,
   refreshWhatsappStatusAction,
   toggleWhatsappEnabledAction,
+  updateWhatsappPhoneNumberAction,
 } from './actions'
 
 const statusLabels: Record<string, string> = {
@@ -29,6 +30,9 @@ export default function WhatsAppManager({ initialConnection }: { initialConnecti
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notConfigured, setNotConfigured] = useState(false)
+  const [phoneInput, setPhoneInput] = useState(initialConnection?.phone_number ?? '')
+  const [savingPhone, setSavingPhone] = useState(false)
+  const [phoneSaved, setPhoneSaved] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -97,6 +101,22 @@ export default function WhatsAppManager({ initialConnection }: { initialConnecti
   async function handleToggleEnabled(isEnabled: boolean) {
     const result = await toggleWhatsappEnabledAction(isEnabled)
     if (result.ok && result.connection) setConnection(result.connection)
+  }
+
+  async function handleSavePhone() {
+    setSavingPhone(true)
+    setPhoneSaved(false)
+    try {
+      const result = await updateWhatsappPhoneNumberAction(phoneInput)
+      if (result.ok && result.connection) {
+        setConnection(result.connection)
+        setPhoneSaved(true)
+      } else if (!result.ok) {
+        setError(result.error ?? 'No se pudo guardar el número')
+      }
+    } finally {
+      setSavingPhone(false)
+    }
   }
 
   if (notConfigured) {
@@ -196,6 +216,35 @@ export default function WhatsAppManager({ initialConnection }: { initialConnecti
           />
           <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Responder automáticamente por WhatsApp</span>
         </label>
+
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-2">
+          <label htmlFor="whatsapp-phone" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+            Número de WhatsApp del colegio
+          </label>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Confirma el número que usaste para escanear el código (Evolution API no lo sincroniza solo). Con código
+            de país, sin espacios ni símbolos — ej. 18095551234. Habilita el botón flotante de WhatsApp en el sitio
+            público y el Portal Familiar.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              id="whatsapp-phone"
+              value={phoneInput}
+              onChange={(e) => { setPhoneInput(e.target.value); setPhoneSaved(false) }}
+              placeholder="18095551234"
+              className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button
+              type="button"
+              onClick={handleSavePhone}
+              disabled={savingPhone}
+              className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60 shrink-0"
+            >
+              {savingPhone ? 'Guardando…' : 'Guardar número'}
+            </button>
+          </div>
+          {phoneSaved && <p className="text-xs text-green-600 dark:text-green-400">✓ Número guardado.</p>}
+        </div>
 
         {connection.status === 'connecting' && qrCode ? (
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-5 text-center">

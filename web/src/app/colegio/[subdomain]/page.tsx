@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getWebsiteSettings, type SchoolWebsiteSettings } from '@/lib/websiteSettings'
 import InquiryForm from './InquiryForm'
 import InstallAppButton from './InstallAppButton'
+import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 
 type SchoolPublic = {
   id: string
@@ -18,6 +19,8 @@ type SchoolPublic = {
   phone: string | null
   email: string | null
   website_settings: Record<string, unknown> | null
+  whatsapp_active: boolean
+  whatsapp_phone_number: string | null
 }
 
 type ServiceRow = { icon: string; name: string; description: string | null; duration: string | null; price: string | null }
@@ -29,7 +32,7 @@ async function getSchool(subdomain: string): Promise<SchoolPublic | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('schools_public')
-    .select('id, name, subdomain, tagline, logo_url, address, phone, email, website_settings')
+    .select('id, name, subdomain, tagline, logo_url, address, phone, email, website_settings, whatsapp_active, whatsapp_phone_number')
     .eq('subdomain', subdomain)
     .maybeSingle()
   return data
@@ -373,6 +376,13 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
           <p className="mt-2 text-[11px] font-mono uppercase tracking-widest text-slate-400">Construido con {PLATFORM_NAME}</p>
         </div>
       </footer>
+
+      {school.whatsapp_active && school.whatsapp_phone_number && (
+        <FloatingWhatsAppButton
+          phoneNumber={school.whatsapp_phone_number}
+          message={`Hola, tengo una pregunta sobre ${school.name}`}
+        />
+      )}
     </main>
   )
 }
