@@ -8,7 +8,8 @@ import SchoolsComparisonTable, { type SchoolComparisonRow } from './SchoolsCompa
 import ChartCard from '@/components/charts/ChartCard'
 import DonutChart from '@/components/charts/DonutChart'
 import SimpleBarChart from '@/components/charts/SimpleBarChart'
-import { CHART_SEMANTIC } from '@/lib/chartColors'
+import StackedBarChart from '@/components/charts/StackedBarChart'
+import { CHART_SEMANTIC, CHART_PALETTE } from '@/lib/chartColors'
 
 export const metadata: Metadata = {
   title: 'Plataforma — MentorIApp',
@@ -136,6 +137,57 @@ export default async function PlataformaPage() {
   const leadCounts = (leadsRaw ?? []).reduce((acc, l) => { acc[l.status] = (acc[l.status] ?? 0) + 1; return acc }, {} as Record<string, number>)
   const leadsDonut = Object.entries(leadStatusLabels).map(([status, name]) => ({ name, value: leadCounts[status] ?? 0, color: leadStatusColors[status] }))
 
+  // ── Consumo de IA/API por colegio (últimos 30 días) ──────────────────
+  // No se guarda tokens ni costo en $ en ningún lado -- esto es un proxy
+  // por VOLUMEN de llamadas: cada fila de estas 4 tablas representa una
+  // llamada real a Claude (asistente, o extracción OCR de una ficha/
+  // factura) u OpenAI Realtime (llamada de voz, contada dentro de
+  // ai_conversations vía channel='voice').
+  const [
+    { data: aiRows, error: aiUsageError },
+    { data: anonRows },
+    { data: enrollScanRows },
+    { data: vendorInvoiceRows },
+  ] = await Promise.all([
+    supabase.from('ai_conversations').select('school_id, channel').eq('role', 'user').gte('created_at', thirtyDaysAgo),
+    supabase.from('whatsapp_anonymous_messages').select('school_id').gte('created_at', thirtyDaysAgo),
+    supabase.from('enrollment_form_scans').select('school_id').gte('created_at', thirtyDaysAgo),
+    supabase.from('vendor_invoices').select('school_id').gte('created_at', thirtyDaysAgo),
+  ])
+
+  const apiUsageBySchool = new Map<string, { asistente: number; ocr: number }>()
+  for (const school of schools) apiUsageBySchool.set(school.id, { asistente: 0, ocr: 0 })
+  for (const r of (aiRows ?? []) as { school_id: string }[]) {
+    const row = apiUsageBySchool.get(r.school_id)
+    if (row) row.asistente += 1
+  }
+  for (const r of (anonRows ?? []) as { school_id: string }[]) {
+    const row = apiUsageBySchool.get(r.school_id)
+    if (row) row.asistente += 1
+  }
+  for (const r of (enrollScanRows ?? []) as { school_id: string }[]) {
+    const row = apiUsageBySchool.get(r.school_id)
+    if (row) row.ocr += 1
+  }
+  for (const r of (vendorInvoiceRows ?? []) as { school_id: string }[]) {
+    const row = apiUsageBySchool.get(r.school_id)
+    if (row) row.ocr += 1
+  }
+
+  const apiUsageBar = schools
+    .map((s) => ({ name: s.name, ...apiUsageBySchool.get(s.id)! }))
+    .filter((s) => s.asistente + s.ocr > 0)
+    .sort((a, b) => (b.asistente + b.ocr) - (a.asistente + a.ocr))
+
+  const aiChannelLabels: Record<string, string> = { widget: 'Chat/voz (Portal)', whatsapp: 'WhatsApp (familia)', voice: 'Llamada en vivo' }
+  const aiChannelCounts = (aiRows ?? []).reduce((acc, r: { channel: string }) => { acc[r.channel] = (acc[r.channel] ?? 0) + 1; return acc }, {} as Record<string, number>)
+  const apiUsageDonut = [
+    ...Object.entries(aiChannelLabels).map(([ch, name], i) => ({ name, value: aiChannelCounts[ch] ?? 0, color: CHART_PALETTE[i] })),
+    { name: 'WhatsApp (sin identificar)', value: (anonRows ?? []).length, color: CHART_PALETTE[3] },
+    { name: 'OCR fichas de estudiantes', value: (enrollScanRows ?? []).length, color: CHART_PALETTE[4] },
+    { name: 'OCR facturas de proveedores', value: (vendorInvoiceRows ?? []).length, color: CHART_PALETTE[5] },
+  ]
+
   const studentsBySchoolBar = comparisonRows
     .slice()
     .sort((a, b) => b.students - a.students)
@@ -158,7 +210,12 @@ export default async function PlataformaPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <QueryErrorBanner errors={[{ label: 'los colegios', error: schoolsError }, { label: 'los cobros', error: paidInvoicesError }, { label: 'los leads', error: leadsError }]} />
+      <QueryErrorBanner errors={[
+        { label: 'los colegios', error: schoolsError },
+        { label: 'los cobros', error: paidInvoicesError },
+        { label: 'los leads', error: leadsError },
+        { label: 'el consumo de IA', error: aiUsageError },
+      ]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -200,6 +257,26 @@ export default async function PlataformaPage() {
           <SimpleBarChart data={morosidadBySchoolBar} horizontal valueFormatter={(v) => `${v}%`} />
         </ChartCard>
       )}
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <ChartCard
+          title="Consumo de IA por colegio"
+          subtitle="Llamadas a Claude/OpenAI, últimos 30 días — volumen de uso, no costo en $"
+          className="sm:col-span-2"
+        >
+          <StackedBarChart
+            data={apiUsageBar}
+            series={[
+              { key: 'asistente', label: 'Asistente (chat/voz/WhatsApp)', color: CHART_PALETTE[0] },
+              { key: 'ocr', label: 'Extracción OCR (fichas/facturas)', color: CHART_PALETTE[4] },
+            ]}
+            emptyMessage="Ningún colegio ha usado el asistente de IA ni la extracción OCR en los últimos 30 días."
+          />
+        </ChartCard>
+        <ChartCard title="En qué se usa la IA" subtitle="Toda la red, últimos 30 días" className="sm:col-span-2">
+          <DonutChart data={apiUsageDonut} centerLabel="Llamadas" emptyMessage="Sin actividad de IA en este período." />
+        </ChartCard>
+      </div>
 
       {schoolsError && (
         <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
