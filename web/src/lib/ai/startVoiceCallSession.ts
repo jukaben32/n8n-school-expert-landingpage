@@ -22,7 +22,11 @@ import { checkDailyLimit, gatherFamilyContext } from './answerFamilyQuestion'
  * `?model=` porque el modelo queda fijado en el token efímero).
  */
 
-const MODEL = 'gpt-realtime'
+// Overridable via OPENAI_REALTIME_MODEL — same pattern as the sibling apps
+// (real-estate/driveia/beauty-barber/healthcare), so a fleet-wide model swap
+// (e.g. to gpt-realtime-mini or gpt-realtime-2.1-mini) is a config change,
+// not a code change, here too.
+const MODEL = process.env.OPENAI_REALTIME_MODEL || 'gpt-realtime'
 const VOICE = 'alloy'
 
 export type StartVoiceCallSessionResult =
