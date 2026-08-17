@@ -11,6 +11,16 @@ export const ACTIVE_SCHOOL_COOKIE = 'mentoriapp_active_school'
  * /dashboard/plataforma ("entrar como director de X") -- guardado en
  * una cookie. Si la cookie apunta a un colegio que ya no existe, o el
  * usuario no es super_admin, se cae de vuelta a su propio colegio.
+ *
+ * `isViewingOtherSchool` se decide solo por "¿hay una cookie de
+ * override válida?", NO por comparar contra `homeSchoolId` -- con un
+ * solo colegio afiliado (el caso de hoy), el `school_id` propio del
+ * super_admin puede coincidir con el del colegio al que "entra", y
+ * `school.id !== homeSchoolId` daba falso aunque la cookie estuviera
+ * bien puesta: el aviso amarillo y el menú de director nunca aparecían.
+ * Elegir "Entrar como director" ya es una acción explícita -- no hace
+ * falta que el colegio sea literalmente distinto del propio para que
+ * cuente como vista de director.
  */
 export async function getActiveSchool(role: string, homeSchoolId: string): Promise<{ schoolId: string; isViewingOtherSchool: boolean; schoolName: string | null }> {
   if (role !== 'super_admin') {
@@ -29,5 +39,5 @@ export async function getActiveSchool(role: string, homeSchoolId: string): Promi
     return { schoolId: homeSchoolId, isViewingOtherSchool: false, schoolName: null }
   }
 
-  return { schoolId: school.id, isViewingOtherSchool: school.id !== homeSchoolId, schoolName: school.name }
+  return { schoolId: school.id, isViewingOtherSchool: true, schoolName: school.name }
 }
