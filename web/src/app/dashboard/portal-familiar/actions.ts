@@ -205,3 +205,74 @@ export async function sendFamilyDirectMessage(body: string): Promise<{ ok: boole
 
   return { ok: true }
 }
+
+export interface ClassUpdateItem {
+  id: string
+  caption: string | null
+  photoUrl: string | null
+  targetLabel: string
+  createdAt: string
+}
+
+const CLASS_UPDATES_BUCKET = 'class-updates'
+const SIGNED_URL_TTL = 3600
+
+// Trae las actualizaciones (fotos del día a día) dirigidas a los hijos de
+// esta familia -- por estudiante puntual, o por su grado/sección
+// (students.grade_level). Las fotos viven en un bucket privado, así que
+// siempre se generan URLs firmadas con el cliente admin, sin importar
+// quién las pida.
+export async function getFamilyClassUpdates(): Promise<{ ok: boolean; updates?: ClassUpdateItem[]; error?: string }> {
+  const identity = await resolveGuardianIdentity()
+  if (!identity.ok) return { ok: false, error: identity.error }
+
+  const admin = createAdminClient()
+  const { data: students } = await admin
+    .from('students')
+    .select('id, grade_level')
+    .eq('family_id', identity.familyId)
+    .is('deleted_at', null)
+
+  const studentIds = (students ?? []).map((s) => s.id as string)
+  const gradeLevels = Array.from(new Set((students ?? []).map((s) => s.grade_level as string | null).filter((g): g is string => !!g)))
+
+  if (studentIds.length === 0 && gradeLevels.length === 0) return { ok: true, updates: [] }
+
+  const orFilter = [
+    studentIds.length ? `student_id.in.(${studentIds.join(',')})` : null,
+    gradeLevels.length ? `grade_level.in.(${gradeLevels.map((g) => `"${g}"`).join(',')})` : null,
+  ].filter(Boolean).join(',')
+
+  const { data: rows } = await admin
+    .from('class_updates')
+    .select('id, caption, photo_path, student_id, grade_level, created_at, students(first_name, last_name)')
+    .eq('school_id', identity.schoolId)
+    .is('deleted_at', null)
+    .or(orFilter)
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  type Row = {
+    id: string
+    caption: string | null
+    photo_path: string
+    grade_level: string | null
+    created_at: string
+    students: { first_name: string; last_name: string } | null
+  }
+
+  const updates = await Promise.all(
+    ((rows ?? []) as unknown as Row[]).map(async (r) => {
+      const { data: signed } = await admin.storage.from(CLASS_UPDATES_BUCKET).createSignedUrl(r.photo_path, SIGNED_URL_TTL)
+      return {
+        id: r.id,
+        caption: r.caption,
+        photoUrl: signed?.signedUrl ?? null,
+        targetLabel: r.students ? `${r.students.first_name} ${r.students.last_name}` : (r.grade_level ?? 'Colegio'),
+        createdAt: r.created_at,
+      }
+    })
+  )
+
+  return { ok: true, updates }
+}

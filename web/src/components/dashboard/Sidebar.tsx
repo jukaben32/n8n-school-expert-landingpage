@@ -126,6 +126,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
+    { href: '/dashboard/actualizaciones', label: 'Actualizaciones', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },

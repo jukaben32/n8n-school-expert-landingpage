@@ -8,6 +8,7 @@ import FamilyChatWidget from '@/components/portal/FamilyChatWidget'
 import VoiceCallWidget from '@/components/portal/VoiceCallWidget'
 import DirectMessagesWidget from '@/components/portal/DirectMessagesWidget'
 import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
+import { getFamilyClassUpdates } from './actions'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — MentorIApp',
@@ -55,6 +56,9 @@ export default async function PortalFamiliarPage() {
   const { data: school } = profile?.school_id
     ? await supabase.from('schools_public').select('name, whatsapp_active, whatsapp_phone_number').eq('id', profile.school_id).maybeSingle()
     : { data: null }
+
+  const classUpdatesResult = await getFamilyClassUpdates()
+  const classUpdates = classUpdatesResult.ok ? classUpdatesResult.updates ?? [] : []
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -115,6 +119,31 @@ export default async function PortalFamiliarPage() {
           </div>
         )}
       </div>
+
+      {/* Actualizaciones con foto del día a día -- estilo Seesaw */}
+      {classUpdates.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
+            Así estuvieron hoy
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {classUpdates.map((u) => (
+              <div key={u.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="aspect-square bg-slate-100 dark:bg-slate-800">
+                  {u.photoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={u.photoUrl} alt={u.caption ?? ''} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="p-2.5">
+                  <p className="text-[11px] font-bold text-primary dark:text-accent-light truncate">{u.targetLabel}</p>
+                  {u.caption && <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2">{u.caption}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Mensajería directa con el colegio -- un humano responde, no la IA */}
       <div className="space-y-3">
