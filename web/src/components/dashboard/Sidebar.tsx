@@ -117,7 +117,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
-    { href: '/dashboard/reportes',        label: 'Reportes', icon: 'reports' },
+    { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
   ],
   default: [
     { href: '/dashboard/secretaria',      label: 'Panel', icon: 'home' },
@@ -130,7 +130,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
-    { href: '/dashboard/reportes',        label: 'Reportes', icon: 'reports' },
+    { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
     { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
     { href: '/dashboard/whatsapp',        label: 'WhatsApp', icon: 'whatsapp' },
     { href: '/dashboard/website',         label: 'Sitio Web', icon: 'website' },

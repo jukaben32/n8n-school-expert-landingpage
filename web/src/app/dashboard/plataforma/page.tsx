@@ -5,6 +5,10 @@ import { redirect } from 'next/navigation'
 import { enterSchool } from './actions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import SchoolsComparisonTable, { type SchoolComparisonRow } from './SchoolsComparisonTable'
+import ChartCard from '@/components/charts/ChartCard'
+import DonutChart from '@/components/charts/DonutChart'
+import SimpleBarChart from '@/components/charts/SimpleBarChart'
+import { CHART_SEMANTIC } from '@/lib/chartColors'
 
 export const metadata: Metadata = {
   title: 'Plataforma — MentorIApp',
@@ -118,12 +122,28 @@ export default async function PlataformaPage() {
     { count: totalStaff },
     { data: paidInvoices, error: paidInvoicesError },
     { count: messagesThisMonth },
+    { data: leadsRaw, error: leadsError },
   ] = await Promise.all([
     supabase.from('students').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('staff').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('invoices').select('total_amount').eq('status', 'pagado').gte('paid_at', startOfMonth.toISOString()),
     supabase.from('messages').select('id', { count: 'exact', head: true }).not('published_at', 'is', null).gte('published_at', startOfMonth.toISOString()),
+    supabase.from('leads').select('status'),
   ])
+
+  const leadStatusLabels: Record<string, string> = { nuevo: 'Nuevo', contactado: 'Contactado', descartado: 'Descartado', convertido: 'Convertido' }
+  const leadStatusColors: Record<string, string> = { nuevo: CHART_SEMANTIC.info, contactado: CHART_SEMANTIC.warning, descartado: CHART_SEMANTIC.neutral, convertido: CHART_SEMANTIC.success }
+  const leadCounts = (leadsRaw ?? []).reduce((acc, l) => { acc[l.status] = (acc[l.status] ?? 0) + 1; return acc }, {} as Record<string, number>)
+  const leadsDonut = Object.entries(leadStatusLabels).map(([status, name]) => ({ name, value: leadCounts[status] ?? 0, color: leadStatusColors[status] }))
+
+  const studentsBySchoolBar = comparisonRows
+    .slice()
+    .sort((a, b) => b.students - a.students)
+    .map((s) => ({ name: s.name, value: s.students }))
+  const morosidadBySchoolBar = comparisonRows
+    .slice()
+    .sort((a, b) => b.morosidadPercent - a.morosidadPercent)
+    .map((s) => ({ name: s.name, value: s.morosidadPercent, color: s.morosidadPercent > 20 ? CHART_SEMANTIC.danger : CHART_SEMANTIC.warning }))
 
   const revenueThisMonth = (paidInvoices ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
   const formatDOP = (amount: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount)
@@ -138,7 +158,7 @@ export default async function PlataformaPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <QueryErrorBanner errors={[{ label: 'los colegios', error: schoolsError }, { label: 'los cobros', error: paidInvoicesError }]} />
+      <QueryErrorBanner errors={[{ label: 'los colegios', error: schoolsError }, { label: 'los cobros', error: paidInvoicesError }, { label: 'los leads', error: leadsError }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -165,6 +185,21 @@ export default async function PlataformaPage() {
           </div>
         ))}
       </div>
+
+      {/* Analíticas de la red */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <ChartCard title="Estudiantes por colegio">
+          <SimpleBarChart data={studentsBySchoolBar} horizontal emptyMessage="Aún no hay colegios con estudiantes." />
+        </ChartCard>
+        <ChartCard title="Leads de ventas por estado">
+          <DonutChart data={leadsDonut} centerLabel="Leads" emptyMessage="Aún no hay leads registrados." />
+        </ChartCard>
+      </div>
+      {comparisonRows.length > 1 && (
+        <ChartCard title="% Morosidad por colegio">
+          <SimpleBarChart data={morosidadBySchoolBar} horizontal valueFormatter={(v) => `${v}%`} />
+        </ChartCard>
+      )}
 
       {schoolsError && (
         <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
