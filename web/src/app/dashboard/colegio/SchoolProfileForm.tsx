@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, MapPin } from 'lucide-react'
+import { Building2, MapPin, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface School {
   id: string
   name: string
   tagline: string | null
+  subdomain: string
   address: string | null
   phone: string | null
   email: string | null
@@ -90,6 +91,21 @@ export default function SchoolProfileForm({ school }: { school: School }) {
             <label htmlFor="email" className={labelClass}>Correo de contacto</label>
             <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
           </div>
+        </div>
+        <div>
+          <label className={labelClass}>Sitio web</label>
+          <a
+            href={`/colegio/${school.subdomain}`}
+            target="_blank"
+            rel="noreferrer"
+            className={`${inputClass} flex items-center justify-between gap-2 text-primary dark:text-accent-light hover:underline`}
+          >
+            /colegio/{school.subdomain}
+            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+          </a>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+            Se edita desde Sitio Web en el menú — aquí solo el enlace directo.
+          </p>
         </div>
       </div>
 

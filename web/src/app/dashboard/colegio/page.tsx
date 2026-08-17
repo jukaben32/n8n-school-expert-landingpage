@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
@@ -46,13 +47,18 @@ export default async function ColegioConfigPage() {
         { label: 'los datos del colegio', error: schoolError },
         { label: 'la configuración de pagos', error: paymentSettings.ok ? null : { message: paymentSettings.error ?? 'error desconocido' } },
       ]} />
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Configuración del colegio
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Esta sección conserva los datos operativos del colegio, los pagos y la base que usa el asistente.
-        </p>
+      <div className="flex items-center gap-3">
+        <span className="w-9 h-9 rounded-full bg-primary/10 text-primary dark:bg-accent-light/10 dark:text-accent-light grid place-items-center shrink-0">
+          <Settings className="w-4.5 h-4.5" />
+        </span>
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Configuración
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Perfil del colegio y configuración operativa.
+          </p>
+        </div>
       </div>
       <ConfigTabs school={school} paymentSettings={paymentSettings.ok ? paymentSettings.data ?? null : null} />
     </div>
