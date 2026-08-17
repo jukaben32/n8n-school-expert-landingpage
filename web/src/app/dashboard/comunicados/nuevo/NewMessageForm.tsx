@@ -6,6 +6,8 @@ import { createMessageAction } from './actions'
 
 interface NewMessageFormProps {
   gradeLevelOptions: string[]
+  /** true para 'teacher': no puede mandar a todo el colegio, solo a sus grados asignados. */
+  forceGradeMode?: boolean
 }
 
 const inputClass =
@@ -18,12 +20,12 @@ const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300
  * "Guardar borrador" deja published_at en null (solo visible para staff).
  * "Publicar ahora" establece published_at = now() (visible para familias).
  */
-export default function NewMessageForm({ gradeLevelOptions }: NewMessageFormProps) {
+export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = false }: NewMessageFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [priority, setPriority] = useState<'normal' | 'urgent'>('normal')
-  const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>('all')
+  const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>(forceGradeMode ? 'grades' : 'all')
   const [selectedGrades, setSelectedGrades] = useState<string[]>([])
   const [saving, setSaving] = useState<'draft' | 'publish' | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -121,31 +123,37 @@ export default function NewMessageForm({ gradeLevelOptions }: NewMessageFormProp
 
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
         <label className={labelClass}>¿A quién le llega?</label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setAudienceMode('all')}
-            className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${
-              audienceMode === 'all'
-                ? 'bg-primary text-white shadow-glow'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            Todo el colegio
-          </button>
-          <button
-            type="button"
-            onClick={() => setAudienceMode('grades')}
-            disabled={gradeLevelOptions.length === 0}
-            className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              audienceMode === 'grades'
-                ? 'bg-primary text-white shadow-glow'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            Grado/sección específico
-          </button>
-        </div>
+        {forceGradeMode ? (
+          <p className="text-xs text-slate-400 dark:text-slate-500 -mt-1">
+            Solo puedes avisar a tus grados/secciones asignados, no a todo el colegio.
+          </p>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAudienceMode('all')}
+              className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                audienceMode === 'all'
+                  ? 'bg-primary text-white shadow-glow'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              Todo el colegio
+            </button>
+            <button
+              type="button"
+              onClick={() => setAudienceMode('grades')}
+              disabled={gradeLevelOptions.length === 0}
+              className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                audienceMode === 'grades'
+                  ? 'bg-primary text-white shadow-glow'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              Grado/sección específico
+            </button>
+          </div>
+        )}
 
         {audienceMode === 'grades' && (
           gradeLevelOptions.length > 0 ? (
@@ -167,8 +175,9 @@ export default function NewMessageForm({ gradeLevelOptions }: NewMessageFormProp
             </div>
           ) : (
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Todavía no hay grados/secciones asignados a ningún estudiante (se asignan desde la ficha de cada
-              estudiante en Estudiantes).
+              {forceGradeMode
+                ? 'Todavía no tienes ningún grado/sección asignado — pídele a dirección que te lo asigne en Personal.'
+                : 'Todavía no hay grados/secciones asignados a ningún estudiante (se asignan desde la ficha de cada estudiante en Estudiantes).'}
             </p>
           )
         )}

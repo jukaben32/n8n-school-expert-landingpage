@@ -94,17 +94,11 @@ export default function PostUpdateForm({ students, gradeLevelOptions }: { studen
           {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       ) : (
-        <input
-          value={gradeLevel}
-          onChange={(e) => setGradeLevel(e.target.value)}
-          list="gradeLevelOptionsUpdate"
-          placeholder="Ej. Kinder A"
-          className={inputClass}
-        />
+        <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} className={inputClass}>
+          {gradeLevelOptions.length === 0 && <option value="">No hay grados/secciones disponibles</option>}
+          {gradeLevelOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+        </select>
       )}
-      <datalist id="gradeLevelOptionsUpdate">
-        {gradeLevelOptions.map((g) => <option key={g} value={g} />)}
-      </datalist>
 
       <textarea
         value={caption}

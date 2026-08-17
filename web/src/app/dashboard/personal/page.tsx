@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
+import TeacherGradeAssignments from './TeacherGradeAssignments'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
@@ -79,6 +80,20 @@ export default async function PersonalPage() {
     .not('staff_id', 'is', null)
   const staffWithAccess = new Set((linkedProfiles ?? []).map((p) => p.staff_id as string))
 
+  const [{ data: assignments }, { data: studentsWithGrade }] = await Promise.all([
+    supabase.from('teacher_assignments').select('staff_id, grade_level').eq('school_id', schoolId),
+    supabase.from('students').select('grade_level').eq('school_id', schoolId).not('grade_level', 'is', null).is('deleted_at', null),
+  ])
+  const gradesByStaff = new Map<string, string[]>()
+  for (const a of assignments ?? []) {
+    const list = gradesByStaff.get(a.staff_id as string) ?? []
+    list.push(a.grade_level as string)
+    gradesByStaff.set(a.staff_id as string, list)
+  }
+  const gradeLevelOptions = Array.from(
+    new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))
+  ).sort()
+
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
 
   return (
@@ -130,6 +145,14 @@ export default async function PersonalPage() {
                   <GrantAccessButton staffId={s.id} suggestedRole={s.role} />
                 )}
               </div>
+
+              {s.role === 'teacher' && (
+                <TeacherGradeAssignments
+                  staffId={s.id}
+                  initialGrades={gradesByStaff.get(s.id) ?? []}
+                  gradeLevelOptions={gradeLevelOptions}
+                />
+              )}
 
               {(s.degree_title || s.alma_mater || s.specialty) && (
                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">

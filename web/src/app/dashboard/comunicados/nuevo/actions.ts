@@ -31,7 +31,7 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('id, role, school_id')
+    .select('id, role, school_id, staff_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -48,11 +48,34 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
   const admin = createAdminClient()
 
+  const selectedGrades = Array.from(new Set(input.gradeLevels.map((g) => g.trim()).filter(Boolean)))
+
+  // RLS ya restringe lo que un 'teacher' puede LEER de otros grados, pero
+  // este insert va con el cliente admin (bypassa RLS) -- así que la regla
+  // "solo tu grado, nunca todo el colegio" se valida aquí de verdad.
+  if (profile.role === 'teacher') {
+    if (selectedGrades.length === 0) {
+      return { ok: false, error: 'Un profesor solo puede dirigir comunicados a su grado/sección asignado, no a todo el colegio.' }
+    }
+    if (!profile.staff_id) {
+      return { ok: false, error: 'No se encontró tu ficha de personal.' }
+    }
+    const { data: assigned } = await admin
+      .from('teacher_assignments')
+      .select('grade_level')
+      .eq('staff_id', profile.staff_id)
+      .eq('school_id', schoolId)
+      .in('grade_level', selectedGrades)
+    const assignedSet = new Set((assigned ?? []).map((a) => a.grade_level as string))
+    if (selectedGrades.some((g) => !assignedSet.has(g))) {
+      return { ok: false, error: 'Solo puedes dirigir comunicados a tus grados/secciones asignados.' }
+    }
+  }
+
   let audienceType: 'all' | 'family' = 'all'
   let audienceIds: string[] | null = null
   let audienceLabel: string | null = null
 
-  const selectedGrades = Array.from(new Set(input.gradeLevels.map((g) => g.trim()).filter(Boolean)))
   if (selectedGrades.length > 0) {
     const { data: students, error: studentsError } = await admin
       .from('students')

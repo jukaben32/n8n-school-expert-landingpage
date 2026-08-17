@@ -22,7 +22,7 @@ async function resolveStaff() {
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('id, role, school_id')
+    .select('id, role, school_id, staff_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -31,7 +31,23 @@ async function resolveStaff() {
   }
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
-  return { ok: true as const, schoolId, profileId: profile.id as string }
+  return { ok: true as const, schoolId, profileId: profile.id as string, role: profile.role as string, staffId: profile.staff_id as string | null }
+}
+
+// RLS ya restringe a 'teacher' a solo ver estudiantes/actualizaciones de
+// sus grados asignados -- pero createClassUpdateAction escribe con el
+// cliente admin (bypassa RLS), así que la restricción real para poder
+// PUBLICAR tiene que validarse aquí, no solo confiar en lo que el
+// formulario mostró en pantalla.
+async function assertTeacherCanTargetGrade(admin: ReturnType<typeof createAdminClient>, staffId: string, schoolId: string, gradeLevel: string): Promise<boolean> {
+  const { data } = await admin
+    .from('teacher_assignments')
+    .select('id')
+    .eq('staff_id', staffId)
+    .eq('school_id', schoolId)
+    .eq('grade_level', gradeLevel)
+    .maybeSingle()
+  return !!data
 }
 
 // Publica una foto corta del día a día -- dirigida a UN estudiante puntual
@@ -64,6 +80,21 @@ export async function createClassUpdateAction(formData: FormData): Promise<Actio
   }
 
   const admin = createAdminClient()
+
+  if (resolved.role === 'teacher') {
+    if (!resolved.staffId) return { ok: false, error: 'No se encontró tu ficha de personal.' }
+
+    let targetGrade: string | null = null
+    if (hasGrade) {
+      targetGrade = (gradeLevel as string).trim()
+    } else {
+      const { data: student } = await admin.from('students').select('grade_level').eq('id', studentId).eq('school_id', resolved.schoolId).maybeSingle()
+      targetGrade = student?.grade_level ?? null
+    }
+    if (!targetGrade || !(await assertTeacherCanTargetGrade(admin, resolved.staffId, resolved.schoolId, targetGrade))) {
+      return { ok: false, error: 'No tienes ese grado/sección asignado.' }
+    }
+  }
 
   const { data: buckets } = await admin.storage.listBuckets()
   if (!buckets?.some((b) => b.name === BUCKET)) {
@@ -99,11 +130,19 @@ export async function deleteClassUpdateAction(updateId: string): Promise<ActionR
   const admin = createAdminClient()
   const { data: update } = await admin
     .from('class_updates')
-    .select('photo_path')
+    .select('photo_path, grade_level, student_id, students(grade_level)')
     .eq('id', updateId)
     .eq('school_id', resolved.schoolId)
     .maybeSingle()
   if (!update) return { ok: false, error: 'No se encontró la actualización.' }
+
+  if (resolved.role === 'teacher') {
+    if (!resolved.staffId) return { ok: false, error: 'No se encontró tu ficha de personal.' }
+    const targetGrade = update.grade_level ?? (update.students as unknown as { grade_level: string | null } | null)?.grade_level ?? null
+    if (!targetGrade || !(await assertTeacherCanTargetGrade(admin, resolved.staffId, resolved.schoolId, targetGrade))) {
+      return { ok: false, error: 'No tienes permiso para eliminar esta actualización.' }
+    }
+  }
 
   await admin.storage.from(BUCKET).remove([update.photo_path])
   const { error } = await admin.from('class_updates').update({ deleted_at: new Date().toISOString() }).eq('id', updateId)

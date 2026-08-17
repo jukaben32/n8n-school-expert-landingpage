@@ -52,7 +52,7 @@ export default async function NuevoComunicadoPage() {
         </p>
       </div>
 
-      <NewMessageForm gradeLevelOptions={gradeLevelOptions} />
+      <NewMessageForm gradeLevelOptions={gradeLevelOptions} forceGradeMode={profile.role === 'teacher'} />
     </div>
   )
 }
