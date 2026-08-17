@@ -8,6 +8,7 @@ interface Family { id: string; name: string }
 
 interface NewStudentFormProps {
   families: Family[]
+  gradeLevelOptions: string[]
 }
 
 interface DraftGuardian {
@@ -43,7 +44,7 @@ function newGuardianDraft(relationship: string): DraftGuardian {
  * vínculos correspondientes en `student_guardians`. El primero de la
  * lista queda marcado como tutor principal (is_primary).
  */
-export default function NewStudentForm({ families }: NewStudentFormProps) {
+export default function NewStudentForm({ families, gradeLevelOptions }: NewStudentFormProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'existing' | 'new'>(families.length > 0 ? 'existing' : 'new')
   const [saving, setSaving] = useState(false)
@@ -55,6 +56,7 @@ export default function NewStudentForm({ families }: NewStudentFormProps) {
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState<'M' | 'F' | 'O' | ''>('')
   const [enrollmentStatus, setEnrollmentStatus] = useState('inscrito')
+  const [gradeLevel, setGradeLevel] = useState('')
 
   // Familia existente
   const [familyId, setFamilyId] = useState(families[0]?.id ?? '')
@@ -100,7 +102,7 @@ export default function NewStudentForm({ families }: NewStudentFormProps) {
 
     setSaving(true)
 
-    const student = { firstName, lastName, birthDate, gender: gender || null, enrollmentStatus }
+    const student = { firstName, lastName, birthDate, gender: gender || null, enrollmentStatus, gradeLevel: gradeLevel.trim() || null }
     const result =
       mode === 'new'
         ? await submitNewStudent({
@@ -284,6 +286,23 @@ export default function NewStudentForm({ families }: NewStudentFormProps) {
               <option value="admitido">Admitido</option>
               <option value="inscrito">Inscrito</option>
             </select>
+          </div>
+          <div className="col-span-2">
+            <label htmlFor="sGradeLevel" className={labelClass}>Grado / sección</label>
+            <input
+              id="sGradeLevel"
+              list="gradeLevelOptions"
+              value={gradeLevel}
+              onChange={(e) => setGradeLevel(e.target.value)}
+              placeholder="Ej. Kinder A"
+              className={inputClass}
+            />
+            <datalist id="gradeLevelOptions">
+              {gradeLevelOptions.map((g) => <option key={g} value={g} />)}
+            </datalist>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+              Se usa para dirigir comunicados a un grado/sección específico en vez de a todo el colegio.
+            </p>
           </div>
         </div>
       </div>

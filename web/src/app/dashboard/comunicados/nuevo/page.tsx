@@ -30,6 +30,17 @@ export default async function NuevoComunicadoPage() {
     redirect('/dashboard/comunicados')
   }
 
+  const { data: studentsWithGrade } = await supabase
+    .from('students')
+    .select('grade_level')
+    .eq('school_id', schoolId)
+    .not('grade_level', 'is', null)
+    .is('deleted_at', null)
+
+  const gradeLevelOptions = Array.from(
+    new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))
+  ).sort()
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -41,7 +52,7 @@ export default async function NuevoComunicadoPage() {
         </p>
       </div>
 
-      <NewMessageForm schoolId={schoolId} authorProfileId={profile.id} />
+      <NewMessageForm gradeLevelOptions={gradeLevelOptions} />
     </div>
   )
 }

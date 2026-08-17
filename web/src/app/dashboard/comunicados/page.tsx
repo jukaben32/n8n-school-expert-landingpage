@@ -39,7 +39,7 @@ export default async function ComunicadosPage() {
   const query = supabase
     .from('messages')
     .select(`
-      id, title, body, priority, published_at, created_at,
+      id, title, body, priority, published_at, created_at, audience_label,
       author:users_profiles!author_id(id),
       reads:message_reads(user_id)
     `)
@@ -97,6 +97,7 @@ export default async function ComunicadosPage() {
                 body={msg.body}
                 priority={msg.priority as 'normal' | 'urgent'}
                 publishedAt={msg.published_at}
+                audienceLabel={msg.audience_label}
                 isRead={isRead}
                 isStaff={isStaff}
                 currentUserId={profile?.id ?? ''}

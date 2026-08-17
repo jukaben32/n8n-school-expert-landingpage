@@ -9,6 +9,7 @@ interface MessageCardProps {
   body: string
   priority: 'normal' | 'urgent'
   publishedAt: string | null
+  audienceLabel: string | null
   isRead: boolean
   isStaff: boolean
   currentUserId: string
@@ -19,7 +20,7 @@ interface MessageCardProps {
  * La lectura se registra en Supabase (tabla message_reads) al hacer clic.
  */
 export default function MessageCard({
-  id, title, body, priority, publishedAt, isRead, isStaff, currentUserId
+  id, title, body, priority, publishedAt, audienceLabel, isRead, isStaff, currentUserId
 }: MessageCardProps) {
   const [read, setRead] = useState(isRead)
   const [expanded, setExpanded] = useState(false)
@@ -77,6 +78,11 @@ export default function MessageCard({
             {priority === 'urgent' && (
               <span className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">
                 Urgente
+              </span>
+            )}
+            {isStaff && audienceLabel && (
+              <span className="text-xs font-semibold text-primary dark:text-accent-light bg-primary/10 dark:bg-accent/10 px-2 py-0.5 rounded-full">
+                Para: {audienceLabel}
               </span>
             )}
             <h3 className={`text-sm font-semibold truncate ${!read ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>

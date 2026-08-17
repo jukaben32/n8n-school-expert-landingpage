@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createMessageAction } from './actions'
 
 interface NewMessageFormProps {
-  schoolId: string
-  authorProfileId: string
+  gradeLevelOptions: string[]
 }
 
 const inputClass =
@@ -19,13 +18,19 @@ const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300
  * "Guardar borrador" deja published_at en null (solo visible para staff).
  * "Publicar ahora" establece published_at = now() (visible para familias).
  */
-export default function NewMessageForm({ schoolId, authorProfileId }: NewMessageFormProps) {
+export default function NewMessageForm({ gradeLevelOptions }: NewMessageFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [priority, setPriority] = useState<'normal' | 'urgent'>('normal')
+  const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>('all')
+  const [selectedGrades, setSelectedGrades] = useState<string[]>([])
   const [saving, setSaving] = useState<'draft' | 'publish' | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  function toggleGrade(grade: string) {
+    setSelectedGrades((prev) => (prev.includes(grade) ? prev.filter((g) => g !== grade) : [...prev, grade]))
+  }
 
   async function handleSave(publish: boolean) {
     setError(null)
@@ -33,21 +38,22 @@ export default function NewMessageForm({ schoolId, authorProfileId }: NewMessage
       setError('El título y el contenido son obligatorios.')
       return
     }
+    if (audienceMode === 'grades' && selectedGrades.length === 0) {
+      setError('Elige al menos un grado/sección, o cambia a "Todo el colegio".')
+      return
+    }
     setSaving(publish ? 'publish' : 'draft')
 
-    const supabase = createClient()
-    const { error: dbError } = await supabase.from('messages').insert({
-      school_id: schoolId,
-      author_id: authorProfileId,
-      title: title.trim(),
-      body: body.trim(),
-      audience_type: 'all',
+    const result = await createMessageAction({
+      title,
+      body,
       priority,
-      published_at: publish ? new Date().toISOString() : null,
+      publish,
+      gradeLevels: audienceMode === 'grades' ? selectedGrades : [],
     })
 
-    if (dbError) {
-      setError('No se pudo guardar el comunicado. Intenta de nuevo.')
+    if (!result.ok) {
+      setError(result.error ?? 'No se pudo guardar el comunicado. Intenta de nuevo.')
       setSaving(null)
       return
     }
@@ -111,6 +117,61 @@ export default function NewMessageForm({ schoolId, authorProfileId }: NewMessage
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
+        <label className={labelClass}>¿A quién le llega?</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setAudienceMode('all')}
+            className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              audienceMode === 'all'
+                ? 'bg-primary text-white shadow-glow'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            Todo el colegio
+          </button>
+          <button
+            type="button"
+            onClick={() => setAudienceMode('grades')}
+            disabled={gradeLevelOptions.length === 0}
+            className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+              audienceMode === 'grades'
+                ? 'bg-primary text-white shadow-glow'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            Grado/sección específico
+          </button>
+        </div>
+
+        {audienceMode === 'grades' && (
+          gradeLevelOptions.length > 0 ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {gradeLevelOptions.map((grade) => (
+                <button
+                  key={grade}
+                  type="button"
+                  onClick={() => toggleGrade(grade)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                    selectedGrades.includes(grade)
+                      ? 'bg-primary text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {grade}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              Todavía no hay grados/secciones asignados a ningún estudiante (se asignan desde la ficha de cada
+              estudiante en Estudiantes).
+            </p>
+          )
+        )}
       </div>
 
       {error && (

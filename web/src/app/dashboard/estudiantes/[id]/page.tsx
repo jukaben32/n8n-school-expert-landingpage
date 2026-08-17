@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import EnrollmentStatusSelect from './EnrollmentStatusSelect'
+import GradeLevelInput from './GradeLevelInput'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
@@ -41,7 +42,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
 
   const { data: student, error: studentError } = await supabase
     .from('students')
-    .select('id, first_name, last_name, birth_date, gender, enrollment_status, family_id, families(id, name)')
+    .select('id, first_name, last_name, birth_date, gender, enrollment_status, grade_level, family_id, families(id, name)')
     .eq('id', id)
     .eq('school_id', schoolId)
     .is('deleted_at', null)
@@ -99,7 +100,10 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
               )}
             </p>
           </div>
-          <EnrollmentStatusSelect studentId={student.id} initialStatus={student.enrollment_status} />
+          <div className="flex flex-col items-end gap-2">
+            <EnrollmentStatusSelect studentId={student.id} initialStatus={student.enrollment_status} />
+            <GradeLevelInput studentId={student.id} initialValue={student.grade_level} />
+          </div>
         </div>
       </div>
 

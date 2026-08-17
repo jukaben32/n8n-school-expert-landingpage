@@ -33,12 +33,14 @@ export default async function NuevoEstudiantePage() {
     redirect('/dashboard/estudiantes')
   }
 
-  const { data: families, error: familiesError } = await supabase
-    .from('families')
-    .select('id, name')
-    .eq('school_id', schoolId)
-    .is('deleted_at', null)
-    .order('name', { ascending: true })
+  const [{ data: families, error: familiesError }, { data: studentsWithGrade }] = await Promise.all([
+    supabase.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null).order('name', { ascending: true }),
+    supabase.from('students').select('grade_level').eq('school_id', schoolId).not('grade_level', 'is', null).is('deleted_at', null),
+  ])
+
+  const gradeLevelOptions = Array.from(
+    new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))
+  ).sort()
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -54,6 +56,7 @@ export default async function NuevoEstudiantePage() {
 
       <NewStudentForm
         families={families ?? []}
+        gradeLevelOptions={gradeLevelOptions}
       />
     </div>
   )
