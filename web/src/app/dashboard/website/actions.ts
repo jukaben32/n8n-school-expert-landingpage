@@ -35,6 +35,7 @@ export interface WebsiteFaqInput {
 }
 
 export interface SaveWebsiteContentInput {
+  logoUrl: string
   settings: SchoolWebsiteSettings
   services: WebsiteServiceInput[]
   teamMembers: WebsiteTeamMemberInput[]
@@ -44,6 +45,12 @@ export interface SaveWebsiteContentInput {
 
 interface ActionResult {
   ok: boolean
+  error?: string
+}
+
+interface UploadResult {
+  ok: boolean
+  url?: string
   error?: string
 }
 
@@ -108,7 +115,10 @@ export async function saveWebsiteContentAction(input: SaveWebsiteContentInput): 
   try {
     const { error: settingsError } = await admin
       .from('schools')
-      .update({ settings: { ...currentSettings, website: websiteSettingsToJson(cleanedSettings) } })
+      .update({
+        logo_url: input.logoUrl.trim() || null,
+        settings: { ...currentSettings, website: websiteSettingsToJson(cleanedSettings) },
+      })
       .eq('id', schoolId)
     if (settingsError) throw settingsError
 
@@ -167,4 +177,62 @@ export async function saveWebsiteContentAction(input: SaveWebsiteContentInput): 
   revalidatePath('/dashboard/website')
   revalidatePath('/colegio/[subdomain]', 'page')
   return { ok: true }
+}
+
+const WEBSITE_PHOTOS_BUCKET = 'website-photos'
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+const ALLOWED_PHOTO_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
+
+// Sube una sola imagen del constructor de sitio web (logo, portada, foto de
+// "sobre nosotros", fotos del personal) al bucket público website-photos,
+// bajo un prefijo website/{schoolId}/ -- mismo patrón que el proyecto de
+// referencia (real-estate-multi-ai-agent-saas), un solo endpoint genérico
+// con un parámetro `kind` en vez de uno por campo.
+//
+// El bucket se crea la primera vez que hace falta (público, para que
+// /colegio/[subdomain] pueda mostrar las imágenes sin sesión) -- así no
+// hace falta un paso manual en el dashboard de Supabase.
+export async function uploadWebsitePhotoAction(formData: FormData): Promise<UploadResult> {
+  const resolved = await resolveSchoolAdmin()
+  if (!resolved.ok) return { ok: false, error: resolved.error }
+
+  const file = formData.get('file')
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'No se recibió ningún archivo.' }
+  }
+  if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+    return { ok: false, error: 'Formato no soportado (usa PNG, JPG o WEBP).' }
+  }
+  if (file.size > MAX_PHOTO_BYTES) {
+    return { ok: false, error: 'La imagen no puede pesar más de 5 MB.' }
+  }
+
+  const kindRaw = formData.get('kind')
+  const kind = typeof kindRaw === 'string' && /^[a-z0-9-]+$/.test(kindRaw) ? kindRaw : 'photo'
+
+  const admin = createAdminClient()
+
+  const { data: buckets } = await admin.storage.listBuckets()
+  if (!buckets?.some((b) => b.name === WEBSITE_PHOTOS_BUCKET)) {
+    const { error: createBucketError } = await admin.storage.createBucket(WEBSITE_PHOTOS_BUCKET, {
+      public: true,
+      fileSizeLimit: MAX_PHOTO_BYTES,
+    })
+    // Ignora "already exists" por si dos subidas concurrentes intentan
+    // crearlo a la vez -- cualquier otro error sí bloquea la subida.
+    if (createBucketError && !/already exists/i.test(createBucketError.message)) {
+      return { ok: false, error: `No se pudo preparar el almacenamiento: ${createBucketError.message}` }
+    }
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `website/${resolved.schoolId}/${kind}-${Date.now()}.${ext}`
+
+  const { error: uploadError } = await admin.storage
+    .from(WEBSITE_PHOTOS_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false })
+  if (uploadError) return { ok: false, error: uploadError.message }
+
+  const { data: publicUrlData } = admin.storage.from(WEBSITE_PHOTOS_BUCKET).getPublicUrl(path)
+  return { ok: true, url: publicUrlData.publicUrl }
 }

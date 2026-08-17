@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, ExternalLink } from 'lucide-react'
+import { Plus, Trash2, ExternalLink, Upload, X } from 'lucide-react'
 import type { SchoolWebsiteSettings, WebsiteTemplate, WebsiteFont } from '@/lib/websiteSettings'
 import {
   saveWebsiteContentAction,
+  uploadWebsitePhotoAction,
   type WebsiteFaqInput,
   type WebsiteServiceInput,
   type WebsiteTeamMemberInput,
@@ -91,6 +92,7 @@ export default function SchoolWebsiteForm({
       : [emptyTestimonial()]
   )
   const [faqs, setFaqs] = useState<FaqRow[]>(initialFaqs.length ? initialFaqs : [emptyFaq()])
+  const [logoUrl, setLogoUrl] = useState(school.logo_url ?? '')
   const [badgeInput, setBadgeInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -117,7 +119,7 @@ export default function SchoolWebsiteForm({
     setSaved(false)
     setSaving(true)
 
-    const result = await saveWebsiteContentAction({ settings, services, teamMembers, testimonials, faqs })
+    const result = await saveWebsiteContentAction({ logoUrl, settings, services, teamMembers, testimonials, faqs })
 
     setSaving(false)
     if (!result.ok) {
@@ -167,6 +169,7 @@ export default function SchoolWebsiteForm({
       {/* Diseño */}
       <section className={sectionClass}>
         <p className={sectionTitleClass}>Diseño</p>
+        <ImageUploadField label="Logo del colegio" value={logoUrl} onChange={setLogoUrl} kind="logo" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Plantilla</label>
@@ -198,7 +201,7 @@ export default function SchoolWebsiteForm({
         <p className={sectionTitleClass}>Portada (Hero)</p>
         <input placeholder="Título principal" value={settings.heroTitle} onChange={(e) => set('heroTitle', e.target.value)} className={inputClass} />
         <textarea placeholder="Subtítulo" rows={2} value={settings.heroSubtitle} onChange={(e) => set('heroSubtitle', e.target.value)} className={inputClass} />
-        <input placeholder="URL de imagen de portada" value={settings.heroImageUrl} onChange={(e) => set('heroImageUrl', e.target.value)} className={inputClass} />
+        <ImageUploadField label="Imagen de portada" value={settings.heroImageUrl} onChange={(url) => set('heroImageUrl', url)} kind="hero" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input placeholder="Texto botón principal" value={settings.ctaLabel} onChange={(e) => set('ctaLabel', e.target.value)} className={inputClass} />
           <input placeholder="Texto botón secundario (opcional)" value={settings.ctaSecondaryLabel} onChange={(e) => set('ctaSecondaryLabel', e.target.value)} className={inputClass} />
@@ -210,7 +213,7 @@ export default function SchoolWebsiteForm({
         <p className={sectionTitleClass}>Sobre nosotros</p>
         <input placeholder="Título de la sección" value={settings.aboutTitle} onChange={(e) => set('aboutTitle', e.target.value)} className={inputClass} />
         <textarea placeholder="Historia del colegio" rows={4} value={settings.aboutStory} onChange={(e) => set('aboutStory', e.target.value)} className={inputClass} />
-        <input placeholder="URL de foto (fachada, patio, etc.)" value={settings.aboutPhotoUrl} onChange={(e) => set('aboutPhotoUrl', e.target.value)} className={inputClass} />
+        <ImageUploadField label="Foto (fachada, patio, etc.)" value={settings.aboutPhotoUrl} onChange={(url) => set('aboutPhotoUrl', url)} kind="about" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input placeholder="Año de fundación" value={settings.yearsFounded} onChange={(e) => set('yearsFounded', e.target.value)} className={inputClass} />
           <input placeholder="Estudiantes actuales" value={settings.studentsCount} onChange={(e) => set('studentsCount', e.target.value)} className={inputClass} />
@@ -273,7 +276,7 @@ export default function SchoolWebsiteForm({
           <>
             <input placeholder="Nombre" value={row.name} onChange={(e) => update({ ...row, name: e.target.value })} className={inputClass} />
             <input placeholder="Cargo (ej. Directora)" value={row.role} onChange={(e) => update({ ...row, role: e.target.value })} className={inputClass} />
-            <input placeholder="URL de foto" value={row.photoUrl} onChange={(e) => update({ ...row, photoUrl: e.target.value })} className={inputClass} />
+            <ImageUploadField label="Foto" value={row.photoUrl} onChange={(url) => update({ ...row, photoUrl: url })} kind="team" />
             <textarea placeholder="Reseña breve" rows={2} value={row.bio} onChange={(e) => update({ ...row, bio: e.target.value })} className={`${inputClass} sm:col-span-3`} />
           </>
         )}
@@ -388,5 +391,84 @@ function RepeatableSection<T>({
         ))}
       </div>
     </section>
+  )
+}
+
+// Sube directo al bucket público website-photos vía uploadWebsitePhotoAction
+// -- reemplaza los campos de "pega la URL" por un botón real de subida,
+// con miniatura de la imagen actual y opción de quitarla.
+function ImageUploadField({
+  label,
+  value,
+  onChange,
+  kind,
+}: {
+  label: string
+  value: string
+  onChange: (url: string) => void
+  kind: string
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setError(null)
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('kind', kind)
+    const result = await uploadWebsitePhotoAction(formData)
+    setUploading(false)
+
+    if (!result.ok) {
+      setError(result.error ?? 'No se pudo subir la imagen')
+      return
+    }
+    onChange(result.url ?? '')
+  }
+
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+      <div className="flex items-center gap-3">
+        <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
+          {value ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <Upload className="w-5 h-5 text-slate-300 dark:text-slate-600" />
+          )}
+        </div>
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+              <Upload className="w-3.5 h-3.5" />
+              {uploading ? 'Subiendo…' : value ? 'Cambiar imagen' : 'Subir imagen'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={handleFile}
+                disabled={uploading}
+              />
+            </label>
+            {value && (
+              <button
+                type="button"
+                onClick={() => onChange('')}
+                className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-red-600"
+              >
+                <X className="w-3 h-3" /> Quitar
+              </button>
+            )}
+          </div>
+          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+        </div>
+      </div>
+    </div>
   )
 }
