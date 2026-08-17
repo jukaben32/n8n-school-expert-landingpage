@@ -12,11 +12,15 @@ export const metadata: Metadata = {
  * Página de Login — MentorIApp
  * Si el usuario ya tiene sesión activa, se redirige al dashboard.
  */
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (user) redirect('/dashboard')
+  if (user) {
+    const redirectTo = (await searchParams).redirect
+    const isSafeRedirect = !!redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+    redirect(isSafeRedirect ? redirectTo : '/dashboard')
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-slate-950 dark:via-slate-900 dark:to-primary-dark/20 px-4 py-12">

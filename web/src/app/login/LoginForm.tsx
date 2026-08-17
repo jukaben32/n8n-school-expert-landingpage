@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export default function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -45,7 +46,17 @@ export default function LoginForm() {
       return
     }
 
-    router.push('/dashboard')
+    // El middleware manda aquí con ?redirect=/lo-que-sea cuando una sesión
+    // vencida interrumpió la visita a una página protegida (ej. Configuración).
+    // Antes esto se ignoraba por completo y SIEMPRE mandaba a /dashboard, que
+    // para super_admin redirige a Plataforma -- así que un simple "se venció
+    // la sesión mientras estaba en Configuración" se sentía como "Configuración
+    // no funciona", sin relación real con la página que se quería ver.
+    // Se valida que empiece con "/" y no con "//" para no reenviar a un
+    // dominio externo si alguien arma el parámetro a mano (open redirect).
+    const redirectTo = searchParams.get('redirect')
+    const isSafeRedirect = !!redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+    router.push(isSafeRedirect ? redirectTo : '/dashboard')
     router.refresh()
   }
 
