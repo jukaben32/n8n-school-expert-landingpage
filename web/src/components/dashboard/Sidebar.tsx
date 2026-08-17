@@ -127,6 +127,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/reportes',        label: 'Reportes', icon: 'reports' },
     { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
@@ -140,13 +141,14 @@ interface SidebarProps {
   role: string
   schoolName: string
   newLeadsCount?: number
+  newMessagesCount?: number
 }
 
 /**
  * Sidebar — Navegación lateral del dashboard.
  * Adapta los ítems de menú según el rol del usuario.
  */
-export default function Sidebar({ role, schoolName, newLeadsCount = 0 }: SidebarProps) {
+export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessagesCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const navItems = navByRole[role] ?? navByRole.default
@@ -197,6 +199,11 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0 }: Sidebar
               {item.href === '/dashboard/plataforma/leads' && newLeadsCount > 0 && (
                 <span className="rounded-full bg-coral text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {newLeadsCount}
+                </span>
+              )}
+              {item.href === '/dashboard/mensajes' && newMessagesCount > 0 && (
+                <span className="rounded-full bg-coral text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {newMessagesCount}
                 </span>
               )}
             </a>

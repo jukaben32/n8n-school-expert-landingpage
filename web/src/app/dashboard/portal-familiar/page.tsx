@@ -6,6 +6,7 @@ import SummaryBadge from '@/components/portal/SummaryBadge'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import FamilyChatWidget from '@/components/portal/FamilyChatWidget'
 import VoiceCallWidget from '@/components/portal/VoiceCallWidget'
+import DirectMessagesWidget from '@/components/portal/DirectMessagesWidget'
 import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 
 export const metadata: Metadata = {
@@ -113,6 +114,14 @@ export default async function PortalFamiliarPage() {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Mensajería directa con el colegio -- un humano responde, no la IA */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
+          Mensajes
+        </h2>
+        <DirectMessagesWidget />
       </div>
 
       {/* Asistente de IA -- "un solo cerebro, dos salidas" (ver AGENTS.md) */}

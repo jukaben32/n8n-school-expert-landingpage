@@ -26,6 +26,7 @@ export type Module =
   | 'personal'
   | 'tesoreria' | 'pagos'
   | 'comunicados' | 'comunicados_nuevo'
+  | 'mensajes_directos' // conversación privada de dos vías con una familia
   | 'asistencia' | 'asistencia_registrar'
   | 'reportes'
   | 'academia_gestionar' // crear lecciones + ver progreso
@@ -36,7 +37,7 @@ export type Module =
 
 const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
-  'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo',
+  'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo', 'mensajes_directos',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar',
   'whatsapp',
   'website',
@@ -51,11 +52,11 @@ const ROLE_MODULES: Record<Role, Module[]> = {
 
   // Profesor: su salón de clases -- asistencia, academia, avisos.
   // No gestiona familias completas ni dinero.
-  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'academia_gestionar'],
+  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'mensajes_directos', 'academia_gestionar'],
 
   // Recepción: la puerta de entrada -- estudiantes, familias, avisos,
   // asistencia. No maneja tesorería ni contenido de Academia.
-  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'asistencia', 'asistencia_registrar'],
+  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar'],
 
   // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, reportes,
   // y solo lectura de familias para facturar. No toca estudiantes,

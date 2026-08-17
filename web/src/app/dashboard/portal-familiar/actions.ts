@@ -112,3 +112,96 @@ export async function logFamilyVoiceCall(turns: VoiceCallTurn[]): Promise<{ ok: 
     turns,
   })
 }
+
+interface DirectMessageRow {
+  id: string
+  sender_type: 'guardian' | 'staff'
+  body: string
+  created_at: string
+}
+
+interface DirectMessagesResult {
+  ok: boolean
+  messages?: DirectMessageRow[]
+  error?: string
+}
+
+async function getOrCreateFamilyConversation(admin: ReturnType<typeof createAdminClient>, schoolId: string, familyId: string) {
+  const { data: existing } = await admin
+    .from('direct_conversations')
+    .select('id')
+    .eq('school_id', schoolId)
+    .eq('family_id', familyId)
+    .maybeSingle()
+  if (existing) return existing.id as string
+
+  const { data: created, error } = await admin
+    .from('direct_conversations')
+    .insert({ school_id: schoolId, family_id: familyId })
+    .select('id')
+    .single()
+  if (error || !created) throw new Error(error?.message ?? 'No se pudo crear la conversación.')
+  return created.id as string
+}
+
+/**
+ * Mensajería directa de dos vías con el colegio -- distinta del asistente
+ * de IA: acá hay un humano (profesor/dirección/recepción) del otro lado.
+ * Una sola conversación por familia (get-or-create), igual que su
+ * contraparte en dashboard/mensajes/actions.ts para el lado del staff.
+ */
+export async function getFamilyDirectMessages(): Promise<DirectMessagesResult> {
+  const identity = await resolveGuardianIdentity()
+  if (!identity.ok) return { ok: false, error: identity.error }
+
+  const admin = createAdminClient()
+  const conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId).catch(() => null)
+  if (!conversationId) return { ok: true, messages: [] }
+
+  await admin.from('direct_conversations').update({ guardian_last_read_at: new Date().toISOString() }).eq('id', conversationId)
+
+  const { data, error } = await admin
+    .from('direct_messages')
+    .select('id, sender_type, body, created_at')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true })
+  if (error) return { ok: false, error: 'No se pudieron cargar los mensajes.' }
+
+  return { ok: true, messages: (data ?? []) as DirectMessageRow[] }
+}
+
+export async function sendFamilyDirectMessage(body: string): Promise<{ ok: boolean; error?: string }> {
+  const identity = await resolveGuardianIdentity()
+  if (!identity.ok) return { ok: false, error: identity.error }
+
+  const trimmed = body.trim()
+  if (!trimmed) return { ok: false, error: 'Escribe un mensaje.' }
+
+  const admin = createAdminClient()
+  let conversationId: string
+  try {
+    conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId)
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'No se pudo abrir la conversación.' }
+  }
+
+  const { data: guardianProfile } = await admin
+    .from('users_profiles')
+    .select('id')
+    .eq('guardian_id', identity.guardianId)
+    .single()
+  if (!guardianProfile) return { ok: false, error: 'No se encontró tu perfil.' }
+
+  const now = new Date().toISOString()
+  const { error: insertError } = await admin.from('direct_messages').insert({
+    conversation_id: conversationId,
+    sender_type: 'guardian',
+    sender_profile_id: guardianProfile.id,
+    body: trimmed,
+  })
+  if (insertError) return { ok: false, error: 'No se pudo enviar el mensaje.' }
+
+  await admin.from('direct_conversations').update({ last_message_at: now, guardian_last_read_at: now }).eq('id', conversationId)
+
+  return { ok: true }
+}

@@ -38,6 +38,24 @@ export default async function DashboardLayout({
     newLeadsCount = count ?? 0
   }
 
+  // Mensajes directos sin leer (de tutores hacia el staff) -- no se puede
+  // filtrar "created_at > staff_last_read_at" por fila con un solo count()
+  // de supabase-js, así que se trae lo mínimo y se cuenta en JS. Escala
+  // muy poco (una fila por familia con conversación activa).
+  let newMessagesCount = 0
+  if (['super_admin', 'school_admin', 'director', 'teacher', 'reception'].includes(role) && schoolId) {
+    const { data: convRows } = await supabase
+      .from('direct_conversations')
+      .select('id, staff_last_read_at, direct_messages(sender_type, created_at)')
+      .eq('school_id', schoolId)
+    type Row = { staff_last_read_at: string | null; direct_messages: { sender_type: string; created_at: string }[] }
+    for (const c of (convRows ?? []) as unknown as Row[]) {
+      newMessagesCount += c.direct_messages.filter(
+        (m) => m.sender_type === 'guardian' && (!c.staff_last_read_at || m.created_at > c.staff_last_read_at)
+      ).length
+    }
+  }
+
   // Obtener el nombre del colegio en una consulta separada si tenemos school_id
   let schoolName = overrideSchoolName ?? 'Mi Colegio'
   if (!overrideSchoolName && schoolId) {
@@ -52,7 +70,12 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar de navegación lateral */}
-      <Sidebar role={isViewingOtherSchool ? 'director' : role} schoolName={schoolName} newLeadsCount={newLeadsCount} />
+      <Sidebar
+        role={isViewingOtherSchool ? 'director' : role}
+        schoolName={schoolName}
+        newLeadsCount={newLeadsCount}
+        newMessagesCount={newMessagesCount}
+      />
 
       {/* Área principal */}
       <div className="flex flex-col flex-1 overflow-hidden">
