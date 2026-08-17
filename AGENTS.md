@@ -236,15 +236,37 @@ hijo 3 → 10% de descuento, total RD$4,500.
   núcleo ya con la identidad resuelta.
 - `FamilyChatWidget.tsx`: chat embebido en Portal Familiar.
 
-**Fase 2 — WhatsApp/Twilio (documentado, NO construido):** un futuro
-endpoint (route handler) recibiría los mensajes entrantes de Twilio,
-resolvería `teléfono → guardian_id → family_id` explícitamente (sin
-sesión de Supabase, ya que WhatsApp no tiene JWT), y llamaría al
-mismo `answerFamilyQuestion()` con `channel: 'whatsapp'` — sin
-duplicar lógica de negocio. El usuario decidió empezar la
-implementación de WhatsApp vía Twilio (más rápido de activar) mientras
-se solicita el acceso real a la API de Meta en paralelo. Pendiente de
-construir cuando se priorice.
+**Fase 2 — WhatsApp vía Evolution API (construido el 2026-08-17):**
+decisión revisada con el usuario ese mismo día — la decisión anterior de
+usar Twilio (ver historial de git) se descarta a favor de Evolution API,
+para quedar alineado con el proyecto de referencia
+(real-estate-multi-ai-agent-saas), que comparte el mismo VPS/servidor de
+Evolution API (cada app usa su propio prefijo de instancia,
+`mentoriapp-${schoolId}` aquí, para no chocar).
+
+- `src/lib/evolutionApi.ts`: cliente REST portado del proyecto de
+  referencia sin cambios de fondo (mismos endpoints v2 verificados ahí).
+- `src/lib/whatsapp/connection.ts`: capa de servicio — crear/reconectar/
+  desconectar instancia, sondear estado, enviar mensajes. Una fila por
+  colegio en `whatsapp_connections` (migración 025 agrega
+  `instance_token`/`is_enabled` sobre la tabla-cáscara de la migración
+  024, que solo guardaba texto sin backend real).
+- `src/lib/whatsapp/resolveGuardianByPhone.ts`: resuelve
+  `teléfono → guardian_id → family_id` por comparación normalizada
+  (últimos 10 dígitos) contra `guardians.phone`, acotado por `school_id`
+  (ya viene en la URL del webhook, no hace falta buscar entre colegios).
+- `src/app/api/whatsapp/webhook/[schoolId]/route.ts`: único route handler
+  real del proyecto además del de Azul — Evolution llama aquí por HTTP
+  plano, no puede invocar un Server Action. Llama al mismo
+  `answerFamilyQuestion()` con `channel: 'whatsapp'`, sin duplicar
+  lógica de negocio ni el límite diario.
+- `src/app/dashboard/whatsapp/`: conectar con un clic + código QR (mismo
+  patrón que el proyecto de referencia), sin selector de agente porque
+  aquí solo hay un asistente por colegio, no varios agentes IA.
+- Pendiente real: `EVOLUTION_API_URL`/`EVOLUTION_API_KEY` no están
+  configuradas todavía (esperando que el VPS quede listo) — hasta
+  entonces el botón "Conectar WhatsApp" muestra el aviso de
+  "no configurado" en vez de fallar.
 
 ## Llamada de voz en vivo (Portal Familiar) — WebRTC realtime, distinta de la nota de voz
 
