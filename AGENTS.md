@@ -1058,9 +1058,17 @@ MentorIApp, no un logo propio.
    `NEXT_PUBLIC_SITE_URL`, verificar el dominio en Resend y actualizar
    `resend_from_address` en `private.app_settings`, considerar mover también
    el SMTP de Supabase Auth al mismo dominio.
-7. **Sistema de comunicación** — Fase 1 (widget interno) construida y
-   verificada, Fase 2 (WhatsApp/Twilio) documentada abajo pero sin
-   construir todavía.
+7. ~~Sistema de comunicación — Fase 2 (WhatsApp)~~ — construido el
+   2026-08-17 vía Evolution API (no Twilio, ver sección "WhatsApp vía
+   Evolution API" más arriba). Pendiente real: `EVOLUTION_API_URL` /
+   `EVOLUTION_API_KEY` no están configuradas todavía (esperando el VPS
+   compartido con el proyecto de referencia) y falta correr la migración
+   025 (`20260817000000_whatsapp_evolution_api.sql`) en producción.
+7b. ~~Constructor de sitio web completo~~ — construido el 2026-08-17
+    (servicios/programas, personal, testimonios, FAQs públicas,
+    plantilla/fuente, redes sociales, stats) — paridad con el proyecto de
+    referencia. Falta correr la migración 026
+    (`20260817010000_website_builder.sql`) en producción.
 8. ~~Descuento automático a partir del Nº hijo~~ — resuelto (ver
    sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).

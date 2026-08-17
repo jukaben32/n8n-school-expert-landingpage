@@ -47,12 +47,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ subdoma
   const manifest = {
     name: school.name,
     short_name: school.name.length > 20 ? school.name.slice(0, 17) + '...' : school.name,
-    description: website.hero_subtitle || school.tagline || `Portal escolar de ${school.name}, en ${PLATFORM_NAME}.`,
+    description: website.heroSubtitle || school.tagline || `Portal escolar de ${school.name}, en ${PLATFORM_NAME}.`,
     start_url: `/colegio/${subdomain}`,
     scope: `/colegio/${subdomain}`,
     display: 'standalone',
-    background_color: website.primary_color,
-    theme_color: website.primary_color,
+    background_color: website.primaryColor,
+    theme_color: website.primaryColor,
     icons,
   }
 
