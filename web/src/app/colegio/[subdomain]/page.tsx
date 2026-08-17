@@ -6,6 +6,7 @@ import { PLATFORM_NAME } from '@/lib/branding'
 import { createClient } from '@/lib/supabase/server'
 import { getWebsiteSettings, type SchoolWebsiteSettings } from '@/lib/websiteSettings'
 import InquiryForm from './InquiryForm'
+import InstallAppButton from './InstallAppButton'
 
 type SchoolPublic = {
   id: string
@@ -217,6 +218,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
                 {website.ctaSecondaryLabel}
               </a>
             )}
+            <InstallAppButton primaryColor={primaryColor} />
           </div>
 
           <p className="mt-6 text-xs text-slate-500">¿No tienes cuenta todavía? Pídele acceso a la administración de tu colegio.</p>
