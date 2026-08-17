@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getWhatsappConnection, sendWhatsappMessage } from '@/lib/whatsapp/connection'
 import { resolveGuardianByPhone } from '@/lib/whatsapp/resolveGuardianByPhone'
-import { answerFamilyQuestion } from '@/lib/ai/answerFamilyQuestion'
+import { answerFamilyQuestion, answerGeneralQuestion } from '@/lib/ai/answerFamilyQuestion'
 
 // This is the "Fase 2" endpoint AGENTS.md describes: resolves
 // phone -> guardian_id -> family_id explicitly (no Supabase session, since
@@ -65,7 +65,12 @@ export async function POST(request: Request, props: { params: Promise<{ schoolId
 
   let reply: string
   if (!identity.ok) {
-    reply = identity.error
+    // No coincide con ninguna familia registrada -- "modo recepción
+    // general": responde con información pública del colegio únicamente,
+    // nunca con datos de una familia (ver answerGeneralQuestion, que a
+    // propósito nunca recibe family_id/guardian_id).
+    const result = await answerGeneralQuestion({ schoolId, phone, message: text })
+    reply = result.ok ? result.reply : result.error
   } else {
     const result = await answerFamilyQuestion({
       schoolId,

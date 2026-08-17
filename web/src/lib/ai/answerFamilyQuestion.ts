@@ -23,6 +23,7 @@ const MAX_OUTPUT_TOKENS = 1024
 const MAX_MESSAGE_LENGTH = 2000
 const DAILY_MESSAGE_LIMIT = 30
 const HISTORY_TURNS = 8
+const ANONYMOUS_DAILY_LIMIT = 15
 
 /**
  * Límite de 30 turnos de usuario por familia cada 24h (ventana móvil),
@@ -116,6 +117,92 @@ export async function answerFamilyQuestion(input: AnswerFamilyQuestionInput): Pr
     // guardada en el historial. No tiene sentido perder la respuesta
     // por un fallo al guardar el log de la conversación.
     console.error('[answerFamilyQuestion] No se pudo guardar la conversación:', insertError.message)
+  }
+
+  return { ok: true, reply }
+}
+
+// "Modo recepción general" -- para cuando el webhook de WhatsApp no pudo
+// identificar el número como el de una familia registrada (ver
+// resolveGuardianByPhone.ts). A propósito NUNCA recibe family_id ni
+// guardian_id, así que no hay forma de que termine mezclando datos de una
+// familia -- solo puede usar información pública del colegio (faq_document,
+// contacto). Sin historial de conversación (una sola respuesta por
+// mensaje): no hay ninguna familia dueña de ese historial para poder
+// guardarlo con las mismas garantías de privacidad que ai_conversations.
+export interface AnswerGeneralQuestionInput {
+  schoolId: string
+  phone: string
+  message: string
+}
+
+export async function answerGeneralQuestion(input: AnswerGeneralQuestionInput): Promise<AnswerFamilyQuestionResult> {
+  const message = input.message.trim()
+  if (!message) {
+    return { ok: false, error: 'El mensaje está vacío.' }
+  }
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return { ok: false, error: 'El mensaje es demasiado largo.' }
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    return { ok: false, error: 'El asistente no está configurado (falta ANTHROPIC_API_KEY).' }
+  }
+
+  const admin = createAdminClient()
+  const { schoolId, phone } = input
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { count: usageCount, error: usageError } = await admin
+    .from('whatsapp_anonymous_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('school_id', schoolId)
+    .eq('phone', phone)
+    .gte('created_at', since)
+  if (usageError) {
+    return { ok: false, error: 'No se pudo verificar el límite de uso.' }
+  }
+  if ((usageCount ?? 0) >= ANONYMOUS_DAILY_LIMIT) {
+    return { ok: false, error: `Se alcanzó el límite de ${ANONYMOUS_DAILY_LIMIT} mensajes por día para este número. Intenta de nuevo mañana, o contacta a la secretaría del colegio.` }
+  }
+
+  const { data: school, error: schoolError } = await admin
+    .from('schools')
+    .select('name, faq_document, address, phone, email')
+    .eq('id', schoolId)
+    .single()
+  if (schoolError || !school) {
+    return { ok: false, error: 'No se encontró el colegio.' }
+  }
+
+  const schoolName = getSchoolOrPlatformName(school.name)
+  const contactText = [school.address, school.phone, school.email].filter(Boolean).join(' · ')
+  const systemPrompt = `Eres el asistente de recepción de ${schoolName}, contestando por WhatsApp a alguien que NO está identificado como padre/madre/tutor de una familia ya registrada en el colegio.
+
+Reglas estrictas:
+1. Solo puedes usar la información de la sección "INFORMACIÓN PÚBLICA DEL COLEGIO" de abajo. No inventes datos que no estén ahí.
+2. NUNCA tienes acceso a datos de ninguna familia, estudiante, pago o asistencia específicos -- no existen en tu contexto. Si te preguntan por el estado de un estudiante, una factura, o cualquier cosa específica de una familia, responde que para eso necesitan entrar al Portal Familiar con su cuenta, o contactar a la secretaría del colegio directamente.
+3. Si parece un padre/madre interesado en matricular a su hijo/a, sé cálido y útil con información general (horarios, proceso de admisión si está en la info de abajo), y sugiere dejar sus datos en el sitio web del colegio o contactar a la secretaría para continuar.
+4. No das consejos médicos, legales ni psicológicos.
+5. Responde en español, de forma breve, cálida y profesional.
+
+INFORMACIÓN PÚBLICA DEL COLEGIO:
+Colegio: ${schoolName}
+${contactText ? `Contacto: ${contactText}` : ''}
+${school.faq_document ? `\nPreguntas frecuentes y políticas generales:\n${school.faq_document}` : 'No hay preguntas frecuentes cargadas todavía.'}`
+
+  let reply: string
+  try {
+    reply = await callClaude(apiKey, systemPrompt, [{ role: 'user', content: message }])
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'error desconocido'
+    return { ok: false, error: `No se pudo obtener respuesta del asistente: ${detail}` }
+  }
+
+  const { error: logError } = await admin.from('whatsapp_anonymous_messages').insert({ school_id: schoolId, phone })
+  if (logError) {
+    console.error('[answerGeneralQuestion] No se pudo registrar el uso:', logError.message)
   }
 
   return { ok: true, reply }
