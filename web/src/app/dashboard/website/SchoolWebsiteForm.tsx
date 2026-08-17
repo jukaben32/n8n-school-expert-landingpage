@@ -129,27 +129,44 @@ export default function SchoolWebsiteForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-          {error}
+      {/* Barra fija: vista previa + publicar + guardar — siempre visible, no
+          hace falta guardar primero para encontrarla ni bajar hasta el final
+          de la página. Los cambios de los campos de abajo solo se reflejan
+          en el sitio público (y en la vista previa) después de "Guardar". */}
+      <div className="sticky top-0 z-10 -mx-1 px-1 py-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <a
+              href={`/colegio/${school.subdomain}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> Vista previa
+            </a>
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={settings.isPublished}
+                onChange={(e) => set('isPublished', e.target.checked)}
+                className="h-4 w-4"
+              />
+              <span className={`text-sm font-semibold ${settings.isPublished ? 'text-green-600 dark:text-green-400' : 'text-slate-400'}`}>
+                {settings.isPublished ? '● Publicado' : '○ Sin publicar (muestra "próximamente")'}
+              </span>
+            </label>
+          </div>
+          <button type="submit" disabled={saving} className="rounded-full bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-2.5 text-sm transition shadow-glow disabled:opacity-60">
+            {saving ? 'Guardando…' : 'Guardar cambios'}
+          </button>
         </div>
-      )}
-      {saved && (
-        <div role="status" className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400 flex items-center justify-between">
-          <span>✓ Sitio web guardado.</span>
-          <a href={`/colegio/${school.subdomain}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold underline">
-            Ver sitio <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
-      )}
+        {error && <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {saved && <p role="status" className="mt-2 text-sm text-green-600 dark:text-green-400">✓ Guardado — la vista previa ya refleja los cambios.</p>}
+      </div>
 
-      {/* Publicación + plantilla */}
+      {/* Diseño */}
       <section className={sectionClass}>
-        <p className={sectionTitleClass}>Publicación</p>
-        <label className="inline-flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
-          <input type="checkbox" checked={settings.isPublished} onChange={(e) => set('isPublished', e.target.checked)} className="h-4 w-4" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Sitio público visible (si está apagado, muestra &ldquo;próximamente&rdquo;)</span>
-        </label>
+        <p className={sectionTitleClass}>Diseño</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Plantilla</label>
@@ -319,7 +336,7 @@ export default function SchoolWebsiteForm({
 
       <div className="flex justify-end">
         <button type="submit" disabled={saving} className="rounded-full bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-2.5 text-sm transition shadow-glow disabled:opacity-60">
-          {saving ? 'Guardando…' : 'Guardar sitio web'}
+          {saving ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
     </form>
