@@ -21,7 +21,7 @@ export type GuardianRelationship = 'madre' | 'padre' | 'tutor_legal' | 'otro'
 export interface DraftGuardianInput {
   firstName: string
   lastName: string
-  phone: string
+  phone?: string | null
   email?: string | null
   relationship: GuardianRelationship
   /** Campos que solo llena la bandeja de fichas escaneadas -- el formulario manual los deja undefined. */
@@ -100,7 +100,7 @@ export async function createStudentWithFamily(
           family_id: familyId,
           first_name: g.firstName,
           last_name: g.lastName,
-          phone: g.phone,
+          phone: g.phone || null,
           email: g.email || null,
           relationship: g.relationship,
           is_primary: i === 0,

@@ -189,8 +189,8 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
       return
     }
     for (const g of draft.guardians) {
-      if (!g.firstName || !g.lastName || !g.phone) {
-        setConfirmError('Completa nombre, apellido y teléfono de cada tutor.')
+      if (!g.firstName || !g.lastName) {
+        setConfirmError('Completa nombre y apellido de cada tutor.')
         return
       }
     }
@@ -444,7 +444,7 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
                           <div className="grid grid-cols-2 gap-2">
                             <div><label className={labelClass}>Nombre</label><input className={inputClass} value={g.firstName} onChange={(e) => updateGuardian(scan.id, g.key, { firstName: e.target.value })} /></div>
                             <div><label className={labelClass}>Apellido</label><input className={inputClass} value={g.lastName} onChange={(e) => updateGuardian(scan.id, g.key, { lastName: e.target.value })} /></div>
-                            <div><label className={labelClass}>Teléfono</label><input className={inputClass} value={g.phone} onChange={(e) => updateGuardian(scan.id, g.key, { phone: e.target.value })} /></div>
+                            <div><label className={labelClass}>Teléfono (opcional)</label><input className={inputClass} value={g.phone} onChange={(e) => updateGuardian(scan.id, g.key, { phone: e.target.value })} /></div>
                             <div><label className={labelClass}>Correo (opcional)</label><input type="email" className={inputClass} value={g.email} onChange={(e) => updateGuardian(scan.id, g.key, { email: e.target.value })} /></div>
                             <div><label className={labelClass}>Cédula</label><input className={inputClass} value={g.nationalId} onChange={(e) => updateGuardian(scan.id, g.key, { nationalId: e.target.value })} /></div>
                             <div>

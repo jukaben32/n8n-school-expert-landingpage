@@ -94,8 +94,8 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
         return
       }
       for (const g of guardians) {
-        if (!g.firstName || !g.lastName || !g.phone) {
-          setError('Completa nombre, apellido y teléfono de cada tutor agregado.')
+        if (!g.firstName || !g.lastName) {
+          setError('Completa nombre y apellido de cada tutor agregado.')
           return
         }
       }
@@ -213,8 +213,8 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
                     <input id={`gLastName-${g.key}`} required value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
                   </div>
                   <div>
-                    <label htmlFor={`gPhone-${g.key}`} className={labelClass}>Teléfono</label>
-                    <input id={`gPhone-${g.key}`} required value={g.phone} onChange={(e) => updateGuardian(g.key, { phone: e.target.value })}
+                    <label htmlFor={`gPhone-${g.key}`} className={labelClass}>Teléfono (opcional)</label>
+                    <input id={`gPhone-${g.key}`} value={g.phone} onChange={(e) => updateGuardian(g.key, { phone: e.target.value })}
                       placeholder="+1 809 000 0000" className={inputClass} />
                   </div>
                   <div>

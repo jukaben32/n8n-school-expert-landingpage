@@ -29,7 +29,7 @@ interface GuardianRow {
   first_name: string
   last_name: string
   email: string | null
-  phone: string
+  phone: string | null
   school_id: string
 }
 
@@ -148,7 +148,7 @@ async function createPhoneBasedAccess(
   guardian: GuardianRow,
   schoolId: string
 ): Promise<InviteResult> {
-  const normalizedPhone = guardian.phone.replace(/\D/g, '')
+  const normalizedPhone = (guardian.phone ?? '').replace(/\D/g, '')
   if (!normalizedPhone) {
     return { ok: false, message: 'Este tutor no tiene teléfono ni correo registrado -- no se puede crear acceso.' }
   }
