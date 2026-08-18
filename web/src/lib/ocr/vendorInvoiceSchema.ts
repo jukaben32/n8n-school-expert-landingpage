@@ -3,8 +3,8 @@
  * Ver AGENTS.md, sección "Facturas de proveedores → Alegra (OCR)".
  */
 
-const nullableString = { anyOf: [{ type: 'string' }, { type: 'null' }] }
-const nullableNumber = { anyOf: [{ type: 'number' }, { type: 'null' }] }
+const nullableString = { type: ['string', 'null'] }
+const nullableNumber = { type: ['number', 'null'] }
 
 export const vendorInvoiceSchema = {
   type: 'object',

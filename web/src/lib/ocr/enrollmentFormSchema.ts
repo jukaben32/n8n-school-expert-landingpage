@@ -3,7 +3,7 @@
  * Ver AGENTS.md, sección "Fichas de inscripción de estudiantes (OCR)".
  */
 
-const nullableString = { anyOf: [{ type: 'string' }, { type: 'null' }] }
+const nullableString = { type: ['string', 'null'] }
 
 export const GUARDIAN_RELATIONSHIPS = ['madre', 'padre', 'tutor_legal', 'otro'] as const
 export type GuardianRelationship = (typeof GUARDIAN_RELATIONSHIPS)[number]
