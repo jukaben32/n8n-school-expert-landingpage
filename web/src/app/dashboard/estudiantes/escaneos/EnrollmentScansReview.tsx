@@ -12,6 +12,7 @@ import {
 import type { SubmitNewStudentInput } from '../nuevo/actions'
 import type { GuardianRelationship } from '@/lib/students/createStudentWithFamily'
 import { inviteGuardianAccess } from '../../familias/actions'
+import DateInputES from '@/components/DateInputES'
 
 const inputClass =
   'w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -417,7 +418,7 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
                       <div className="grid grid-cols-2 gap-2">
                         <div><label className={labelClass}>Nombre</label><input className={inputClass} value={draft.firstName} onChange={(e) => updateDraft(scan.id, { firstName: e.target.value })} /></div>
                         <div><label className={labelClass}>Apellido</label><input className={inputClass} value={draft.lastName} onChange={(e) => updateDraft(scan.id, { lastName: e.target.value })} /></div>
-                        <div><label className={labelClass}>Fecha de nacimiento</label><input type="date" className={inputClass} value={draft.birthDate} onChange={(e) => updateDraft(scan.id, { birthDate: e.target.value })} /></div>
+                        <div><label className={labelClass}>Fecha de nacimiento</label><DateInputES fieldClassName={inputClass} value={draft.birthDate} onChange={(v) => updateDraft(scan.id, { birthDate: v })} /></div>
                         <div><label className={labelClass}>Lugar de nacimiento</label><input className={inputClass} value={draft.birthPlace} onChange={(e) => updateDraft(scan.id, { birthPlace: e.target.value })} /></div>
                         <div><label className={labelClass}>Curso</label><input className={inputClass} value={draft.gradeLevel} onChange={(e) => updateDraft(scan.id, { gradeLevel: e.target.value })} /></div>
                         <div><label className={labelClass}>Matrícula</label><input className={inputClass} value={draft.studentCode} onChange={(e) => updateDraft(scan.id, { studentCode: e.target.value })} /></div>

@@ -9,6 +9,7 @@ import {
   uploadVendorInvoices,
   type PendingVendorInvoice,
 } from './actions'
+import DateInputES from '@/components/DateInputES'
 
 const inputClass =
   'w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -272,7 +273,7 @@ export default function VendorInvoicesReview({ initialInvoices }: { initialInvoi
                       <div className="col-span-2"><label className={labelClass}>Proveedor</label><input className={inputClass} value={draft.proveedor} onChange={(e) => updateDraft(invoice.id, { proveedor: e.target.value })} /></div>
                       <div><label className={labelClass}>RNC</label><input className={inputClass} value={draft.rnc} onChange={(e) => updateDraft(invoice.id, { rnc: e.target.value })} /></div>
                       <div><label className={labelClass}>NCF</label><input className={inputClass} value={draft.ncf} onChange={(e) => updateDraft(invoice.id, { ncf: e.target.value })} /></div>
-                      <div><label className={labelClass}>Fecha</label><input type="date" className={inputClass} value={draft.fecha} onChange={(e) => updateDraft(invoice.id, { fecha: e.target.value })} /></div>
+                      <div><label className={labelClass}>Fecha</label><DateInputES fieldClassName={inputClass} value={draft.fecha} onChange={(v) => updateDraft(invoice.id, { fecha: v })} /></div>
                       <div><label className={labelClass}>Categoría</label><input className={inputClass} value={draft.categoria} onChange={(e) => updateDraft(invoice.id, { categoria: e.target.value })} /></div>
                       <div><label className={labelClass}>Subtotal (DOP)</label><input type="number" step="0.01" className={inputClass} value={draft.subtotal} onChange={(e) => updateDraft(invoice.id, { subtotal: e.target.value })} /></div>
                       <div><label className={labelClass}>ITBIS (DOP)</label><input type="number" step="0.01" className={inputClass} value={draft.itbis} onChange={(e) => updateDraft(invoice.id, { itbis: e.target.value })} /></div>

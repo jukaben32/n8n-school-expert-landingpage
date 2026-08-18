@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import DateInputES from '@/components/DateInputES'
 
 interface Student { id: string; first_name: string; last_name: string }
 interface Family { id: string; name: string; students: Student[] }
@@ -195,7 +196,7 @@ export default function NewInvoiceForm({ schoolId, authorProfileId, families, co
           </div>
           <div>
             <label htmlFor="dueDate" className={labelClass}>Fecha límite</label>
-            <input id="dueDate" type="date" required value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
+            <DateInputES id="dueDate" required value={dueDate} onChange={setDueDate} />
           </div>
         </div>
 

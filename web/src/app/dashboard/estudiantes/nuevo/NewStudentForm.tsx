@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitNewStudent } from './actions'
+import DateInputES from '@/components/DateInputES'
 
 interface Family { id: string; name: string }
 
@@ -266,7 +267,7 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
           </div>
           <div>
             <label htmlFor="sBirthDate" className={labelClass}>Fecha de nacimiento</label>
-            <input id="sBirthDate" type="date" required value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={inputClass} />
+            <DateInputES id="sBirthDate" required value={birthDate} onChange={setBirthDate} />
           </div>
           <div>
             <label htmlFor="sGender" className={labelClass}>Sexo</label>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import DateInputES from '@/components/DateInputES'
 
 type AttendanceStatus = 'presente' | 'ausente' | 'tardanza' | 'justificado'
 
@@ -97,13 +98,11 @@ export default function AttendanceForm({
         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
           Fecha:
         </label>
-        <input
+        <DateInputES
           id="attendance-date"
-          type="date"
           value={date}
-          max={defaultDate}
-          onChange={(e) => setDate(e.target.value)}
-          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+          onChange={(v) => setDate(v && v > defaultDate ? defaultDate : v)}
+          fieldClassName="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
 
