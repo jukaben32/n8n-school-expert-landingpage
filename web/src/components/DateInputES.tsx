@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Reemplaza <input type="date"> nativo -- el selector nativo del
 // navegador se muestra en el idioma/formato del SISTEMA OPERATIVO de
@@ -22,19 +22,53 @@ interface DateInputESProps {
   fieldClassName?: string
 }
 
+interface DateParts {
+  day: string
+  month: string
+  year: string
+}
+
+function splitValue(value: string): DateParts {
+  const [y, m, d] = (value || '').split('-')
+  return { year: y ?? '', month: m ?? '', day: d ?? '' }
+}
+
 export default function DateInputES({ value, onChange, id, required, fieldClassName }: DateInputESProps) {
-  const [year, month, day] = useMemo(() => {
-    const [y, m, d] = (value || '').split('-')
-    return [y ?? '', m ?? '', d ?? '']
+  // Estado propio para día/mes/año -- mientras la fecha está incompleta
+  // (ej. ya se eligió el día pero falta el mes) no existe ningún string
+  // 'YYYY-MM-DD' válido que reportarle al padre, así que ese estado
+  // intermedio solo puede vivir aquí. Si este componente derivara todo
+  // directamente de `value` (como antes), cada selección parcial hacía
+  // onChange('') hacia el padre, que volvía con value='' y borraba la
+  // selección que se acababa de hacer.
+  const [parts, setParts] = useState<DateParts>(() => splitValue(value))
+  const lastEmitted = useRef(value)
+
+  // Resincroniza desde afuera solo cuando el cambio de `value` no vino de
+  // este mismo componente (ej. se cargó un draft distinto, o se limpió el
+  // formulario) -- así no se pisa una selección parcial en curso.
+  useEffect(() => {
+    if (value !== lastEmitted.current) {
+      lastEmitted.current = value
+      setParts(splitValue(value))
+    }
   }, [value])
 
   function update(newDay: string, newMonth: string, newYear: string) {
-    if (newDay && newMonth && newYear && newYear.length === 4) {
-      onChange(`${newYear}-${newMonth}-${newDay}`)
-    } else {
+    setParts({ day: newDay, month: newMonth, year: newYear })
+    const complete = Boolean(newDay && newMonth && newYear && newYear.length === 4)
+    const cleared = !newDay && !newMonth && !newYear
+    if (complete) {
+      const next = `${newYear}-${newMonth}-${newDay}`
+      lastEmitted.current = next
+      onChange(next)
+    } else if (cleared) {
+      lastEmitted.current = ''
       onChange('')
     }
   }
+
+  const { day, month, year } = parts
 
   const fieldClass =
     fieldClassName ??
