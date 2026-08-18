@@ -65,11 +65,11 @@ export default function NewStaffForm({ schoolId }: NewStaffFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="firstName" className={labelClass}>Nombre</label>
-            <input id="firstName" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
+            <input id="firstName" required spellCheck={false} value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="lastName" className={labelClass}>Apellido</label>
-            <input id="lastName" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
+            <input id="lastName" required spellCheck={false} value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="email" className={labelClass}>Correo</label>

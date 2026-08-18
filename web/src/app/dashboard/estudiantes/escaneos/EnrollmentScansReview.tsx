@@ -416,8 +416,8 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Estudiante</p>
                       <div className="grid grid-cols-2 gap-2">
-                        <div><label className={labelClass}>Nombre</label><input className={inputClass} value={draft.firstName} onChange={(e) => updateDraft(scan.id, { firstName: e.target.value })} /></div>
-                        <div><label className={labelClass}>Apellido</label><input className={inputClass} value={draft.lastName} onChange={(e) => updateDraft(scan.id, { lastName: e.target.value })} /></div>
+                        <div><label className={labelClass}>Nombre</label><input className={inputClass} spellCheck={false} value={draft.firstName} onChange={(e) => updateDraft(scan.id, { firstName: e.target.value })} /></div>
+                        <div><label className={labelClass}>Apellido</label><input className={inputClass} spellCheck={false} value={draft.lastName} onChange={(e) => updateDraft(scan.id, { lastName: e.target.value })} /></div>
                         <div><label className={labelClass}>Fecha de nacimiento</label><DateInputES fieldClassName={inputClass} value={draft.birthDate} onChange={(v) => updateDraft(scan.id, { birthDate: v })} /></div>
                         <div><label className={labelClass}>Lugar de nacimiento</label><input className={inputClass} value={draft.birthPlace} onChange={(e) => updateDraft(scan.id, { birthPlace: e.target.value })} /></div>
                         <div><label className={labelClass}>Curso</label><input className={inputClass} value={draft.gradeLevel} onChange={(e) => updateDraft(scan.id, { gradeLevel: e.target.value })} /></div>
@@ -428,7 +428,7 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
 
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Familia</p>
-                      <div><label className={labelClass}>Apellido / nombre de la familia</label><input className={inputClass} value={draft.familyName} onChange={(e) => updateDraft(scan.id, { familyName: e.target.value })} /></div>
+                      <div><label className={labelClass}>Apellido / nombre de la familia</label><input className={inputClass} spellCheck={false} value={draft.familyName} onChange={(e) => updateDraft(scan.id, { familyName: e.target.value })} /></div>
                     </div>
 
                     <div className="space-y-2">
@@ -442,8 +442,8 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
                             )}
                           </div>
                           <div className="grid grid-cols-2 gap-2">
-                            <div><label className={labelClass}>Nombre</label><input className={inputClass} value={g.firstName} onChange={(e) => updateGuardian(scan.id, g.key, { firstName: e.target.value })} /></div>
-                            <div><label className={labelClass}>Apellido</label><input className={inputClass} value={g.lastName} onChange={(e) => updateGuardian(scan.id, g.key, { lastName: e.target.value })} /></div>
+                            <div><label className={labelClass}>Nombre</label><input className={inputClass} spellCheck={false} value={g.firstName} onChange={(e) => updateGuardian(scan.id, g.key, { firstName: e.target.value })} /></div>
+                            <div><label className={labelClass}>Apellido</label><input className={inputClass} spellCheck={false} value={g.lastName} onChange={(e) => updateGuardian(scan.id, g.key, { lastName: e.target.value })} /></div>
                             <div><label className={labelClass}>Teléfono (opcional)</label><input className={inputClass} value={g.phone} onChange={(e) => updateGuardian(scan.id, g.key, { phone: e.target.value })} /></div>
                             <div><label className={labelClass}>Correo (opcional)</label><input type="email" className={inputClass} value={g.email} onChange={(e) => updateGuardian(scan.id, g.key, { email: e.target.value })} /></div>
                             <div><label className={labelClass}>Cédula</label><input className={inputClass} value={g.nationalId} onChange={(e) => updateGuardian(scan.id, g.key, { nationalId: e.target.value })} /></div>
@@ -468,7 +468,7 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Contacto de emergencia</p>
                       <div className="grid grid-cols-3 gap-2">
-                        <div><label className={labelClass}>Nombre</label><input className={inputClass} value={draft.emergencyName} onChange={(e) => updateDraft(scan.id, { emergencyName: e.target.value })} /></div>
+                        <div><label className={labelClass}>Nombre</label><input className={inputClass} spellCheck={false} value={draft.emergencyName} onChange={(e) => updateDraft(scan.id, { emergencyName: e.target.value })} /></div>
                         <div><label className={labelClass}>Teléfono</label><input className={inputClass} value={draft.emergencyPhone} onChange={(e) => updateDraft(scan.id, { emergencyPhone: e.target.value })} /></div>
                         <div><label className={labelClass}>Parentesco</label><input className={inputClass} value={draft.emergencyRelationship} onChange={(e) => updateDraft(scan.id, { emergencyRelationship: e.target.value })} /></div>
                       </div>

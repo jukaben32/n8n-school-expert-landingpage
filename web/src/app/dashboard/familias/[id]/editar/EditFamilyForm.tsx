@@ -168,7 +168,7 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Datos de la familia</p>
         <div>
           <label htmlFor="name" className={labelClass}>Nombre de la familia</label>
-          <input id="name" required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+          <input id="name" required spellCheck={false} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -203,11 +203,11 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor={`fn-${g.key}`} className={labelClass}>Nombre</label>
-                <input id={`fn-${g.key}`} required value={g.firstName} onChange={(e) => updateGuardian(g.key, { firstName: e.target.value })} className={inputClass} />
+                <input id={`fn-${g.key}`} required spellCheck={false} value={g.firstName} onChange={(e) => updateGuardian(g.key, { firstName: e.target.value })} className={inputClass} />
               </div>
               <div>
                 <label htmlFor={`ln-${g.key}`} className={labelClass}>Apellido</label>
-                <input id={`ln-${g.key}`} required value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
+                <input id={`ln-${g.key}`} required spellCheck={false} value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
               </div>
               <div>
                 <label htmlFor={`ph-${g.key}`} className={labelClass}>Teléfono</label>

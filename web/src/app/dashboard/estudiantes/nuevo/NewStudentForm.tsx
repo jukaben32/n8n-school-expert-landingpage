@@ -183,7 +183,7 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
           <div className="space-y-4">
             <div>
               <label htmlFor="familyName" className={labelClass}>Apellido / nombre de la familia</label>
-              <input id="familyName" required value={familyName} onChange={(e) => setFamilyName(e.target.value)}
+              <input id="familyName" required spellCheck={false} value={familyName} onChange={(e) => setFamilyName(e.target.value)}
                 placeholder="Ej. Familia Pérez" className={inputClass} />
             </div>
 
@@ -206,11 +206,11 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label htmlFor={`gFirstName-${g.key}`} className={labelClass}>Nombre</label>
-                    <input id={`gFirstName-${g.key}`} required value={g.firstName} onChange={(e) => updateGuardian(g.key, { firstName: e.target.value })} className={inputClass} />
+                    <input id={`gFirstName-${g.key}`} required spellCheck={false} value={g.firstName} onChange={(e) => updateGuardian(g.key, { firstName: e.target.value })} className={inputClass} />
                   </div>
                   <div>
                     <label htmlFor={`gLastName-${g.key}`} className={labelClass}>Apellido</label>
-                    <input id={`gLastName-${g.key}`} required value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
+                    <input id={`gLastName-${g.key}`} required spellCheck={false} value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
                   </div>
                   <div>
                     <label htmlFor={`gPhone-${g.key}`} className={labelClass}>Teléfono (opcional)</label>
@@ -259,11 +259,11 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="sFirstName" className={labelClass}>Nombre</label>
-            <input id="sFirstName" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
+            <input id="sFirstName" required spellCheck={false} value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="sLastName" className={labelClass}>Apellido</label>
-            <input id="sLastName" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
+            <input id="sLastName" required spellCheck={false} value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="sBirthDate" className={labelClass}>Fecha de nacimiento</label>
