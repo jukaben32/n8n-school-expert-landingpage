@@ -16,7 +16,7 @@
 -- así que no hace falta (ni conviene) una policy de insert para `anon`.
 -- =========================================================================
 
-create table website_inquiries (
+create table if not exists website_inquiries (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     name text not null,
@@ -26,16 +26,18 @@ create table website_inquiries (
     status text not null default 'nuevo' check (status in ('nuevo', 'contactado', 'descartado')),
     created_at timestamptz not null default now()
 );
-create index idx_website_inquiries_school on website_inquiries(school_id, created_at desc);
+create index if not exists idx_website_inquiries_school on website_inquiries(school_id, created_at desc);
 
 alter table website_inquiries enable row level security;
 
 -- Contiene datos personales de familias que ni siquiera son usuarias
 -- todavía -- a diferencia de website_services/team/testimonials/faqs, NO
 -- lleva policy de lectura pública ni grant a anon.
+drop policy if exists "website_inquiries_super_admin_all" on website_inquiries;
 create policy "website_inquiries_super_admin_all" on website_inquiries
   for all using (is_super_admin()) with check (is_super_admin());
 
+drop policy if exists "website_inquiries_staff_manage" on website_inquiries;
 create policy "website_inquiries_staff_manage" on website_inquiries
   for all
   using (school_id in (select school_id from users_profiles where auth_id = auth.uid() and role in ('school_admin', 'director')))

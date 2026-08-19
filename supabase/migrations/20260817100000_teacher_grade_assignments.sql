@@ -28,7 +28,7 @@
 -- aparte).
 -- =========================================================================
 
-create table teacher_assignments (
+create table if not exists teacher_assignments (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     staff_id uuid not null references staff(id) on delete cascade,
@@ -36,11 +36,12 @@ create table teacher_assignments (
     created_at timestamptz not null default now(),
     unique (staff_id, grade_level)
 );
-create index idx_teacher_assignments_staff on teacher_assignments(staff_id);
-create index idx_teacher_assignments_school_grade on teacher_assignments(school_id, grade_level);
+create index if not exists idx_teacher_assignments_staff on teacher_assignments(staff_id);
+create index if not exists idx_teacher_assignments_school_grade on teacher_assignments(school_id, grade_level);
 
 alter table teacher_assignments enable row level security;
 
+drop policy if exists "teacher_assignments_admin_manage" on teacher_assignments;
 create policy "teacher_assignments_admin_manage" on teacher_assignments
 for all using (
     school_id in (select school_id from users_profiles where auth_id = auth.uid() and role in ('super_admin', 'school_admin', 'director'))
@@ -48,6 +49,7 @@ for all using (
     school_id in (select school_id from users_profiles where auth_id = auth.uid() and role in ('super_admin', 'school_admin', 'director'))
 );
 
+drop policy if exists "teacher_assignments_own_read" on teacher_assignments;
 create policy "teacher_assignments_own_read" on teacher_assignments
 for select using (
     staff_id in (select staff_id from users_profiles where auth_id = auth.uid() and staff_id is not null)

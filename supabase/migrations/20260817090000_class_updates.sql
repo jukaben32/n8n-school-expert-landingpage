@@ -13,7 +13,7 @@
 -- mismo patrón que las fichas escaneadas de estudiantes_escaneos.
 -- =========================================================================
 
-create table class_updates (
+create table if not exists class_updates (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     author_profile_id uuid not null references users_profiles(id),
@@ -28,11 +28,12 @@ create table class_updates (
         or (student_id is null and grade_level is not null)
     )
 );
-create index idx_class_updates_school on class_updates(school_id, created_at desc) where deleted_at is null;
-create index idx_class_updates_student on class_updates(student_id) where deleted_at is null;
+create index if not exists idx_class_updates_school on class_updates(school_id, created_at desc) where deleted_at is null;
+create index if not exists idx_class_updates_student on class_updates(student_id) where deleted_at is null;
 
 alter table class_updates enable row level security;
 
+drop policy if exists "class_updates_staff_all" on class_updates;
 create policy "class_updates_staff_all" on class_updates
 for all using (
     school_id in (
@@ -48,6 +49,7 @@ for all using (
     )
 );
 
+drop policy if exists "class_updates_guardian_read" on class_updates;
 create policy "class_updates_guardian_read" on class_updates
 for select using (
     deleted_at is null

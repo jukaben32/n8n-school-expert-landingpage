@@ -15,7 +15,7 @@
 -- ninguna de insert/update para roles autenticados.
 -- =========================================================================
 
-create table direct_conversations (
+create table if not exists direct_conversations (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     family_id uuid not null references families(id) on delete cascade,
@@ -25,9 +25,9 @@ create table direct_conversations (
     created_at timestamptz not null default now(),
     unique (family_id)
 );
-create index idx_direct_conversations_school on direct_conversations(school_id, last_message_at desc);
+create index if not exists idx_direct_conversations_school on direct_conversations(school_id, last_message_at desc);
 
-create table direct_messages (
+create table if not exists direct_messages (
     id uuid primary key default gen_random_uuid(),
     conversation_id uuid not null references direct_conversations(id) on delete cascade,
     sender_type text not null check (sender_type in ('guardian', 'staff')),
@@ -35,11 +35,12 @@ create table direct_messages (
     body text not null,
     created_at timestamptz not null default now()
 );
-create index idx_direct_messages_conversation on direct_messages(conversation_id, created_at);
+create index if not exists idx_direct_messages_conversation on direct_messages(conversation_id, created_at);
 
 alter table direct_conversations enable row level security;
 alter table direct_messages enable row level security;
 
+drop policy if exists "direct_conversations_guardian_read" on direct_conversations;
 create policy "direct_conversations_guardian_read" on direct_conversations
 for select using (
     family_id in (
@@ -49,6 +50,7 @@ for select using (
     )
 );
 
+drop policy if exists "direct_conversations_staff_read" on direct_conversations;
 create policy "direct_conversations_staff_read" on direct_conversations
 for select using (
     school_id in (
@@ -58,6 +60,7 @@ for select using (
     )
 );
 
+drop policy if exists "direct_messages_guardian_read" on direct_messages;
 create policy "direct_messages_guardian_read" on direct_messages
 for select using (
     conversation_id in (
@@ -68,6 +71,7 @@ for select using (
     )
 );
 
+drop policy if exists "direct_messages_staff_read" on direct_messages;
 create policy "direct_messages_staff_read" on direct_messages
 for select using (
     conversation_id in (
