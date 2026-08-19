@@ -91,13 +91,12 @@ export async function inviteGuardianAccess(guardianId: string): Promise<InviteRe
   const admin = createAdminClient()
 
   if (guardian.email) {
-    return inviteByEmail(supabase, admin, guardian as GuardianRow, schoolId)
+    return inviteByEmail(admin, guardian as GuardianRow, schoolId)
   }
-  return createPhoneBasedAccess(supabase, admin, guardian as GuardianRow, schoolId)
+  return createPhoneBasedAccess(admin, guardian as GuardianRow, schoolId)
 }
 
 async function inviteByEmail(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,
   schoolId: string
@@ -130,7 +129,12 @@ async function inviteByEmail(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  // users_profiles no tiene ninguna policy de RLS para insert (solo
+  // select/update) -- insertar con el cliente de sesión siempre falla con
+  // "new row violates row-level security policy", sin importar el rol. Se
+  // usa el cliente admin (service_role) porque el permiso ya se validó
+  // arriba con canAccess().
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
   })
   if (profileError) {
@@ -143,7 +147,6 @@ async function inviteByEmail(
 }
 
 async function createPhoneBasedAccess(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,
   schoolId: string
@@ -186,7 +189,9 @@ async function createPhoneBasedAccess(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  // Mismo motivo que en inviteByEmail: users_profiles no tiene policy de
+  // insert para el cliente de sesión, hay que usar el admin (service_role).
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
   })
   if (profileError) {

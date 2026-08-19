@@ -94,7 +94,12 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  // users_profiles no tiene ninguna policy de RLS para insert (solo
+  // select/update) -- insertar con el cliente de sesión del director/admin
+  // siempre falla con "new row violates row-level security policy",
+  // sin importar el rol. Se usa el cliente admin (service_role) porque el
+  // permiso ya se validó arriba con canAccess().
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId,
     school_id: schoolId,
     staff_id: staffId,
