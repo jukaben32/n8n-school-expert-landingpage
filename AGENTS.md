@@ -1020,6 +1020,53 @@ bienvenida) al momento de escribir esto -- el usuario lo hará en persona el
 próximo lunes. Hasta entonces, su manifiesto usa los íconos de respaldo de
 MentorIApp, no un logo propio.
 
+## Autorregistro de personal por enlace público (WhatsApp) + bandeja de revisión
+
+El usuario compartió una foto con la lista de ~30 empleados de Gran
+Manantial de Sabiduría (nombre, curso/materia, teléfono, cédula) y pidió
+un enlace para compartir por WhatsApp donde cada quien complete su perfil.
+
+**Decisión de diseño importante, tomada a propósito**: se consideró
+transcribir los 30 nombres/cédulas directo de la foto para precargar los
+registros, pero se descartó -- la foto está rotada y el texto pequeño de
+cédula/teléfono no daba suficiente certeza para copiar datos de
+identificación de personas reales sin riesgo real de error. En vez de
+eso, mismo patrón ya usado para `leads` y las fichas de inscripción
+escaneadas: **formulario público que nunca crea el registro real
+directamente** -- cada persona reporta sus propios datos (garantizado
+exacto, los escribe ella misma), dirección revisa y corrige si hace falta
+antes de aprobar.
+
+**Implementación**:
+- Migración `20260819000000_staff_registrations.sql`: tabla
+  `staff_registrations`, envío público (`grant insert ... to anon,
+  authenticated` + policy `with check (true)`, mismo patrón que `leads`),
+  revisión restringida a `super_admin`/`school_admin`/`director` del
+  colegio.
+- `web/src/lib/staff/roleLabels.ts`: las etiquetas de puestos y nivel
+  académico se extrajeron aquí (antes vivían solo dentro de
+  `personal/page.tsx`) para reutilizarlas también en el formulario público
+  y la bandeja de revisión, sin duplicar.
+- `/colegio/[subdomain]/registro-personal`: formulario público (sin
+  login), mismo patrón de `FormData` no controlado que `LeadForm.tsx` (evita
+  el bug ya conocido de que el autocompletado del navegador no dispara
+  `onChange`). Pide correo, teléfono, cédula, puesto, materia/área, y
+  ficha profesional completa.
+- `/dashboard/personal/registros`: bandeja de revisión --
+  `StaffRegistrationsReview.tsx` deja **corregir cualquier campo en
+  pantalla antes de aprobar** (mismo principio que
+  `confirmEnrollmentScan`/`approveVendorInvoice`: nunca se confía en el
+  dato sin revisar). Al aprobar, crea el `staff` real y reutiliza
+  `GrantAccessButton.tsx` (ya existente) para dar acceso al sistema ahí
+  mismo, sin ir a otra pantalla.
+- `PublicRegistrationLinkButton.tsx` en `/dashboard/personal`: copia el
+  enlace listo para pegar en WhatsApp. Badge con el conteo de pendientes
+  junto al botón "Registros pendientes".
+
+**Pendiente real**: el usuario todavía no ha compartido el enlace ni
+recibido ningún registro real -- sin verificar en vivo con un envío
+real todavía.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
