@@ -123,19 +123,12 @@ create trigger whatsapp_connections_set_updated_at
 before update on whatsapp_connections
 for each row execute function whatsapp_connections_set_updated_at();
 
-create or replace view schools_public
-as
-select
-    id,
-    name,
-    subdomain,
-    tagline,
-    logo_url,
-    address,
-    phone,
-    email,
-    coalesce(settings -> 'website', '{}'::jsonb) as website_settings
-from schools
-where deleted_at is null;
-
-grant select on schools_public to anon, authenticated;
+-- NOTA (2026-08-19): la redefinición de `schools_public` que originalmente
+-- vivía aquí se quitó -- en producción, la vista ya avanzó más allá de esta
+-- versión (una sesión anterior aplicó directo, fuera de orden, las columnas
+-- de WhatsApp que trae la migración 20260817050000_schools_public_whatsapp.sql).
+-- CREATE OR REPLACE VIEW no puede quitar columnas, así que intentar
+-- redefinirla aquí con menos columnas que las que ya existen en vivo
+-- rompía todo el lote de `supabase db push`. La migración
+-- 20260817050000, más adelante en este mismo lote, ya deja la vista en su
+-- forma final correcta -- no hace falta duplicarlo aquí.
