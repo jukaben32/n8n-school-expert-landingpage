@@ -6,6 +6,7 @@ import { transcribeAudio } from '@/lib/ai/transcribeAudio'
 import { startVoiceCallSession } from '@/lib/ai/startVoiceCallSession'
 import { logVoiceCallTranscript, type VoiceCallTurn } from '@/lib/ai/logVoiceCallTranscript'
 import { resolveGuardianIdentity } from '@/lib/auth/resolveGuardianIdentity'
+import { type MessageCategory } from '@/lib/messaging/categoryAccess'
 
 interface ChatResult {
   ok: boolean
@@ -126,18 +127,24 @@ interface DirectMessagesResult {
   error?: string
 }
 
-async function getOrCreateFamilyConversation(admin: ReturnType<typeof createAdminClient>, schoolId: string, familyId: string) {
+async function getOrCreateFamilyConversation(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string,
+  familyId: string,
+  category: MessageCategory
+) {
   const { data: existing } = await admin
     .from('direct_conversations')
     .select('id')
     .eq('school_id', schoolId)
     .eq('family_id', familyId)
+    .eq('category', category)
     .maybeSingle()
   if (existing) return existing.id as string
 
   const { data: created, error } = await admin
     .from('direct_conversations')
-    .insert({ school_id: schoolId, family_id: familyId })
+    .insert({ school_id: schoolId, family_id: familyId, category })
     .select('id')
     .single()
   if (error || !created) throw new Error(error?.message ?? 'No se pudo crear la conversación.')
@@ -146,16 +153,17 @@ async function getOrCreateFamilyConversation(admin: ReturnType<typeof createAdmi
 
 /**
  * Mensajería directa de dos vías con el colegio -- distinta del asistente
- * de IA: acá hay un humano (profesor/dirección/recepción) del otro lado.
- * Una sola conversación por familia (get-or-create), igual que su
- * contraparte en dashboard/mensajes/actions.ts para el lado del staff.
+ * de IA: acá hay un humano (profesor/dirección/recepción, o el equipo de
+ * Inglés/Deporte según la categoría) del otro lado. Una conversación por
+ * (familia, categoría) -- get-or-create, igual que su contraparte en
+ * dashboard/mensajes/actions.ts para el lado del staff.
  */
-export async function getFamilyDirectMessages(): Promise<DirectMessagesResult> {
+export async function getFamilyDirectMessages(category: MessageCategory = 'regular'): Promise<DirectMessagesResult> {
   const identity = await resolveGuardianIdentity()
   if (!identity.ok) return { ok: false, error: identity.error }
 
   const admin = createAdminClient()
-  const conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId).catch(() => null)
+  const conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId, category).catch(() => null)
   if (!conversationId) return { ok: true, messages: [] }
 
   await admin.from('direct_conversations').update({ guardian_last_read_at: new Date().toISOString() }).eq('id', conversationId)
@@ -170,7 +178,7 @@ export async function getFamilyDirectMessages(): Promise<DirectMessagesResult> {
   return { ok: true, messages: (data ?? []) as DirectMessageRow[] }
 }
 
-export async function sendFamilyDirectMessage(body: string): Promise<{ ok: boolean; error?: string }> {
+export async function sendFamilyDirectMessage(body: string, category: MessageCategory = 'regular'): Promise<{ ok: boolean; error?: string }> {
   const identity = await resolveGuardianIdentity()
   if (!identity.ok) return { ok: false, error: identity.error }
 
@@ -180,7 +188,7 @@ export async function sendFamilyDirectMessage(body: string): Promise<{ ok: boole
   const admin = createAdminClient()
   let conversationId: string
   try {
-    conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId)
+    conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId, category)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'No se pudo abrir la conversación.' }
   }

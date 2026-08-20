@@ -2,8 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { MessageCategory } from '@/lib/messaging/categoryAccess'
 
-export default function StartConversationForm({ families }: { families: { id: string; name: string }[] }) {
+export default function StartConversationForm({
+  families,
+  category,
+}: {
+  families: { id: string; name: string }[]
+  category: MessageCategory
+}) {
   const router = useRouter()
   const [familyId, setFamilyId] = useState('')
 
@@ -13,7 +20,7 @@ export default function StartConversationForm({ families }: { families: { id: st
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        if (familyId) router.push(`/dashboard/mensajes/${familyId}`)
+        if (familyId) router.push(`/dashboard/mensajes/${familyId}/${category}`)
       }}
       className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
     >
