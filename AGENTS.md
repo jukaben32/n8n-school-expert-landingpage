@@ -1141,6 +1141,72 @@ en producción que Gladys Esther (o cualquier Secretaria/Coordinadora real)
 recibe la invitación correctamente y ve los módulos esperados al iniciar
 sesión.
 
+## Estructura del área de Inglés (Amco) y enrutamiento de comunicaciones por materia -- PENDIENTE DE DISEÑO, aún no implementado
+
+Contexto de negocio, dado por el usuario el 2026-08-20 (no asumido): el
+colegio piloto no es bilingüe, pero tiene una alianza con **Amco** para el
+área de Inglés -- una de sus fortalezas de mayor peso -- con su propia
+estructura paralela de coordinación y docentes por ciclo:
+
+| Puesto | Persona | Ciclo |
+|---|---|---|
+| Coordinadora de Inglés | María Angélica Vizcaíno | Todo el colegio (supervisión) |
+| Docente de Inglés | Nercy Rodríguez | Inicial (pre kínder, kínder, preprimario) |
+| Docente de Inglés | Yuleymis Lugo Ochoa | 1er ciclo primaria (1°, 2°, 3°) |
+| Docente de Inglés | Marianelis Calderón | 2do ciclo primaria (4°, 5°, 6°) |
+| Docente de Inglés | Orlando Antoine Natera | 1er ciclo secundaria (1°, 2°, 3°) |
+| Docente de Inglés | Yendry Paulino | 2do ciclo secundaria (4°, 5°, 6°) |
+
+**El requisito** (parafraseado, no es una decisión de diseño ya tomada --
+falta definir el cómo): cuando un padre le escribe al colegio, el mensaje
+debe llegarle **solo** al equipo correspondiente según el tema -- si es
+sobre Inglés, solo al docente de Inglés de ese ciclo (o a la Coordinadora,
+que sí debe ver todo el departamento de Inglés, no solo su propio ciclo);
+si es sobre Deporte, solo al único profesor de Educación Física de todo el
+colegio; de lo contrario, a los docentes regulares de siempre. Mismo
+criterio para la salida: los comunicados que publica el equipo de Inglés
+deben tener una clasificación separada de los regulares. El usuario
+sugirió que el padre elija una categoría (Inglés / Educación regular /
+Deporte) al redactar.
+
+**Por qué esto es un rediseño real, no un ajuste chico** (verificado
+leyendo las migraciones existentes antes de prometer nada):
+- `direct_conversations` (Mensajes directos, migración 031) es **una sola
+  conversación por familia** (`unique(family_id)`), visible a cualquier
+  staff con el módulo `mensajes_directos` (todo `teacher`/`reception`/
+  `director`/etc., sin filtrar por grado). El comentario de esa misma
+  migración ya advertía que el enrutamiento por grado quedaba fuera de
+  alcance "a propósito" porque una familia puede tener hijos en más de un
+  grado. Enrutar por *materia* (Inglés/Deporte/Regular) es un eje
+  totalmente nuevo, ortogonal al de grado.
+- `teacher_assignments` (migración 033) vincula un `staff_id` a un
+  `grade_level` (texto libre), pero no tiene ningún concepto de *materia*
+  -- hoy no hay forma de decir "esta profesora da Inglés en este grado" vs
+  "este profesor da la materia regular en este mismo grado". Habría que
+  agregar una columna `subject` (o una tabla nueva) para que ambos
+  convivan sin chocar.
+- `grade_level` en `students`/`teacher_assignments`/Comunicados es texto
+  libre sin catálogo formal -- los ciclos de la tabla de arriba ("1er ciclo
+  primaria (1,2,3)") probablemente no coinciden 1:1 con los valores de
+  `grade_level` que ya se estén usando en el colegio piloto para
+  Asistencia/Actualizaciones. Hay que confirmar esos valores reales antes
+  de mapear.
+- La Coordinadora de Inglés necesita una vista más amplia que un docente
+  de Inglés normal (todo el departamento, no solo su ciclo) -- eso es un
+  tercer nivel de alcance (docente-de-materia-en-su-grado vs
+  coordinador-de-materia-en-todo-el-colegio vs staff-regular-todo-el-
+  colegio) que no existe hoy en `permissions.ts` ni en las RLS.
+
+**Nada de esto está implementado todavía.** No se creó ninguna migración,
+tabla, columna ni cambio de interfaz para esto -- queda registrado aquí
+únicamente como contexto de negocio para que la próxima sesión no tenga
+que volver a preguntar la estructura del equipo de Inglés, y como
+recordatorio de que enrutar por materia requiere diseño explícito (¿un
+campo `subject` en `direct_conversations`/`messages`? ¿una conversación
+separada por materia en vez de por familia? ¿cómo defino "Coordinadora ve
+todo Inglés" en RLS sin volver a caer en recursión?) antes de tocar
+código.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
