@@ -1067,6 +1067,80 @@ antes de aprobar.
 recibido ningún registro real -- sin verificar en vivo con un envío
 real todavía.
 
+## Bug real: `users_profiles` nunca tuvo policy de RLS para `insert`
+
+Reportado por el usuario con una captura real: al aprobar un registro de
+personal (Gladys Esther Vargas Tejeda, puesto Director) y darle acceso,
+`inviteStaffAccess`/`inviteGuardianAccess` fallaban con `new row violates
+row-level security policy for table "users_profiles"`, sin importar el rol
+elegido. Causa confirmada revisando las 27 migraciones: `users_profiles`
+tiene RLS habilitado (`20260703000000_rls_hardening.sql`) pero **jamás**
+tuvo una policy de `insert`, solo `select`/`update` -- el insert se hacía
+con el cliente de sesión del director (`supabase`, sujeto a RLS) en vez del
+cliente `admin` (service_role). Afectaba tanto a Personal como a Familias
+(mismo patrón copiado). Fix: los tres inserts (`inviteStaffAccess`,
+`inviteByEmail`, `createPhoneBasedAccess`) ahora usan el cliente `admin` --
+el permiso ya se valida arriba con `canAccess()`, así que esto es correcto
+y consistente con el resto de operaciones privilegiadas del proyecto. No
+hizo falta ninguna migración -- fue un bug de código, no de policy faltante
+que algún flujo legítimo necesitara desde el cliente de sesión.
+
+## Mapeo de puesto → rol de acceso: Secretaría y Coordinación
+
+El usuario confirmó explícitamente el alcance de cada puesto (no se asumió):
+
+- **Secretaria**: se encargará de comunicaciones, mantenimiento de la base
+  de datos de estudiantes (nuevos ingresos, salidas), pagos y validación de
+  comprobantes, y ver las solicitudes de los padres que no son del maestro
+  (permisos, cartas de confirmación de estudio). **No existía un rol de
+  login "Secretaria"** -- el puesto (`secretary`/`teaching_secretary` en
+  `roleLabels.ts`) es distinto de los 5 roles de acceso
+  (`director`/`school_admin`/`teacher`/`finance`/`reception`). Se decidió
+  reusar `reception` (ya etiquetado "Secretaría" en `TopBar.tsx` desde
+  antes de esta tarea) en vez de crear un rol nuevo -- a nivel de RLS,
+  `reception` ya tenía acceso de lectura/escritura a `invoices`/`payments`/
+  `billing_concepts` desde la migración 004 (nunca expuesto en la interfaz
+  hasta ahora). Se amplió `ROLE_MODULES.reception` en `permissions.ts` con
+  `tesoreria`+`pagos` (ya tenía `estudiantes`/`familias`/`comunicados`/
+  `mensajes_directos`/`asistencia`), y se agregaron los links "Mensajes" y
+  "Tesorería" al nav de `reception` en `Sidebar.tsx` (existían los permisos
+  pero no el link, un gap que ya existía antes de esta tarea para
+  `mensajes_directos`).
+- **Facturas de proveedores/Alegra quedó fuera a propósito** -- no es parte
+  de lo que el usuario describió para Secretaria, y es gestión contable
+  (mapeo RNC→contacto, categoría→cuenta) que se decidió dejar solo en
+  Finanzas/Dirección. Como `tesoreria_proveedores` compartía el mismo
+  gate `canAccess(role,'tesoreria')` que el resto de Tesorería (todo el
+  módulo usaba un solo permiso, sin distinción), se separó en un módulo
+  nuevo `tesoreria_proveedores` (permissions.ts) para poder darle
+  `tesoreria`+`pagos` a Recepción/Secretaría sin regalarle también la
+  aprobación de facturas de proveedores. `finance` lo mantiene explícito;
+  `director`/`school_admin`/`super_admin` lo siguen teniendo vía
+  `FULL_ACCESS`. El link "Facturas de proveedores" en
+  `/dashboard/tesoreria` ahora se oculta si el rol no tiene ese módulo.
+- **Coordinadora**: el usuario confirmó "acceso igual a la Directora" --
+  no hizo falta ningún cambio de permisos, `director` (`FULL_ACCESS`) ya es
+  exactamente eso. Solo se ajustó la sugerencia automática del selector de
+  rol.
+- **Sugerencia automática del selector de rol** (`GrantAccessButton.tsx`):
+  antes, cualquier puesto que no calzara exactamente con uno de los 5
+  roles de login (ej. `secretary`, `coordinator`, `admin`) caía
+  silenciosamente en "Docente" por defecto -- riesgo real de que alguien
+  aprobara sin fijarse y la Secretaria quedara con permisos de Docente. Se
+  agregó una tabla `SUGGESTED_LOGIN_ROLE` explícita: `coordinator`→
+  `director`, `secretary`/`teaching_secretary`→`reception`,
+  `admin`/`administrator`→`school_admin`. Quien invita siempre puede
+  cambiar el rol sugerido antes de enviar -- esto solo mejora el valor por
+  defecto.
+
+**Pendiente real**: ningún dato de prueba se creó ni se verificó en vivo
+contra producción en esta tarea (no había credenciales de Supabase
+disponibles) -- se verificó con `tsc --noEmit`/`lint`/`build` limpios y
+lectura cuidadosa de las policies de RLS existentes, pero falta confirmar
+en producción que Gladys Esther (o cualquier Secretaria/Coordinadora real)
+recibe la invitación correctamente y ve los módulos esperados al iniciar
+sesión.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
