@@ -1085,6 +1085,48 @@ y consistente con el resto de operaciones privilegiadas del proyecto. No
 hizo falta ninguna migración -- fue un bug de código, no de policy faltante
 que algún flujo legítimo necesitara desde el cliente de sesión.
 
+## Bug real: la invitación decía "enviada" aunque el correo ya existiera y no se mandara nada
+
+Reportado por el usuario: "los correos de invitación todavía no salen".
+Revisando `inviteStaffAccess` (Personal) e `inviteByEmail` (Familias):
+cuando `admin.auth.admin.inviteUserByEmail()` falla porque el correo **ya
+tiene una cuenta de Auth** (ej. la misma persona quedó registrada antes
+como tutor en otro colegio, o un intento anterior de invitación ya había
+creado la cuenta pero la persona nunca completó el proceso), el código
+detecta el error "already been registered" y **reusa la cuenta existente
+en silencio** -- pero nunca mandaba ningún correo nuevo en ese caso
+(`inviteUserByEmail` había fallado, así que no salió nada) y aun así el
+mensaje final decía "Invitación enviada a {email}." La persona quedaba
+vinculada al perfil pero sin ninguna forma real de enterarse o entrar.
+Fix: en ese caso ahora se llama a `admin.auth.resetPasswordForEmail()`
+para mandar un correo de verdad (restablecer contraseña), y el mensaje que
+ve quien invita distingue los dos casos en vez de decir siempre
+"Invitación enviada". Si ese segundo envío también falla, el mensaje lo
+dice explícitamente y sugiere que la persona entre con "Olvidé mi
+contraseña" en vez de mentir sobre el resultado.
+
+**Importante, sin resolver todavía y fuera del alcance de un cambio de
+código**: si el usuario ve que **ningún** correo de invitación llega
+(ni el primero, cuenta nueva) esto probablemente no es un bug de la
+aplicación -- `inviteUserByEmail`/`resetPasswordForEmail` envían el correo
+a través del servicio de email **propio de Supabase Auth** (configurado en
+el Dashboard de Supabase, Authentication → Emails → SMTP Settings), que es
+un sistema de envío totalmente distinto al de `pg_net`+Resend que ya usa
+este proyecto para los correos de leads (ver bug #7 y la nota de
+"resend_from_address" más arriba) -- ese Resend NO cubre las invitaciones
+de Auth a menos que también se configure un SMTP personalizado ahí. El
+correo por defecto de Supabase (sin SMTP propio configurado) tiene límites
+de envío muy bajos pensados solo para desarrollo, no para producción, y es
+la causa más común de "las invitaciones no llegan". Ninguna sesión de
+Claude Code ha podido verificar ni configurar esto: el conector MCP de
+Supabase de esta sesión sigue enlazado al proyecto vacío
+`hwrtwylnhhobnharthsx` (ahora además `INACTIVE`), no al proyecto real
+(`fssjgpqisfnmnkavsyld`) -- mismo bloqueo ya documentado en la sección de
+OCR más abajo. **Pendiente real para el usuario**: entrar al Dashboard de
+Supabase del proyecto real → Authentication → Emails → SMTP Settings, y
+configurar un SMTP personalizado (por ejemplo con Resend y el dominio ya
+verificado `resendcegmas.com`) en vez de depender del envío por defecto.
+
 ## Mapeo de puesto → rol de acceso: Secretaría y Coordinación
 
 El usuario confirmó explícitamente el alcance de cada puesto (no se asumió):
