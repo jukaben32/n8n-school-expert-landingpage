@@ -3,11 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createMessageAction } from './actions'
+import { MESSAGE_CATEGORY_LABELS, type MessageCategory } from '@/lib/messaging/categoryAccess'
 
 interface NewMessageFormProps {
   gradeLevelOptions: string[]
   /** true para 'teacher': no puede mandar a todo el colegio, solo a sus grados asignados. */
   forceGradeMode?: boolean
+  /** Categorías en las que quien publica tiene permiso (ver categoryAccess.ts). Si es solo ['regular'], no se muestra selector. */
+  availableCategories: MessageCategory[]
 }
 
 const inputClass =
@@ -20,11 +23,12 @@ const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300
  * "Guardar borrador" deja published_at en null (solo visible para staff).
  * "Publicar ahora" establece published_at = now() (visible para familias).
  */
-export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = false }: NewMessageFormProps) {
+export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = false, availableCategories }: NewMessageFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [priority, setPriority] = useState<'normal' | 'urgent'>('normal')
+  const [category, setCategory] = useState<MessageCategory>(availableCategories[0] ?? 'regular')
   const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>(forceGradeMode ? 'grades' : 'all')
   const [selectedGrades, setSelectedGrades] = useState<string[]>([])
   const [saving, setSaving] = useState<'draft' | 'publish' | null>(null)
@@ -52,6 +56,7 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
       priority,
       publish,
       gradeLevels: audienceMode === 'grades' ? selectedGrades : [],
+      category,
     })
 
     if (!result.ok) {
@@ -119,6 +124,28 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
             </button>
           </div>
         </div>
+
+        {availableCategories.length > 1 && (
+          <div>
+            <label className={labelClass}>Categoría</label>
+            <div className="flex gap-2">
+              {availableCategories.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategory(c)}
+                  className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                    category === c
+                      ? 'bg-primary text-white shadow-glow'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {MESSAGE_CATEGORY_LABELS[c]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">

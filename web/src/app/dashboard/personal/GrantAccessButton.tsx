@@ -8,12 +8,34 @@ const roleOptions = [
   { value: 'school_admin', label: 'Administrador de colegio' },
   { value: 'teacher', label: 'Docente' },
   { value: 'finance', label: 'Finanzas' },
-  { value: 'reception', label: 'Recepción' },
+  { value: 'reception', label: 'Recepción / Secretaría' },
 ]
+
+// Puesto (catálogo de Personal, ver roleLabels.ts) -> rol de acceso
+// sugerido. La mayoría de los puestos no tienen un rol de acceso propio
+// (son más granulares que los 5 roles de login) -- antes esto caía
+// siempre en "Docente" por defecto sin avisar, lo cual era incorrecto
+// para puestos como Secretaria o Coordinadora. Quien invita siempre puede
+// cambiar el rol sugerido en el selector antes de enviar.
+const SUGGESTED_LOGIN_ROLE: Record<string, string> = {
+  director: 'director',
+  coordinator: 'director', // la Coordinadora tiene el mismo acceso que la Directora
+  teacher: 'teacher',
+  finance: 'finance',
+  reception: 'reception',
+  secretary: 'reception',
+  teaching_secretary: 'reception',
+  admin: 'school_admin',
+  administrator: 'school_admin',
+}
+
+function suggestLoginRole(position: string): string {
+  return SUGGESTED_LOGIN_ROLE[position] ?? 'teacher'
+}
 
 export default function GrantAccessButton({ staffId, suggestedRole }: { staffId: string; suggestedRole: string }) {
   const [open, setOpen] = useState(false)
-  const [role, setRole] = useState(roleOptions.some((r) => r.value === suggestedRole) ? suggestedRole : 'teacher')
+  const [role, setRole] = useState(suggestLoginRole(suggestedRole))
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [message, setMessage] = useState<string | null>(null)
 

@@ -110,7 +110,9 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
   reception: [
     { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
+    { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
   ],
   finance: [

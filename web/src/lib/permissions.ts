@@ -24,7 +24,7 @@ export type Module =
   | 'estudiantes' | 'estudiantes_nuevo' | 'estudiantes_escaneos'
   | 'familias'
   | 'personal'
-  | 'tesoreria' | 'pagos'
+  | 'tesoreria' | 'pagos' | 'tesoreria_proveedores'
   | 'comunicados' | 'comunicados_nuevo'
   | 'mensajes_directos' // conversación privada de dos vías con una familia
   | 'asistencia' | 'asistencia_registrar'
@@ -38,7 +38,7 @@ export type Module =
 
 const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
-  'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo', 'mensajes_directos',
+  'tesoreria', 'pagos', 'tesoreria_proveedores', 'comunicados', 'comunicados_nuevo', 'mensajes_directos',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar', 'actualizaciones',
   'whatsapp',
   'website',
@@ -55,14 +55,18 @@ const ROLE_MODULES: Record<Role, Module[]> = {
   // No gestiona familias completas ni dinero.
   teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones'],
 
-  // Recepción: la puerta de entrada -- estudiantes, familias, avisos,
-  // asistencia. No maneja tesorería ni contenido de Academia.
-  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar'],
+  // Recepción/Secretaría: la puerta de entrada -- estudiantes (ingresos y
+  // salidas), familias, avisos, asistencia, mensajes directos con padres
+  // (permisos, cartas de confirmación de estudio) y tesorería/pagos
+  // (facturar, cobrar, validar comprobantes de transferencia). No incluye
+  // 'tesoreria_proveedores' (facturas de proveedores/Alegra -- eso es
+  // gestión contable, se queda en Finanzas) ni contenido de Academia.
+  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'tesoreria', 'pagos'],
 
-  // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, reportes,
-  // y solo lectura de familias para facturar. No toca estudiantes,
-  // asistencia, comunicados ni Academia.
-  finance: ['tesoreria', 'pagos', 'reportes', 'familias'],
+  // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, facturas de
+  // proveedores/Alegra, reportes, y solo lectura de familias para
+  // facturar. No toca estudiantes, asistencia, comunicados ni Academia.
+  finance: ['tesoreria', 'pagos', 'tesoreria_proveedores', 'reportes', 'familias'],
 
   // Estos dos no usan este mapa (tienen sus propias páginas dedicadas:
   // portal-familiar y academia), se listan por completitud de tipos.

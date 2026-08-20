@@ -91,13 +91,12 @@ export async function inviteGuardianAccess(guardianId: string): Promise<InviteRe
   const admin = createAdminClient()
 
   if (guardian.email) {
-    return inviteByEmail(supabase, admin, guardian as GuardianRow, schoolId)
+    return inviteByEmail(admin, guardian as GuardianRow, schoolId)
   }
-  return createPhoneBasedAccess(supabase, admin, guardian as GuardianRow, schoolId)
+  return createPhoneBasedAccess(admin, guardian as GuardianRow, schoolId)
 }
 
 async function inviteByEmail(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,
   schoolId: string
@@ -113,10 +112,16 @@ async function inviteByEmail(
   })
 
   let authId = invited?.user?.id
+  let reusedExistingAccount = false
 
   // Si el correo ya tenía una cuenta de Auth (ej. ya es personal del
   // colegio, o tutor de otro hijo en otro colegio), inviteUserByEmail
-  // falla -- se reusa esa cuenta en vez de tratarlo como error.
+  // falla -- se reusa esa cuenta en vez de tratarlo como error. BUG real
+  // corregido: este caso nunca mandaba ningún correo (inviteUserByEmail
+  // falló, así que no salió nada), pero el mensaje final siempre decía
+  // "Invitación enviada" de todos modos -- el tutor quedaba vinculado sin
+  // ninguna forma de enterarse o entrar. Ahora se le manda un correo de
+  // restablecer contraseña como sustituto.
   if (inviteError || !authId) {
     const isAlreadyRegistered = inviteError?.message?.toLowerCase().includes('already been registered')
     if (!isAlreadyRegistered) {
@@ -128,9 +133,15 @@ async function inviteByEmail(
       return { ok: false, message: 'Ese correo ya está registrado, pero no se pudo vincular. Contacta soporte.' }
     }
     authId = existingUser.id
+    reusedExistingAccount = true
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  // users_profiles no tiene ninguna policy de RLS para insert (solo
+  // select/update) -- insertar con el cliente de sesión siempre falla con
+  // "new row violates row-level security policy", sin importar el rol. Se
+  // usa el cliente admin (service_role) porque el permiso ya se validó
+  // arriba con canAccess().
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
   })
   if (profileError) {
@@ -139,11 +150,24 @@ async function inviteByEmail(
 
   revalidatePath('/dashboard/familias')
   revalidatePath('/dashboard/estudiantes/escaneos')
-  return { ok: true, message: `Invitación enviada a ${guardian.email}.` }
+
+  if (!reusedExistingAccount) {
+    return { ok: true, message: `Invitación enviada a ${guardian.email}.` }
+  }
+
+  const { error: resetError } = await admin.auth.resetPasswordForEmail(guardian.email!, {
+    redirectTo: `${siteUrl}/actualizar-contrasena`,
+  })
+  if (resetError) {
+    return {
+      ok: true,
+      message: `Se vinculó el acceso, pero no se pudo enviar el correo (${resetError.message}). Pídele que entre con "Olvidé mi contraseña" en ${guardian.email}.`,
+    }
+  }
+  return { ok: true, message: `Ese correo ya tenía una cuenta -- se vinculó y le enviamos un correo a ${guardian.email} para entrar.` }
 }
 
 async function createPhoneBasedAccess(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,
   schoolId: string
@@ -186,7 +210,9 @@ async function createPhoneBasedAccess(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  // Mismo motivo que en inviteByEmail: users_profiles no tiene policy de
+  // insert para el cliente de sesión, hay que usar el admin (service_role).
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
   })
   if (profileError) {

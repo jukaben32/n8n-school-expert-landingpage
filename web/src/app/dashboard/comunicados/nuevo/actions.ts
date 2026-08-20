@@ -5,11 +5,14 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { MESSAGE_CATEGORIES, type MessageCategory } from '@/lib/messaging/categoryAccess'
 
 interface ActionResult {
   ok: boolean
   error?: string
 }
+
+const FULL_ACCESS_ROLES = ['super_admin', 'school_admin', 'director']
 
 export interface CreateMessageInput {
   title: string
@@ -18,6 +21,8 @@ export interface CreateMessageInput {
   publish: boolean
   /** Grados/secciones elegidos (students.grade_level) -- vacío = todo el colegio. */
   gradeLevels: string[]
+  /** Regular / Inglés / Deporte (ver migración 036) -- clasifica el comunicado, no restringe quién lo lee. */
+  category: MessageCategory
 }
 
 // Resuelve grados/secciones elegidos -> family_id de sus estudiantes activos,
@@ -48,27 +53,45 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
   const admin = createAdminClient()
 
+  const category = input.category
+  if (!MESSAGE_CATEGORIES.includes(category)) {
+    return { ok: false, error: 'Categoría inválida.' }
+  }
+
   const selectedGrades = Array.from(new Set(input.gradeLevels.map((g) => g.trim()).filter(Boolean)))
 
   // RLS ya restringe lo que un 'teacher' puede LEER de otros grados, pero
   // este insert va con el cliente admin (bypassa RLS) -- así que la regla
-  // "solo tu grado, nunca todo el colegio" se valida aquí de verdad.
-  if (profile.role === 'teacher') {
-    if (selectedGrades.length === 0) {
-      return { ok: false, error: 'Un profesor solo puede dirigir comunicados a su grado/sección asignado, no a todo el colegio.' }
+  // "solo tu grado, nunca todo el colegio" y "solo tu categoría" se
+  // validan aquí de verdad.
+  if (!FULL_ACCESS_ROLES.includes(profile.role)) {
+    if (profile.role !== 'teacher' && !(profile.role === 'reception' && category === 'regular')) {
+      return { ok: false, error: 'No tienes permiso para publicar en esta categoría.' }
     }
-    if (!profile.staff_id) {
-      return { ok: false, error: 'No se encontró tu ficha de personal.' }
-    }
-    const { data: assigned } = await admin
-      .from('teacher_assignments')
-      .select('grade_level')
-      .eq('staff_id', profile.staff_id)
-      .eq('school_id', schoolId)
-      .in('grade_level', selectedGrades)
-    const assignedSet = new Set((assigned ?? []).map((a) => a.grade_level as string))
-    if (selectedGrades.some((g) => !assignedSet.has(g))) {
-      return { ok: false, error: 'Solo puedes dirigir comunicados a tus grados/secciones asignados.' }
+    if (profile.role === 'teacher') {
+      if (selectedGrades.length === 0) {
+        return { ok: false, error: 'Un profesor solo puede dirigir comunicados a su grado/sección asignado, no a todo el colegio.' }
+      }
+      if (!profile.staff_id) {
+        return { ok: false, error: 'No se encontró tu ficha de personal.' }
+      }
+      const { data: assigned } = await admin
+        .from('teacher_assignments')
+        .select('grade_level')
+        .eq('staff_id', profile.staff_id)
+        .eq('school_id', schoolId)
+        .eq('category', category)
+      const assignedRows = assigned ?? []
+      if (assignedRows.length === 0) {
+        return { ok: false, error: 'No tienes ningún grado/sección asignado en esta categoría.' }
+      }
+      const wholeSchool = assignedRows.some((a) => a.grade_level === null)
+      if (!wholeSchool) {
+        const assignedSet = new Set(assignedRows.map((a) => a.grade_level as string))
+        if (selectedGrades.some((g) => !assignedSet.has(g))) {
+          return { ok: false, error: 'Solo puedes dirigir comunicados a tus grados/secciones asignados en esta categoría.' }
+        }
+      }
     }
   }
 
@@ -106,6 +129,7 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
     audience_ids: audienceIds,
     audience_label: audienceLabel,
     priority: input.priority,
+    category,
     published_at: input.publish ? new Date().toISOString() : null,
   })
   if (insertError) {
