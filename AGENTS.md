@@ -1141,7 +1141,7 @@ en producción que Gladys Esther (o cualquier Secretaria/Coordinadora real)
 recibe la invitación correctamente y ve los módulos esperados al iniciar
 sesión.
 
-## Estructura del área de Inglés (Amco) y enrutamiento de comunicaciones por materia -- PENDIENTE DE DISEÑO, aún no implementado
+## Estructura del área de Inglés (Amco) y enrutamiento de comunicaciones por materia -- implementado el 2026-08-20
 
 Contexto de negocio, dado por el usuario el 2026-08-20 (no asumido): el
 colegio piloto no es bilingüe, pero tiene una alianza con **Amco** para el
@@ -1157,55 +1157,102 @@ estructura paralela de coordinación y docentes por ciclo:
 | Docente de Inglés | Orlando Antoine Natera | 1er ciclo secundaria (1°, 2°, 3°) |
 | Docente de Inglés | Yendry Paulino | 2do ciclo secundaria (4°, 5°, 6°) |
 
-**El requisito** (parafraseado, no es una decisión de diseño ya tomada --
-falta definir el cómo): cuando un padre le escribe al colegio, el mensaje
-debe llegarle **solo** al equipo correspondiente según el tema -- si es
-sobre Inglés, solo al docente de Inglés de ese ciclo (o a la Coordinadora,
-que sí debe ver todo el departamento de Inglés, no solo su propio ciclo);
-si es sobre Deporte, solo al único profesor de Educación Física de todo el
-colegio; de lo contrario, a los docentes regulares de siempre. Mismo
-criterio para la salida: los comunicados que publica el equipo de Inglés
-deben tener una clasificación separada de los regulares. El usuario
-sugirió que el padre elija una categoría (Inglés / Educación regular /
-Deporte) al redactar.
+**El requisito**: cuando un padre le escribe al colegio, el mensaje debe
+llegarle **solo** al equipo correspondiente según el tema -- si es sobre
+Inglés, solo al docente de Inglés de ese ciclo (o a quien tenga la
+categoría completa asignada); si es sobre Deporte, solo al único profesor
+de Educación Física de todo el colegio; de lo contrario, a los docentes
+regulares de siempre. Mismo criterio para la salida: los comunicados que
+publica el equipo de Inglés tienen una clasificación separada de los
+regulares. El usuario confirmó (vía `AskUserQuestion`) que quería una
+**conversación separada por categoría** (no un tag por mensaje dentro de
+un solo hilo), y que la Coordinadora de Inglés no debía quedar limitada a
+la vista de un docente de un solo ciclo.
 
-**Por qué esto es un rediseño real, no un ajuste chico** (verificado
-leyendo las migraciones existentes antes de prometer nada):
-- `direct_conversations` (Mensajes directos, migración 031) es **una sola
-  conversación por familia** (`unique(family_id)`), visible a cualquier
-  staff con el módulo `mensajes_directos` (todo `teacher`/`reception`/
-  `director`/etc., sin filtrar por grado). El comentario de esa misma
-  migración ya advertía que el enrutamiento por grado quedaba fuera de
-  alcance "a propósito" porque una familia puede tener hijos en más de un
-  grado. Enrutar por *materia* (Inglés/Deporte/Regular) es un eje
-  totalmente nuevo, ortogonal al de grado.
-- `teacher_assignments` (migración 033) vincula un `staff_id` a un
-  `grade_level` (texto libre), pero no tiene ningún concepto de *materia*
-  -- hoy no hay forma de decir "esta profesora da Inglés en este grado" vs
-  "este profesor da la materia regular en este mismo grado". Habría que
-  agregar una columna `subject` (o una tabla nueva) para que ambos
-  convivan sin chocar.
-- `grade_level` en `students`/`teacher_assignments`/Comunicados es texto
-  libre sin catálogo formal -- los ciclos de la tabla de arriba ("1er ciclo
-  primaria (1,2,3)") probablemente no coinciden 1:1 con los valores de
-  `grade_level` que ya se estén usando en el colegio piloto para
-  Asistencia/Actualizaciones. Hay que confirmar esos valores reales antes
-  de mapear.
-- La Coordinadora de Inglés necesita una vista más amplia que un docente
-  de Inglés normal (todo el departamento, no solo su ciclo) -- eso es un
-  tercer nivel de alcance (docente-de-materia-en-su-grado vs
-  coordinador-de-materia-en-todo-el-colegio vs staff-regular-todo-el-
-  colegio) que no existe hoy en `permissions.ts` ni en las RLS.
+**Diseño elegido -- reutiliza `teacher_assignments` en vez de crear un
+concepto nuevo**: la tabla gana una columna `category` (`'regular' |
+'ingles' | 'deporte'`, default `'regular'`) y `grade_level` pasa a ser
+**nullable** -- una fila con `grade_level = null` significa "todos los
+grados del colegio para esta categoría" (para un docente único de todo el
+colegio en su materia, como Deporte). No hizo falta ningún rol de acceso
+nuevo ni tocar `permissions.ts`: Inglés y Deporte siguen entrando como
+`teacher`, la separación es 100% vía esta tabla + RLS, igual que ya pasaba
+con el grado. La Coordinadora de Inglés no necesita ninguna fila especial
+-- su rol de acceso ya es `director` (definido en la tarea anterior de
+Secretaría/Coordinación, "acceso igual a la Directora"), así que ya entra
+por la rama de acceso total en las policies, sin depender de
+`teacher_assignments`.
 
-**Nada de esto está implementado todavía.** No se creó ninguna migración,
-tabla, columna ni cambio de interfaz para esto -- queda registrado aquí
-únicamente como contexto de negocio para que la próxima sesión no tenga
-que volver a preguntar la estructura del equipo de Inglés, y como
-recordatorio de que enrutar por materia requiere diseño explícito (¿un
-campo `subject` en `direct_conversations`/`messages`? ¿una conversación
-separada por materia en vez de por familia? ¿cómo defino "Coordinadora ve
-todo Inglés" en RLS sin volver a caer en recursión?) antes de tocar
-código.
+**Migraciones** (`supabase/migrations/20260821000000..20260821020000`):
+1. `teacher_assignments`: columna `category`, `grade_level` nullable,
+   índice único `(staff_id, category, coalesce(grade_level, '*'))`
+   (reemplaza el `unique(staff_id, grade_level)` de la migración 033, que
+   se busca y elimina por introspección de `pg_constraint` en vez de
+   asumir su nombre generado). `teacher_is_assigned_to_grade()` gana un
+   tercer parámetro `category` con default `'regular'` -- retrocompatible,
+   las llamadas existentes de `students`/`attendance`/`class_updates` (2
+   argumentos) no cambian de comportamiento. Nueva función
+   `staff_can_see_family_category(school_id, family_id, category)`.
+2. `direct_conversations`: columna `category`, índice único cambia de
+   `(family_id)` a `(family_id, category)`. RLS de staff reescrita:
+   `super_admin`/`school_admin`/`director` ven las 3 categorías;
+   `'regular'` sigue exactamente como antes (`teacher`/`reception` ven
+   todas las familias sin filtrar por grado, a propósito, igual que
+   documentaba la migración 031); `'ingles'`/`'deporte'` solo para
+   `teacher` con una asignación que calce (`staff_can_see_family_category`)
+   -- `reception` no ve estas dos categorías. Las policies de guardian no
+   cambian: un tutor ve las 3 categorías de su propia familia.
+3. `messages` (Comunicados): columna `category` -- a diferencia de
+   Mensajes directos, es solo una **clasificación de salida**, no
+   restringe lectura de guardian (un padre sigue viendo todos los avisos
+   dirigidos a él). Quién puede publicar en cada categoría se valida en
+   `createMessageAction`, mismo patrón que ya usaba el cruce contra
+   `teacher_assignments` para el grado/sección.
+
+**Hallazgo de seguridad importante durante la implementación**: las Server
+Actions de Mensajes directos (`portal-familiar/actions.ts` y
+`dashboard/mensajes/actions.ts`) usan el cliente **admin** (service_role)
+para casi todas las lecturas/escrituras -- y bajo service_role
+`auth.uid()` es `null`, así que las policies de RLS de arriba **no
+alcanzan esos caminos** (protegen la lista de staff, que sí usa el
+cliente de sesión, y protegen a guardians). Se replicó la misma regla de
+autorización en TypeScript
+(`web/src/lib/messaging/categoryAccess.ts`,
+`staffCanAccessFamilyCategory()`) y se aplicó explícitamente en
+`sendStaffMessageAction`/`markStaffReadAction` y en la página de detalle
+de la conversación, antes de tocar el cliente admin -- documentado ahí
+mismo para que quede claro por qué la regla existe dos veces (RLS +
+TypeScript) y no es redundancia accidental.
+
+**Cambios de interfaz**:
+- `DirectMessagesWidget.tsx` (Portal Familiar): pestañas
+  Regular/Inglés/Deporte, cada una con su propia conversación y su propio
+  estado de carga.
+- `dashboard/mensajes`: pestañas por categoría (solo se muestran las que
+  el staff puede usar) + lista de "iniciar conversación" filtrada según
+  qué familias puede alcanzar en esa categoría
+  (`getEligibleFamilyIdsForCategory`); la ruta de detalle pasa de
+  `/mensajes/[familyId]` a `/mensajes/[familyId]/[category]`.
+- `TeacherGradeAssignments.tsx` (Personal): selector de categoría junto a
+  los chips de grado ya existentes, más un toggle "Todo el colegio" que
+  guarda la fila `grade_level = null`.
+- `NewMessageForm.tsx` (Comunicados): selector de categoría, solo visible
+  si quien publica tiene permiso en más de una (`getStaffAvailableCategories`);
+  `MessageCard.tsx` muestra un badge de categoría cuando no es Regular.
+
+**Verificado**: `tsc --noEmit`, `npm run lint` y `npm run build` limpios.
+**No verificado en producción** (mismo bloqueo de siempre -- sin acceso a
+Supabase desde este entorno): falta aplicar las 3 migraciones nuevas y
+probar con datos reales que cada persona ve exactamente lo que le
+corresponde.
+
+**Pendiente real (Fase 4, bloqueada por el usuario hasta que confirme la
+lista completa del equipo de Inglés)**: dar de alta en Personal a quienes
+falten de la tabla de arriba y asignarles categoría+grados (o "todo el
+colegio" para un docente único) con la UI ya extendida -- no necesita
+código nuevo, solo datos. El usuario dijo explícitamente que la prioridad
+es "amarilla" (puede esperar 1-2 días, antes de que arranque el año
+escolar 2026-2027 la semana del 24 de agosto).
 
 ## Convenciones de trabajo
 
