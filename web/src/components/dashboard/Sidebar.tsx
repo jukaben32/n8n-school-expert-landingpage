@@ -25,6 +25,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
     </svg>
   ),
+  agenda: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-13.5-4.5h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm3-3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm3-3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+    </svg>
+  ),
   payments: (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
@@ -91,17 +96,20 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
   guardian: [
     { href: '/dashboard/portal-familiar', label: 'Inicio', icon: 'home' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
   ],
   student: [
     { href: '/dashboard/academia',        label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
   ],
   teacher: [
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
   ],
   super_admin: [
     { href: '/dashboard/plataforma',      label: 'Plataforma', icon: 'plataforma' },
@@ -111,6 +119,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
   ],
   finance: [
@@ -129,6 +138,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/actualizaciones', label: 'Actualizaciones', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
+    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
     { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
