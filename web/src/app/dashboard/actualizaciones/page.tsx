@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
@@ -51,6 +52,34 @@ export default async function ActualizacionesPage() {
 
   const gradeLevelOptions = Array.from(new Set((students ?? []).map((s) => s.grade_level).filter((g): g is string => !!g))).sort()
 
+  // ── Alerta de Uso de Imagen (Ley 136-03) ────────────────────────────────
+  // Busca la autorización marcada como "de imagen" más reciente, y arma un
+  // mapa de qué estudiantes NO tienen luz verde (explícitamente no
+  // autorizado, o todavía sin responder -- por seguridad se trata igual
+  // que "no autorizado" hasta que el tutor conteste). Ver AGENTS.md.
+  const { data: imageConsentRequest } = await supabase
+    .from('authorization_requests')
+    .select('id, title')
+    .eq('school_id', schoolId)
+    .eq('is_image_consent', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const restrictedStudents: Record<string, 'no_autorizado' | 'pendiente'> = {}
+  if (imageConsentRequest) {
+    const { data: responsesRaw } = await supabase
+      .from('authorization_responses')
+      .select('student_id, decision')
+      .eq('authorization_request_id', imageConsentRequest.id)
+    const decisionByStudent = new Map((responsesRaw ?? []).map((r) => [r.student_id as string, r.decision as string]))
+    for (const s of students ?? []) {
+      const decision = decisionByStudent.get(s.id)
+      if (decision === 'no_autorizado') restrictedStudents[s.id] = 'no_autorizado'
+      else if (!decision) restrictedStudents[s.id] = 'pendiente'
+    }
+  }
+
   type UpdateRow = {
     id: string
     caption: string | null
@@ -89,9 +118,24 @@ export default async function ActualizacionesPage() {
         </p>
       </div>
 
+      {!imageConsentRequest && canAccess(profile.role, 'autorizaciones_nuevo') && (
+        <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          ⚠️ Todavía no has creado la <strong>autorización de Uso de Imagen</strong> (Ley 136-03) —
+          {' '}<Link href="/dashboard/autorizaciones/nuevo" className="underline underline-offset-2 font-semibold hover:no-underline">créala aquí</Link>
+          {' '}para que esta página avise automáticamente cuándo un estudiante no puede ser fotografiado de frente.
+        </div>
+      )}
+
       <PostUpdateForm
         students={(students ?? []).map((s) => ({ id: s.id, name: `${s.first_name} ${s.last_name}` }))}
         gradeLevelOptions={gradeLevelOptions}
+        studentsByGrade={Object.fromEntries(
+          gradeLevelOptions.map((g) => [
+            g,
+            (students ?? []).filter((s) => s.grade_level === g).map((s) => ({ id: s.id, name: `${s.first_name} ${s.last_name}` })),
+          ])
+        )}
+        restrictedStudents={restrictedStudents}
       />
 
       {updates.length > 0 ? (

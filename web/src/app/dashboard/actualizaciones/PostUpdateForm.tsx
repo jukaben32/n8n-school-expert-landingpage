@@ -6,11 +6,27 @@ import { Camera } from 'lucide-react'
 import { createClassUpdateAction } from './actions'
 
 interface Student { id: string; name: string }
+type ImageConsentStatus = 'no_autorizado' | 'pendiente'
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary'
 
-export default function PostUpdateForm({ students, gradeLevelOptions }: { students: Student[]; gradeLevelOptions: string[] }) {
+const statusLabel: Record<ImageConsentStatus, string> = {
+  no_autorizado: 'NO autorizó el uso de imagen',
+  pendiente: 'todavía no ha respondido la autorización de imagen',
+}
+
+export default function PostUpdateForm({
+  students,
+  gradeLevelOptions,
+  studentsByGrade = {},
+  restrictedStudents = {},
+}: {
+  students: Student[]
+  gradeLevelOptions: string[]
+  studentsByGrade?: Record<string, Student[]>
+  restrictedStudents?: Record<string, ImageConsentStatus>
+}) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [targetMode, setTargetMode] = useState<'student' | 'grade'>('student')
@@ -89,15 +105,38 @@ export default function PostUpdateForm({ students, gradeLevelOptions }: { studen
       </div>
 
       {targetMode === 'student' ? (
-        <select value={studentId} onChange={(e) => setStudentId(e.target.value)} className={inputClass}>
-          {students.length === 0 && <option value="">No hay estudiantes</option>}
-          {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        <>
+          <select value={studentId} onChange={(e) => setStudentId(e.target.value)} className={inputClass}>
+            {students.length === 0 && <option value="">No hay estudiantes</option>}
+            {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          {restrictedStudents[studentId] && (
+            <p role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-400">
+              ⚠️ Este estudiante <strong>{statusLabel[restrictedStudents[studentId]]}</strong> (Ley 136-03). No publiques una foto donde se le identifique de frente.
+            </p>
+          )}
+        </>
       ) : (
-        <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} className={inputClass}>
-          {gradeLevelOptions.length === 0 && <option value="">No hay grados/secciones disponibles</option>}
-          {gradeLevelOptions.map((g) => <option key={g} value={g}>{g}</option>)}
-        </select>
+        <>
+          <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} className={inputClass}>
+            {gradeLevelOptions.length === 0 && <option value="">No hay grados/secciones disponibles</option>}
+            {gradeLevelOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+          {(() => {
+            const restrictedInGrade = (studentsByGrade[gradeLevel] ?? []).filter((s) => restrictedStudents[s.id])
+            if (restrictedInGrade.length === 0) return null
+            return (
+              <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-400">
+                ⚠️ En este grado, estos estudiantes no tienen autorización de imagen vigente (Ley 136-03) — no deben aparecer identificables de frente:
+                <ul className="mt-1 list-disc list-inside">
+                  {restrictedInGrade.map((s) => (
+                    <li key={s.id}>{s.name} <span className="opacity-70">({statusLabel[restrictedStudents[s.id]]})</span></li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })()}
+        </>
       )}
 
       <textarea

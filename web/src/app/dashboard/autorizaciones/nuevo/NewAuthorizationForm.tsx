@@ -21,6 +21,7 @@ export default function NewAuthorizationForm({ gradeLevelOptions, forceGradeMode
   const [eventDate, setEventDate] = useState('')
   const [audienceMode, setAudienceMode] = useState<'all' | 'grade'>(forceGradeMode ? 'grade' : 'all')
   const [selectedGrade, setSelectedGrade] = useState('')
+  const [isImageConsent, setIsImageConsent] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,7 +37,7 @@ export default function NewAuthorizationForm({ gradeLevelOptions, forceGradeMode
     }
     setSaving(true)
     const result = await createAuthorizationAction({
-      title, description, eventDate, gradeLevel: audienceMode === 'grade' ? selectedGrade : '',
+      title, description, eventDate, gradeLevel: audienceMode === 'grade' ? selectedGrade : '', isImageConsent,
     })
     setSaving(false)
     if (!result.ok) {
@@ -82,6 +83,19 @@ export default function NewAuthorizationForm({ gradeLevelOptions, forceGradeMode
             <DraftAssistant draft={description} context="comunicado" onApply={setDescription} />
           </div>
         </div>
+
+        <label className="flex items-start gap-2.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3.5 py-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isImageConsent}
+            onChange={(e) => setIsImageConsent(e.target.checked)}
+            className="mt-0.5 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          <span className="text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-semibold text-slate-800 dark:text-slate-100">Esta es la autorización de Uso de Imagen (Ley 136-03).</span>
+            {' '}Al marcarla, Actualizaciones va a alertar automáticamente cuando alguien vaya a publicar una foto de un estudiante que no autorizó (o no ha respondido todavía).
+          </span>
+        </label>
       </div>
 
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">

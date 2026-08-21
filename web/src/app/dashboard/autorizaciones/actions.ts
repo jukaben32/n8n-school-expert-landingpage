@@ -17,6 +17,7 @@ export interface CreateAuthorizationInput {
   description: string
   eventDate: string
   gradeLevel: string // '' = todo el colegio
+  isImageConsent: boolean
 }
 
 export async function createAuthorizationAction(input: CreateAuthorizationInput): Promise<ActionResult> {
@@ -70,6 +71,7 @@ export async function createAuthorizationAction(input: CreateAuthorizationInput)
       event_date: input.eventDate || null,
       grade_level: gradeLevel,
       created_by: profile.id,
+      is_image_consent: input.isImageConsent,
     })
     .select('id')
     .single()
