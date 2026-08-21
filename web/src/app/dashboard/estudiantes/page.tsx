@@ -24,14 +24,22 @@ type StudentRow = {
   last_name: string
   birth_date: string
   enrollment_status: string | null
+  grade_level: string | null
   families: { name: string } | null
 }
 
 /**
  * Página de Estudiantes — Solo para staff.
- * Lista los estudiantes del colegio con su familia y estado de inscripción.
+ * Lista los estudiantes del colegio con su familia, curso y estado de
+ * inscripción. Filtro por curso vía ?curso=... (searchParams, no hace
+ * falta un componente cliente para esto).
  */
-export default async function EstudiantesPage() {
+export default async function EstudiantesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ curso?: string }>
+}) {
+  const { curso } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -49,14 +57,31 @@ export default async function EstudiantesPage() {
     redirect('/dashboard/portal-familiar')
   }
 
-  const { data: studentsRaw, error: studentsError } = await supabase
+  let query = supabase
     .from('students')
-    .select('id, first_name, last_name, birth_date, enrollment_status, families(name)')
+    .select('id, first_name, last_name, birth_date, enrollment_status, grade_level, families(name)')
     .eq('school_id', schoolId)
     .is('deleted_at', null)
+    .order('grade_level', { ascending: true, nullsFirst: false })
     .order('last_name', { ascending: true })
 
+  if (curso) query = query.eq('grade_level', curso)
+
+  const { data: studentsRaw, error: studentsError } = await query
+
   const students = (studentsRaw ?? []) as unknown as StudentRow[]
+
+  // Cursos disponibles para el filtro -- consulta aparte, sin filtrar, para
+  // que las opciones no desaparezcan cuando ya hay un curso seleccionado.
+  const { data: gradesRaw } = await supabase
+    .from('students')
+    .select('grade_level')
+    .eq('school_id', schoolId)
+    .is('deleted_at', null)
+    .not('grade_level', 'is', null)
+  const gradeOptions = Array.from(
+    new Set((gradesRaw ?? []).map((s) => s.grade_level as string).filter(Boolean))
+  ).sort()
 
   const formatBirthDate = (d: string) =>
     new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -101,6 +126,35 @@ export default async function EstudiantesPage() {
         </div>
       </div>
 
+      {/* Filtro por curso */}
+      {gradeOptions.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/dashboard/estudiantes"
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+              !curso
+                ? 'bg-primary text-white shadow-glow'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            Todos los cursos
+          </Link>
+          {gradeOptions.map((grade) => (
+            <Link
+              key={grade}
+              href={`/dashboard/estudiantes?curso=${encodeURIComponent(grade)}`}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                curso === grade
+                  ? 'bg-primary text-white shadow-glow'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              {grade}
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* Tabla de estudiantes */}
       {studentsError && (
         <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
@@ -115,6 +169,7 @@ export default async function EstudiantesPage() {
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Nombre</th>
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Curso</th>
                 <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Familia</th>
                 <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Nacimiento</th>
                 <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400 text-center">Estado</th>
@@ -127,6 +182,9 @@ export default async function EstudiantesPage() {
                     <Link href={`/dashboard/estudiantes/${s.id}`} className="block">
                       {s.last_name}, {s.first_name}
                     </Link>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                    {s.grade_level ?? '—'}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                     {s.families?.name ?? '—'}
@@ -148,7 +206,9 @@ export default async function EstudiantesPage() {
         <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🎒</p>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Aún no hay estudiantes registrados en este colegio.
+            {curso
+              ? `Ningún estudiante activo en "${curso}".`
+              : 'Aún no hay estudiantes registrados en este colegio.'}
           </p>
         </div>
       )}
