@@ -1126,11 +1126,34 @@ con la barra lateral de su rol de trabajo intacta -- no hay que cerrar
 sesión ni cambiar de cuenta. `resolveGuardianIdentity()` ahora autoriza
 por `guardian_id`, no por `role === 'guardian'` a secas.
 
-**Pendiente real, sin resolver**: Horarios y Notas todavía no ofrecen
-la vista del/los hijo(s) para alguien en Vista de Familia -- solo ven
-su propio horario/notas como personal. Portal Familiar (comunicados,
-agenda, asistencia, mensajes directos, asistente de IA, boletín) sí
-funciona completo.
+**Corrección sobre lo que se creyó resuelto (2026-08-21, más tarde el
+mismo día)**: la nota original de arriba decía que "Portal Familiar
+completo ya funciona" para doble rol -- **eso era una suposición sin
+verificar, y era falso**. El mismo problema de fondo (`role = 'guardian'`
+estricto) existía en **24 políticas RLS de 21 tablas**, desde
+`init.sql`: `ai_conversations`, `attendance`, `authorization_requests`/
+`authorization_responses`, `azul_transactions`, `billing_concepts`,
+`calendar_events`, `class_schedules`, `class_updates`,
+`direct_conversations`/`direct_messages`, `enrollments`, `families`
+(x2), `grades`, `guardians`, `invoices`, `messages`, `payment_receipts`,
+`payments`, `student_guardians` (x2), `students`. La app ya dejaba
+entrar a un perfil de personal con `guardian_id` a Portal Familiar,
+pero las consultas RLS de comunicados/asistencia/mensajes/pagos/etc.
+devolvían vacío en silencio -- nada de eso funcionaba de verdad para
+doble rol, solo para un `role = 'guardian'` puro.
+
+**Corregido** en `20260821060000_fix_dual_role_rls.sql` (`ALTER POLICY`
+en las 24, sin downtime): el JOIN contra `guardians`/
+`users_profiles.guardian_id` ya prueba el vínculo real con ese tutor
+específico, así que el filtro `and role = 'guardian'` era una
+restricción extra innecesaria -- se quitó en las 24. Donde no había
+JOIN que lo probara, se reemplazó por `guardian_id is not null`
+explícito. Horarios y Notas también quedaron cubiertos por esta misma
+corrección (usan el mismo patrón).
+
+**Pendiente real**: sin probar en vivo con una cuenta de doble rol
+real todavía -- solo se confirmó por SQL que ninguna política sigue
+con la restricción vieja.
 
 ## Gestión Académica: 4 módulos nuevos (2026-08-21, inspirados en TokApp iEduca)
 
