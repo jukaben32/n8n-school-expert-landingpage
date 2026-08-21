@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
+import ChangeAccessRoleButton, { accessRoleLabels } from './ChangeAccessRoleButton'
 import PublicRegistrationLinkButton from './PublicRegistrationLinkButton'
 import TeacherGradeAssignments from './TeacherGradeAssignments'
 import EditStaffButton from './EditStaffButton'
@@ -71,10 +72,12 @@ export default async function PersonalPage() {
 
   const { data: linkedProfiles, error: linkedProfilesError } = await supabase
     .from('users_profiles')
-    .select('staff_id')
+    .select('id, staff_id, role')
     .eq('school_id', schoolId)
     .not('staff_id', 'is', null)
-  const staffWithAccess = new Set((linkedProfiles ?? []).map((p) => p.staff_id as string))
+  const staffWithAccess = new Map(
+    (linkedProfiles ?? []).map((p) => [p.staff_id as string, { profileId: p.id as string, role: p.role as string }])
+  )
 
   const [{ data: assignments }, { data: studentsWithGrade }] = await Promise.all([
     supabase.from('teacher_assignments').select('staff_id, grade_level').eq('school_id', schoolId),
@@ -158,7 +161,15 @@ export default async function PersonalPage() {
 
               <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 {staffWithAccess.has(s.id) ? (
-                  <p className="text-xs font-semibold text-green-600 dark:text-green-400">✓ Tiene acceso al sistema</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+                      ✓ Acceso: {accessRoleLabels[staffWithAccess.get(s.id)!.role] ?? staffWithAccess.get(s.id)!.role}
+                    </p>
+                    <ChangeAccessRoleButton
+                      profileId={staffWithAccess.get(s.id)!.profileId}
+                      currentRole={staffWithAccess.get(s.id)!.role}
+                    />
+                  </div>
                 ) : (
                   <GrantAccessButton staffId={s.id} suggestedRole={s.role} />
                 )}

@@ -216,3 +216,30 @@ export async function deleteStaffAction(staffId: string): Promise<InviteResult> 
   revalidatePath('/dashboard/personal')
   return { ok: true, message: 'Eliminado.' }
 }
+
+/**
+ * Cambia el rol de acceso de alguien que YA tiene cuenta en el sistema --
+ * ej. se le dio "Docente" por error cuando en realidad es recepción.
+ * inviteStaffAccess solo cubre el momento de la invitación inicial; esto
+ * cubre corregirlo después.
+ */
+export async function changeAccessRoleAction(profileId: string, newRole: string): Promise<InviteResult> {
+  if (!LOGIN_ROLES.includes(newRole as LoginRole)) {
+    return { ok: false, message: 'Rol de acceso inválido.' }
+  }
+
+  const resolved = await resolveStaffAdmin()
+  if (!resolved.ok) return { ok: false, message: resolved.message }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('users_profiles')
+    .update({ role: newRole })
+    .eq('id', profileId)
+    .eq('school_id', resolved.schoolId)
+    .not('staff_id', 'is', null)
+  if (error) return { ok: false, message: 'No se pudo cambiar el rol de acceso.' }
+
+  revalidatePath('/dashboard/personal')
+  return { ok: true, message: 'Rol de acceso actualizado.' }
+}
