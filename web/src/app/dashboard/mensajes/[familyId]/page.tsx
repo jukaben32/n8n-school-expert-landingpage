@@ -5,7 +5,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
-import { markStaffReadAction } from '../actions'
 import ThreadView from './ThreadView'
 
 export const metadata: Metadata = {
@@ -58,8 +57,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
         .order('created_at', { ascending: true })
     : { data: [] }
 
+  // Marca la conversación como leída directo aquí (no vía Server Action):
+  // llamar revalidatePath() durante el render de una página no es válido en
+  // Next.js -- esta página ya muestra datos frescos, no necesita invalidar
+  // caché de /dashboard/mensajes para sí misma.
   if (conversation) {
-    await markStaffReadAction(familyId)
+    await admin
+      .from('direct_conversations')
+      .update({ staff_last_read_at: new Date().toISOString() })
+      .eq('id', conversation.id)
   }
 
   return (

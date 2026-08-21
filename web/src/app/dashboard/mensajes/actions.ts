@@ -78,18 +78,3 @@ export async function sendStaffMessageAction(familyId: string, body: string): Pr
   revalidatePath('/dashboard/mensajes')
   return { ok: true }
 }
-
-export async function markStaffReadAction(familyId: string): Promise<ActionResult> {
-  const resolved = await resolveStaff()
-  if (!resolved.ok) return { ok: false, error: resolved.error }
-
-  const admin = createAdminClient()
-  await admin
-    .from('direct_conversations')
-    .update({ staff_last_read_at: new Date().toISOString() })
-    .eq('school_id', resolved.schoolId)
-    .eq('family_id', familyId)
-
-  revalidatePath('/dashboard/mensajes')
-  return { ok: true }
-}
