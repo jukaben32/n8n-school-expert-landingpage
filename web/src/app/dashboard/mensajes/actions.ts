@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
 
 interface ActionResult {
   ok: boolean
@@ -73,6 +74,26 @@ export async function sendStaffMessageAction(familyId: string, body: string): Pr
   if (insertError) return { ok: false, error: 'No se pudo enviar el mensaje.' }
 
   await admin.from('direct_conversations').update({ last_message_at: now, staff_last_read_at: now }).eq('id', conversationId)
+
+  // Best-effort: avisa por correo al tutor principal de que le llegó un
+  // mensaje nuevo. No bloquea ni falla el envío si esto falla.
+  const [{ data: school }, { data: guardians }] = await Promise.all([
+    admin.from('schools').select('name').eq('id', resolved.schoolId).single(),
+    admin
+      .from('guardians')
+      .select('email, is_primary')
+      .eq('family_id', familyId)
+      .order('is_primary', { ascending: false }),
+  ])
+  const recipient = (guardians ?? []).find((g) => g.email)
+  if (recipient?.email) {
+    await notifyGuardianByEmail({
+      schoolName: school?.name ?? null,
+      guardianEmail: recipient.email,
+      subject: 'Tienes un mensaje nuevo del colegio',
+      body: trimmed,
+    })
+  }
 
   revalidatePath(`/dashboard/mensajes/${familyId}`)
   revalidatePath('/dashboard/mensajes')

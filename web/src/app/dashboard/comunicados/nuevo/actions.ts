@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
 
 interface ActionResult {
   ok: boolean
@@ -112,6 +113,54 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
     return { ok: false, error: 'No se pudo guardar el comunicado. Intenta de nuevo.' }
   }
 
+  // Comunicado urgente y publicado ya (no borrador) -- avisa por correo a
+  // un tutor por familia (el principal si tiene, si no el primero con
+  // correo registrado). Best-effort, nunca falla la publicación.
+  if (input.publish && input.priority === 'urgent') {
+    await notifyUrgentMessage({ admin, schoolId, audienceType, audienceIds, title, body })
+  }
+
   revalidatePath('/dashboard/comunicados')
   return { ok: true }
+}
+
+async function notifyUrgentMessage({
+  admin,
+  schoolId,
+  audienceType,
+  audienceIds,
+  title,
+  body,
+}: {
+  admin: ReturnType<typeof createAdminClient>
+  schoolId: string
+  audienceType: 'all' | 'family'
+  audienceIds: string[] | null
+  title: string
+  body: string
+}): Promise<void> {
+  const [{ data: school }, { data: guardians }] = await Promise.all([
+    admin.from('schools').select('name').eq('id', schoolId).single(),
+    audienceType === 'family' && audienceIds
+      ? admin.from('guardians').select('family_id, email, is_primary').in('family_id', audienceIds).order('is_primary', { ascending: false })
+      : admin.from('guardians').select('family_id, email, is_primary').eq('school_id', schoolId).order('is_primary', { ascending: false }),
+  ])
+
+  // Un tutor por familia -- como ya viene ordenado is_primary primero, el
+  // primer email que aparezca por cada family_id es el principal.
+  const emailByFamily = new Map<string, string>()
+  for (const g of guardians ?? []) {
+    if (g.email && !emailByFamily.has(g.family_id)) emailByFamily.set(g.family_id, g.email)
+  }
+
+  await Promise.all(
+    Array.from(emailByFamily.values()).map((email) =>
+      notifyGuardianByEmail({
+        schoolName: school?.name ?? null,
+        guardianEmail: email,
+        subject: `Aviso urgente: ${title}`,
+        body,
+      })
+    )
+  )
 }
