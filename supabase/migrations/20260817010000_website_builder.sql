@@ -20,7 +20,7 @@
 -- inmobiliaria sin equivalente natural en un colegio.
 -- =========================================================================
 
-create table website_services (
+create table if not exists website_services (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     icon text not null default 'sparkles',
@@ -31,9 +31,9 @@ create table website_services (
     sort_order integer not null default 0,
     created_at timestamptz not null default now()
 );
-create index idx_website_services_school on website_services(school_id);
+create index if not exists idx_website_services_school on website_services(school_id);
 
-create table website_team_members (
+create table if not exists website_team_members (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     name text not null,
@@ -43,9 +43,9 @@ create table website_team_members (
     sort_order integer not null default 0,
     created_at timestamptz not null default now()
 );
-create index idx_website_team_members_school on website_team_members(school_id);
+create index if not exists idx_website_team_members_school on website_team_members(school_id);
 
-create table website_testimonials (
+create table if not exists website_testimonials (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     quote text not null,
@@ -55,13 +55,13 @@ create table website_testimonials (
     sort_order integer not null default 0,
     created_at timestamptz not null default now()
 );
-create index idx_website_testimonials_school on website_testimonials(school_id);
+create index if not exists idx_website_testimonials_school on website_testimonials(school_id);
 
 -- FAQs públicas del sitio (Q&A mostrado a visitantes) -- distinto de
 -- schools.faq_document (texto libre que alimenta el contexto del
 -- asistente de IA en answerFamilyQuestion.ts). Ambos pueden decir lo
 -- mismo, mantenerlos sincronizados a mano es aceptable por ahora.
-create table website_faqs (
+create table if not exists website_faqs (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     question text not null,
@@ -69,7 +69,7 @@ create table website_faqs (
     sort_order integer not null default 0,
     created_at timestamptz not null default now()
 );
-create index idx_website_faqs_school on website_faqs(school_id);
+create index if not exists idx_website_faqs_school on website_faqs(school_id);
 
 -- Mismo patrón de RLS en las 4: super_admin todo, school_admin/director
 -- del propio colegio pueden administrar, cualquiera puede leer (el sitio

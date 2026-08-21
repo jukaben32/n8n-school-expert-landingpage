@@ -5,26 +5,14 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
+import PublicRegistrationLinkButton from './PublicRegistrationLinkButton'
 import TeacherGradeAssignments from './TeacherGradeAssignments'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import { roleLabels, educationLabels } from '@/lib/staff/roleLabels'
 
 export const metadata: Metadata = {
   title: 'Personal — MentorIApp',
   description: 'Personal y docentes del colegio, con su ficha profesional.',
-}
-
-const roleLabels: Record<string, string> = {
-  director: 'Director', coordinator: 'Coordinador', teacher: 'Docente',
-  assistant: 'Asistente', finance: 'Finanzas', reception: 'Recepción',
-  nurse: 'Enfermería', admin: 'Administración',
-  security: 'Seguridad', janitor: 'Conserje', cafeteria_assistant: 'Auxiliar de Cafetería',
-  cleaning_assistant: 'Auxiliar de Limpieza', doorman: 'Portero', secretary: 'Secretaria',
-  teaching_secretary: 'Secretaria Docente', teaching_assistant: 'Ayudante Docente',
-  administrator: 'Administrador', psychologist: 'Psicóloga',
-}
-const educationLabels: Record<string, string> = {
-  tecnico: 'Técnico', bachiller: 'Bachiller', licenciatura: 'Licenciatura',
-  maestria: 'Maestría', doctorado: 'Doctorado',
 }
 
 type StaffRow = {
@@ -59,6 +47,12 @@ export default async function PersonalPage() {
   if (profileError) console.error('[perfil]', profileError)
 
   const schoolId = (await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')).schoolId
+  const { data: schoolRow } = await supabase.from('schools').select('subdomain').eq('id', schoolId).single()
+  const { count: pendingRegistrationsCount } = await supabase
+    .from('staff_registrations')
+    .select('*', { count: 'exact', head: true })
+    .eq('school_id', schoolId)
+    .eq('status', 'pendiente')
 
   if (!profile || !canAccess(profile.role, 'personal')) {
     redirect('/dashboard')
@@ -106,12 +100,28 @@ export default async function PersonalPage() {
             {staff.length} miembro{staff.length !== 1 ? 's' : ''} del equipo
           </p>
         </div>
-        <Link
-          href="/dashboard/personal/nuevo"
-          className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
-        >
-          + Agregar personal
-        </Link>
+        <div className="flex items-center gap-3">
+          {schoolRow?.subdomain && (
+            <PublicRegistrationLinkButton subdomain={schoolRow.subdomain} />
+          )}
+          <Link
+            href="/dashboard/personal/registros"
+            className="relative inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+          >
+            Registros pendientes
+            {!!pendingRegistrationsCount && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+                {pendingRegistrationsCount}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/dashboard/personal/nuevo"
+            className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
+          >
+            + Agregar personal
+          </Link>
+        </div>
       </div>
 
       {staffError && (

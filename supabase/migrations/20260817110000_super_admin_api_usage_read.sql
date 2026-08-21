@@ -16,14 +16,18 @@
 -- una nueva solo para super_admin, sin tocar el resto.
 -- =========================================================================
 
+drop policy if exists "ai_conversations_super_admin_all" on ai_conversations;
 create policy "ai_conversations_super_admin_all" on ai_conversations
 for all using (is_super_admin()) with check (is_super_admin());
 
+drop policy if exists "whatsapp_anonymous_messages_super_admin_read" on whatsapp_anonymous_messages;
 create policy "whatsapp_anonymous_messages_super_admin_read" on whatsapp_anonymous_messages
 for select using (is_super_admin());
 
+drop policy if exists "enrollment_form_scans_super_admin_all" on enrollment_form_scans;
 create policy "enrollment_form_scans_super_admin_all" on enrollment_form_scans
 for all using (is_super_admin()) with check (is_super_admin());
 
+drop policy if exists "vendor_invoices_super_admin_all" on vendor_invoices;
 create policy "vendor_invoices_super_admin_all" on vendor_invoices
 for all using (is_super_admin()) with check (is_super_admin());

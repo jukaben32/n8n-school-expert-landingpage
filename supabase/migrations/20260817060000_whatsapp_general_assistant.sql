@@ -15,13 +15,13 @@
 -- ninguna familia dueña de esos datos que deba poder leerlos después.
 -- =========================================================================
 
-create table whatsapp_anonymous_messages (
+create table if not exists whatsapp_anonymous_messages (
     id uuid primary key default gen_random_uuid(),
     school_id uuid not null references schools(id) on delete cascade,
     phone text not null,
     created_at timestamptz not null default now()
 );
-create index idx_whatsapp_anonymous_messages_lookup on whatsapp_anonymous_messages(school_id, phone, created_at);
+create index if not exists idx_whatsapp_anonymous_messages_lookup on whatsapp_anonymous_messages(school_id, phone, created_at);
 
 alter table whatsapp_anonymous_messages enable row level security;
 
