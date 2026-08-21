@@ -91,13 +91,12 @@ export async function inviteGuardianAccess(guardianId: string): Promise<InviteRe
   const admin = createAdminClient()
 
   if (guardian.email) {
-    return inviteByEmail(supabase, admin, guardian as GuardianRow, schoolId)
+    return inviteByEmail(admin, guardian as GuardianRow, schoolId)
   }
-  return createPhoneBasedAccess(supabase, admin, guardian as GuardianRow, schoolId)
+  return createPhoneBasedAccess(admin, guardian as GuardianRow, schoolId)
 }
 
 async function inviteByEmail(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,
   schoolId: string
@@ -130,7 +129,7 @@ async function inviteByEmail(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
   })
   if (profileError) {
@@ -143,7 +142,6 @@ async function inviteByEmail(
 }
 
 async function createPhoneBasedAccess(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,
   schoolId: string
@@ -186,7 +184,7 @@ async function createPhoneBasedAccess(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
   })
   if (profileError) {

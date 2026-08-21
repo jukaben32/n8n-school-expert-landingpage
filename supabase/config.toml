@@ -234,14 +234,20 @@ otp_length = 6
 otp_expiry = 3600
 
 # Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# Producción: mismo proveedor y dominio verificado que ya usa notify-attendance
+# (supabase/functions/notify-attendance/index.ts) para salir del límite de
+# 2 correos/hora del servicio de email por defecto de Supabase. Esta sección
+# solo afecta el entorno local (`supabase start`); en el proyecto remoto hay
+# que configurarlo también a mano en el Dashboard →
+# Authentication → Emails → SMTP Settings (no existe API para esto).
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 587
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "no-reply@mail.resendcegmas.com"
+sender_name = "MentorIA"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

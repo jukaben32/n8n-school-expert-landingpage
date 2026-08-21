@@ -94,7 +94,7 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
     authId = existingUser.id
   }
 
-  const { error: profileError } = await supabase.from('users_profiles').insert({
+  const { error: profileError } = await admin.from('users_profiles').insert({
     auth_id: authId,
     school_id: schoolId,
     staff_id: staffId,

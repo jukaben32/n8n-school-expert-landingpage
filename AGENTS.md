@@ -1058,6 +1058,20 @@ MentorIApp, no un logo propio.
    `NEXT_PUBLIC_SITE_URL`, verificar el dominio en Resend y actualizar
    `resend_from_address` en `private.app_settings`, considerar mover también
    el SMTP de Supabase Auth al mismo dominio.
+   - ~~SMTP de Auth~~ — hecho el 2026-08-20. Config-as-code en
+     `supabase/config.toml` (`[auth.email.smtp]`, host `smtp.resend.com`,
+     `mail.resendcegmas.com` como remitente -- ojo, es un subdominio, ver
+     nota en "Dominios confirmados") y aplicado a mano en el proyecto
+     remoto (`fssjgpqisfnmnkavsyld`) vía Dashboard → Authentication →
+     Emails → SMTP Settings (sender name `MentorIA`, key de Resend nueva
+     y separada `supabase-auth-smtp`). Primer intento falló con `550 The
+     resendcegmas.com domain is not verified` porque el remitente usaba
+     el dominio raíz en vez del subdominio verificado; corregido a
+     `no-reply@mail.resendcegmas.com`. Rate limit de Auth subido a
+     100 correos/hora en Authentication → Rate Limits. Pendiente real:
+     verificar con un envío real (reenviar invitación a alguno de los
+     usuarios en "Waiting for verification" de antes del fix, en vez de
+     crear un usuario de prueba ficticio).
 7. ~~Sistema de comunicación — Fase 2 (WhatsApp)~~ — construido el
    2026-08-17 vía Evolution API (no Twilio, ver sección "WhatsApp vía
    Evolution API" más arriba). Pendiente real: `EVOLUTION_API_URL` /
@@ -1088,11 +1102,16 @@ MentorIApp, no un logo propio.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
-- Resend / remitente: `resendcegmas.com`
+- Resend / remitente: `mail.resendcegmas.com` **(subdominio -- NO
+  `resendcegmas.com` a secas; ese es el que aparece verificado en
+  resend.com/domains, confirmado 2026-08-20 al depurar el error `550 The
+  resendcegmas.com domain is not verified` en el SMTP de Auth)**.
 - `NEXT_PUBLIC_SITE_URL` en producciÃ³n debe apuntar a
   `https://educacionmanantial.com`.
 - `resend_from_address` debe usar un correo verificado del dominio
-  `resendcegmas.com` para el colegio Gran Manantial de SabidurÃ­a.
+  `mail.resendcegmas.com` para el colegio Gran Manantial de SabidurÃ­a.
+  Si en algÃºn lado del repo o de la config remota todavÃ­a dice
+  `resendcegmas.com` sin el `mail.`, estÃ¡ mal y hay que corregirlo.
 
 ## Branding de comunicaciones
 
@@ -1100,7 +1119,8 @@ MentorIApp, no un logo propio.
   cuando exista.
 - Si no hay un nombre de colegio disponible, usa `MentorIA` como respaldo.
 - No volver a usar el remitente viejo `schoolos.app`; el correo debe salir
-  del dominio verificado `resendcegmas.com`.
+  del dominio verificado `mail.resendcegmas.com` (no `resendcegmas.com`
+  a secas -- ver nota en "Dominios confirmados").
 
 ## Revision Vercel (2026-08-10)
 
