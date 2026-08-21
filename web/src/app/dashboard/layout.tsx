@@ -24,7 +24,7 @@ export default async function DashboardLayout({
   // Obtener el perfil del usuario (rol y school_id) — sin join para evitar problemas de tipos
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('role, school_id')
+    .select('role, school_id, guardian_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -75,6 +75,7 @@ export default async function DashboardLayout({
         schoolName={schoolName}
         newLeadsCount={newLeadsCount}
         newMessagesCount={newMessagesCount}
+        guardianId={role !== 'guardian' ? profile?.guardian_id ?? null : null}
       />
 
       {/* Área principal */}

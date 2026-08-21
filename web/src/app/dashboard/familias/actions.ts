@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { getPublicSiteUrl } from '@/lib/siteUrl'
+import { linkProfileForDualRole } from '@/lib/auth/linkProfileForDualRole'
 
 interface InviteResult {
   ok: boolean
@@ -129,11 +130,9 @@ async function inviteByEmail(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await admin.from('users_profiles').insert({
-    auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
-  })
-  if (profileError) {
-    return { ok: false, message: `El correo se invitó, pero no se pudo vincular el perfil: ${profileError.message}` }
+  const linkResult = await linkProfileForDualRole(admin, authId, schoolId, { guardianId: guardian.id })
+  if (!linkResult.ok) {
+    return { ok: false, message: `El correo se invitó, pero no se pudo vincular el perfil: ${linkResult.message}` }
   }
 
   revalidatePath('/dashboard/familias')
@@ -184,11 +183,9 @@ async function createPhoneBasedAccess(
     authId = existingUser.id
   }
 
-  const { error: profileError } = await admin.from('users_profiles').insert({
-    auth_id: authId, school_id: schoolId, guardian_id: guardian.id, role: 'guardian',
-  })
-  if (profileError) {
-    return { ok: false, message: `Se creó el acceso, pero no se pudo vincular el perfil: ${profileError.message}` }
+  const linkResult = await linkProfileForDualRole(admin, authId, schoolId, { guardianId: guardian.id })
+  if (!linkResult.ok) {
+    return { ok: false, message: `Se creó el acceso, pero no se pudo vincular el perfil: ${linkResult.message}` }
   }
 
   revalidatePath('/dashboard/familias')

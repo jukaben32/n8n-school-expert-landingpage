@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { getPublicSiteUrl } from '@/lib/siteUrl'
+import { linkProfileForDualRole } from '@/lib/auth/linkProfileForDualRole'
 
 const LOGIN_ROLES = ['school_admin', 'director', 'teacher', 'finance', 'reception'] as const
 type LoginRole = (typeof LOGIN_ROLES)[number]
@@ -94,15 +95,9 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
     authId = existingUser.id
   }
 
-  const { error: profileError } = await admin.from('users_profiles').insert({
-    auth_id: authId,
-    school_id: schoolId,
-    staff_id: staffId,
-    role: loginRole,
-  })
-
-  if (profileError) {
-    return { ok: false, message: `El correo se invitó, pero no se pudo vincular el perfil: ${profileError.message}` }
+  const linkResult = await linkProfileForDualRole(admin, authId, schoolId, { staffId, role: loginRole })
+  if (!linkResult.ok) {
+    return { ok: false, message: `El correo se invitó, pero no se pudo vincular el perfil: ${linkResult.message}` }
   }
 
   revalidatePath('/dashboard/personal')

@@ -177,13 +177,15 @@ interface SidebarProps {
   schoolName: string
   newLeadsCount?: number
   newMessagesCount?: number
+  /** Si este perfil de personal también está vinculado a una ficha de tutor (doble rol). */
+  guardianId?: string | null
 }
 
 /**
  * Sidebar — Navegación lateral del dashboard.
  * Adapta los ítems de menú según el rol del usuario.
  */
-export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessagesCount = 0 }: SidebarProps) {
+export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessagesCount = 0, guardianId = null }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const navItems = navByRole[role] ?? navByRole.default
@@ -245,6 +247,19 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
           )
         })}
       </nav>
+
+      {/* Doble rol: personal que también es tutor de un hijo aquí */}
+      {guardianId && (
+        <div className="px-3 py-3 border-t border-slate-100 dark:border-slate-800">
+          <a
+            href="/dashboard/portal-familiar"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
+          >
+            <span aria-hidden="true">👪</span>
+            <span className="flex-1">Vista de Familia</span>
+          </a>
+        </div>
+      )}
 
       {/* Botón cerrar sesión */}
       <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800">

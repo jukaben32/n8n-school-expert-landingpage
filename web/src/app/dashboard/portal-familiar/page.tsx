@@ -33,7 +33,10 @@ export default async function PortalFamiliarPage() {
 
   if (profileError) console.error('[perfil]', profileError)
 
-  if (profile?.role === 'school_admin' || profile?.role === 'director') {
+  // school_admin/director van a su panel normal, salvo que también sean
+  // tutores de algún hijo (doble rol) -- en ese caso sí pueden entrar a
+  // ver su Vista de Familia.
+  if ((profile?.role === 'school_admin' || profile?.role === 'director') && !profile?.guardian_id) {
     redirect('/dashboard/secretaria')
   }
 
@@ -60,9 +63,29 @@ export default async function PortalFamiliarPage() {
   const classUpdatesResult = await getFamilyClassUpdates()
   const classUpdates = classUpdatesResult.ok ? classUpdatesResult.updates ?? [] : []
 
+  // Doble rol: personal (profesor, dirección...) que también es tutor de
+  // algún hijo aquí. Se les avisa que están en su Vista de Familia y se
+  // les da un camino de regreso a su panel de trabajo normal.
+  const staffRoleLabels: Record<string, string> = {
+    teacher: 'Docente', director: 'Dirección', school_admin: 'Administración',
+    finance: 'Tesorería', reception: 'Secretaría', super_admin: 'Súper Admin',
+  }
+  const isStaffInFamilyView = profile?.role !== 'guardian' && !!profile?.guardian_id
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <QueryErrorBanner errors={[{ label: 'tus hijos', error: studentsError }]} />
+
+      {isStaffInFamilyView && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm">
+          <span className="text-amber-800 dark:text-amber-300 font-medium">
+            👪 Estás en tu <strong className="font-bold">Vista de Familia</strong>
+          </span>
+          <a href="/dashboard" className="text-amber-800 dark:text-amber-300 font-semibold underline underline-offset-2 hover:no-underline shrink-0">
+            Volver a mi panel de {staffRoleLabels[profile?.role ?? ''] ?? 'trabajo'}
+          </a>
+        </div>
+      )}
 
       {/* Encabezado */}
       <div>
