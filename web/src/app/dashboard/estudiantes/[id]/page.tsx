@@ -103,6 +103,11 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
           <div className="flex flex-col items-end gap-2">
             <EnrollmentStatusSelect studentId={student.id} initialStatus={student.enrollment_status} />
             <GradeLevelInput studentId={student.id} initialValue={student.grade_level} />
+            {canAccess(profile.role, 'notas') && (
+              <Link href={`/dashboard/notas/boletin/${student.id}`} className="text-xs font-semibold text-primary dark:text-accent-light hover:underline">
+                📋 Ver boletín
+              </Link>
+            )}
           </div>
         </div>
       </div>

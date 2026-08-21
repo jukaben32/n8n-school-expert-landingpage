@@ -30,6 +30,8 @@ export type Module =
   | 'horarios' // ver el horario de clases (propio si es teacher, del colegio si es staff)
   | 'horarios_gestionar' // crear franjas horarias y asignar materia/profesor por grado
   | 'planificacion' // planificar clases -- profesor solo las suyas (RLS), admin ve todas
+  | 'notas' // ver notas / boletines
+  | 'notas_gestionar' // registrar notas -- profesor solo sus materias/grados (RLS), admin todas
   | 'mensajes_directos' // conversación privada de dos vías con una familia
   | 'asistencia' | 'asistencia_registrar'
   | 'reportes'
@@ -44,7 +46,7 @@ const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar', 'actualizaciones',
-  'horarios', 'horarios_gestionar', 'planificacion',
+  'horarios', 'horarios_gestionar', 'planificacion', 'notas', 'notas_gestionar',
   'whatsapp',
   'website',
   'configuracion_colegio', 'asistente_ia',
@@ -58,11 +60,11 @@ const ROLE_MODULES: Record<Role, Module[]> = {
 
   // Profesor: su salón de clases -- asistencia, academia, avisos.
   // No gestiona familias completas ni dinero.
-  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion'],
+  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion', 'notas', 'notas_gestionar'],
 
   // Recepción: la puerta de entrada -- estudiantes, familias, avisos,
   // asistencia. No maneja tesorería ni contenido de Academia.
-  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'horarios'],
+  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'horarios', 'notas'],
 
   // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, reportes,
   // y solo lectura de familias para facturar. No toca estudiantes,

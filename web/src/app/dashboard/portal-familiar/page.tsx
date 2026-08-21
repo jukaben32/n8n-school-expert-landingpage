@@ -98,15 +98,22 @@ export default async function PortalFamiliarPage() {
               const student = (sg.students as unknown) as StudentShape | null
               if (!student) return null
               return (
-                <StudentCard
-                  key={student.id}
-                  id={student.id}
-                  firstName={student.first_name}
-                  lastName={student.last_name}
-                  photoUrl={student.photo_url}
-                  enrollmentStatus={student.enrollment_status ?? 'N/A'}
-                  relationship={sg.relationship}
-                />
+                <div key={student.id} className="space-y-1.5">
+                  <StudentCard
+                    id={student.id}
+                    firstName={student.first_name}
+                    lastName={student.last_name}
+                    photoUrl={student.photo_url}
+                    enrollmentStatus={student.enrollment_status ?? 'N/A'}
+                    relationship={sg.relationship}
+                  />
+                  <a
+                    href={`/dashboard/notas/boletin/${student.id}`}
+                    className="inline-block ml-1 text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+                  >
+                    📋 Ver boletín de calificaciones
+                  </a>
+                </div>
               )
             })}
           </div>

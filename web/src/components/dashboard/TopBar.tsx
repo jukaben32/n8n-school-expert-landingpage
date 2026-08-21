@@ -29,7 +29,7 @@ export default function TopBar({ user, role }: TopBarProps) {
     .toUpperCase()
 
   return (
-    <header className="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
+    <header className="print:hidden flex items-center justify-between px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
       {/* Sección izquierda: breadcrumb / título */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
