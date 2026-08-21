@@ -29,6 +29,7 @@ export type Module =
   | 'agenda' | 'agenda_nuevo' // agenda digital: eventos del colegio (reuniones, feriados, evaluaciones...)
   | 'horarios' // ver el horario de clases (propio si es teacher, del colegio si es staff)
   | 'horarios_gestionar' // crear franjas horarias y asignar materia/profesor por grado
+  | 'planificacion' // planificar clases -- profesor solo las suyas (RLS), admin ve todas
   | 'mensajes_directos' // conversación privada de dos vías con una familia
   | 'asistencia' | 'asistencia_registrar'
   | 'reportes'
@@ -43,7 +44,7 @@ const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
   'tesoreria', 'pagos', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar', 'actualizaciones',
-  'horarios', 'horarios_gestionar',
+  'horarios', 'horarios_gestionar', 'planificacion',
   'whatsapp',
   'website',
   'configuracion_colegio', 'asistente_ia',
@@ -57,7 +58,7 @@ const ROLE_MODULES: Record<Role, Module[]> = {
 
   // Profesor: su salón de clases -- asistencia, academia, avisos.
   // No gestiona familias completas ni dinero.
-  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios'],
+  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion'],
 
   // Recepción: la puerta de entrada -- estudiantes, familias, avisos,
   // asistencia. No maneja tesorería ni contenido de Academia.

@@ -30,6 +30,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-13.5-4.5h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm3-3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm3-3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
     </svg>
   ),
+  planificacion: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+    </svg>
+  ),
   horarios: (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -117,6 +122,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/horarios',        label: 'Horario', icon: 'horarios' },
+    { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
   ],
   super_admin: [
     { href: '/dashboard/plataforma',      label: 'Plataforma', icon: 'plataforma' },
@@ -148,6 +154,7 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/horarios',        label: 'Horarios', icon: 'horarios' },
+    { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
     { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
