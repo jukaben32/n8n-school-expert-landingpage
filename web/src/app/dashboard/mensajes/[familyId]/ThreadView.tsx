@@ -17,13 +17,22 @@ export default function ThreadView({ familyId, initialMessages }: { familyId: st
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  // Auto-crece con el texto (hasta un máximo) para que el borrador se vea
+  // completo, igual que el cuadro de "versión sugerida" de arriba.
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+  }, [input])
+
+  async function sendMessage() {
     const body = input.trim()
     if (!body || sending) return
 
@@ -36,6 +45,20 @@ export default function ThreadView({ familyId, initialMessages }: { familyId: st
     setSending(false)
     if (!result.ok) {
       setError(result.error ?? 'No se pudo enviar el mensaje.')
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    sendMessage()
+  }
+
+  // Enter envía, Shift+Enter agrega un salto de línea -- convención
+  // estándar de chat, necesaria ahora que el cuadro es multilínea.
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
     }
   }
 
@@ -71,13 +94,16 @@ export default function ThreadView({ familyId, initialMessages }: { familyId: st
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 p-3">
-        <input
+      <form onSubmit={handleSubmit} className="flex items-end gap-2 border-t border-slate-100 dark:border-slate-800 p-3">
+        <textarea
+          ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Escribe tu respuesta…"
+          onKeyDown={handleKeyDown}
+          placeholder="Escribe tu respuesta… (Enter para enviar, Shift+Enter para salto de línea)"
           disabled={sending}
-          className="flex-1 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
+          rows={1}
+          className="flex-1 resize-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary disabled:opacity-60 max-h-40 overflow-y-auto"
         />
         <button
           type="submit"
