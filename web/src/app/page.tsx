@@ -108,11 +108,11 @@ export default function Home() {
             <a href="#como-funciona" className="hover:text-white transition">Cómo funciona</a>
             <a href="#faq" className="hover:text-white transition">FAQ</a>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/login" className="text-sm font-medium text-white/70 hover:text-white transition whitespace-nowrap">
               Ingresar
             </Link>
-            <a href="#demo" className="rounded-full bg-coral hover:brightness-110 text-white text-sm font-semibold px-4 py-2 transition shadow-glow">
+            <a href="#demo" className="rounded-full bg-coral hover:brightness-110 text-white text-sm font-semibold px-3.5 sm:px-4 py-2 transition shadow-glow whitespace-nowrap">
               Solicitar demo
             </a>
           </div>
