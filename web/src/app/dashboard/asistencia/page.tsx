@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { todaySchoolDate } from '@/lib/schoolDate'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
@@ -39,7 +40,7 @@ export default async function AsistenciaPage() {
   const isStaff = ['director', 'school_admin', 'teacher', 'reception', 'super_admin']
     .includes(profile?.role ?? '')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todaySchoolDate()
 
   let records: { id: string; date: string; status: string; student: { first_name: string; last_name: string } | null; notified_at: string | null }[] = []
   let recordsError: { message: string } | null = null

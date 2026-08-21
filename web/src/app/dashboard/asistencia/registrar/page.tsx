@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
+import { todaySchoolDate } from '@/lib/schoolDate'
 import { redirect } from 'next/navigation'
 import AttendanceForm from './AttendanceForm'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
@@ -41,7 +42,7 @@ export default async function RegistrarAsistenciaPage() {
     .is('deleted_at', null)
     .order('last_name', { ascending: true })
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todaySchoolDate()
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
