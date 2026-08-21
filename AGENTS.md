@@ -1067,6 +1067,42 @@ antes de aprobar.
 recibido ningún registro real -- sin verificar en vivo con un envío
 real todavía.
 
+## Gestión Académica: 4 módulos nuevos (2026-08-21, inspirados en TokApp iEduca)
+
+El usuario pidió copiar/mejorar 4 funciones de TokApp iEduca. Se construyeron
+en orden (cada uno depende del anterior), reutilizando siempre
+`students.grade_level` (texto libre) como sistema de grado -- nunca el
+catálogo `grade_levels`/`enrollments` de Academia, que sigue sin poblarse
+(ver nota más abajo sobre los dos sistemas de grado en paralelo).
+
+1. **Agenda digital** (`/dashboard/agenda`) -- eventos del colegio,
+   dirigidos a todo el colegio o a un curso. Migración
+   `20260821000000_calendar_events.sql`.
+2. **Horarios** (`/dashboard/horarios`, `/horarios/periodos`) -- franjas
+   horarias + materia/profesor por curso/día. Migración
+   `20260821010000_class_schedules.sql`. **Nota técnica**: hubo que llamar
+   `teacher_is_assigned_to_grade()` con 3 argumentos explícitos (existe una
+   sobrecarga más nueva con `category default 'regular'` que hace ambigua
+   la llamada de 2 argumentos que usan las políticas viejas de
+   `students`/`attendance`/`class_updates` -- esas siguen con 2 argumentos
+   y siguen funcionando porque ya estaban creadas antes de la ambigüedad,
+   pero cualquier política NUEVA que la use debe pasar los 3 argumentos).
+3. **Planificación de clases** (`/dashboard/planificacion`) -- un plan por
+   franja de `class_schedules` + fecha puntual. Migración
+   `20260821020000_lesson_plans.sql`. Herramienta interna, sin acceso de
+   guardian/estudiante.
+4. **Notas y boletines** (`/dashboard/notas`, `/notas/periodos`,
+   `/notas/boletin/[studentId]`) -- notas 0-100 por estudiante+materia+
+   periodo, autorizadas vía `class_schedules` (mismo profesor que da esa
+   materia a ese curso). Migración `20260821030000_grades.sql`. Boletín
+   imprimible (PDF vía "Imprimir" del navegador, sin librería nueva) --
+   por eso `Sidebar`/`TopBar` ahora tienen `print:hidden`.
+
+**Pendiente real**: nada de esto se ha probado en vivo con datos reales
+todavía (crear un evento, asignar un horario, planificar una clase,
+registrar una nota, generar un boletín) -- solo se verificó que compila
+(`tsc`) y que las migraciones se aplicaron sin error al proyecto real.
+
 ## Notificaciones por correo (2026-08-20/21)
 
 - **Hallazgo importante**: `RESEND_API_KEY` nunca estuvo configurada como
