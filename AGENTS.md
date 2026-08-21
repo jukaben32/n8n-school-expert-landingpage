@@ -1067,6 +1067,28 @@ antes de aprobar.
 recibido ningún registro real -- sin verificar en vivo con un envío
 real todavía.
 
+## Doble rol (staff + tutor) -- "Vista de Familia" (2026-08-21)
+
+Personal del colegio que también es padre/madre de un estudiante aquí
+(ej. un profesor con un hijo inscrito) usa **una sola cuenta**, no dos.
+`users_profiles` tiene `UNIQUE(auth_id)` pero ya tenía `staff_id` Y
+`guardian_id` como columnas separadas en la misma fila -- sin usarse hasta
+ahora. `lib/auth/linkProfileForDualRole.ts` es el helper que vincula
+ambos sobre el mismo perfil en vez de intentar una segunda fila (que
+violaría el UNIQUE). El rol principal (`role`, el que controla
+`canAccess()`/menús) sigue siendo su rol de trabajo; para ver a sus
+hijos usan el enlace "👪 Vista de Familia" en el Sidebar (solo aparece
+si `guardian_id` está seteado), que los manda a `/dashboard/portal-familiar`
+con la barra lateral de su rol de trabajo intacta -- no hay que cerrar
+sesión ni cambiar de cuenta. `resolveGuardianIdentity()` ahora autoriza
+por `guardian_id`, no por `role === 'guardian'` a secas.
+
+**Pendiente real, sin resolver**: Horarios y Notas todavía no ofrecen
+la vista del/los hijo(s) para alguien en Vista de Familia -- solo ven
+su propio horario/notas como personal. Portal Familiar (comunicados,
+agenda, asistencia, mensajes directos, asistente de IA, boletín) sí
+funciona completo.
+
 ## Gestión Académica: 4 módulos nuevos (2026-08-21, inspirados en TokApp iEduca)
 
 El usuario pidió copiar/mejorar 4 funciones de TokApp iEduca. Se construyeron
