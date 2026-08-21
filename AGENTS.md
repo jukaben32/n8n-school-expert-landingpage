@@ -1067,6 +1067,32 @@ antes de aprobar.
 recibido ningún registro real -- sin verificar en vivo con un envío
 real todavía.
 
+## Autorizaciones -- permisos firmados digitalmente (2026-08-21)
+
+Reemplaza el papel firmado para excursiones (usado tanto para dejar
+subir al estudiante al vehículo como constancia ante el Distrito de
+Educación / en caso de accidente). Decisión clave: **sin firma
+criptográfica (PKI)**, innecesaria para este caso -- en su lugar,
+identidad ya verificada por el login del tutor + reautenticación con
+contraseña en el momento de firmar (mitiga que un hijo firme desde el
+teléfono ya desbloqueado del padre) + nombre completo escrito + el
+texto exacto autorizado congelado en la respuesta.
+
+- `authorization_requests` + `authorization_responses`
+  (`20260821040000_authorization_requests.sql`), mismo targeting por
+  `grade_level` que Agenda/Comunicados. `unique(request, student)` --
+  cada hijo necesita su propia autorización aunque varios hermanos
+  estén en el mismo curso.
+- `/dashboard/autorizaciones`: staff ve todas con conteo autorizados/
+  pendientes/no autorizados; tutor responde por cada hijo.
+- `/dashboard/autorizaciones/[id]`: roster imprimible (misma técnica
+  de boletines, sin librería de PDF) + botón de recordatorio por
+  correo a los pendientes (reutiliza `notify-message`). WhatsApp no
+  incluido -- Evolution API sigue sin configurar en producción.
+
+**Pendiente real**: sin probar en vivo (crear una autorización, firmar
+como tutor de prueba, mandar el recordatorio).
+
 ## Doble rol (staff + tutor) -- "Vista de Familia" (2026-08-21)
 
 Personal del colegio que también es padre/madre de un estudiante aquí
