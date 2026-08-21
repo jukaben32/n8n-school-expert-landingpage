@@ -6,6 +6,8 @@ import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import EnrollmentStatusSelect from './EnrollmentStatusSelect'
 import GradeLevelInput from './GradeLevelInput'
+import EditStudentButton from './EditStudentButton'
+import DeleteStudentButton from './DeleteStudentButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 
 export const metadata: Metadata = {
@@ -99,6 +101,10 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
                 <> · <Link href={`/dashboard/familias/${family.id}`} className="text-primary dark:text-accent-light hover:underline">{family.name}</Link></>
               )}
             </p>
+            <div className="flex items-center gap-3 mt-2">
+              <EditStudentButton student={student} />
+              <DeleteStudentButton studentId={student.id} fullName={`${student.first_name} ${student.last_name}`} />
+            </div>
           </div>
           <div className="flex flex-col items-end gap-2">
             <EnrollmentStatusSelect studentId={student.id} initialStatus={student.enrollment_status} />

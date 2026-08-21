@@ -103,3 +103,116 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   revalidatePath('/dashboard/personal')
   return { ok: true, message: `Invitación enviada a ${staff.email}.` }
 }
+
+export interface UpdateStaffInput {
+  staffId: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  role: string
+  specialty: string
+  educationLevel: string
+  degreeTitle: string
+  almaMater: string
+}
+
+async function resolveStaffAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false as const, message: 'No hay sesión activa.' }
+
+  const { data: profile } = await supabase
+    .from('users_profiles')
+    .select('role, school_id')
+    .eq('auth_id', user.id)
+    .single()
+
+  if (!profile || !canAccess(profile.role, 'personal')) {
+    return { ok: false as const, message: 'No tienes permiso para gestionar personal.' }
+  }
+
+  const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
+  return { ok: true as const, schoolId }
+}
+
+export async function updateStaffAction(input: UpdateStaffInput): Promise<InviteResult> {
+  const resolved = await resolveStaffAdmin()
+  if (!resolved.ok) return { ok: false, message: resolved.message }
+
+  const firstName = input.firstName.trim()
+  const lastName = input.lastName.trim()
+  const email = input.email.trim()
+  if (!firstName || !lastName || !email) {
+    return { ok: false, message: 'Nombre, apellido y correo son obligatorios.' }
+  }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('staff')
+    .update({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone: input.phone.trim() || null,
+      role: input.role,
+      specialty: input.specialty.trim() || null,
+      education_level: input.educationLevel || null,
+      degree_title: input.degreeTitle.trim() || null,
+      alma_mater: input.almaMater.trim() || null,
+    })
+    .eq('id', input.staffId)
+    .eq('school_id', resolved.schoolId)
+  if (error) return { ok: false, message: 'No se pudo actualizar el personal.' }
+
+  revalidatePath('/dashboard/personal')
+  return { ok: true, message: 'Actualizado.' }
+}
+
+/**
+ * Elimina (soft-delete) una ficha de personal -- ej. alguien que renunció,
+ * o un registro duplicado por error.
+ *
+ * Si esa persona tenía acceso al sistema (users_profiles con este
+ * staff_id):
+ * - Si TAMBIÉN es tutor de un hijo aquí (doble rol, guardian_id seteado):
+ *   se le quita el staff_id y el rol pasa a 'guardian' -- conserva su
+ *   acceso de familia, pierde el de personal. Nunca se le borra la
+ *   cuenta de alguien que sigue siendo padre/madre en el colegio.
+ * - Si NO es tutor: se borra su perfil y su cuenta de Auth por completo
+ *   -- ya no debe poder entrar al sistema.
+ */
+export async function deleteStaffAction(staffId: string): Promise<InviteResult> {
+  const resolved = await resolveStaffAdmin()
+  if (!resolved.ok) return { ok: false, message: resolved.message }
+
+  const admin = createAdminClient()
+
+  const { data: linkedProfile } = await admin
+    .from('users_profiles')
+    .select('id, auth_id, guardian_id')
+    .eq('staff_id', staffId)
+    .eq('school_id', resolved.schoolId)
+    .maybeSingle()
+
+  if (linkedProfile) {
+    if (linkedProfile.guardian_id) {
+      await admin.from('users_profiles').update({ staff_id: null, role: 'guardian' }).eq('id', linkedProfile.id)
+    } else {
+      await admin.from('users_profiles').delete().eq('id', linkedProfile.id)
+      await admin.auth.admin.deleteUser(linkedProfile.auth_id).catch(() => {
+        // Si ya no existe en Auth por alguna razón, no bloquear el borrado del personal.
+      })
+    }
+  }
+
+  const { error } = await admin
+    .from('staff')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', staffId)
+    .eq('school_id', resolved.schoolId)
+  if (error) return { ok: false, message: 'No se pudo eliminar el personal.' }
+
+  revalidatePath('/dashboard/personal')
+  return { ok: true, message: 'Eliminado.' }
+}

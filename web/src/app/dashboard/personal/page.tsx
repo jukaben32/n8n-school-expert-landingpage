@@ -7,6 +7,8 @@ import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
 import PublicRegistrationLinkButton from './PublicRegistrationLinkButton'
 import TeacherGradeAssignments from './TeacherGradeAssignments'
+import EditStaffButton from './EditStaffButton'
+import DeleteStaffButton from './DeleteStaffButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { roleLabels, educationLabels } from '@/lib/staff/roleLabels'
 
@@ -145,7 +147,13 @@ export default async function PersonalPage() {
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.email} {s.phone ? `· ${s.phone}` : ''}</p>
                 </div>
-                <p className="text-xs text-slate-400 dark:text-slate-500 shrink-0">Desde {formatDate(s.hire_date)}</p>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Desde {formatDate(s.hire_date)}</p>
+                  <div className="flex items-center gap-3">
+                    <EditStaffButton staff={s} />
+                    <DeleteStaffButton staffId={s.id} fullName={`${s.first_name} ${s.last_name}`} />
+                  </div>
+                </div>
               </div>
 
               <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">

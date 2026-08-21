@@ -32,12 +32,12 @@ export default function EnrollmentStatusSelect({ studentId, initialStatus }: { s
       onChange={(e) => handleChange(e.target.value)}
       className={`text-xs font-bold uppercase tracking-wider rounded-full px-3 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-primary ${statusStyles[status] ?? statusStyles.prospecto}`}
     >
-      <option value="prospecto">Prospecto</option>
-      <option value="solicitud">Solicitud</option>
-      <option value="evaluacion">Evaluación</option>
-      <option value="admitido">Admitido</option>
-      <option value="inscrito">Inscrito</option>
-      <option value="retirado">Retirado</option>
+      <option value="prospecto" className="text-slate-900 bg-white normal-case font-normal">Prospecto</option>
+      <option value="solicitud" className="text-slate-900 bg-white normal-case font-normal">Solicitud</option>
+      <option value="evaluacion" className="text-slate-900 bg-white normal-case font-normal">Evaluación</option>
+      <option value="admitido" className="text-slate-900 bg-white normal-case font-normal">Admitido</option>
+      <option value="inscrito" className="text-slate-900 bg-white normal-case font-normal">Inscrito</option>
+      <option value="retirado" className="text-slate-900 bg-white normal-case font-normal">Retirado</option>
     </select>
   )
 }
