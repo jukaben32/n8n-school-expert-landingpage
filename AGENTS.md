@@ -1067,6 +1067,23 @@ antes de aprobar.
 recibido ningún registro real -- sin verificar en vivo con un envío
 real todavía.
 
+## Alerta de uso de imagen -- Ley 136-03 (2026-08-21)
+
+`authorization_requests.is_image_consent` (boolean) marca cuál
+Autorización es "la de Uso de Imagen" -- se elige con un checkbox al
+crearla. Actualizaciones (`dashboard/actualizaciones/page.tsx`) busca la
+más reciente marcada así, cruza con `authorization_responses`, y le pasa
+a `PostUpdateForm.tsx` un mapa de estudiantes sin luz verde
+(`no_autorizado` explícito, o `pendiente` -- sin respuesta se trata
+igual de cauteloso). Avisa en rojo antes de publicar, sin bloquear (una
+foto grupal donde ese estudiante no sale identificable sigue siendo
+válida). Si nadie ha creado todavía la autorización marcada, se le
+sugiere a quien puede crearlas (con enlace directo) en vez de fallar en
+silencio.
+
+**Pendiente real**: sin probar en vivo -- falta crear la autorización
+real de Uso de Imagen del colegio y confirmar que la alerta aparece.
+
 ## Autorizaciones -- permisos firmados digitalmente (2026-08-21)
 
 Reemplaza el papel firmado para excursiones (usado tanto para dejar
