@@ -109,7 +109,7 @@ export default function Home() {
             <a href="#faq" className="hover:text-white transition">FAQ</a>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/login" className="text-sm font-medium text-white/70 hover:text-white transition whitespace-nowrap">
+            <Link href="/login" className="rounded-full bg-mint hover:brightness-110 text-ink text-sm font-semibold px-3.5 sm:px-4 py-2 transition shadow-glow whitespace-nowrap">
               Ingresar
             </Link>
             <a href="#demo" className="rounded-full bg-coral hover:brightness-110 text-white text-sm font-semibold px-3.5 sm:px-4 py-2 transition shadow-glow whitespace-nowrap">

@@ -31,6 +31,7 @@
   --paper:          #f6f2e9;
   --coral:          #ff6b5b;
   --gold:           #f0b429;
+  --mint:           #3ee089;
 
   /* Sombras (valores base; ver @theme inline para exponerlas como utilidades) */
   --shadow-soft-value: 0 20px 40px rgba(15, 23, 42, 0.08);
@@ -51,6 +52,7 @@
   --color-paper:         var(--paper);
   --color-coral:         var(--coral);
   --color-gold:          var(--gold);
+  --color-mint:          var(--mint);
   --font-sans:           var(--font-inter);
   --font-display:        var(--font-display);
   --font-mono:           var(--font-mono);
