@@ -1067,6 +1067,40 @@ antes de aprobar.
 recibido ningún registro real -- sin verificar en vivo con un envío
 real todavía.
 
+## Notificaciones por correo (2026-08-20/21)
+
+- **Hallazgo importante**: `RESEND_API_KEY` nunca estuvo configurada como
+  secret de las Edge Functions de Supabase (`supabase secrets list` no la
+  mostraba). Esto significa que `notify-attendance` (avisos de
+  ausencia/tardanza) **nunca pudo enviar nada en producción** desde que se
+  construyó -- ni WhatsApp (tampoco configurado) ni correo. Ya se agregó
+  el secret (Dashboard → Edge Functions → Secrets), así que
+  `notify-attendance` debería empezar a funcionar también, pero **no se
+  ha verificado en vivo todavía**.
+- Nueva Edge Function `notify-message` (`supabase/functions/notify-message/`):
+  avisa por correo (Resend) al tutor principal de una familia cuando:
+  1. El staff manda un mensaje directo nuevo (`sendStaffMessageAction` en
+     `dashboard/mensajes/actions.ts`).
+  2. Se publica un comunicado marcado **"Urgente"** (`createMessageAction`
+     en `dashboard/comunicados/nuevo/actions.ts`) -- normal y borradores
+     no notifican.
+  - Se invoca directo con `admin.functions.invoke('notify-message', ...)`
+    desde Next.js (no usa Database Webhook como notify-attendance, porque
+    quien llama ya es código de servidor de confianza) vía
+    `web/src/lib/notifications/notifyGuardianByEmail.ts`, best-effort
+    (nunca tumba la acción si falla el correo).
+  - La función rechaza (401) cualquier llamada que no traiga un JWT con
+    `role: service_role` -- sin eso, cualquiera con la key pública `anon`
+    podría haberla usado como relay de correo arbitrario.
+  - Solo correo por ahora. WhatsApp (Evolution API) vive en
+    `web/src/lib/whatsapp/` (Next.js, no Deno) y sus credenciales
+    (`EVOLUTION_API_URL`/`EVOLUTION_API_KEY`) siguen sin configurar en
+    producción -- portar a este flujo cuando eso exista.
+- **Pendiente real**: verificar en vivo -- mandar un mensaje directo real
+  y publicar un comunicado urgente de prueba, confirmar que el correo
+  llega y que `notify-attendance` también quedó funcionando con el
+  secret nuevo.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
