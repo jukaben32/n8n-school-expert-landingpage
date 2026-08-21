@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
+import { MobileNavProvider } from '@/components/dashboard/MobileNavContext'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { exitSchoolView } from './plataforma/actions'
 
@@ -68,35 +69,37 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar de navegación lateral */}
-      <Sidebar
-        role={isViewingOtherSchool ? 'director' : role}
-        schoolName={schoolName}
-        newLeadsCount={newLeadsCount}
-        newMessagesCount={newMessagesCount}
-        guardianId={role !== 'guardian' ? profile?.guardian_id ?? null : null}
-      />
+    <MobileNavProvider>
+      <div className="flex h-screen bg-background overflow-hidden">
+        {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
+        <Sidebar
+          role={isViewingOtherSchool ? 'director' : role}
+          schoolName={schoolName}
+          newLeadsCount={newLeadsCount}
+          newMessagesCount={newMessagesCount}
+          guardianId={role !== 'guardian' ? profile?.guardian_id ?? null : null}
+        />
 
-      {/* Área principal */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {isViewingOtherSchool && (
-          <div className="flex items-center justify-between gap-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-6 py-2 text-sm">
-            <span className="text-amber-800 dark:text-amber-300 font-medium">
-              👁️ Estás viendo <strong className="font-bold">{schoolName}</strong> como director — súper administrador
-            </span>
-            <form action={exitSchoolView}>
-              <button type="submit" className="text-amber-800 dark:text-amber-300 font-semibold underline underline-offset-2 hover:no-underline">
-                Volver a Plataforma
-              </button>
-            </form>
-          </div>
-        )}
-        <TopBar user={user} role={role} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+        {/* Área principal */}
+        <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+          {isViewingOtherSchool && (
+            <div className="flex items-center justify-between gap-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-4 sm:px-6 py-2 text-sm">
+              <span className="text-amber-800 dark:text-amber-300 font-medium">
+                👁️ Estás viendo <strong className="font-bold">{schoolName}</strong> como director — súper administrador
+              </span>
+              <form action={exitSchoolView}>
+                <button type="submit" className="text-amber-800 dark:text-amber-300 font-semibold underline underline-offset-2 hover:no-underline shrink-0">
+                  Volver a Plataforma
+                </button>
+              </form>
+            </div>
+          )}
+          <TopBar user={user} role={role} />
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </MobileNavProvider>
   )
 }

@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useMobileNav } from './MobileNavContext'
 
 // Íconos SVG compactos
 const icons = {
@@ -198,6 +200,14 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
   const pathname = usePathname()
   const router = useRouter()
   const navItems = navByRole[role] ?? navByRole.default
+  const { isOpen, close } = useMobileNav()
+
+  // Cierra el cajón móvil solo automáticamente al navegar a otra página --
+  // así el clic que dispara la navegación no queda peleando con el cierre.
+  useEffect(() => {
+    close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   async function handleLogout() {
     const supabase = createClient()
@@ -207,7 +217,21 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
   }
 
   return (
-    <aside className="print:hidden hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
+    <>
+      {/* Fondo oscuro detrás del cajón móvil -- clic para cerrar */}
+      {isOpen && (
+        <div
+          onClick={close}
+          aria-hidden="true"
+          className="fixed inset-0 z-40 bg-slate-900/50 md:hidden"
+        />
+      )}
+
+      <aside
+        className={`print:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-72 max-w-[85vw] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 transition-transform duration-200 ease-out md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
 
       {/* Logo del colegio */}
       <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800">
@@ -218,10 +242,20 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422A12.083 12.083 0 0121 13c0 4.418-3.582 8-8 8S5 17.418 5 13c0-.935.164-1.832.463-2.668L12 14z" />
             </svg>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light">MentorIApp</p>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{schoolName}</p>
           </div>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Cerrar menú"
+            className="md:hidden shrink-0 p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -281,6 +315,7 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
           Cerrar sesión
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }
