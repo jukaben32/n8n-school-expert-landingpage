@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { sendStaffMessageAction } from '../actions'
+import DraftAssistant from '@/components/dashboard/DraftAssistant'
 
 interface Message {
   id: string
@@ -63,6 +64,12 @@ export default function ThreadView({ familyId, initialMessages }: { familyId: st
       </div>
 
       {error && <p role="alert" className="px-4 text-xs text-red-600 dark:text-red-400">{error}</p>}
+
+      {input.trim() && (
+        <div className="px-4 pt-2">
+          <DraftAssistant draft={input} context="mensaje_directo" onApply={setInput} />
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 p-3">
         <input

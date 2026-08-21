@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createMessageAction } from './actions'
+import DraftAssistant from '@/components/dashboard/DraftAssistant'
 
 interface NewMessageFormProps {
   gradeLevelOptions: string[]
@@ -90,6 +91,9 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
             placeholder="Escribe el mensaje que recibirán las familias..."
             className={`${inputClass} resize-none`}
           />
+          <div className="mt-2">
+            <DraftAssistant draft={body} context="comunicado" onApply={setBody} />
+          </div>
         </div>
 
         <div>
