@@ -82,7 +82,7 @@ export default async function DashboardLayout({
             de la preferencia del sistema operativo (ver globals.css:
             @custom-variant dark). El resto de la app (login, landing) no
             lleva esta clase, así que no le afecta. */}
-        <div className="dark flex h-[calc(100vh-1rem)] sm:h-[calc(100vh-1.5rem)] bg-dash-bg overflow-hidden rounded-2xl shadow-2xl">
+        <div className="dash-shell dark flex h-[calc(100vh-1rem)] sm:h-[calc(100vh-1.5rem)] overflow-hidden rounded-2xl shadow-2xl">
           {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
           <Sidebar
             role={isViewingOtherSchool ? 'director' : role}

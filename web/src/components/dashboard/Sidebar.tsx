@@ -243,7 +243,7 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
       )}
 
       <aside
-        className={`print:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-72 max-w-[85vw] border-r border-dash-border bg-dash-bg shrink-0 transition-transform duration-200 ease-out md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 ${
+        className={`dash-bar print:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-72 max-w-[85vw] border-r shrink-0 transition-transform duration-200 ease-out md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

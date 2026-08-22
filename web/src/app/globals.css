@@ -134,6 +134,55 @@
   background: rgba(255, 255, 255, 0.07);
 }
 
+/* Animaciones del panel */
+@keyframes riseBar  { from { transform: scaleY(0.02); } to { transform: scaleY(1); } }
+@keyframes drawLine { from { stroke-dashoffset: 900; } to { stroke-dashoffset: 0; } }
+@keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* Concha oscura del dashboard: dos halos de menta sobre el verde profundo.
+   Se usa en el contenedor .dark del layout, en vez de bg-dash-bg liso. */
+.dash-shell {
+  background:
+    radial-gradient(1200px 640px at 10% -10%, rgba(16,185,129,.28), transparent 62%),
+    radial-gradient(900px 520px at 98% 6%,  rgba(52,211,153,.16), transparent 64%),
+    #04231a;
+}
+
+/* Barras translúcidas (sidebar y topbar) sobre la concha */
+.dash-bar {
+  background: rgba(5, 42, 32, .55);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-color: rgba(150, 225, 196, .16);
+}
+
+/* El "plato" claro esmerilado donde se apoyan las tarjetas de vidrio.
+   Todo el contenido que se le ponga encima debe estar en sus propias
+   tarjetas oscuras (.dash-card/etc.) -- un texto suelto directamente
+   sobre este fondo quedaría ilegible si usa los colores de texto claros
+   del resto del dashboard oscuro. */
+.dash-main {
+  background: linear-gradient(180deg, rgba(248,250,249,.96), rgba(240,245,243,.94));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255,255,255,.5);
+}
+
+/* Botón sólido de acción primaria (el único objeto opaco del panel) */
+.dash-btn-primary {
+  background: linear-gradient(180deg, #34d399, #0b8259);
+  color: #04231a;
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgba(16,185,129,.35);
+  font-weight: 600;
+  transition: filter .15s;
+}
+.dash-btn-primary:hover { filter: brightness(1.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-main *, .dash-shell * { animation: none !important; }
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   :root {

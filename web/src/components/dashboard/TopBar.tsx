@@ -45,7 +45,7 @@ export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0
   const canSearch = SEARCHABLE_ROLES.includes(role) && (canAccess(role, 'estudiantes') || canAccess(role, 'familias'))
 
   return (
-    <header className="print:hidden flex items-center gap-4 px-4 sm:px-6 py-3.5 border-b border-dash-border bg-dash-bg shrink-0">
+    <header className="dash-bar print:hidden flex items-center gap-4 px-4 sm:px-6 py-3.5 border-b shrink-0">
       {/* Botón de menú (solo móvil) + eyebrow rol · colegio */}
       <div className="flex items-center gap-3 min-w-0 shrink-0">
         <button
