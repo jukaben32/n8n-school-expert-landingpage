@@ -5,7 +5,6 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
-import ChartCard from '@/components/charts/ChartCard'
 import StackedBarChart from '@/components/charts/StackedBarChart'
 import TrendChart from '@/components/charts/TrendChart'
 import DonutChart from '@/components/charts/DonutChart'
@@ -220,15 +219,14 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
 
       {/* Encabezado + selector de rango */}
       <div className="flex items-end justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-black text-dash-text tracking-tight">Centro de control</h1>
-        <div className="flex items-center gap-1 rounded-full bg-dash-surface border border-dash-border p-1">
+        <h1 className="text-3xl font-bold font-barlow text-dash-text tracking-tight">Centro de control</h1>
+        <div className="dash-chip flex overflow-hidden">
           {RANGE_OPTIONS.map((r) => (
             <Link
               key={r}
               href={`/dashboard/secretaria?range=${r}`}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide transition ${
-                range === r ? 'bg-dash-accent text-dash-bg' : 'text-dash-text-muted hover:text-dash-text'
-              }`}
+              className="px-3.5 py-1.5 text-[13px] font-barlow uppercase tracking-[0.06em] transition"
+              style={range === r ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { color: 'var(--dash-text-muted)' }}
             >
               {RANGE_LABELS[r]}
             </Link>
@@ -237,67 +235,86 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
       </div>
 
       {/* Métricas */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Estudiantes inscritos</p>
-          <p className="text-3xl font-black text-dash-text mt-2">{totalStudents}</p>
-          <p className="text-xs text-dash-accent-light mt-1">+{newStudentsInRange} {rangeLabel}</p>
-          <div className="flex items-end gap-0.5 h-6 mt-3" aria-hidden="true">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="dash-card p-4">
+          <p className="text-[11px] font-barlow uppercase tracking-[0.16em] text-dash-text-muted">Estudiantes inscritos</p>
+          <div className="flex items-end gap-2 mt-2">
+            <p className="text-[38px] leading-none font-bold font-barlow text-dash-text">{totalStudents}</p>
+            <p className="text-xs text-dash-accent pb-1 whitespace-nowrap">+{newStudentsInRange} {rangeLabel}</p>
+          </div>
+          <div className="flex items-end gap-[3px] h-7 mt-3" aria-hidden="true">
             {studentsSparkline.map((v, i) => (
-              <div key={i} className="flex-1 bg-dash-accent/40 rounded-sm" style={{ height: `${Math.max(8, (v / sparkMax) * 100)}%` }} />
+              <div
+                key={i}
+                className="flex-1 rounded-sm"
+                style={{ height: `${Math.max(8, (v / sparkMax) * 100)}%`, background: 'linear-gradient(180deg,#6ee7b7,#10b981)' }}
+              />
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Familias registradas</p>
-          <p className="text-3xl font-black text-dash-text mt-2">{totalFamilies}</p>
-          <p className="text-xs text-dash-text-muted mt-1">{familiesWithAccess.size} con acceso</p>
-          <div className="h-1.5 rounded-full bg-dash-border mt-3 overflow-hidden">
-            <div className="h-full rounded-full bg-dash-accent" style={{ width: `${accessPercent}%` }} />
+        <div className="dash-card p-4">
+          <p className="text-[11px] font-barlow uppercase tracking-[0.16em] text-dash-text-muted">Familias registradas</p>
+          <div className="flex items-end gap-2 mt-2">
+            <p className="text-[38px] leading-none font-bold font-barlow text-dash-text">{totalFamilies}</p>
+            <p className="text-xs text-dash-text-muted pb-1 whitespace-nowrap">{familiesWithAccess.size} con acceso</p>
           </div>
-          <p className="text-[10px] text-dash-text-faint mt-1">{accessPercent}% activo el portal</p>
+          <div className="h-[7px] rounded-full mt-3.5 overflow-hidden" style={{ background: 'rgba(150,225,196,.12)' }}>
+            <div className="h-full rounded-full" style={{ width: `${accessPercent}%`, background: 'linear-gradient(90deg,#10b981,#6ee7b7)' }} />
+          </div>
+          <p className="text-[11px] text-dash-text-muted mt-1.5">{accessPercent}% activo el portal</p>
         </div>
 
-        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Asistencia (7 días)</p>
-          <p className="text-3xl font-black text-dash-text mt-2">{asistenciaPercent !== null ? `${asistenciaPercent}%` : '—'}</p>
-          {asistenciaDelta !== null && (
-            <p className={`text-xs mt-1 ${asistenciaDelta >= 0 ? 'text-dash-accent-light' : 'text-dash-danger'}`}>
-              {asistenciaDelta >= 0 ? '+' : ''}{asistenciaDelta} pts
-            </p>
-          )}
-          <div className="flex items-end gap-0.5 h-6 mt-3" aria-hidden="true">
+        <div className="dash-card p-4">
+          <p className="text-[11px] font-barlow uppercase tracking-[0.16em] text-dash-text-muted">Asistencia (7 días)</p>
+          <div className="flex items-end gap-2 mt-2">
+            <p className="text-[38px] leading-none font-bold font-barlow text-dash-text">{asistenciaPercent !== null ? `${asistenciaPercent}%` : '—'}</p>
+            {asistenciaDelta !== null && (
+              <p className="text-xs pb-1 whitespace-nowrap" style={{ color: asistenciaDelta >= 0 ? 'var(--dash-accent)' : 'var(--dash-warning)' }}>
+                {asistenciaDelta >= 0 ? '+' : ''}{asistenciaDelta} pts
+              </p>
+            )}
+          </div>
+          <div className="flex items-end gap-[3px] h-7 mt-3" aria-hidden="true">
             {validDays.slice(-7).map((d, i) => (
-              <div key={i} className="flex-1 bg-dash-accent/40 rounded-sm" style={{ height: `${Math.max(8, d.asistencia)}%` }} />
+              <div
+                key={i}
+                className="flex-1 rounded-sm"
+                style={{ height: `${Math.max(8, d.asistencia)}%`, background: 'linear-gradient(180deg,#6ee7b7,#10b981)' }}
+              />
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Cobrado {rangeLabel}</p>
-          <p className="text-3xl font-black text-dash-text mt-2">{formatDOP(cobradoRango)}</p>
-          <div className="h-1.5 rounded-full bg-dash-border mt-3 overflow-hidden">
-            <div className="h-full rounded-full bg-dash-accent" style={{ width: `${cobradoPercent}%` }} />
+        <div className="dash-card p-4">
+          <p className="text-[11px] font-barlow uppercase tracking-[0.16em] text-dash-text-muted">Cobrado {rangeLabel}</p>
+          <p className="text-[36px] leading-none font-bold font-barlow text-dash-text mt-2 whitespace-nowrap">{formatDOP(cobradoRango)}</p>
+          <p className="text-xs text-dash-accent mt-1.5">{cobradoPercent}% de lo facturado {rangeLabel}</p>
+          <div className="h-[7px] rounded-full mt-2.5 overflow-hidden" style={{ background: 'rgba(150,225,196,.12)' }}>
+            <div className="h-full rounded-full" style={{ width: `${cobradoPercent}%`, background: 'linear-gradient(90deg,#10b981,#6ee7b7)' }} />
           </div>
-          <p className="text-[10px] text-dash-text-faint mt-1">{cobradoPercent}% de lo facturado {rangeLabel}</p>
         </div>
       </div>
 
       {/* Cartera vencida */}
       {overdue.length > 0 && (
-        <div className="rounded-2xl border border-dash-danger-border bg-dash-danger-bg p-6">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-danger-strong">Cartera vencida</p>
-          <p className="text-3xl font-black text-dash-danger-strong mt-2">{formatDOP(carteraVencida)}</p>
-          <p className="text-sm text-dash-text-muted mt-1">{overdue.length} facturas · {familiasConMora} familias</p>
-          <Link href="/dashboard/pagos" className="inline-block mt-3 text-xs font-bold uppercase tracking-wide text-dash-danger-strong hover:underline">
-            Ver gestión de moras →
+        <div className="dash-card-danger p-5">
+          <p className="text-[11px] font-barlow uppercase tracking-[0.16em]" style={{ color: 'var(--dash-danger-strong)' }}>Cartera vencida</p>
+          <p className="text-[36px] leading-none font-bold font-barlow mt-2 whitespace-nowrap" style={{ color: 'var(--dash-danger-strong)' }}>{formatDOP(carteraVencida)}</p>
+          <p className="text-xs mt-1.5" style={{ color: '#e3a79e' }}>{overdue.length} facturas · {familiasConMora} familias</p>
+          <Link
+            href="/dashboard/pagos"
+            className="inline-block mt-2.5 text-xs font-barlow uppercase tracking-[0.08em]"
+            style={{ color: 'var(--dash-danger-strong)', borderBottom: '1px solid rgba(255,157,144,.45)' }}
+          >
+            Ver gestión de moras
           </Link>
         </div>
       )}
 
       {/* Flujo de cobranza -- año escolar */}
-      <ChartCard title="Flujo de cobranza · año escolar" subtitle="Últimos 12 meses" className="!bg-dash-surface !border-dash-border">
+      <div className="dash-card p-4 sm:p-5">
+        <h2 className="text-[18px] font-bold font-barlow tracking-wide text-dash-text mb-3">FLUJO DE COBRANZA · AÑO ESCOLAR</h2>
         <StackedBarChart
           data={flujoCobranza}
           series={[
@@ -309,29 +326,30 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
           valueFormat="currency-dop"
           emptyMessage="Aún no hay facturación registrada."
         />
-      </ChartCard>
+      </div>
 
       {/* Asistencia diaria + estado de matrícula */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <ChartCard
-          title="Asistencia diaria"
-          subtitle={`Últimas 4 semanas${promedio4Semanas !== null ? ` · Promedio ${promedio4Semanas}%` : ''}${minimo4Semanas ? ` · mínimo ${minimo4Semanas.asistencia}% el ${minimo4Semanas.label}` : ''}`}
-          className="!bg-dash-surface !border-dash-border"
-        >
+        <div className="dash-card p-4 sm:p-5">
+          <h2 className="text-base font-bold font-barlow tracking-wide text-dash-text">ASISTENCIA DIARIA · ÚLTIMAS 4 SEMANAS</h2>
+          <p className="text-xs text-dash-text-muted mb-3.5">
+            {promedio4Semanas !== null ? `Promedio ${promedio4Semanas}%` : 'Sin datos'}{minimo4Semanas ? ` · mínimo ${minimo4Semanas.asistencia}% el ${minimo4Semanas.label}` : ''}
+          </p>
           <TrendChart
             data={asistenciaDiaria}
             series={[{ key: 'asistencia', label: '% presente', color: CHART_SEMANTIC.success }]}
             valueFormat="percent"
           />
-        </ChartCard>
-        <ChartCard title="Estado de matrícula" className="!bg-dash-surface !border-dash-border">
+        </div>
+        <div className="dash-card p-4 sm:p-5">
+          <h2 className="text-base font-bold font-barlow tracking-wide text-dash-text mb-3.5">ESTADO DE MATRÍCULA</h2>
           <DonutChart data={enrollmentDonut} centerLabel={`Inscritos ${inscritosCount}`} emptyMessage="Aún no hay estudiantes registrados." />
-        </ChartCard>
+        </div>
       </div>
 
       {/* Acciones rápidas */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-dash-text-faint mb-3">Acciones rápidas</h2>
+        <h2 className="text-[11px] font-barlow uppercase tracking-[0.16em] text-dash-text-muted mb-3">Acciones rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { href: '/dashboard/estudiantes/nuevo', label: 'Nuevo Estudiante', icon: '➕' },
@@ -345,7 +363,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
               key={action.href}
               href={action.href}
               id={`action-${action.label.toLowerCase().replace(/\s/g, '-')}`}
-              className="flex items-center gap-3 p-4 rounded-2xl border border-dash-border bg-dash-surface hover:border-dash-accent/40 transition group"
+              className="dash-card flex items-center gap-3 p-4 hover:border-dash-accent/40 transition group"
             >
               <span className="text-xl" aria-hidden="true">{action.icon}</span>
               <span className="text-sm font-medium text-dash-text-muted group-hover:text-dash-text transition">

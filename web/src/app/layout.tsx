@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 
 // Fuente principal — Inter es la fuente recomendada para este proyecto
@@ -27,6 +27,16 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// Fuente del dashboard interno oscuro/menta ("Centro de control", agosto
+// 2026) -- cifras grandes, etiquetas y títulos de tarjeta. Distinta de
+// --font-display (Fraunces, cálida, para la landing pública).
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "MentorIA — Sistema de Gestión Escolar",
   description:
@@ -43,7 +53,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
       {/* suppressHydrationWarning evita warnings si alguna extensión del navegador inyecta atributos en <body> antes de que React hidrate. */}
       <body suppressHydrationWarning className="min-h-full flex flex-col">{children}</body>

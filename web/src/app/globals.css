@@ -64,6 +64,7 @@
   --dash-danger-bg:      #2a1215;
   --dash-danger-border:  #5c2b2e;
   --dash-warning:        #e6bd63;
+  --dash-notify:         #d0453a;
 }
 
 @theme inline {
@@ -84,6 +85,7 @@
   --font-sans:           var(--font-inter);
   --font-display:        var(--font-display);
   --font-mono:           var(--font-mono);
+  --font-barlow:         var(--font-barlow-condensed), sans-serif;
 
   /* Namespace --shadow-* registra las utilidades shadow-soft / shadow-glow */
   --shadow-soft: var(--shadow-soft-value);
@@ -104,6 +106,32 @@
   --color-dash-danger-bg:      var(--dash-danger-bg);
   --color-dash-danger-border:  var(--dash-danger-border);
   --color-dash-warning:        var(--dash-warning);
+  --color-dash-notify:         var(--dash-notify);
+}
+
+/* Tarjetas "de vidrio" del dashboard oscuro/menta -- valores calcados del
+   rediseño real (glassmorphism: blur + sombra en capas + borde translúcido
+   con tinte menta), no aproximados con un simple bg/border plano. */
+.dash-card {
+  border-radius: 16px;
+  border: 1px solid rgba(150, 225, 196, 0.14);
+  background: rgba(6, 45, 34, 0.74);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 38px rgba(0, 26, 18, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.dash-card-danger {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 157, 144, 0.4);
+  background: linear-gradient(155deg, rgba(208, 69, 58, 0.28), rgba(208, 69, 58, 0.06)), rgba(6, 45, 34, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 38px rgba(0, 26, 18, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.dash-chip {
+  border-radius: 11px;
+  border: 1px solid rgba(150, 225, 196, 0.16);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 /* Modo oscuro */

@@ -58,7 +58,7 @@ export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-        <p className="hidden sm:block text-xs font-semibold uppercase tracking-widest text-dash-text-muted truncate">
+        <p className="hidden sm:block text-xs font-semibold font-barlow uppercase tracking-[0.14em] text-dash-text-muted truncate">
           {roleLabels[role] ?? 'Portal'} · {schoolName}
         </p>
       </div>
@@ -82,9 +82,11 @@ export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0
             {roleLabels[role] ?? role}
           </p>
         </div>
-        {/* Avatar con iniciales */}
+        {/* Avatar con iniciales -- degradado y esquinas redondeadas (no
+            círculo), calcado del diseño original */}
         <div
-          className="w-9 h-9 rounded-full bg-dash-accent flex items-center justify-center text-dash-bg text-sm font-bold shrink-0"
+          className="w-9 h-9 rounded-[10px] flex items-center justify-center text-dash-bg text-sm font-bold font-barlow shrink-0"
+          style={{ background: 'linear-gradient(180deg,#34d399,#0b8259)', boxShadow: '0 10px 26px rgba(16,185,129,.35)' }}
           aria-hidden="true"
         >
           {initials}

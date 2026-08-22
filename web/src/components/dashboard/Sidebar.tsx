@@ -113,9 +113,16 @@ const icons = {
   ),
 }
 
-// Definición de rutas según rol
-const navByRole: Record<string, { href: string; label: string; icon: keyof typeof icons }[]> = {
-  guardian: [
+type NavItem = { href: string; label: string; icon: keyof typeof icons }
+type NavGroup = { title?: string; items: NavItem[] }
+
+// Definición de rutas según rol -- agrupadas para el rol "default"
+// (dirección/administración/personal), igual que en el rediseño original
+// (grupos "Operación", "Académico", "Comunicación", "Sistema" -- extraídos
+// del código fuente del diseño, no inventados). Los roles con menús más
+// cortos quedan en un solo grupo sin encabezado.
+const navByRole: Record<string, NavGroup[]> = {
+  guardian: [{ items: [
     { href: '/dashboard/portal-familiar', label: 'Inicio', icon: 'home' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
@@ -123,13 +130,13 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
-  ],
-  student: [
+  ] }],
+  student: [{ items: [
     { href: '/dashboard/academia',        label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
-  ],
-  teacher: [
+  ] }],
+  teacher: [{ items: [
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
@@ -138,12 +145,12 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
     { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
-  ],
-  super_admin: [
+  ] }],
+  super_admin: [{ items: [
     { href: '/dashboard/plataforma',      label: 'Plataforma', icon: 'plataforma' },
     { href: '/dashboard/plataforma/leads', label: 'Leads', icon: 'messages' },
-  ],
-  reception: [
+  ] }],
+  reception: [{ items: [
     { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
@@ -152,34 +159,42 @@ const navByRole: Record<string, { href: string; label: string; icon: keyof typeo
     { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
-  ],
-  finance: [
+  ] }],
+  finance: [{ items: [
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
     { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
-  ],
+  ] }],
   default: [
-    { href: '/dashboard/secretaria',      label: 'Panel', icon: 'home' },
-    { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
-    { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
-    { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
-    { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
-    { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
-    { href: '/dashboard/actualizaciones', label: 'Actualizaciones', icon: 'academia' },
-    { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
-    { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
-    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
-    { href: '/dashboard/horarios',        label: 'Horarios', icon: 'horarios' },
-    { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
-    { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
-    { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
-    { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
-    { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
-    { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
-    { href: '/dashboard/whatsapp',        label: 'WhatsApp', icon: 'whatsapp' },
-    { href: '/dashboard/website',         label: 'Sitio Web', icon: 'website' },
-    { href: '/dashboard/colegio',         label: 'Configuración', icon: 'configuracion' },
+    { title: 'Operación', items: [
+      { href: '/dashboard/secretaria',      label: 'Panel', icon: 'home' },
+      { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
+      { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
+      { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
+      { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
+    ] },
+    { title: 'Académico', items: [
+      { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
+      { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
+      { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
+      { href: '/dashboard/horarios',        label: 'Horarios', icon: 'horarios' },
+      { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
+    ] },
+    { title: 'Comunicación', items: [
+      { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+      { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
+      { href: '/dashboard/actualizaciones', label: 'Actualizaciones', icon: 'academia' },
+      { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
+      { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
+    ] },
+    { title: 'Sistema', items: [
+      { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
+      { href: '/dashboard/asistente-ia',    label: 'Asistente de IA', icon: 'asistente_ia' },
+      { href: '/dashboard/whatsapp',        label: 'WhatsApp', icon: 'whatsapp' },
+      { href: '/dashboard/website',         label: 'Sitio Web', icon: 'website' },
+      { href: '/dashboard/colegio',         label: 'Configuración', icon: 'configuracion' },
+    ] },
   ],
 }
 
@@ -199,7 +214,7 @@ interface SidebarProps {
 export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessagesCount = 0, guardianId = null }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const navItems = navByRole[role] ?? navByRole.default
+  const navGroups = navByRole[role] ?? navByRole.default
   const { isOpen, close } = useMobileNav()
 
   // Cierra el cajón móvil solo automáticamente al navegar a otra página --
@@ -243,7 +258,7 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
             </svg>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-dash-accent-light">MentorIApp</p>
+            <p className="text-xs font-bold font-barlow uppercase tracking-widest text-dash-accent-light">MentorIApp</p>
             <p className="text-sm font-medium text-dash-text truncate">{schoolName}</p>
           </div>
           <button
@@ -259,36 +274,47 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
         </div>
       </div>
 
-      {/* Ítems de navegación */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menú principal">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href)
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              aria-current={isActive ? 'page' : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
-                isActive
-                  ? 'bg-dash-accent/15 text-dash-accent-light'
-                  : 'text-dash-text-muted hover:bg-dash-surface hover:text-dash-text'
-              }`}
-            >
-              {icons[item.icon]}
-              <span className="flex-1">{item.label}</span>
-              {item.href === '/dashboard/plataforma/leads' && newLeadsCount > 0 && (
-                <span className="rounded-full bg-dash-danger-strong text-dash-danger-bg text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                  {newLeadsCount}
-                </span>
-              )}
-              {item.href === '/dashboard/mensajes' && newMessagesCount > 0 && (
-                <span className="rounded-full bg-dash-danger-strong text-dash-danger-bg text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                  {newMessagesCount}
-                </span>
-              )}
-            </a>
-          )
-        })}
+      {/* Ítems de navegación, agrupados */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto" aria-label="Menú principal">
+        {navGroups.map((group, gi) => (
+          <div key={group.title ?? gi} className={gi > 0 ? 'mt-4' : ''}>
+            {group.title && (
+              <p className="px-3 mb-1.5 text-[10px] font-bold font-barlow uppercase tracking-[0.16em] text-dash-text-faint">
+                {group.title}
+              </p>
+            )}
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = pathname.startsWith(item.href)
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`flex items-center gap-3 pl-2.5 pr-3 py-2.5 rounded-xl text-sm font-medium transition border-l-2 ${
+                      isActive
+                        ? 'border-dash-accent bg-[rgba(16,185,129,0.22)] text-dash-text'
+                        : 'border-transparent text-dash-text-muted hover:bg-dash-surface hover:text-dash-text'
+                    }`}
+                  >
+                    {icons[item.icon]}
+                    <span className="flex-1">{item.label}</span>
+                    {item.href === '/dashboard/plataforma/leads' && newLeadsCount > 0 && (
+                      <span className="rounded-full bg-dash-notify text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                        {newLeadsCount}
+                      </span>
+                    )}
+                    {item.href === '/dashboard/mensajes' && newMessagesCount > 0 && (
+                      <span className="rounded-full bg-dash-notify text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                        {newMessagesCount}
+                      </span>
+                    )}
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Doble rol: personal que también es tutor de un hijo aquí */}

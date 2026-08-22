@@ -28,21 +28,21 @@ export default function NotificationBell({ unreadMessagesCount }: { unreadMessag
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Notificaciones"
-        className="relative p-2 rounded-full text-dash-text-muted hover:bg-dash-surface hover:text-dash-text transition"
+        className="dash-chip relative w-[34px] h-[34px] flex items-center justify-center text-dash-text-muted hover:text-dash-text transition"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <svg className="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
         </svg>
         {unreadMessagesCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-dash-danger-strong text-dash-danger-bg text-[9px] font-bold px-1">
+          <span className="absolute -top-[5px] -right-[5px] flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-dash-notify text-white text-[10px] font-bold px-1">
             {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-dash-border bg-dash-surface-raised shadow-lg overflow-hidden z-50">
-          <div className="px-4 py-3 border-b border-dash-border">
+        <div className="dash-card absolute right-0 mt-2 w-72 overflow-hidden z-50">
+          <div className="px-4 py-3 border-b border-white/10">
             <p className="text-sm font-semibold text-dash-text">Notificaciones</p>
           </div>
           {unreadMessagesCount > 0 ? (
