@@ -254,7 +254,7 @@ export default async function PlataformaPage() {
       </div>
       {comparisonRows.length > 1 && (
         <ChartCard title="% Morosidad por colegio">
-          <SimpleBarChart data={morosidadBySchoolBar} horizontal valueFormatter={(v) => `${v}%`} />
+          <SimpleBarChart data={morosidadBySchoolBar} horizontal valueFormat="percent" />
         </ChartCard>
       )}
 

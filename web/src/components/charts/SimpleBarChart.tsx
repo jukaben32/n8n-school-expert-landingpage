@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 import { CHART_PALETTE, CHART_AXIS_COLOR, CHART_GRID_COLOR } from '@/lib/chartColors'
 import ChartTooltip from './ChartTooltip'
 import { ChartEmptyState } from './ChartCard'
+import { resolveValueFormatter, type ValueFormat } from './valueFormat'
 
 export interface BarDatum {
   name: string
@@ -15,17 +16,18 @@ export default function SimpleBarChart({
   data,
   height = 220,
   horizontal = false,
-  valueFormatter,
+  valueFormat,
   emptyMessage = 'Sin datos todavía.',
   singleColor,
 }: {
   data: BarDatum[]
   height?: number
   horizontal?: boolean
-  valueFormatter?: (v: number) => string
+  valueFormat?: ValueFormat
   emptyMessage?: string
   singleColor?: string
 }) {
+  const valueFormatter = resolveValueFormatter(valueFormat)
   if (data.length === 0 || data.every((d) => d.value === 0)) return <ChartEmptyState message={emptyMessage} />
 
   return (

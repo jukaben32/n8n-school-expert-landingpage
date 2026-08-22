@@ -243,7 +243,7 @@ export default async function ReportesPage() {
             <TrendChart
               data={attendanceTrend}
               series={[{ key: 'asistencia', label: '% presente', color: CHART_SEMANTIC.success }]}
-              valueFormatter={(v) => `${v}%`}
+              valueFormat="percent"
             />
           </ChartCard>
           <ChartCard title="Distribución">
@@ -278,7 +278,7 @@ export default async function ReportesPage() {
               { key: 'facturado', label: 'Facturado', color: CHART_SEMANTIC.neutral },
               { key: 'cobrado', label: 'Cobrado', color: CHART_SEMANTIC.success },
             ]}
-            valueFormatter={(v) => formatDOP(v)}
+            valueFormat="currency-dop"
           />
         </ChartCard>
       </section>
@@ -318,7 +318,7 @@ export default async function ReportesPage() {
             <DonutChart data={academiaDonut} centerLabel="Intentos" emptyMessage="Aún no hay cuestionarios completados." />
           </ChartCard>
           <ChartCard title="Promedio por lección" subtitle="Top 8 por cantidad de intentos">
-            <SimpleBarChart data={lessonBar} horizontal valueFormatter={(v) => `${v}%`} emptyMessage="Aún no hay intentos de cuestionario." />
+            <SimpleBarChart data={lessonBar} horizontal valueFormat="percent" emptyMessage="Aún no hay intentos de cuestionario." />
           </ChartCard>
         </div>
         <p className="text-xs text-slate-400 dark:text-slate-500">

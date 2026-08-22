@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 import { CHART_PALETTE, CHART_AXIS_COLOR, CHART_GRID_COLOR } from '@/lib/chartColors'
 import ChartTooltip from './ChartTooltip'
 import { ChartEmptyState } from './ChartCard'
+import { resolveValueFormatter, type ValueFormat } from './valueFormat'
 
 export interface StackedSeries {
   key: string
@@ -16,16 +17,17 @@ export default function StackedBarChart({
   series,
   height = 260,
   horizontal = true,
-  valueFormatter,
+  valueFormat,
   emptyMessage = 'Sin datos todavía.',
 }: {
   data: Record<string, string | number>[]
   series: StackedSeries[]
   height?: number
   horizontal?: boolean
-  valueFormatter?: (v: number) => string
+  valueFormat?: ValueFormat
   emptyMessage?: string
 }) {
+  const valueFormatter = resolveValueFormatter(valueFormat)
   const hasData = data.length > 0 && data.some((row) => series.some((s) => Number(row[s.key]) > 0))
   if (!hasData) return <ChartEmptyState message={emptyMessage} />
 
