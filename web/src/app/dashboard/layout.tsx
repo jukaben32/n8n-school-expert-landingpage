@@ -71,17 +71,18 @@ export default async function DashboardLayout({
   return (
     <MobileNavProvider>
       {/* El panel oscuro flota sobre un fondo claro (gris muy tenue), con
-          esquinas redondeadas -- tal como el diseño original. Solo aplica
-          desde md: para arriba: en móvil el Sidebar se vuelve "fixed" para
-          el cajón deslizable (posicionado contra el viewport, no contra
-          este contenedor), así que enmarcarlo ahí rompería esa posición --
-          en móvil se queda de borde a borde, como ya funcionaba. */}
-      <div className="min-h-screen bg-background md:p-3">
+          esquinas redondeadas -- tal como el diseño original. Aplica en
+          todos los tamaños de pantalla (antes solo desde md: hacia arriba,
+          por precaución con el cajón móvil -- pero el Sidebar en móvil usa
+          position:fixed, que se posiciona contra el viewport sin importar
+          el padding/rounded de este contenedor, así que no hacía falta esa
+          condición y solo generaba dudas sobre en qué ancho se activaba). */}
+      <div className="min-h-screen bg-background p-2 sm:p-3">
         {/* "dark" fija el tema oscuro del dashboard interno independientemente
             de la preferencia del sistema operativo (ver globals.css:
             @custom-variant dark). El resto de la app (login, landing) no
             lleva esta clase, así que no le afecta. */}
-        <div className="dark flex h-screen md:h-[calc(100vh-1.5rem)] bg-dash-bg overflow-hidden md:rounded-2xl md:shadow-2xl">
+        <div className="dark flex h-[calc(100vh-1rem)] sm:h-[calc(100vh-1.5rem)] bg-dash-bg overflow-hidden rounded-2xl shadow-2xl">
           {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
           <Sidebar
             role={isViewingOtherSchool ? 'director' : role}
