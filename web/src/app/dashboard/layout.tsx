@@ -70,38 +70,46 @@ export default async function DashboardLayout({
 
   return (
     <MobileNavProvider>
-      {/* "dark" fija el tema oscuro del dashboard interno independientemente
-          de la preferencia del sistema operativo (ver globals.css:
-          @custom-variant dark). El resto de la app (login, landing) no
-          lleva esta clase, así que no le afecta. */}
-      <div className="dark flex h-screen bg-dash-bg overflow-hidden">
-        {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
-        <Sidebar
-          role={isViewingOtherSchool ? 'director' : role}
-          schoolName={schoolName}
-          newLeadsCount={newLeadsCount}
-          newMessagesCount={newMessagesCount}
-          guardianId={role !== 'guardian' ? profile?.guardian_id ?? null : null}
-        />
+      {/* El panel oscuro flota sobre un fondo claro (gris muy tenue), con
+          esquinas redondeadas -- tal como el diseño original. Solo aplica
+          desde md: para arriba: en móvil el Sidebar se vuelve "fixed" para
+          el cajón deslizable (posicionado contra el viewport, no contra
+          este contenedor), así que enmarcarlo ahí rompería esa posición --
+          en móvil se queda de borde a borde, como ya funcionaba. */}
+      <div className="min-h-screen bg-background md:p-3">
+        {/* "dark" fija el tema oscuro del dashboard interno independientemente
+            de la preferencia del sistema operativo (ver globals.css:
+            @custom-variant dark). El resto de la app (login, landing) no
+            lleva esta clase, así que no le afecta. */}
+        <div className="dark flex h-screen md:h-[calc(100vh-1.5rem)] bg-dash-bg overflow-hidden md:rounded-2xl md:shadow-2xl">
+          {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
+          <Sidebar
+            role={isViewingOtherSchool ? 'director' : role}
+            schoolName={schoolName}
+            newLeadsCount={newLeadsCount}
+            newMessagesCount={newMessagesCount}
+            guardianId={role !== 'guardian' ? profile?.guardian_id ?? null : null}
+          />
 
-        {/* Área principal */}
-        <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-          {isViewingOtherSchool && (
-            <div className="flex items-center justify-between gap-3 bg-amber-900/20 border-b border-amber-800 px-4 sm:px-6 py-2 text-sm">
-              <span className="text-amber-300 font-medium">
-                👁️ Estás viendo <strong className="font-bold">{schoolName}</strong> como director — súper administrador
-              </span>
-              <form action={exitSchoolView}>
-                <button type="submit" className="text-amber-300 font-semibold underline underline-offset-2 hover:no-underline shrink-0">
-                  Volver a Plataforma
-                </button>
-              </form>
-            </div>
-          )}
-          <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} />
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-            {children}
-          </main>
+          {/* Área principal */}
+          <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+            {isViewingOtherSchool && (
+              <div className="flex items-center justify-between gap-3 bg-amber-900/20 border-b border-amber-800 px-4 sm:px-6 py-2 text-sm">
+                <span className="text-amber-300 font-medium">
+                  👁️ Estás viendo <strong className="font-bold">{schoolName}</strong> como director — súper administrador
+                </span>
+                <form action={exitSchoolView}>
+                  <button type="submit" className="text-amber-300 font-semibold underline underline-offset-2 hover:no-underline shrink-0">
+                    Volver a Plataforma
+                  </button>
+                </form>
+              </div>
+            )}
+            <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} />
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     </MobileNavProvider>
