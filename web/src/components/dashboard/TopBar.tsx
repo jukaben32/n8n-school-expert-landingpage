@@ -2,6 +2,9 @@
 
 import type { User } from '@supabase/supabase-js'
 import { useMobileNav } from './MobileNavContext'
+import { canAccess } from '@/lib/permissions'
+import GlobalSearch from './GlobalSearch'
+import NotificationBell from './NotificationBell'
 
 const roleLabels: Record<string, string> = {
   guardian:     'Portal Familiar',
@@ -13,16 +16,24 @@ const roleLabels: Record<string, string> = {
   super_admin:  'Super Admin',
 }
 
+// Roles que gestionan estudiantes/familias/facturas -- únicos para los
+// que tiene sentido mostrar la búsqueda global (el resto no tiene
+// acceso a esos módulos, ver lib/permissions.ts).
+const SEARCHABLE_ROLES = ['super_admin', 'school_admin', 'director', 'reception', 'finance']
+
 interface TopBarProps {
   user: User
   role: string
+  schoolName: string
+  unreadMessagesCount?: number
 }
 
 /**
  * TopBar — Barra superior del dashboard.
- * Muestra el nombre/email del usuario y su rol actual.
+ * Muestra búsqueda global (roles de gestión), notificaciones, y el
+ * usuario con su rol y colegio actual.
  */
-export default function TopBar({ user, role }: TopBarProps) {
+export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0 }: TopBarProps) {
   const { toggle } = useMobileNav()
   const displayName = user.user_metadata?.full_name ?? user.email ?? 'Usuario'
   const initials = displayName
@@ -31,39 +42,49 @@ export default function TopBar({ user, role }: TopBarProps) {
     .slice(0, 2)
     .join('')
     .toUpperCase()
+  const canSearch = SEARCHABLE_ROLES.includes(role) && (canAccess(role, 'estudiantes') || canAccess(role, 'familias'))
 
   return (
-    <header className="print:hidden flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
-      {/* Sección izquierda: botón de menú (solo móvil) + breadcrumb / título */}
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="print:hidden flex items-center gap-4 px-4 sm:px-6 py-3.5 border-b border-dash-border bg-dash-bg shrink-0">
+      {/* Botón de menú (solo móvil) + eyebrow rol · colegio */}
+      <div className="flex items-center gap-3 min-w-0 shrink-0">
         <button
           type="button"
           onClick={toggle}
           aria-label="Abrir menú de navegación"
-          className="md:hidden -ml-1.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
+          className="md:hidden -ml-1.5 p-2 rounded-lg text-dash-text-muted hover:bg-dash-surface transition shrink-0"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 truncate">
-          {roleLabels[role] ?? 'Portal'}
+        <p className="hidden sm:block text-xs font-semibold uppercase tracking-widest text-dash-text-muted truncate">
+          {roleLabels[role] ?? 'Portal'} · {schoolName}
         </p>
       </div>
 
-      {/* Sección derecha: avatar del usuario */}
-      <div className="flex items-center gap-3">
+      {/* Búsqueda global -- centrada, solo para roles de gestión */}
+      {canSearch && (
+        <div className="flex-1 flex justify-center min-w-0">
+          <GlobalSearch />
+        </div>
+      )}
+      {!canSearch && <div className="flex-1" />}
+
+      {/* Notificaciones + usuario */}
+      <div className="flex items-center gap-3 shrink-0">
+        <NotificationBell unreadMessagesCount={unreadMessagesCount} />
         <div className="text-right hidden sm:block">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight truncate max-w-[180px]">
+          <p className="text-sm font-medium text-dash-text leading-tight truncate max-w-[180px]">
             {displayName}
           </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-dash-text-faint">
             {roleLabels[role] ?? role}
           </p>
         </div>
         {/* Avatar con iniciales */}
         <div
-          className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold shrink-0"
+          className="w-9 h-9 rounded-full bg-dash-accent flex items-center justify-center text-dash-bg text-sm font-bold shrink-0"
           aria-hidden="true"
         >
           {initials}

@@ -1,29 +1,66 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import ChartCard from '@/components/charts/ChartCard'
+import StackedBarChart from '@/components/charts/StackedBarChart'
+import TrendChart from '@/components/charts/TrendChart'
+import DonutChart from '@/components/charts/DonutChart'
+import { CHART_SEMANTIC } from '@/lib/chartColors'
 
 export const metadata: Metadata = {
-  title: 'Secretaría — MentorIApp',
+  title: 'Centro de control — MentorIApp',
   description: 'Panel de gestión escolar para el equipo administrativo.',
 }
 
-function daysAgoDate(days: number): string {
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+const RANGE_OPTIONS = ['hoy', 'semana', 'mes'] as const
+type RangeOption = (typeof RANGE_OPTIONS)[number]
+const RANGE_LABELS: Record<RangeOption, string> = { hoy: 'Hoy', semana: 'Semana', mes: 'Mes' }
+
+function resolveRange(range: RangeOption) {
+  const now = new Date()
+  if (range === 'hoy') {
+    const start = new Date(now); start.setHours(0, 0, 0, 0)
+    return { start, spanMs: now.getTime() - start.getTime(), label: 'hoy' }
+  }
+  if (range === 'semana') {
+    const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    return { start, spanMs: 7 * 24 * 60 * 60 * 1000, label: 'esta semana' }
+  }
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  return { start, spanMs: now.getTime() - start.getTime(), label: 'este mes' }
+}
+
+function isoDate(d: Date): string {
+  return d.toISOString().split('T')[0]
+}
+
+const enrollmentLabels: Record<string, string> = {
+  prospecto: 'Prospecto', solicitud: 'Solicitud', evaluacion: 'Evaluación',
+  admitido: 'Admitido', inscrito: 'Inscrito', retirado: 'Retirado',
 }
 
 /**
- * Portal de Secretaría — Vista principal para administradores, dirección y recepción.
- * Muestra: métricas rápidas (total estudiantes, comunicados pendientes, pagos).
+ * Centro de Control — Vista principal para administradores, dirección y recepción.
+ * Rediseño agosto 2026 (Claude Design) sobre el tema oscuro/menta del
+ * dashboard. El selector Hoy/Semana/Mes mueve la ventana de tiempo de
+ * "Estudiantes inscritos" y "Cobrado" -- Asistencia (7 días), Flujo de
+ * cobranza (año escolar) y Asistencia diaria (4 semanas) usan ventanas
+ * fijas, tal como dice su propio título, sin importar el filtro.
  */
-export default async function SecretariaPage() {
+export default async function SecretariaPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+  const { range: rangeParam } = await searchParams
+  const range: RangeOption = RANGE_OPTIONS.includes(rangeParam as RangeOption) ? (rangeParam as RangeOption) : 'mes'
+  const { start: rangeStart, spanMs, label: rangeLabel } = resolveRange(range)
+  const prevStart = new Date(rangeStart.getTime() - spanMs)
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Obtener el school_id del perfil
   const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
     .select('school_id, role')
@@ -38,202 +75,263 @@ export default async function SecretariaPage() {
     redirect('/dashboard')
   }
 
-  // Rango del mes en curso, para el conteo de comunicados publicados
   const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const sevenDaysAgo = daysAgoDate(7)
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+  const twentyEightDaysAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
-  // Métricas básicas
   const [
-    { count: totalStudents, error: studentsCountError },
-    { count: totalFamilies, error: familiesCountError },
-    { count: messagesThisMonth, error: messagesCountError },
-    { count: pendingInvoices, error: invoicesCountError },
-  ] = await Promise.all([
-    supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-    supabase.from('families').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-    supabase.from('messages').select('*', { count: 'exact', head: true })
-      .eq('school_id', schoolId)
-      .gte('published_at', startOfMonth)
-      .not('published_at', 'is', null),
-    supabase.from('invoices').select('*', { count: 'exact', head: true })
-      .eq('school_id', schoolId)
-      .in('status', ['pendiente', 'vencido']),
-  ])
-
-  // ── Financiero: cobrado este mes / pendiente / vencido ────────────────
-  const [
-    { data: paymentsThisMonth, error: paymentsError },
-    { data: pendingInvoiceRows, error: pendingRowsError },
-    { data: overdueInvoiceRows, error: overdueRowsError },
-  ] = await Promise.all([
-    supabase.from('payments').select('amount_paid').eq('school_id', schoolId).gte('paid_at', startOfMonth),
-    supabase.from('invoices').select('total_amount').eq('school_id', schoolId).eq('status', 'pendiente').is('deleted_at', null),
-    supabase.from('invoices').select('total_amount').eq('school_id', schoolId).eq('status', 'vencido').is('deleted_at', null),
-  ])
-  const cobradoMes = (paymentsThisMonth ?? []).reduce((sum, p) => sum + Number(p.amount_paid), 0)
-  const pendienteTotal = (pendingInvoiceRows ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
-  const vencidoTotal = (overdueInvoiceRows ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
-
-  // ── Académico: asistencia de los últimos 7 días, participación en Academia ──
-  const [
+    { data: studentsInRange, error: studentsRangeError },
+    { data: studentsPrevRange, error: studentsPrevError },
+    { data: enrolledStudents, error: enrolledError },
+    { data: allGuardians, error: guardiansError },
+    { data: accessProfiles, error: accessError },
+    { data: paymentsInRange, error: paymentsRangeError },
+    { data: invoicedInRange, error: invoicedRangeError },
+    { data: overdueInvoices, error: overdueError },
     { data: attendanceWeek, error: attendanceWeekError },
-    { data: studentIdsForAcademia, error: studentIdsError },
-    { data: activeAttemptsMonth, error: attemptsError },
+    { data: attendancePrevWeek, error: attendancePrevError },
+    { data: attendance4Weeks, error: attendance4WeeksError },
+    { data: invoicesYear, error: invoicesYearError },
+    { data: last10DaysStudents, error: last10DaysError },
   ] = await Promise.all([
-    supabase.from('attendance').select('status').eq('school_id', schoolId).gte('date', sevenDaysAgo),
-    supabase.from('students').select('id').eq('school_id', schoolId).eq('enrollment_status', 'inscrito').is('deleted_at', null),
-    supabase.from('quiz_attempts').select('student_id').gte('completed_at', startOfMonth).not('completed_at', 'is', null),
+    supabase.from('students').select('id').eq('school_id', schoolId).is('deleted_at', null).gte('created_at', rangeStart.toISOString()),
+    supabase.from('students').select('id').eq('school_id', schoolId).is('deleted_at', null).gte('created_at', prevStart.toISOString()).lt('created_at', rangeStart.toISOString()),
+    supabase.from('students').select('id, enrollment_status').eq('school_id', schoolId).is('deleted_at', null),
+    supabase.from('guardians').select('id, family_id').eq('school_id', schoolId),
+    supabase.from('users_profiles').select('guardian_id').eq('school_id', schoolId).not('guardian_id', 'is', null),
+    supabase.from('payments').select('amount_paid').eq('school_id', schoolId).gte('paid_at', rangeStart.toISOString()),
+    supabase.from('invoices').select('total_amount').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', rangeStart.toISOString()),
+    supabase.from('invoices').select('id, total_amount, family_id').eq('school_id', schoolId).eq('status', 'vencido').is('deleted_at', null),
+    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(sevenDaysAgo)),
+    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(fourteenDaysAgo)).lt('date', isoDate(sevenDaysAgo)),
+    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(twentyEightDaysAgo)),
+    supabase.from('invoices').select('status, total_amount, issued_at').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', twelveMonthsAgo.toISOString()),
+    supabase.from('students').select('created_at').eq('school_id', schoolId).is('deleted_at', null).gte('created_at', new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString()),
   ])
-  const totalAttendanceRecords = (attendanceWeek ?? []).length
-  const presentRecords = (attendanceWeek ?? []).filter((a) => a.status === 'presente').length
-  const asistenciaPercent = totalAttendanceRecords > 0 ? Math.round((presentRecords / totalAttendanceRecords) * 100) : null
 
-  const enrolledStudentIds = new Set((studentIdsForAcademia ?? []).map((s) => s.id))
-  const studentsWithAttemptsThisSchool = new Set(
-    (activeAttemptsMonth ?? []).map((a) => a.student_id).filter((id) => enrolledStudentIds.has(id))
+  const formatDOP = (n: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0, notation: n >= 1_000_000 ? 'compact' : 'standard' }).format(n)
+
+  // ── Estudiantes inscritos ──────────────────────────────────────────
+  const totalStudents = (enrolledStudents ?? []).length
+  const newStudentsInRange = (studentsInRange ?? []).length
+  const studentsSparkline = Array.from({ length: 10 }, (_, i) => {
+    const day = isoDate(new Date(now.getTime() - (9 - i) * 24 * 60 * 60 * 1000))
+    return (last10DaysStudents ?? []).filter((s) => isoDate(new Date(s.created_at as string)) === day).length
+  })
+  const sparkMax = Math.max(1, ...studentsSparkline)
+
+  // ── Familias / acceso al portal ─────────────────────────────────────
+  const guardianIdsWithAccess = new Set((accessProfiles ?? []).map((p) => p.guardian_id as string))
+  const familiesWithAccess = new Set(
+    (allGuardians ?? []).filter((g) => guardianIdsWithAccess.has(g.id as string)).map((g) => g.family_id as string)
   )
-  const academiaParticipacionPercent = enrolledStudentIds.size > 0
-    ? Math.round((studentsWithAttemptsThisSchool.size / enrolledStudentIds.size) * 100)
+  const totalFamilies = new Set((allGuardians ?? []).map((g) => g.family_id as string)).size
+  const accessPercent = totalFamilies > 0 ? Math.round((familiesWithAccess.size / totalFamilies) * 100) : 0
+
+  // ── Asistencia (7 días) + delta vs. semana previa ────────────────────
+  function attendancePercent(rows: { status: string }[] | null): number | null {
+    const list = rows ?? []
+    if (list.length === 0) return null
+    return Math.round((list.filter((a) => a.status === 'presente').length / list.length) * 1000) / 10
+  }
+  const asistenciaPercent = attendancePercent(attendanceWeek)
+  const asistenciaPrevPercent = attendancePercent(attendancePrevWeek)
+  const asistenciaDelta = asistenciaPercent !== null && asistenciaPrevPercent !== null
+    ? Math.round((asistenciaPercent - asistenciaPrevPercent) * 10) / 10
     : null
 
-  // ── Comunicación: comunicados leídos vs. enviados este mes ────────────
-  const { data: messagesThisMonthRows, error: messagesRowsError } = await supabase
-    .from('messages')
-    .select('id')
-    .eq('school_id', schoolId)
-    .gte('published_at', startOfMonth)
-    .not('published_at', 'is', null)
-  const messageIdsThisMonth = (messagesThisMonthRows ?? []).map((m) => m.id)
-  const { count: readsThisMonth, error: readsError } = messageIdsThisMonth.length
-    ? await supabase.from('message_reads').select('*', { count: 'exact', head: true }).in('message_id', messageIdsThisMonth)
-    : { count: 0, error: null }
+  // ── Cobrado en el rango seleccionado ─────────────────────────────────
+  const cobradoRango = (paymentsInRange ?? []).reduce((sum, p) => sum + Number(p.amount_paid), 0)
+  const facturadoRango = (invoicedInRange ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
+  const cobradoPercent = facturadoRango > 0 ? Math.min(100, Math.round((cobradoRango / facturadoRango) * 100)) : 0
 
-  // ── Asistente de IA: preguntas de familias en los últimos 7 días ──────
-  const { count: aiMessagesWeek, error: aiCountError } = await supabase
-    .from('ai_conversations')
-    .select('*', { count: 'exact', head: true })
-    .eq('school_id', schoolId)
-    .eq('role', 'user')
-    .gte('created_at', sevenDaysAgo)
+  // ── Cartera vencida ───────────────────────────────────────────────────
+  const overdue = overdueInvoices ?? []
+  const carteraVencida = overdue.reduce((sum, i) => sum + Number(i.total_amount), 0)
+  const familiasConMora = new Set(overdue.map((i) => i.family_id as string)).size
 
-  const formatDOP = (n: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(n)
+  // ── Flujo de cobranza -- año escolar (12 meses) ──────────────────────
+  type InvoiceRow = { status: string; total_amount: number; issued_at: string }
+  const invoiceRows = (invoicesYear ?? []) as InvoiceRow[]
+  const monthKeys: string[] = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  const byMonth = new Map(monthKeys.map((k) => [k, { cobrado: 0, pendiente: 0, vencido: 0 }]))
+  for (const inv of invoiceRows) {
+    const d = new Date(inv.issued_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const row = byMonth.get(key)
+    if (!row) continue
+    if (inv.status === 'pagado') row.cobrado += Number(inv.total_amount)
+    else if (inv.status === 'vencido') row.vencido += Number(inv.total_amount)
+    else row.pendiente += Number(inv.total_amount)
+  }
+  const flujoCobranza = monthKeys.map((key) => {
+    const [y, m] = key.split('-')
+    const label = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('es-DO', { month: 'short' }).replace('.', '')
+    const row = byMonth.get(key)!
+    return { label, cobrado: Math.round(row.cobrado), pendiente: Math.round(row.pendiente), vencido: Math.round(row.vencido) }
+  })
 
-  const metrics = [
-    { label: 'Estudiantes inscritos', value: totalStudents ?? 0, icon: '🎒', color: 'text-primary dark:text-accent-light' },
-    { label: 'Familias registradas',  value: totalFamilies ?? 0, icon: '👨‍👩‍👧', color: 'text-primary dark:text-accent-light' },
-    { label: 'Comunicados este mes',  value: messagesThisMonth ?? 0, icon: '📬', color: 'text-primary dark:text-accent-light' },
-    { label: 'Pagos pendientes',      value: pendingInvoices ?? 0, icon: '💳', color: 'text-primary dark:text-accent-light' },
-  ]
+  // ── Asistencia diaria -- últimas 4 semanas ───────────────────────────
+  type AttendanceRow = { date: string; status: string }
+  const attendance4 = (attendance4Weeks ?? []) as AttendanceRow[]
+  const byDay = new Map<string, { presente: number; total: number }>()
+  for (const a of attendance4) {
+    const row = byDay.get(a.date) ?? { presente: 0, total: 0 }
+    row.total += 1
+    if (a.status === 'presente') row.presente += 1
+    byDay.set(a.date, row)
+  }
+  const dailyEntries = Array.from(byDay.entries()).sort(([a], [b]) => a.localeCompare(b))
+  const asistenciaDiaria = dailyEntries.map(([date, { presente, total }]) => ({
+    label: new Date(date + 'T00:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
+    dateObj: date,
+    asistencia: total > 0 ? Math.round((presente / total) * 1000) / 10 : 0,
+  }))
+  const validDays = asistenciaDiaria.filter((d) => d.asistencia > 0 || byDay.get(d.dateObj)!.total > 0)
+  const promedio4Semanas = validDays.length > 0 ? Math.round((validDays.reduce((s, d) => s + d.asistencia, 0) / validDays.length) * 10) / 10 : null
+  const minimo4Semanas = validDays.length > 0 ? validDays.reduce((min, d) => (d.asistencia < min.asistencia ? d : min)) : null
+
+  // ── Estado de matrícula ───────────────────────────────────────────────
+  const enrollmentCounts = (enrolledStudents ?? []).reduce((acc, s) => {
+    const key = (s.enrollment_status as string | null) ?? 'prospecto'
+    acc[key] = (acc[key] ?? 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  const enrollmentDonut = Object.entries(enrollmentCounts).map(([status, value]) => ({ name: enrollmentLabels[status] ?? status, value }))
+  const inscritosCount = enrollmentCounts['inscrito'] ?? 0
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6">
       <QueryErrorBanner errors={[
-        { label: 'estudiantes', error: studentsCountError },
-        { label: 'familias', error: familiesCountError },
-        { label: 'comunicados', error: messagesCountError },
-        { label: 'pagos pendientes', error: invoicesCountError },
-        { label: 'cobros del mes', error: paymentsError },
-        { label: 'facturas pendientes', error: pendingRowsError },
-        { label: 'facturas vencidas', error: overdueRowsError },
-        { label: 'asistencia de la semana', error: attendanceWeekError },
-        { label: 'estudiantes inscritos (academia)', error: studentIdsError },
-        { label: 'intentos de academia', error: attemptsError },
-        { label: 'comunicados del mes', error: messagesRowsError },
-        { label: 'lecturas de comunicados', error: readsError },
-        { label: 'uso del asistente de IA', error: aiCountError },
+        { label: 'estudiantes', error: studentsRangeError || studentsPrevError || enrolledError || last10DaysError },
+        { label: 'familias y acceso', error: guardiansError || accessError },
+        { label: 'cobros', error: paymentsRangeError || invoicedRangeError },
+        { label: 'cartera vencida', error: overdueError },
+        { label: 'asistencia', error: attendanceWeekError || attendancePrevError || attendance4WeeksError },
+        { label: 'facturación del año', error: invoicesYearError },
       ]} />
 
-      {/* Encabezado */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Panel de Secretaría
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Vista general del colegio
-        </p>
+      {/* Encabezado + selector de rango */}
+      <div className="flex items-end justify-between flex-wrap gap-3">
+        <h1 className="text-2xl font-black text-dash-text tracking-tight">Centro de control</h1>
+        <div className="flex items-center gap-1 rounded-full bg-dash-surface border border-dash-border p-1">
+          {RANGE_OPTIONS.map((r) => (
+            <Link
+              key={r}
+              href={`/dashboard/secretaria?range=${r}`}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide transition ${
+                range === r ? 'bg-dash-accent text-dash-bg' : 'text-dash-text-muted hover:text-dash-text'
+              }`}
+            >
+              {RANGE_LABELS[r]}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Métricas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m) => (
-          <div
-            key={m.label}
-            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5"
-          >
-            <p className="text-2xl mb-2" aria-hidden="true">{m.icon}</p>
-            <p className={`text-3xl font-black ${m.color}`}>{m.value}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{m.label}</p>
+        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Estudiantes inscritos</p>
+          <p className="text-3xl font-black text-dash-text mt-2">{totalStudents}</p>
+          <p className="text-xs text-dash-accent-light mt-1">+{newStudentsInRange} {rangeLabel}</p>
+          <div className="flex items-end gap-0.5 h-6 mt-3" aria-hidden="true">
+            {studentsSparkline.map((v, i) => (
+              <div key={i} className="flex-1 bg-dash-accent/40 rounded-sm" style={{ height: `${Math.max(8, (v / sparkMax) * 100)}%` }} />
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Financiero */}
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
-          Financiero
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Cobrado este mes</p>
-            <p className="text-2xl font-black text-green-600 dark:text-green-400">{formatDOP(cobradoMes)}</p>
+        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Familias registradas</p>
+          <p className="text-3xl font-black text-dash-text mt-2">{totalFamilies}</p>
+          <p className="text-xs text-dash-text-muted mt-1">{familiesWithAccess.size} con acceso</p>
+          <div className="h-1.5 rounded-full bg-dash-border mt-3 overflow-hidden">
+            <div className="h-full rounded-full bg-dash-accent" style={{ width: `${accessPercent}%` }} />
           </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Pendiente (sin vencer)</p>
-            <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{formatDOP(pendienteTotal)}</p>
+          <p className="text-[10px] text-dash-text-faint mt-1">{accessPercent}% activo el portal</p>
+        </div>
+
+        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Asistencia (7 días)</p>
+          <p className="text-3xl font-black text-dash-text mt-2">{asistenciaPercent !== null ? `${asistenciaPercent}%` : '—'}</p>
+          {asistenciaDelta !== null && (
+            <p className={`text-xs mt-1 ${asistenciaDelta >= 0 ? 'text-dash-accent-light' : 'text-dash-danger'}`}>
+              {asistenciaDelta >= 0 ? '+' : ''}{asistenciaDelta} pts
+            </p>
+          )}
+          <div className="flex items-end gap-0.5 h-6 mt-3" aria-hidden="true">
+            {validDays.slice(-7).map((d, i) => (
+              <div key={i} className="flex-1 bg-dash-accent/40 rounded-sm" style={{ height: `${Math.max(8, d.asistencia)}%` }} />
+            ))}
           </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Vencido</p>
-            <p className="text-2xl font-black text-red-600 dark:text-red-400">{formatDOP(vencidoTotal)}</p>
+        </div>
+
+        <div className="rounded-2xl border border-dash-border bg-dash-surface p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-text-faint">Cobrado {rangeLabel}</p>
+          <p className="text-3xl font-black text-dash-text mt-2">{formatDOP(cobradoRango)}</p>
+          <div className="h-1.5 rounded-full bg-dash-border mt-3 overflow-hidden">
+            <div className="h-full rounded-full bg-dash-accent" style={{ width: `${cobradoPercent}%` }} />
           </div>
+          <p className="text-[10px] text-dash-text-faint mt-1">{cobradoPercent}% de lo facturado {rangeLabel}</p>
         </div>
       </div>
 
-      {/* Académico */}
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
-          Académico
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Asistencia (últimos 7 días)</p>
-            <p className="text-2xl font-black text-primary dark:text-accent-light">
-              {asistenciaPercent !== null ? `${asistenciaPercent}%` : 'Sin registros'}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Participación en Academia (mes)</p>
-            <p className="text-2xl font-black text-primary dark:text-accent-light">
-              {academiaParticipacionPercent !== null ? `${academiaParticipacionPercent}%` : 'Sin estudiantes inscritos'}
-            </p>
-          </div>
+      {/* Cartera vencida */}
+      {overdue.length > 0 && (
+        <div className="rounded-2xl border border-dash-danger-border bg-dash-danger-bg p-6">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-dash-danger-strong">Cartera vencida</p>
+          <p className="text-3xl font-black text-dash-danger-strong mt-2">{formatDOP(carteraVencida)}</p>
+          <p className="text-sm text-dash-text-muted mt-1">{overdue.length} facturas · {familiasConMora} familias</p>
+          <Link href="/dashboard/pagos" className="inline-block mt-3 text-xs font-bold uppercase tracking-wide text-dash-danger-strong hover:underline">
+            Ver gestión de moras →
+          </Link>
         </div>
-      </div>
+      )}
 
-      {/* Comunicación + Asistente de IA */}
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
-          Comunicación y Asistente de IA
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Comunicados leídos este mes</p>
-            <p className="text-2xl font-black text-primary dark:text-accent-light">
-              {readsThisMonth ?? 0} <span className="text-sm font-normal text-slate-400">de {messageIdsThisMonth.length} enviados</span>
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Preguntas al asistente (últimos 7 días)</p>
-            <p className="text-2xl font-black text-primary dark:text-accent-light">{aiMessagesWeek ?? 0}</p>
-          </div>
-        </div>
+      {/* Flujo de cobranza -- año escolar */}
+      <ChartCard title="Flujo de cobranza · año escolar" subtitle="Últimos 12 meses" className="!bg-dash-surface !border-dash-border">
+        <StackedBarChart
+          data={flujoCobranza}
+          series={[
+            { key: 'cobrado', label: 'Cobrado', color: CHART_SEMANTIC.success },
+            { key: 'pendiente', label: 'Pendiente', color: CHART_SEMANTIC.neutral },
+            { key: 'vencido', label: 'Vencido', color: CHART_SEMANTIC.danger },
+          ]}
+          horizontal={false}
+          valueFormat="currency-dop"
+          emptyMessage="Aún no hay facturación registrada."
+        />
+      </ChartCard>
+
+      {/* Asistencia diaria + estado de matrícula */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <ChartCard
+          title="Asistencia diaria"
+          subtitle={`Últimas 4 semanas${promedio4Semanas !== null ? ` · Promedio ${promedio4Semanas}%` : ''}${minimo4Semanas ? ` · mínimo ${minimo4Semanas.asistencia}% el ${minimo4Semanas.label}` : ''}`}
+          className="!bg-dash-surface !border-dash-border"
+        >
+          <TrendChart
+            data={asistenciaDiaria}
+            series={[{ key: 'asistencia', label: '% presente', color: CHART_SEMANTIC.success }]}
+            valueFormat="percent"
+          />
+        </ChartCard>
+        <ChartCard title="Estado de matrícula" className="!bg-dash-surface !border-dash-border">
+          <DonutChart data={enrollmentDonut} centerLabel={`Inscritos ${inscritosCount}`} emptyMessage="Aún no hay estudiantes registrados." />
+        </ChartCard>
       </div>
 
       {/* Acciones rápidas */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
-          Acciones rápidas
-        </h2>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-dash-text-faint mb-3">Acciones rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { href: '/dashboard/estudiantes/nuevo', label: 'Nuevo Estudiante', icon: '➕' },
@@ -241,16 +339,16 @@ export default async function SecretariaPage() {
             { href: '/dashboard/familias',           label: 'Ver Familias',     icon: '👨‍👩‍👧' },
             { href: '/dashboard/asistencia',         label: 'Registrar Asistencia', icon: '📅' },
             { href: '/dashboard/pagos',              label: 'Ver Pagos',        icon: '💳' },
-            { href: '/dashboard/reportes',           label: 'Reportes',         icon: '📊' },
+            { href: '/dashboard/reportes',           label: 'Analíticas',       icon: '📊' },
           ].map((action) => (
             <a
               key={action.href}
               href={action.href}
               id={`action-${action.label.toLowerCase().replace(/\s/g, '-')}`}
-              className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/30 dark:hover:border-accent/30 hover:shadow-soft transition group"
+              className="flex items-center gap-3 p-4 rounded-2xl border border-dash-border bg-dash-surface hover:border-dash-accent/40 transition group"
             >
               <span className="text-xl" aria-hidden="true">{action.icon}</span>
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary dark:group-hover:text-accent-light transition">
+              <span className="text-sm font-medium text-dash-text-muted group-hover:text-dash-text transition">
                 {action.label}
               </span>
             </a>

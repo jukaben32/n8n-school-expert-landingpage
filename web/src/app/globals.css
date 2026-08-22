@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Modo oscuro por clase (".dark" en un ancestro) en vez de solo por
+   preferencia del sistema -- necesario para forzar el tema oscuro del
+   dashboard interno (ver dashboard/layout.tsx, que le pone la clase
+   "dark" a su contenedor raíz) sin afectar cómo funciona `dark:` en el
+   resto de la app (login, landing, etc.), que sigue sin esa clase y por
+   lo tanto nunca activa este selector -- ahí `dark:` simplemente no
+   hace nada (antes sí seguía la preferencia del sistema operativo). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ===================================================
    SCHOOLOS — Paleta de colores corporativa
    Extraída de la landing page original n8n-school-expert
@@ -36,6 +45,25 @@
   /* Sombras (valores base; ver @theme inline para exponerlas como utilidades) */
   --shadow-soft-value: 0 20px 40px rgba(15, 23, 42, 0.08);
   --shadow-glow-value: 0 24px 60px rgba(26, 95, 122, 0.18);
+
+  /* Dashboard interno — tema oscuro/menta ("Centro de control", agosto 2026)
+     Colores extraídos del rediseño real (Claude Design), no aproximados.
+     Solo se usan dentro de .dark (ver dashboard/layout.tsx). */
+  --dash-bg:             #04231a;
+  --dash-surface:        #0a2c20;
+  --dash-surface-raised: #0f3527;
+  --dash-border:         #163f2f;
+  --dash-text:           #eaf6f1;
+  --dash-text-muted:     #93b6a9;
+  --dash-text-faint:     #5f7a70;
+  --dash-accent:         #4ade9f;
+  --dash-accent-light:   #6ee7b7;
+  --dash-accent-dark:    #0b8259;
+  --dash-danger:         #e08a7e;
+  --dash-danger-strong:  #ff9d90;
+  --dash-danger-bg:      #2a1215;
+  --dash-danger-border:  #5c2b2e;
+  --dash-warning:        #e6bd63;
 }
 
 @theme inline {
@@ -60,6 +88,22 @@
   /* Namespace --shadow-* registra las utilidades shadow-soft / shadow-glow */
   --shadow-soft: var(--shadow-soft-value);
   --shadow-glow: var(--shadow-glow-value);
+
+  --color-dash-bg:             var(--dash-bg);
+  --color-dash-surface:        var(--dash-surface);
+  --color-dash-surface-raised: var(--dash-surface-raised);
+  --color-dash-border:         var(--dash-border);
+  --color-dash-text:           var(--dash-text);
+  --color-dash-text-muted:     var(--dash-text-muted);
+  --color-dash-text-faint:     var(--dash-text-faint);
+  --color-dash-accent:         var(--dash-accent);
+  --color-dash-accent-light:   var(--dash-accent-light);
+  --color-dash-accent-dark:    var(--dash-accent-dark);
+  --color-dash-danger:         var(--dash-danger);
+  --color-dash-danger-strong:  var(--dash-danger-strong);
+  --color-dash-danger-bg:      var(--dash-danger-bg);
+  --color-dash-danger-border:  var(--dash-danger-border);
+  --color-dash-warning:        var(--dash-warning);
 }
 
 /* Modo oscuro */

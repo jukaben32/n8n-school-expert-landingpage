@@ -228,29 +228,29 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
       )}
 
       <aside
-        className={`print:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-72 max-w-[85vw] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 transition-transform duration-200 ease-out md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 ${
+        className={`print:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-72 max-w-[85vw] border-r border-dash-border bg-dash-bg shrink-0 transition-transform duration-200 ease-out md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
 
       {/* Logo del colegio */}
-      <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800">
+      <div className="px-5 py-5 border-b border-dash-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <div className="w-9 h-9 rounded-xl bg-dash-accent flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-dash-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422A12.083 12.083 0 0121 13c0 4.418-3.582 8-8 8S5 17.418 5 13c0-.935.164-1.832.463-2.668L12 14z" />
             </svg>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light">MentorIApp</p>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{schoolName}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-dash-accent-light">MentorIApp</p>
+            <p className="text-sm font-medium text-dash-text truncate">{schoolName}</p>
           </div>
           <button
             type="button"
             onClick={close}
             aria-label="Cerrar menú"
-            className="md:hidden shrink-0 p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="md:hidden shrink-0 p-1.5 rounded-lg text-dash-text-faint hover:bg-dash-surface transition"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -270,19 +270,19 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
               aria-current={isActive ? 'page' : undefined}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                 isActive
-                  ? 'bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent-light'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+                  ? 'bg-dash-accent/15 text-dash-accent-light'
+                  : 'text-dash-text-muted hover:bg-dash-surface hover:text-dash-text'
               }`}
             >
               {icons[item.icon]}
               <span className="flex-1">{item.label}</span>
               {item.href === '/dashboard/plataforma/leads' && newLeadsCount > 0 && (
-                <span className="rounded-full bg-coral text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <span className="rounded-full bg-dash-danger-strong text-dash-danger-bg text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {newLeadsCount}
                 </span>
               )}
               {item.href === '/dashboard/mensajes' && newMessagesCount > 0 && (
-                <span className="rounded-full bg-coral text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <span className="rounded-full bg-dash-danger-strong text-dash-danger-bg text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {newMessagesCount}
                 </span>
               )}
@@ -293,10 +293,10 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
 
       {/* Doble rol: personal que también es tutor de un hijo aquí */}
       {guardianId && (
-        <div className="px-3 py-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="px-3 py-3 border-t border-dash-border">
           <a
             href="/dashboard/portal-familiar"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dash-warning bg-dash-warning/10 hover:bg-dash-warning/20 transition"
           >
             <span aria-hidden="true">👪</span>
             <span className="flex-1">Vista de Familia</span>
@@ -305,11 +305,11 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
       )}
 
       {/* Botón cerrar sesión */}
-      <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800">
+      <div className="px-3 py-4 border-t border-dash-border">
         <button
           id="sidebar-logout-btn"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition"
+          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dash-text-faint hover:bg-dash-danger-bg hover:text-dash-danger-strong transition"
         >
           {icons.logout}
           Cerrar sesión
