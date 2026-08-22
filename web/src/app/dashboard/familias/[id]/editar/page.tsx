@@ -43,6 +43,12 @@ export default async function EditarFamiliaPage({ params }: { params: Promise<{ 
     .eq('family_id', id)
     .order('is_primary', { ascending: false })
 
+  const guardianIds = (guardiansRaw ?? []).map((g) => g.id)
+  const { data: linkedProfiles } = guardianIds.length
+    ? await supabase.from('users_profiles').select('guardian_id').in('guardian_id', guardianIds)
+    : { data: [] }
+  const accessGuardianIds = (linkedProfiles ?? []).map((p) => p.guardian_id as string)
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -53,7 +59,7 @@ export default async function EditarFamiliaPage({ params }: { params: Promise<{ 
           Datos de facturación y padres/tutores de {family.name}.
         </p>
       </div>
-      <EditFamilyForm schoolId={schoolId} family={family} initialGuardians={guardiansRaw ?? []} />
+      <EditFamilyForm schoolId={schoolId} family={family} initialGuardians={guardiansRaw ?? []} accessGuardianIds={accessGuardianIds} />
     </div>
   )
 }

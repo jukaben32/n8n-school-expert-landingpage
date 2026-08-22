@@ -140,6 +140,75 @@ async function inviteByEmail(
   return { ok: true, message: `Invitación enviada a ${guardian.email}.` }
 }
 
+/**
+ * Actualiza el correo de ACCESO (login) de un tutor que ya tiene cuenta
+ * en el sistema, para que quede igual al correo guardado en su ficha.
+ *
+ * Por qué existe: si un tutor recibió acceso "sin correo" (ver
+ * createPhoneBasedAccess arriba), su cuenta de Auth quedó identificada
+ * por `{telefono}@mentoriapp.local` -- un correo que nunca revisa nadie.
+ * Si luego la secretaría le agrega su correo real en la ficha de familia,
+ * ESE cambio solo toca la tabla `guardians`; la cuenta de Auth sigue
+ * apuntando al correo falso. Entonces cuando el padre usa "Recuperar
+ * contraseña" con su correo real, Supabase no encuentra ninguna cuenta
+ * con ese correo y no envía nada (el mensaje genérico de éxito no lo
+ * distingue). Esta acción sincroniza el correo de Auth con el de la
+ * ficha para que el restablecimiento de contraseña por correo funcione.
+ */
+export async function syncGuardianAccessEmailAction(guardianId: string, newEmail: string): Promise<InviteResult> {
+  const email = newEmail.trim()
+  if (!email) return { ok: false, message: 'Falta el correo.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, message: 'No hay sesión activa.' }
+
+  const { data: profile } = await supabase
+    .from('users_profiles')
+    .select('role, school_id')
+    .eq('auth_id', user.id)
+    .single()
+
+  if (!profile || !canAccess(profile.role, 'familias')) {
+    return { ok: false, message: 'No tienes permiso para gestionar el acceso de tutores.' }
+  }
+
+  const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
+  const admin = createAdminClient()
+
+  const { data: guardian } = await admin
+    .from('guardians')
+    .select('id, school_id')
+    .eq('id', guardianId)
+    .single()
+  if (!guardian || guardian.school_id !== schoolId) {
+    return { ok: false, message: 'No se encontró ese tutor en este colegio.' }
+  }
+
+  const { data: linkedProfile } = await admin
+    .from('users_profiles')
+    .select('auth_id')
+    .eq('guardian_id', guardianId)
+    .maybeSingle()
+  if (!linkedProfile) {
+    // Todavía no tiene acceso -- no hay cuenta de Auth que sincronizar.
+    return { ok: true, message: 'Correo guardado.' }
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(linkedProfile.auth_id, {
+    email,
+    email_confirm: true,
+  })
+  if (error) {
+    if (error.message?.toLowerCase().includes('already been registered')) {
+      return { ok: false, message: 'Ese correo ya está en uso por otra cuenta -- no se pudo actualizar el acceso.' }
+    }
+    return { ok: false, message: `No se pudo actualizar el correo de acceso: ${error.message}` }
+  }
+
+  return { ok: true, message: 'Correo de acceso actualizado -- ya puede restablecer su contraseña con ese correo.' }
+}
+
 async function createPhoneBasedAccess(
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,

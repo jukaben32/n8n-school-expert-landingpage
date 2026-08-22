@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { syncGuardianAccessEmailAction } from '../../actions'
 
 interface Guardian {
   id: string
@@ -54,7 +55,7 @@ function newDraft(): EditableGuardian {
   return { key: crypto.randomUUID(), firstName: '', lastName: '', phone: '', email: '', relationship: 'tutor_legal', isPrimary: false, nationalId: '' }
 }
 
-export default function EditFamilyForm({ schoolId, family, initialGuardians }: { schoolId: string; family: Family; initialGuardians: Guardian[] }) {
+export default function EditFamilyForm({ schoolId, family, initialGuardians, accessGuardianIds }: { schoolId: string; family: Family; initialGuardians: Guardian[]; accessGuardianIds: string[] }) {
   const router = useRouter()
   const [name, setName] = useState(family.name)
   const [billingEmail, setBillingEmail] = useState(family.billing_email ?? '')
@@ -64,6 +65,10 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [accessNotices, setAccessNotices] = useState<string[]>([])
+
+  const initialEmailById = new Map(initialGuardians.map((g) => [g.id, g.email ?? '']))
+  const accessGuardianIdSet = new Set(accessGuardianIds)
 
   function updateGuardian(key: string, patch: Partial<EditableGuardian>) {
     setGuardians((prev) => prev.map((g) => (g.key === key ? { ...g, ...patch } : g)))
@@ -84,6 +89,7 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
     e.preventDefault()
     setError(null)
     setSaved(false)
+    setAccessNotices([])
 
     for (const g of guardians) {
       if (!g.firstName || !g.lastName || !g.phone) {
@@ -124,6 +130,21 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
           .eq('id', g.id as string)
         if (updateError) throw updateError
       }
+
+      // 3b. Si un tutor con acceso al sistema cambió su correo, sincronizar
+      //     también su correo de acceso (login) -- si no, "Recuperar
+      //     contraseña" nunca le encuentra la cuenta (ver comentario en
+      //     syncGuardianAccessEmailAction).
+      const notices: string[] = []
+      for (const g of guardians.filter((x) => x.id)) {
+        const guardianId = g.id as string
+        const emailChanged = (g.email || '') !== (initialEmailById.get(guardianId) ?? '')
+        if (emailChanged && g.email && accessGuardianIdSet.has(guardianId)) {
+          const syncResult = await syncGuardianAccessEmailAction(guardianId, g.email)
+          notices.push(`${g.firstName} ${g.lastName}: ${syncResult.message}`)
+        }
+      }
+      if (notices.length > 0) setAccessNotices(notices)
 
       // 4. Tutores nuevos: crear y vincular a todos los estudiantes de la familia
       const newGuardians = guardians.filter((x) => !x.id)
@@ -253,6 +274,11 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians }: {
       {saved && (
         <div role="status" className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400">
           ✓ Guardado.
+        </div>
+      )}
+      {accessNotices.length > 0 && (
+        <div role="status" className="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3 text-sm text-blue-700 dark:text-blue-400 space-y-1">
+          {accessNotices.map((n, i) => <p key={i}>{n}</p>)}
         </div>
       )}
 
