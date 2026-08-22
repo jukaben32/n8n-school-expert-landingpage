@@ -70,19 +70,22 @@ export default async function DashboardLayout({
 
   return (
     <MobileNavProvider>
-      {/* El panel oscuro flota sobre un fondo claro (gris muy tenue), con
-          esquinas redondeadas -- tal como el diseño original. Aplica en
-          todos los tamaños de pantalla (antes solo desde md: hacia arriba,
-          por precaución con el cajón móvil -- pero el Sidebar en móvil usa
-          position:fixed, que se posiciona contra el viewport sin importar
-          el padding/rounded de este contenedor, así que no hacía falta esa
-          condición y solo generaba dudas sobre en qué ancho se activaba). */}
+      {/* El panel oscuro (sidebar + barra superior) flota sobre un fondo
+          claro exterior, con esquinas redondeadas -- tal como el diseño
+          original. El contenido de cada página (<main>) usa "dash-main":
+          el plato claro esmerilado donde flotan las tarjetas.
+
+          A propósito NO se le pone la clase "dark" a nada aquí: Sidebar,
+          TopBar, GlobalSearch y NotificationBell ya no usan el variante
+          `dark:` de Tailwind (usan sus propias clases dash-*, que no
+          dependen de esa clase) y siguen viéndose oscuros igual. Las
+          demás ~25 páginas del dashboard (Estudiantes, Familias, etc.)
+          SÍ usan `dark:` por todos lados -- sin la clase "dark" forzada,
+          esas clases simplemente no activan, y caen solas a su variante
+          clara original (fondo blanco, texto oscuro legible), que ya
+          existía y no hay que rehacer página por página. */}
       <div className="min-h-screen bg-background p-2 sm:p-3">
-        {/* "dark" fija el tema oscuro del dashboard interno independientemente
-            de la preferencia del sistema operativo (ver globals.css:
-            @custom-variant dark). El resto de la app (login, landing) no
-            lleva esta clase, así que no le afecta. */}
-        <div className="dash-shell dark flex h-[calc(100vh-1rem)] sm:h-[calc(100vh-1.5rem)] overflow-hidden rounded-2xl shadow-2xl">
+        <div className="dash-shell flex h-[calc(100vh-1rem)] sm:h-[calc(100vh-1.5rem)] overflow-hidden rounded-2xl shadow-2xl">
           {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
           <Sidebar
             role={isViewingOtherSchool ? 'director' : role}
@@ -107,7 +110,7 @@ export default async function DashboardLayout({
               </div>
             )}
             <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <main className="dash-main flex-1 overflow-y-auto p-4 sm:p-6">
               {children}
             </main>
           </div>

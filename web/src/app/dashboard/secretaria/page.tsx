@@ -330,16 +330,18 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
         { label: 'autorizaciones', error: authRequestsError },
       ]} />
 
-      {/* Encabezado + selector de rango */}
+      {/* Encabezado + selector de rango -- van sobre el plato claro
+          (dash-main en el <main> del layout), no sobre la concha oscura,
+          así que usan colores oscuros, no los dash-text-* claros. */}
       <div className="flex items-end justify-between flex-wrap gap-3">
-        <h1 className="text-3xl font-bold font-barlow text-dash-text tracking-tight">Centro de control</h1>
-        <div className="dash-chip flex overflow-hidden">
+        <h1 className="text-3xl font-bold font-barlow text-slate-900 tracking-tight">Centro de control</h1>
+        <div className="flex overflow-hidden rounded-[11px] border border-slate-200 bg-white">
           {RANGE_OPTIONS.map((r) => (
             <Link
               key={r}
               href={`/dashboard/secretaria?range=${r}`}
               className="px-3.5 py-1.5 text-[13px] font-barlow uppercase tracking-[0.06em] transition"
-              style={range === r ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { color: 'var(--dash-text-muted)' }}
+              style={range === r ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { color: '#5f7a70' }}
             >
               {RANGE_LABELS[r]}
             </Link>
@@ -347,35 +349,30 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
         </div>
       </div>
 
-      {/* Contenido: "plato" claro esmerilado donde flotan las tarjetas
-          oscuras (ver .dash-main en globals.css). Todo lo que va aquí
-          adentro debe estar en su propia tarjeta oscura (PanelCentroControl
-          ya lo hace) -- texto suelto directamente sobre este fondo, con
-          los colores de texto claro del resto del dashboard, quedaría
-          ilegible. */}
-      <div className="dash-main rounded-2xl p-4 sm:p-6">
-        <PanelCentroControl
-          students={{ total: totalStudents, delta: `+${newStudentsInRange} ${rangeLabel}`, spark: studentsSpark }}
-          families={{ total: totalFamilies, withAccess: familiesWithAccess.size, pct: accessPercent }}
-          attendance={{
-            pct: asistenciaPercent !== null ? `${asistenciaPercent}%` : '—',
-            delta: asistenciaDelta !== null ? `${asistenciaDelta >= 0 ? '+' : ''}${asistenciaDelta} pts` : 'Sin datos previos',
-            spark: asistenciaSpark,
-            series: asistenciaSeries,
-            note: promedio4Semanas !== null
-              ? `Promedio ${promedio4Semanas}%${minimo4Semanas ? ` · mínimo ${minimo4Semanas.asistencia}% el ${minimo4Semanas.label}` : ''}`
-              : 'Sin datos todavía',
-          }}
-          collected={{ amount: formatDOP(cobradoRango), pctOfGoal: cobradoPercent }}
-          overdue={{ amount: formatDOP(carteraVencida), invoices: overdueCountTotal ?? 0, families: familiasConMora }}
-          enrollment={{ enrolled: inscritosCount, inProcess: enProcesoCount, withdrawn: retiradosCount }}
-          cashflow={cashflowNormalized}
-          overdueRows={overdueRowsMapped}
-          alerts={alerts}
-          insights={insights}
-          showInsights={insights.length > 0}
-        />
-      </div>
+      {/* PanelCentroControl ya arma sus propias tarjetas oscuras -- el
+          plato claro donde flotan lo pone el <main> compartido del layout
+          (dash-main), no hace falta duplicarlo aquí. */}
+      <PanelCentroControl
+        students={{ total: totalStudents, delta: `+${newStudentsInRange} ${rangeLabel}`, spark: studentsSpark }}
+        families={{ total: totalFamilies, withAccess: familiesWithAccess.size, pct: accessPercent }}
+        attendance={{
+          pct: asistenciaPercent !== null ? `${asistenciaPercent}%` : '—',
+          delta: asistenciaDelta !== null ? `${asistenciaDelta >= 0 ? '+' : ''}${asistenciaDelta} pts` : 'Sin datos previos',
+          spark: asistenciaSpark,
+          series: asistenciaSeries,
+          note: promedio4Semanas !== null
+            ? `Promedio ${promedio4Semanas}%${minimo4Semanas ? ` · mínimo ${minimo4Semanas.asistencia}% el ${minimo4Semanas.label}` : ''}`
+            : 'Sin datos todavía',
+        }}
+        collected={{ amount: formatDOP(cobradoRango), pctOfGoal: cobradoPercent }}
+        overdue={{ amount: formatDOP(carteraVencida), invoices: overdueCountTotal ?? 0, families: familiasConMora }}
+        enrollment={{ enrolled: inscritosCount, inProcess: enProcesoCount, withdrawn: retiradosCount }}
+        cashflow={cashflowNormalized}
+        overdueRows={overdueRowsMapped}
+        alerts={alerts}
+        insights={insights}
+        showInsights={insights.length > 0}
+      />
     </div>
   )
 }
