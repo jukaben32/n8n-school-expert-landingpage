@@ -176,8 +176,12 @@ w('begin;')
 w('')
 w('-- 1. Orlando Antoine Natera: docente de Ingles de 1er ciclo de secundaria')
 w('--    (area de Ingles/Amco). No existia en `staff`.')
-w(f"""insert into staff (id, school_id, first_name, last_name, role, specialty)
-values ('{ORLANDO_ID}', '{SCHOOL}', 'Orlando Antoine', 'Natera', 'teacher',
+w('--    El correo es un MARCADOR: la tabla lo exige y no lo tenemos. El')
+w('--    dominio .local no resuelve, asi que no puede llegarle a nadie por')
+w('--    error. Reemplazar por el real cuando se consiga.')
+w(f"""insert into staff (id, school_id, first_name, last_name, email, role, specialty)
+values ('{ORLANDO_ID}', '{SCHOOL}', 'Orlando Antoine', 'Natera',
+        'orlando.natera@pendiente.local', 'teacher',
         'Inglés (Nivel secundario) primer ciclo')
 on conflict (id) do nothing;""")
 w('')

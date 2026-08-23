@@ -4,8 +4,12 @@ begin;
 
 -- 1. Orlando Antoine Natera: docente de Ingles de 1er ciclo de secundaria
 --    (area de Ingles/Amco). No existia en `staff`.
-insert into staff (id, school_id, first_name, last_name, role, specialty)
-values ('b7c1e5a2-9d34-4f68-8a10-3c5e7f2b6d91', '0001da6e-2fe8-4dc9-97bf-8eadb7ee944e', 'Orlando Antoine', 'Natera', 'teacher',
+--    El correo es un MARCADOR: la tabla lo exige y no lo tenemos. El
+--    dominio .local no resuelve, asi que no puede llegarle a nadie por
+--    error. Reemplazar por el real cuando se consiga.
+insert into staff (id, school_id, first_name, last_name, email, role, specialty)
+values ('b7c1e5a2-9d34-4f68-8a10-3c5e7f2b6d91', '0001da6e-2fe8-4dc9-97bf-8eadb7ee944e', 'Orlando Antoine', 'Natera',
+        'orlando.natera@pendiente.local', 'teacher',
         'Inglés (Nivel secundario) primer ciclo')
 on conflict (id) do nothing;
 
