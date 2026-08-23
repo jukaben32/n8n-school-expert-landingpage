@@ -172,6 +172,66 @@ exportación de datos).
     tardanza en el sistema, punto. Confirmado con 3 inserts de prueba
     reales (revertidos con `ROLLBACK`) antes y después del fix.
     Corregido en la migración 019, mismo patrón que la 015 (leads).
+13. **Invitar personal dejaba usuarios huérfanos** (`web/src/app/dashboard/personal/actions.ts`,
+    `inviteStaffAccess`): `inviteUserByEmail` corría con el cliente
+    `admin` (service_role), pero el `insert` en `users_profiles` que
+    venía justo después usaba el cliente de sesión del invitador. Como
+    `users_profiles` **nunca ha tenido una policy de INSERT** (ni en la
+    migración 016 ni en ninguna otra -- solo tiene `own_read`,
+    `own_update` y `staff_read`), Postgres lo denegaba por defecto para
+    cualquier rol sujeto a RLS: el usuario de Auth quedaba creado, con
+    credenciales, pero sin perfil -- sin rol, sin `school_id`, la app no
+    sabía quién era. Fix: mover el insert al cliente `admin` también
+    (misma llamada server-side ya usada para la invitación), y mover
+    TODA la autorización que antes recaía en RLS al propio Server
+    Action -- permiso sobre el módulo `personal`, jerarquía de rol (el
+    invitador no puede otorgar un rol de más peso que el suyo, tabla
+    `ROLE_RANK`), `school_id` resuelto en servidor (nunca de un
+    parámetro), `staff_id` verificado contra ese mismo colegio. Si el
+    insert del perfil falla tras crear la cuenta de Auth, se revierte
+    con `deleteUser` (nunca si la cuenta ya existía de antes); si el
+    propio rollback falla, queda registrado en `audit_logs` (tabla ya
+    existente, sin uso hasta ahora) además de en consola, para no dejar
+    un huérfano real sin rastro. **No se agregó ninguna policy de
+    INSERT a `users_profiles` -- su ausencia es intencional**, la única
+    vía de creación válida es este Server Action.
+    Verificado end-to-end contra producción: se reinvitó a la cuenta
+    huérfana real (`anthonia24.04@gmail.com`, borrada primero) con el
+    flujo corregido, y una segunda invitación de prueba completa
+    (`role: reception`) confirmó `users_profiles` creado con
+    `school_id`/`staff_id`/`role` correctos, y control de acceso real
+    -- el usuario invitado pudo entrar y ver Asistencia (permitido para
+    `reception`) pero fue redirigido fuera de Tesorería y Personal (no
+    permitidos), exactamente según `permissions.ts`. Ambas pruebas se
+    hicieron con acceso directo a Supabase (Management API con un PAT
+    de un solo uso) porque el conector MCP de esta sesión seguía
+    apuntando al proyecto vacío equivocado (mismo problema documentado
+    más abajo en la sección de OCR) -- verificado de nuevo con
+    `list_projects` antes de confiar en cualquier herramienta MCP de
+    Supabase.
+14. **Los correos de invitación de personal (`admin.inviteUserByEmail`)
+    no llegaron durante la verificación de esta sesión**, a diferencia
+    de los correos de enlace mágico y de recuperación de contraseña
+    (`resetPasswordForEmail`), que sí llegaron con normalidad segundos
+    después de dispararse, en la misma sesión y con el mismo remitente
+    (`demo@mail.resendcegmas.com` vía Resend). No se pudo confirmar la
+    causa exacta -- no había una API key de Resend disponible para
+    revisar sus logs de entrega, y `audit_log_disable_postgres: true`
+    en la configuración de Auth del proyecto deja vacía
+    `auth.audit_log_entries`, así que tampoco sirvió como rastro. Dato
+    encontrado que vale la pena revisar aunque no se pudo confirmar
+    como causa: `rate_limit_email_sent` está en `2` (correos por hora)
+    en la configuración de Auth del proyecto -- un límite muy bajo para
+    dar de alta a todo un equipo de colegio en una sola sesión, y un
+    límite que Supabase aplica del lado de su propio auth server
+    **incluso con SMTP personalizado (Resend) configurado** -- no lo
+    desactiva. Para completar la verificación de este bug sin esperar
+    el correo real, se confirmó el email de la cuenta de prueba
+    directamente vía `admin.updateUserById({ email_confirm: true })`
+    (equivalente a lo que haría el clic en el enlace del correo).
+    **Pendiente**: conseguir acceso a los logs de Resend (o subir
+    `rate_limit_email_sent` a un valor razonable) para confirmar si
+    esto también afecta invitaciones reales del colegio piloto.
 
 ## Descuento por hermanos (Tesorería)
 
