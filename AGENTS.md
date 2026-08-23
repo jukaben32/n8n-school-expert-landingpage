@@ -1363,22 +1363,63 @@ El hallazgo central: ningún docente de secundaria llega a las 25h, pero
 **materia por materia** casi todas ya están al mínimo de un solo docente
 para los 6 grados -- la única con una oportunidad real de consolidación,
 confirmada por los números (2 docentes al 50-55% de utilización, demanda
-combinada de solo 26.5h, apenas por encima de 1 plaza), es **Inglés**,
+combinada real de solo 25.67h, apenas 0.67h por encima de 1 plaza -- cifra
+corregida, ver "Verificación cruzada" abajo), es **Inglés**,
 separado como grupo propio en el informe a pedido explícito del usuario.
-Orientación Educativa (Génesis Rodríguez, 1.67h/semana) se excluyó del
+Orientación Educativa (Génesis Rodríguez, 1.83h/semana) se excluyó del
 análisis financiero -- su rol probablemente incluye trabajo real fuera del
 horario de clases (consejería, casos, reuniones) que este informe no puede
 medir. Educación Física (Jennifer Liliana Soriano, única especialista para
 todo el colegio) se presenta con su carga combinada primaria+secundaria
 (11.5h) para no sobreestimar su disponibilidad real.
 
-**Pendiente real**: no se pudo previsualizar el `.docx` renderizado a PDF en
-esta sesión -- `soffice`/LibreOffice falla con "source file could not be
-loaded" incluso al convertir un `.docx`/`.txt` mínimo generado en el momento
-(problema del entorno, no del archivo -- confirmado con
-`validate.py`: XML bien formado, cero `NaN`/`undefined` en las cifras). Se
-recomienda que alguien lo abra una vez en Word/Google Docs para confirmar
-que el formato se ve como se espera antes de distribuirlo más ampliamente.
+~~**Pendiente real**: no se pudo previsualizar el `.docx` renderizado a PDF en
+esta sesión~~ -- **resuelto el mismo día** en una sesión de Claude Code con
+acceso a la máquina del usuario: el `.docx` se exportó a PDF con Word
+(COM, `ExportAsFixedFormat`) sin errores -- 4 gráficas y 2 tablas intactas.
+El bloqueo era del entorno anterior (`soffice`), no del archivo.
+
+### Verificación cruzada de los dos entregables (2026-08-23, sesión posterior)
+
+Los dos archivos se volvieron a revisar leyéndolos directamente (`.xlsx`/`.docx`
+son ZIP con XML; se re-contaron las horas desde el horario en vez de confiar en
+la hoja "Resumen Docentes"). **Toda la aritmética financiera resultó correcta**
+(salario diario, tarifa/hora, cada fila de brecha, el promedio de 16.0h, la
+utilización de 63.9% y el total de RD$37,756 -- diferencias de céntimos por
+redondeo). También salieron limpias dos comprobaciones estructurales: los 6
+grados de secundaria tienen sus 30 sesiones semanales completas, y ningún
+docente aparece asignado a dos grados a la misma hora.
+
+Se encontraron **tres errores de conteo**, ya corregidos en las versiones
+`*_corregido.xlsx` / `*_corregido.docx` (los originales se dejaron intactos):
+
+1. **Inglés estaba inflado por doble conteo, y eso *refuerza* la
+   recomendación principal.** La franja compartida de 1ro (viernes 7:30-8:20)
+   se le cuenta a los dos profesores, así que sumar sus horas cuenta esos 50
+   minutos dos veces. La demanda combinada real es **25.67h, no 26.5h** --
+   o sea que consolidar en una sola plaza queda a 0.67h del límite, no a 1.5h.
+   El valor mensual del grupo pasa de RD$9,840 a RD$10,180.
+2. **Marcelis Santos: descuadre entre documentos (hallazgo nuevo).** Su
+   horario de docente marca 21 sesiones (18.00h), pero en los horarios de los
+   6 grados solo aparecen 20 (17.17h). Hay una clase de Ciencias Naturales que
+   existe en un documento y no en el otro. Se mantuvo la cifra del horario de
+   docentes (la fuente declarada del informe) y se dejó anotado para que
+   Dirección Académica confirme cuál documento está al día.
+3. **Génesis Rodríguez: 1.83h, no 1.67h.** Sus 2 sesiones no duran lo mismo
+   (una de 50 min con 1ro y otra de 60 min con 4to). No afecta el análisis
+   financiero porque está excluida.
+
+Si los puntos 1 y 2 se confirmaran, la brecha total del informe subiría unos
+RD$700/mes (~1.8%) -- sin cambiar ninguna conclusión. También se arregló un
+defecto de formato del Excel: la hoja "Notas" tenía el texto partido en
+columnas sueltas y la nota de primaria quedaba cortada a media frase.
+
+**Pendiente real que sigue abierto**: cargar los horarios en producción
+(`class_periods`/`class_schedules`, y `subjects` si hace falta). Nota para
+quien lo retome: ahora sí es viable -- ya se comprobó en esta misma fecha que
+`supabase link` + la Management API funcionan contra `fssjgpqisfnmnkavsyld`
+con un token personal. Antes de insertar, verificar que `subjects` y `staff`
+estén pobladas y usar el archivo **corregido** como fuente, no el original.
 
 ## Convenciones de trabajo
 
@@ -1467,8 +1508,16 @@ que el formato se ve como se espera antes de distribuirlo más ampliamente.
     `sender_name = "MentorIApp"` confirmado como correcto. (Ver sección
     "Vencimiento del enlace de 'recuperar contraseña'" más arriba para el
     detalle completo, incluido el incidente del `config push`.) PR #4
-    (`fix/config-toml-produccion-real`) pendiente de que el usuario lo
-    fusione a mano en GitHub.
+    (`fix/config-toml-produccion-real`) fusionado a `main` el 2026-08-23.
+13. **Horarios 2026-2027 en producción** — los 3 horarios ya están cruzados,
+    verificados y corregidos en un Excel listo para usar como fuente (ver
+    sección "Horarios 2026-2027 ... + informe ejecutivo de carga horaria"
+    más arriba), pero **no se han cargado en `class_periods`/`class_schedules`**.
+    Antes de insertar: confirmar que `subjects` y `staff` estén pobladas, usar
+    el archivo `*_corregido.xlsx` (no el original), y resolver con Dirección
+    Académica los dos descuadres detectados (la franja de Inglés de 1ro y la
+    sesión de Marcelis Santos). El informe ejecutivo de carga horaria ya se
+    entregó al usuario y no vive en el repo.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
