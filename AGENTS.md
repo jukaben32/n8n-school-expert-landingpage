@@ -1225,6 +1225,42 @@ registrar una nota, generar un boletín) -- solo se verificó que compila
   llega y que `notify-attendance` también quedó funcionando con el
   secret nuevo.
 
+## Vencimiento del enlace de "recuperar contraseña" (2026-08-23)
+
+**Reporte real del usuario, no hipotético**: probó el flujo de "olvidé mi
+contraseña" con una familia real -- el enlace de restablecimiento venía
+con un vencimiento de **1 minuto**, insuficiente para alguien que no revisa
+el correo con agilidad (la mayoría de las familias en el país se comunican
+por WhatsApp, no por correo). Le tomó 3 intentos lograrlo.
+
+**Cómo funciona este flujo**: `recuperar-contrasena/page.tsx` llama a
+`supabase.auth.resetPasswordForEmail()` (SDK nativo de Supabase, sin lógica
+propia); `actualizar-contrasena/page.tsx` intercambia el `?code=` del enlace
+por sesión (`exchangeCodeForSession`). El vencimiento del enlace no lo
+controla el código de este repo -- lo controla Supabase Auth, con el mismo
+parámetro `otp_expiry` que ya se documentaba en `supabase/config.toml` para
+los OTP de correo (aplica a señalización, invitación, cambio de correo Y
+recuperación de contraseña por igual -- no hay un valor separado solo para
+"olvidé mi contraseña").
+
+**Lo que se corrigió en este repo**: `supabase/config.toml` →
+`[auth.email] otp_expiry` de `3600` a `600` (10 minutos).
+
+**Lo que quedó pendiente y no se pudo verificar en esta sesión**: el valor
+de `config.toml` ya estaba en `3600` (1 hora) *antes* de este cambio, no en
+60 -- es decir, el `1 minuto` real que vio el usuario en producción no
+coincide con lo que dice este archivo. Mismo patrón que el SMTP de Auth
+documentado más abajo: varias configuraciones de Authentication solo se
+aplican de verdad al proyecto remoto a mano, desde el Dashboard de
+Supabase (Authentication → Emails → tiempo de expiración del OTP de
+correo), no leyendo este `config.toml` -- esta sesión no tuvo acceso al
+Dashboard ni a un token de la API de administración de Supabase para
+confirmar o corregir el valor remoto directamente. **Falta**: entrar al
+Dashboard del proyecto remoto (`fssjgpqisfnmnkavsyld`) → Authentication →
+Emails, y poner el tiempo de expiración del OTP de correo en 600 segundos
+(10 minutos) a mano, luego probar de nuevo el enlace de recuperación con
+una familia real para confirmar el nuevo vencimiento.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
