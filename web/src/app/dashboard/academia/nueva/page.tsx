@@ -37,10 +37,10 @@ export default async function NuevaLeccionPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'las materias', error: subjectsError }, { label: 'los grados', error: gradeLevelsError }]} />
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Nueva Lección
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Un video explicativo + un cuestionario corto para reforzar el tema.
         </p>
       </div>

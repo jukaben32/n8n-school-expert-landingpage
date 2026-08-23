@@ -59,8 +59,8 @@ export default async function AcademiaPage() {
     return (
       <div className="max-w-lg mx-auto mt-16 text-center space-y-3">
         <p className="text-4xl" aria-hidden="true">🎓</p>
-        <h1 className="text-xl font-black text-slate-900 dark:text-white">Academia</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <h1 className="text-xl font-bold font-barlow text-slate-900">Academia</h1>
+        <p className="text-sm text-slate-500">
           Tu cuenta todavía no está vinculada a un estudiante. Pídele a la administración del colegio que la vincule para poder ver tus lecciones.
         </p>
       </div>
@@ -104,19 +104,19 @@ export default async function AcademiaPage() {
       ]} />
 
       {/* Encabezado con gamificación */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="dash-card p-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Academia</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tus lecciones y cuestionarios</p>
+          <h1 className="text-2xl font-bold font-barlow tracking-tight" style={{ color: 'var(--dash-text)' }}>Academia</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--dash-text-muted)' }}>Tus lecciones y cuestionarios</p>
         </div>
         <div className="flex gap-6">
           <div className="text-center">
-            <p className="text-2xl font-black text-primary dark:text-accent-light">{points?.total_points ?? 0}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Puntos</p>
+            <p className="text-2xl font-bold font-barlow" style={{ color: 'var(--dash-accent)' }}>{points?.total_points ?? 0}</p>
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--dash-text-faint)' }}>Puntos</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-black text-orange-500">🔥 {points?.current_streak_days ?? 0}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Racha</p>
+            <p className="text-2xl font-bold font-barlow" style={{ color: 'var(--dash-warning)' }}>🔥 {points?.current_streak_days ?? 0}</p>
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--dash-text-faint)' }}>Racha</p>
           </div>
         </div>
       </div>
@@ -145,15 +145,15 @@ export default async function AcademiaPage() {
               <Link
                 key={lesson.id}
                 href={`/dashboard/academia/${lesson.id}`}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between gap-4 hover:border-primary/40 transition"
+                className="dash-card p-5 flex items-center justify-between gap-4 transition"
               >
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-accent-dark dark:text-accent-light">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--dash-accent-light)' }}>
                     {lesson.subjects?.name ?? 'Materia'}
                   </p>
-                  <p className="font-semibold text-slate-900 dark:text-white truncate">{lesson.title}</p>
+                  <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{lesson.title}</p>
                   {lesson.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{lesson.description}</p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>{lesson.description}</p>
                   )}
                 </div>
                 {attempt ? (
@@ -170,9 +170,9 @@ export default async function AcademiaPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🎬</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             Todavía no hay lecciones publicadas para tu grado.
           </p>
         </div>

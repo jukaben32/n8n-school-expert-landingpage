@@ -66,7 +66,7 @@ export default async function AutorizacionDetallePage({ params }: { params: Prom
   return (
     <div className="max-w-3xl mx-auto space-y-6 print:max-w-full">
       <div className="flex items-center justify-between print:hidden">
-        <Link href="/dashboard/autorizaciones" className="text-sm text-primary dark:text-accent-light hover:underline">
+        <Link href="/dashboard/autorizaciones" className="text-sm hover:underline" style={{ color: 'var(--dash-accent)' }}>
           ← Autorizaciones
         </Link>
         <div className="flex items-center gap-2">
@@ -75,43 +75,43 @@ export default async function AutorizacionDetallePage({ params }: { params: Prom
         </div>
       </div>
 
-      <div className="border-b border-slate-200 dark:border-slate-800 print:border-slate-900 pb-4 space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light print:text-slate-900">{school?.name ?? 'Colegio'}</p>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">{request.title}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 print:text-slate-700">
+      <div className="border-b print:border-slate-900 pb-4 space-y-1" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
+        <p className="text-xs font-semibold uppercase tracking-widest print:text-slate-900" style={{ color: 'var(--dash-accent-light)' }}>{school?.name ?? 'Colegio'}</p>
+        <h1 className="text-2xl font-bold font-barlow print:text-slate-900" style={{ color: 'var(--dash-text)' }}>{request.title}</h1>
+        <p className="text-sm print:text-slate-700" style={{ color: 'var(--dash-text-muted)' }}>
           {request.grade_level ?? 'Todo el colegio'}
           {request.event_date && ` · ${new Date(`${request.event_date}T00:00:00`).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}`}
         </p>
-        <p className="text-sm text-slate-700 dark:text-slate-300 print:text-slate-900 whitespace-pre-wrap pt-2">{request.description}</p>
+        <p className="text-sm print:text-slate-900 whitespace-pre-wrap pt-2" style={{ color: 'var(--dash-text-muted)' }}>{request.description}</p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 print:border-slate-900 overflow-x-auto">
+      <div className="dash-card print:border-slate-900 overflow-x-auto">
         <table className="w-full text-sm text-left border-collapse">
-          <thead className="bg-slate-50 dark:bg-slate-800/50 print:bg-transparent">
-            <tr>
-              <th className="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-400 print:text-slate-900 border-b print:border-slate-900">Estudiante</th>
-              <th className="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-400 print:text-slate-900 border-b print:border-slate-900">Estado</th>
-              <th className="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-400 print:text-slate-900 border-b print:border-slate-900">Firmado por</th>
-              <th className="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-400 print:text-slate-900 border-b print:border-slate-900">Fecha/hora</th>
+          <thead className="print:bg-transparent">
+            <tr className="border-b print:border-slate-900" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
+              <th className="px-3 py-2.5 font-barlow uppercase tracking-wide text-xs print:text-slate-900" style={{ color: 'var(--dash-text-muted)' }}>Estudiante</th>
+              <th className="px-3 py-2.5 font-barlow uppercase tracking-wide text-xs print:text-slate-900" style={{ color: 'var(--dash-text-muted)' }}>Estado</th>
+              <th className="px-3 py-2.5 font-barlow uppercase tracking-wide text-xs print:text-slate-900" style={{ color: 'var(--dash-text-muted)' }}>Firmado por</th>
+              <th className="px-3 py-2.5 font-barlow uppercase tracking-wide text-xs print:text-slate-900" style={{ color: 'var(--dash-text-muted)' }}>Fecha/hora</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 print:divide-slate-300">
+          <tbody className="divide-y print:divide-slate-300" style={{ borderColor: 'rgba(150,225,196,.08)' }}>
             {students.map((s) => {
               const r = responseByStudent.get(s.id)
               return (
                 <tr key={s.id}>
-                  <td className="px-3 py-2.5 font-medium text-slate-900 dark:text-white">{s.last_name}, {s.first_name}</td>
+                  <td className="px-3 py-2.5 font-medium print:text-slate-900" style={{ color: 'var(--dash-text)' }}>{s.last_name}, {s.first_name}</td>
                   <td className="px-3 py-2.5">
                     {!r ? (
-                      <span className="text-amber-600 dark:text-amber-400 font-semibold">Pendiente</span>
+                      <span className="font-semibold" style={{ color: 'var(--dash-warning)' }}>Pendiente</span>
                     ) : r.decision === 'autorizado' ? (
-                      <span className="text-green-600 dark:text-green-400 font-semibold">✓ Autorizado</span>
+                      <span className="font-semibold" style={{ color: 'var(--dash-accent)' }}>✓ Autorizado</span>
                     ) : (
-                      <span className="text-red-600 dark:text-red-400 font-semibold">✗ No autorizado</span>
+                      <span className="font-semibold" style={{ color: 'var(--dash-danger-strong)' }}>✗ No autorizado</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 print:text-slate-900">{r?.signer_full_name ?? '—'}</td>
-                  <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400 print:text-slate-700">{r ? formatDateTime(r.responded_at) : '—'}</td>
+                  <td className="px-3 py-2.5 print:text-slate-900" style={{ color: 'var(--dash-text-muted)' }}>{r?.signer_full_name ?? '—'}</td>
+                  <td className="px-3 py-2.5 print:text-slate-700" style={{ color: 'var(--dash-text-faint)' }}>{r ? formatDateTime(r.responded_at) : '—'}</td>
                 </tr>
               )
             })}
@@ -120,8 +120,8 @@ export default async function AutorizacionDetallePage({ params }: { params: Prom
       </div>
 
       {students.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
-          <p className="text-slate-500 dark:text-slate-400 text-sm">No hay estudiantes en el grupo dirigido.</p>
+        <div className="dash-card border-dashed p-12 text-center">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No hay estudiantes en el grupo dirigido.</p>
         </div>
       )}
     </div>

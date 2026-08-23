@@ -51,9 +51,9 @@ export default async function AutorizacionesPage() {
     if (myStudents.length === 0) {
       return (
         <div className="max-w-2xl mx-auto space-y-6">
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Autorizaciones</h1>
-          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No hay estudiantes vinculados a tu cuenta.</p>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Autorizaciones</h1>
+          <div className="dash-card border-dashed p-12 text-center">
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No hay estudiantes vinculados a tu cuenta.</p>
           </div>
         </div>
       )
@@ -86,27 +86,27 @@ export default async function AutorizacionesPage() {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Autorizaciones</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Permisos que requieren tu autorización.</p>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Autorizaciones</h1>
+          <p className="text-sm text-slate-500 mt-1">Permisos que requieren tu autorización.</p>
         </div>
 
         {relevantPairs.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+          <div className="dash-card border-dashed p-12 text-center">
             <p className="text-4xl mb-3" aria-hidden="true">✅</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No hay autorizaciones pendientes.</p>
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No hay autorizaciones pendientes.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {relevantPairs.map(({ request, student }) => {
               const existing = responseFor(request.id, student.id)
               return (
-                <div key={`${request.id}-${student.id}`} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary dark:text-accent-light">
+                <div key={`${request.id}-${student.id}`} className="dash-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--dash-accent-light)' }}>
                     {student.first_name} {student.last_name}
                     {request.event_date && ` · ${formatDate(request.event_date)}`}
                   </p>
-                  <p className="font-semibold text-slate-900 dark:text-white mt-1">{request.title}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-wrap">{request.description}</p>
+                  <p className="font-semibold mt-1" style={{ color: 'var(--dash-text)' }}>{request.title}</p>
+                  <p className="text-sm mt-1 whitespace-pre-wrap" style={{ color: 'var(--dash-text-muted)' }}>{request.description}</p>
 
                   {existing ? (
                     <div className={`mt-3 rounded-xl px-3 py-2 text-sm font-semibold ${
@@ -156,11 +156,11 @@ export default async function AutorizacionesPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Autorizaciones</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Permisos firmados por los tutores (excursiones, etc.)</p>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Autorizaciones</h1>
+          <p className="text-sm text-slate-500 mt-1">Permisos firmados por los tutores (excursiones, etc.)</p>
         </div>
         {canCreate && (
-          <Link href="/dashboard/autorizaciones/nuevo" className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow">
+          <Link href="/dashboard/autorizaciones/nuevo" className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5">
             + Nueva
           </Link>
         )}
@@ -173,9 +173,9 @@ export default async function AutorizacionesPage() {
       )}
 
       {requests.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">📝</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no hay autorizaciones creadas.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay autorizaciones creadas.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -185,18 +185,18 @@ export default async function AutorizacionesPage() {
               <Link
                 key={r.id}
                 href={`/dashboard/autorizaciones/${r.id}`}
-                className="block rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 hover:border-primary/40 transition"
+                className="dash-card block p-5 transition"
               >
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary dark:text-accent-light">
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--dash-accent-light)' }}>
                   {r.grade_level ?? 'Todo el colegio'}{r.event_date && ` · ${formatDate(r.event_date)}`}
                 </p>
-                <p className="font-semibold text-slate-900 dark:text-white mt-1">{r.title}</p>
+                <p className="font-semibold mt-1" style={{ color: 'var(--dash-text)' }}>{r.title}</p>
                 {c && (
                   <div className="flex gap-3 mt-2 text-xs font-semibold">
-                    <span className="text-green-600 dark:text-green-400">{c.autorizados} autorizados</span>
-                    <span className="text-amber-600 dark:text-amber-400">{c.pendientes} pendientes</span>
-                    {c.noAutorizados > 0 && <span className="text-red-600 dark:text-red-400">{c.noAutorizados} no autorizados</span>}
-                    <span className="text-slate-400 dark:text-slate-500">de {c.total}</span>
+                    <span style={{ color: 'var(--dash-accent)' }}>{c.autorizados} autorizados</span>
+                    <span style={{ color: 'var(--dash-warning)' }}>{c.pendientes} pendientes</span>
+                    {c.noAutorizados > 0 && <span style={{ color: 'var(--dash-danger-strong)' }}>{c.noAutorizados} no autorizados</span>}
+                    <span style={{ color: 'var(--dash-text-faint)' }}>de {c.total}</span>
                   </div>
                 )}
               </Link>

@@ -41,10 +41,10 @@ export default async function NuevaAutorizacionPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Nueva Autorización
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           El texto que escribas aquí es lo que cada tutor va a firmar -- sé específico y completo (fecha, actividad, transporte, riesgos, etc.).
         </p>
       </div>

@@ -41,7 +41,16 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
   const [videoUrl, setVideoUrl] = useState('')
   const [videoProvider, setVideoProvider] = useState<'youtube' | 'vimeo'>('youtube')
   const [isPublished, setIsPublished] = useState(true)
-  const [questions, setQuestions] = useState<DraftQuestion[]>([newQuestion()])
+  // Claves fijas (no crypto.randomUUID()) para la pregunta inicial: este
+  // useState se evalua tanto en el servidor como en el cliente durante la
+  // hidratacion, y un UUID aleatorio saldria distinto en cada uno,
+  // provocando un mismatch de hidratacion en el `name` de los radios.
+  const [questions, setQuestions] = useState<DraftQuestion[]>([
+    { key: 'q-initial', prompt: '', points: 10, options: [
+      { key: 'o-initial-1', label: '', isCorrect: true },
+      { key: 'o-initial-2', label: '', isCorrect: false },
+    ] },
+  ])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
