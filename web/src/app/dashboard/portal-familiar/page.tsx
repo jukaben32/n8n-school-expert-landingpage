@@ -132,7 +132,7 @@ export default async function PortalFamiliarPage() {
                   />
                   <a
                     href={`/dashboard/notas/boletin/${student.id}`}
-                    className="inline-block ml-1 text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+                    className="inline-block ml-1 text-xs font-semibold text-dash-accent hover:underline"
                   >
                     📋 Ver boletín de calificaciones
                   </a>
@@ -166,7 +166,7 @@ export default async function PortalFamiliarPage() {
                   )}
                 </div>
                 <div className="p-2.5">
-                  <p className="text-[11px] font-bold text-primary dark:text-accent-light truncate">{u.targetLabel}</p>
+                  <p className="text-[11px] font-bold text-dash-accent truncate">{u.targetLabel}</p>
                   {u.caption && <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2">{u.caption}</p>}
                 </div>
               </div>

@@ -27,7 +27,7 @@ export default function SendReminderButton({ authorizationRequestId, pendingCoun
         type="button"
         onClick={handleSend}
         disabled={sending}
-        className="inline-flex items-center gap-2 rounded-full border border-primary/30 text-primary dark:text-accent-light dark:border-accent/30 text-sm font-semibold px-4 py-2 transition hover:bg-primary/5 dark:hover:bg-accent/10 disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-full border border-dash-accent/40 text-dash-accent text-sm font-semibold px-4 py-2 transition hover:bg-primary/5 dark:hover:bg-accent/10 disabled:opacity-60"
       >
         {sending ? 'Enviando...' : `✉️ Recordar a pendientes (${pendingCount})`}
       </button>

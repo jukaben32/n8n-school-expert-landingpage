@@ -44,7 +44,7 @@ export default function UpdateCard({
         )}
       </div>
       <div className="p-3">
-        <p className="text-xs font-bold text-primary dark:text-accent-light">{targetLabel}</p>
+        <p className="text-xs font-bold text-dash-accent">{targetLabel}</p>
         {caption && <p className="text-sm text-slate-700 dark:text-slate-200 mt-1">{caption}</p>}
         <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{dateStr}</p>
       </div>

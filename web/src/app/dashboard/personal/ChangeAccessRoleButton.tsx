@@ -39,7 +39,7 @@ export default function ChangeAccessRoleButton({ profileId, currentRole }: { pro
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="text-xs text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-accent-light hover:underline"
+        className="text-xs text-dash-text-muted hover:text-dash-accent hover:underline"
       >
         Cambiar rol de acceso
       </button>
@@ -70,7 +70,7 @@ export default function ChangeAccessRoleButton({ profileId, currentRole }: { pro
         type="button"
         onClick={() => { setEditing(false); setRole(currentRole) }}
         disabled={saving}
-        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+        className="text-xs text-dash-text-muted hover:text-dash-text"
       >
         Cancelar
       </button>
