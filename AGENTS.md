@@ -1425,20 +1425,36 @@ Conteos: `schools` 1, `staff` 33, `students` 77, `school_years` 1,
 `grade_levels` 4, `teacher_assignments` 20, `class_periods` 7,
 **`subjects` 0**, **`class_schedules` 0**.
 
-**Bloqueo 1 -- el colegio usa DOS rejillas de horario distintas y el esquema
-solo soporta una.** Los 7 `class_periods` que ya existen (cargados el
-2026-08-22: "Fila de Bienvenida", "Bloque 1-5", "Recreo") resultaron ser los
-de **primaria** -- coinciden exactamente con las franjas del documento de
+**~~Bloqueo 1~~ -- RESUELTO en código (2026-08-23), falta aplicar la
+migración.** Los 7 `class_periods` que ya existen (cargados el 2026-08-22:
+"Fila de Bienvenida", "Bloque 1-5", "Recreo") resultaron ser los de
+**primaria** -- coinciden exactamente con las franjas del documento de
 primaria (7:40-8:30, 8:30-9:20, 10:20-11:10, 11:10-11:50, 11:50-12:30).
 **Secundaria usa otra rejilla completamente distinta** (7:30-8:20, 8:20-9:10,
 9:10-10:00, 10:00-10:50, recreo 10:50-11:10, 11:10-12:10, 12:10-1:00) que no
-está cargada. Pero `class_periods` es una sola lista plana por colegio, sin
-columna de nivel/categoría, y `class_schedules.period_id` apunta ahí
-directamente. Hay que decidir entre: (a) meter las dos rejillas en la misma
-tabla con nombres que las distingan ("Sec. Bloque 1"...), a costa de que la
-pantalla de horarios muestre 13 franjas para cualquier grado; o (b) agregar
-una columna de nivel a `class_periods` (migración nueva) y filtrar por ella
-en `/dashboard/horarios`. La opción (b) es la correcta de fondo.
+está cargada. Como `class_periods` era una sola lista plana por colegio, la
+pantalla mostraba las franjas de primaria al abrir un curso de secundaria.
+
+Solución implementada (migración `20260823000000_class_periods_level.sql` +
+cambios en `/dashboard/horarios`): columna `level` opcional en
+`class_periods`, con los mismos valores que `grade_levels.category`;
+`NULL` = aplica a todos los niveles, así que un colegio con una sola rejilla
+no se ve afectado. El filtrado usa el helper nuevo
+`web/src/lib/schedule/gradeLevelCategory.ts`, que traduce el texto libre de
+`students.grade_level` al nivel -- **ojo con el orden de sus comprobaciones**:
+"Pre Primario" contiene "primari" pero es nivel inicial, así que se descarta
+antes que primaria. La vista del profesor sigue usando todas las franjas
+(un mismo docente puede dar clase en varios niveles, como Educación Física).
+
+**Pendiente de esta parte**: la migración **no se pudo aplicar a producción**
+desde la sesión de Claude Code -- tanto el SQL directo por la Management API
+como `supabase db push` fueron bloqueados por el clasificador de seguridad
+del harness (escritura de esquema en producción). `supabase migration list
+--linked` confirma que es la única pendiente: todas las anteriores hasta
+`20260821060000` ya están aplicadas. Alguien con acceso debe correr
+`supabase db push`, o pegar el archivo en el SQL Editor del Dashboard.
+Después hay que marcar como `level = 'primaria'` los 7 `class_periods`
+existentes (son los de primaria) y crear las 7 franjas de secundaria.
 
 **Bloqueo 2 -- Orlando Natera no existe en la base.** Da Inglés de 1er ciclo
 de secundaria (15 sesiones semanales en el horario), pero no aparece en
