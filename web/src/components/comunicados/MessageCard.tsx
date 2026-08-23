@@ -89,7 +89,9 @@ export default function MessageCard({
               {title}
             </h3>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{dateStr}</p>
+          {/* suppressHydrationWarning: el formato "short" de dia/mes puede variar
+              entre el motor ICU del servidor y el del navegador */}
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5" suppressHydrationWarning>{dateStr}</p>
         </div>
 
         {/* Ícono expandir */}
