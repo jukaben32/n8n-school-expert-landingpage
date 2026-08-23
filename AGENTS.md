@@ -1551,15 +1551,16 @@ con `urllib` de Python. Usar `curl` para estas consultas.
      crear un usuario de prueba ficticio).
 7. ~~Sistema de comunicación — Fase 2 (WhatsApp)~~ — construido el
    2026-08-17 vía Evolution API (no Twilio, ver sección "WhatsApp vía
-   Evolution API" más arriba). Pendiente real: `EVOLUTION_API_URL` /
+   Evolution API" más arriba). ~~Falta correr la migración 025~~ —
+   **ya aplicada** (verificado el 2026-08-23 con `supabase migration list
+   --linked`). Pendiente real que sigue abierto: `EVOLUTION_API_URL` /
    `EVOLUTION_API_KEY` no están configuradas todavía (esperando el VPS
-   compartido con el proyecto de referencia) y falta correr la migración
-   025 (`20260817000000_whatsapp_evolution_api.sql`) en producción.
+   compartido con el proyecto de referencia).
 7b. ~~Constructor de sitio web completo~~ — construido el 2026-08-17
     (servicios/programas, personal, testimonios, FAQs públicas,
     plantilla/fuente, redes sociales, stats) — paridad con el proyecto de
-    referencia. Falta correr la migración 026
-    (`20260817010000_website_builder.sql`) en producción.
+    referencia. ~~Falta correr la migración 026~~ — **ya aplicada**
+    (verificado el 2026-08-23).
 8. ~~Descuento automático a partir del Nº hijo~~ — resuelto (ver
    sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).
@@ -1569,13 +1570,20 @@ con `urllib` de Python. Usar `curl` para estas consultas.
     Claude" más arriba). Pendiente: probar la llamada real a Claude con una
     ficha/factura de prueba, y definir el mapeo de Alegra.
 11. **Llamada de voz en vivo + visor de conversaciones para el colegio** —
-    código verificado (`tsc`/`lint`/`build` limpios) y fusionado a `main`,
-    pero **las 2 migraciones nuevas todavía no se han aplicado a
-    producción** (`20260801020000_ai_conversations_voice_channel.sql` y
-    `20260802000000_ai_conversations_staff_read.sql`) -- correr
-    `supabase db push`. Pendiente también: probar la llamada de voz real
-    (necesita `OPENAI_API_KEY` con saldo) y confirmar que el visor
-    `/dashboard/asistente-ia` muestra los datos correctamente.
+    código verificado (`tsc`/`lint`/`build` limpios) y fusionado a `main`.
+    ~~Las 2 migraciones nuevas no se han aplicado~~ —
+    `20260801020000_ai_conversations_voice_channel.sql` y
+    `20260802000000_ai_conversations_staff_read.sql` **ya están aplicadas**
+    (verificado el 2026-08-23). Pendiente real que sigue abierto: probar la
+    llamada de voz real (necesita `OPENAI_API_KEY` con saldo) y confirmar
+    que el visor `/dashboard/asistente-ia` muestra los datos correctamente.
+
+**Nota de método (2026-08-23)**: los cuatro "falta correr la migración X"
+de arriba llevaban tiempo marcados como pendientes sin estarlo. La forma
+rápida de comprobarlo, en vez de asumir, es `supabase migration list
+--linked`: la columna `remote` vacía es la única señal fiable de que una
+migración no está aplicada. Conviene correrlo antes de dar por bueno
+cualquier pendiente de migración de este archivo.
 12. ~~Vencimiento del enlace de recuperar contraseña~~ — `otp_expiry` en
     600s (10 min), confirmado en producción. ~~`site_url` de Auth
     apuntando al dominio viejo de Vercel~~ — corregido a
