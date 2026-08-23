@@ -1414,15 +1414,60 @@ RD$700/mes (~1.8%) -- sin cambiar ninguna conclusión. También se arregló un
 defecto de formato del Excel: la hoja "Notas" tenía el texto partido en
 columnas sueltas y la nota de primaria quedaba cortada a media frase.
 
-### Estado real de producción para cargar los horarios (revisado 2026-08-23)
+### Carga de los horarios en producción — HECHA el 2026-08-23
 
-Con un token personal de Supabase se inspeccionó la base real
-(`fssjgpqisfnmnkavsyld`) vía Management API. **No se insertó nada**: la
-revisión encontró cinco bloqueos que requieren decisiones del colegio, y
-cargar sin resolverlos habría metido suposiciones en producción.
+**Las 330 clases están cargadas y verificadas en producción.** El script vive
+en `supabase/seeds/20260823_horarios_2026_2027.sql` (con su generador al
+lado); lo corrió el usuario a mano en el SQL Editor, porque el clasificador
+de seguridad del harness bloquea toda escritura a producción desde la sesión.
 
-Conteos: `schools` 1, `staff` 33, `students` 77, `school_years` 1,
-`grade_levels` 4, `teacher_assignments` 20, `class_periods` 7,
+Verificación posterior contra la base, no asumida: `class_schedules` 330,
+`subjects` 14, `class_periods` 14 (7 primaria + 7 secundaria, ninguna sin
+nivel), 12 grados con horario, 19 clases sin docente. Dos comprobaciones que
+importaban más que los conteos:
+
+- **Ningún curso del horario quedó huérfano**: todos los `grade_level` de
+  `class_schedules` existen en `students`. Era el riesgo real -- la política
+  RLS `class_schedules_guardian_read` une por ese texto, así que una variante
+  habría dejado a esa familia sin ver nada.
+- **Ningún cruce de niveles**: cada grado de primaria usa solo franjas de
+  primaria (25 clases = 5 franjas x 5 días) y cada uno de secundaria solo las
+  suyas (30 = 6 x 5).
+
+Validación indirecta que dio confianza en el mapeo completo: el reparto de
+Inglés que quedó en la base reproduce exactamente la estructura del área de
+Amco documentada más arriba, sin haberla usado como fuente de la carga --
+Yuleymis Lugo 1er ciclo primaria, Marianelis 2do ciclo primaria, Orlando
+Natera 1er ciclo secundaria, Yendry Paulino 2do ciclo secundaria.
+
+**Error cometido y corregido en el camino**: el primer intento falló con
+`23502` porque `staff.email` es `NOT NULL` y el insert de Orlando no lo
+traía. La transacción revirtió entera, así que no quedó nada a medias -- por
+eso el script va envuelto en `begin/commit`. Lección aplicada después:
+comprobar las columnas `NOT NULL` sin default de **todas** las tablas destino
+antes de generar un script de carga, no solo de la que falló.
+
+**Pendientes que dejó esta carga:**
+1. **El correo de Orlando Natera es un marcador**
+   (`orlando.natera@pendiente.local`). La tabla exige correo y no se tenía el
+   suyo; se usó a propósito un dominio que no resuelve, para que no pueda
+   llegarle una invitación a un desconocido. Hace falta el real para
+   invitarlo a la app.
+2. **6to de Primaria no tiene docente titular** -- sus 19 clases están
+   cargadas con `staff_id` nulo porque el documento de origen trae ese campo
+   en blanco. Se asigna desde `/dashboard/horarios` sin volver a correr nada.
+3. `teacher_assignments.category` sigue en `'regular'` para todo, incluidas
+   las 5 asignaciones de Inglés y la de Educación Física, con el ciclo
+   escrito a mano dentro del texto del grado. Limpiarlo es parte del PR #2
+   (enrutamiento por materia), todavía sin fusionar.
+
+### Estado que tenía producción antes de la carga (contexto)
+
+Los cinco bloqueos de abajo quedaron todos resueltos; se dejan documentados
+porque explican por qué el script hace lo que hace.
+
+Conteos de entonces: `schools` 1, `staff` 33, `students` 77, `school_years`
+1, `grade_levels` 4, `teacher_assignments` 20, `class_periods` 7,
 **`subjects` 0**, **`class_schedules` 0**.
 
 **~~Bloqueo 1~~ -- RESUELTO en código (2026-08-23), falta aplicar la
@@ -1593,22 +1638,19 @@ cualquier pendiente de migración de este archivo.
     "Vencimiento del enlace de 'recuperar contraseña'" más arriba para el
     detalle completo, incluido el incidente del `config push`.) PR #4
     (`fix/config-toml-produccion-real`) fusionado a `main` el 2026-08-23.
-13. **Horarios 2026-2027 en producción** — los 3 horarios ya están cruzados,
-    verificados y corregidos en un Excel listo para usar como fuente, y se
-    revisó el estado real de la base (ver "Estado real de producción para
-    cargar los horarios" más arriba), pero **no se ha cargado nada todavía**:
-    `subjects` y `class_schedules` siguen vacías. Están identificados cinco
-    bloqueos concretos, todos pendientes de decisión del colegio:
-    (1) secundaria y primaria usan rejillas de horario distintas y
-    `class_periods` solo soporta una -- probablemente haga falta una
-    migración que le agregue nivel; (2) Orlando Natera (Inglés, 1er ciclo
-    secundaria, 15 sesiones) no existe en `staff`; (3) "Maríanelis Calderón"
-    no se puede identificar con certeza entre dos candidatas; (4)
-    `grade_level` es texto libre e inconsistente, y de él depende que las
-    familias vean el horario (RLS); (5) falta definir la lista canónica de
-    materias. Además siguen abiertos los dos descuadres del propio horario
-    (la franja de Inglés de 1ro y la sesión de Marcelis Santos). El informe
-    ejecutivo ya se entregó al usuario y no vive en el repo.
+13. ~~**Horarios 2026-2027 en producción**~~ — **hecho el 2026-08-23**: las
+    330 clases de los 12 grados están cargadas y verificadas (ver "Carga de
+    los horarios en producción" más arriba). Los cinco bloqueos quedaron
+    resueltos: se agregó nivel a `class_periods` (migración
+    `20260823000000`), se creó a Orlando Natera, se confirmó a Maríanelis,
+    se normalizó `grade_level` y se pobló `subjects` con 14 materias
+    canónicas. Los dos descuadres del horario también: la franja de Inglés de
+    1ro quedó para Orlando (1er ciclo es suyo según la estructura de Amco), y
+    la sesión de más de Marcelis Santos no existe en el horario de ningún
+    grado, así que no había nada que cargar. El informe ejecutivo se entregó
+    al usuario y no vive en el repo. **Quedan tres cabos sueltos menores**:
+    el correo de Orlando es un marcador, 6to de Primaria no tiene docente
+    titular, y `teacher_assignments.category` sigue todo en `'regular'`.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
