@@ -55,7 +55,7 @@ export default function GrantAccessButton({ staffId, suggestedRole }: { staffId:
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+        className="text-xs font-semibold text-dash-accent hover:underline"
       >
         Dar acceso al sistema
       </button>
@@ -86,7 +86,7 @@ export default function GrantAccessButton({ staffId, suggestedRole }: { staffId:
         type="button"
         onClick={() => setOpen(false)}
         disabled={status === 'sending'}
-        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+        className="text-xs text-dash-text-muted hover:text-dash-text"
       >
         Cancelar
       </button>
