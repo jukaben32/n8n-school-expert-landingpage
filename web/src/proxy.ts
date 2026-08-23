@@ -82,6 +82,13 @@ export const config = {
     // JavaScript válido para ese registro -- el service worker viejo nunca se
     // actualiza/autodestruye, y esa persona sigue viendo el contenido viejo para
     // siempre, sin importar qué tan bien esté desplegado el sitio nuevo.
-    '/((?!_next/static|_next/image|favicon.ico|icon.*|manifest.*|sw\\.js).*)',
+    //
+    // robots.txt / sitemap.xml / llms.txt caían en la misma trampa: el
+    // middleware los redirigía a /login, así que Google y los rastreadores
+    // de IA recibían una página de inicio de sesión en vez del archivo. Con
+    // eso el sitio era invisible -- no hay forma de indexar lo que no se
+    // puede leer. Comprobado en producción antes del fix: los tres
+    // devolvían 307 hacia /login.
+    '/((?!_next/static|_next/image|favicon.ico|icon.*|manifest.*|sw\\.js|robots\\.txt|sitemap\\.xml|llms\\.txt).*)',
   ],
 }

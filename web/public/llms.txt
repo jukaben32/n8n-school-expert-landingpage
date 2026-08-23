@@ -1,0 +1,47 @@
+# MentorIApp
+
+> Plataforma de gestión escolar para colegios de República Dominicana.
+> Reúne en un solo sitio lo que hoy vive repartido entre cuadernos, grupos
+> de WhatsApp y hojas de cálculo: estudiantes, familias, tesorería,
+> asistencia, comunicados, horarios, notas y un portal para las familias.
+
+Cada colegio afiliado tiene su propio espacio, con su información separada
+del resto. El personal entra con un panel distinto según su puesto —
+dirección, secretaría, docentes, tesorería — y las familias entran a un
+portal donde ven solo lo de sus hijos.
+
+## Para las familias
+
+- Ver las notas, la asistencia y el horario de sus hijos
+- Recibir los comunicados del colegio
+- Consultar y pagar facturas (tarjeta o transferencia con comprobante)
+- Escribirle directamente al colegio
+- Preguntarle a un asistente que responde sobre la situación de sus hijos
+
+## Para el colegio
+
+- Estudiantes, familias y personal
+- Tesorería: facturación con NCF, cobros, descuentos por hermanos
+- Asistencia diaria y avisos automáticos de ausencia
+- Comunicados y mensajería con las familias
+- Horarios, planificación de clases y registro de notas
+- Academia con video-lecciones y cuestionarios
+- Autorizaciones firmadas digitalmente (excursiones, uso de imagen)
+
+## Colegios en la plataforma
+
+- [Centro Educativo Gran Manantial de Sabiduría](https://www.educacionmanantial.com/colegio/gran-manantial-de-sabiduria):
+  colegio en República Dominicana con niveles inicial, párvulo, primaria y
+  secundaria. Primer colegio afiliado a MentorIApp.
+
+## Enlaces
+
+- [Portada](https://www.educacionmanantial.com)
+- [Términos y privacidad](https://www.educacionmanantial.com/terminos)
+
+## Notas
+
+- El sitio está en español y su público son colegios y familias de
+  República Dominicana.
+- Todo lo que hay bajo `/dashboard` requiere iniciar sesión y no es
+  contenido público.
