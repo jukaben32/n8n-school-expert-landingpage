@@ -46,8 +46,8 @@ export default function TeacherGradeAssignments({
   const extraOptions = gradeLevelOptions.filter((g) => !grades.includes(g))
 
   return (
-    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-      <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
+      <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: 'var(--dash-text-faint)' }}>
         Grados/secciones asignados
       </p>
       <div className="flex flex-wrap gap-1.5 items-center">
@@ -57,7 +57,8 @@ export default function TeacherGradeAssignments({
             type="button"
             onClick={() => toggle(g)}
             disabled={saving}
-            className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary dark:text-accent-light px-2.5 py-1 text-xs font-semibold disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold disabled:opacity-60"
+            style={{ background: 'rgba(74,222,159,.15)', color: 'var(--dash-accent)' }}
           >
             {g} <span aria-hidden="true">&times;</span>
           </button>
@@ -68,7 +69,8 @@ export default function TeacherGradeAssignments({
             type="button"
             onClick={() => toggle(g)}
             disabled={saving}
-            className="inline-flex items-center rounded-full border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 px-2.5 py-1 text-xs font-medium hover:border-primary/40 disabled:opacity-60"
+            className="dash-chip inline-flex items-center border-dashed px-2.5 py-1 text-xs font-medium disabled:opacity-60"
+            style={{ color: 'var(--dash-text-muted)' }}
           >
             + {g}
           </button>
@@ -79,12 +81,12 @@ export default function TeacherGradeAssignments({
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
           onBlur={addCustom}
           placeholder="Otro grado…"
-          className="w-28 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary"
+          className="w-28 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 placeholder-slate-400 outline-none focus:ring-2 focus:ring-primary"
         />
-        {saved && <span className="text-[11px] text-green-600 dark:text-green-400">✓ Guardado</span>}
+        {saved && <span className="text-[11px]" style={{ color: 'var(--dash-accent)' }}>✓ Guardado</span>}
       </div>
       {grades.length === 0 && (
-        <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1.5">
+        <p className="text-[11px] mt-1.5" style={{ color: 'var(--dash-warning)' }}>
           Sin grados asignados: por ahora no ve estudiantes en Asistencia ni Actualizaciones.
         </p>
       )}
