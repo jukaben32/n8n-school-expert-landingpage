@@ -98,20 +98,20 @@ export default async function PersonalPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'el personal', error: staffError }, { label: 'los accesos', error: linkedProfilesError }]} />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Personal</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Personal</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {staff.length} miembro{staff.length !== 1 ? 's' : ''} del equipo
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {schoolRow?.subdomain && (
             <PublicRegistrationLinkButton subdomain={schoolRow.subdomain} />
           )}
           <Link
             href="/dashboard/personal/registros"
-            className="relative inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            className="relative inline-flex items-center gap-2 rounded-full border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 hover:bg-slate-50 transition"
           >
             Registros pendientes
             {!!pendingRegistrationsCount && (
@@ -122,7 +122,7 @@ export default async function PersonalPage() {
           </Link>
           <Link
             href="/dashboard/personal/nuevo"
-            className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
+            className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
           >
             + Agregar personal
           </Link>
@@ -130,7 +130,7 @@ export default async function PersonalPage() {
       </div>
 
       {staffError && (
-        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+        <div role="alert" className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           <p className="font-semibold">No se pudo cargar la lista de personal.</p>
           <p className="mt-1 font-mono text-xs">{staffError.message}</p>
         </div>
@@ -139,19 +139,22 @@ export default async function PersonalPage() {
       {staff.length > 0 ? (
         <div className="grid gap-3">
           {staff.map((s) => (
-            <div key={s.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+            <div key={s.id} className="dash-card p-5">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-slate-900 dark:text-white">{s.first_name} {s.last_name}</p>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary dark:text-accent-light">
+                    <p className="font-semibold" style={{ color: 'var(--dash-text)' }}>{s.first_name} {s.last_name}</p>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-bold font-barlow uppercase tracking-wider"
+                      style={{ background: 'rgba(74,222,159,.15)', color: 'var(--dash-accent)' }}
+                    >
                       {roleLabels[s.role] ?? s.role}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.email} {s.phone ? `· ${s.phone}` : ''}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-muted)' }}>{s.email} {s.phone ? `· ${s.phone}` : ''}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <p className="text-xs text-slate-400 dark:text-slate-500">Desde {formatDate(s.hire_date)}</p>
+                  <p className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>Desde {formatDate(s.hire_date)}</p>
                   <div className="flex items-center gap-3">
                     <EditStaffButton staff={s} />
                     <DeleteStaffButton staffId={s.id} fullName={`${s.first_name} ${s.last_name}`} />
@@ -159,10 +162,10 @@ export default async function PersonalPage() {
                 </div>
               </div>
 
-              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
                 {staffWithAccess.has(s.id) ? (
                   <div className="flex items-center gap-3 flex-wrap">
-                    <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+                    <p className="text-xs font-semibold" style={{ color: 'var(--dash-accent)' }}>
                       ✓ Acceso: {accessRoleLabels[staffWithAccess.get(s.id)!.role] ?? staffWithAccess.get(s.id)!.role}
                     </p>
                     <ChangeAccessRoleButton
@@ -184,23 +187,23 @@ export default async function PersonalPage() {
               )}
 
               {(s.degree_title || s.alma_mater || s.specialty) && (
-                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div className="mt-3 pt-3 border-t grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
                   {s.degree_title && (
                     <div>
-                      <p className="text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Título</p>
-                      <p className="text-slate-700 dark:text-slate-300">{s.degree_title}{s.education_level ? ` (${educationLabels[s.education_level] ?? s.education_level})` : ''}</p>
+                      <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Título</p>
+                      <p style={{ color: 'var(--dash-text-muted)' }}>{s.degree_title}{s.education_level ? ` (${educationLabels[s.education_level] ?? s.education_level})` : ''}</p>
                     </div>
                   )}
                   {s.alma_mater && (
                     <div>
-                      <p className="text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Egresado de</p>
-                      <p className="text-slate-700 dark:text-slate-300">{s.alma_mater}</p>
+                      <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Egresado de</p>
+                      <p style={{ color: 'var(--dash-text-muted)' }}>{s.alma_mater}</p>
                     </div>
                   )}
                   {s.specialty && (
                     <div>
-                      <p className="text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Especialidad</p>
-                      <p className="text-slate-700 dark:text-slate-300">{s.specialty}</p>
+                      <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Especialidad</p>
+                      <p style={{ color: 'var(--dash-text-muted)' }}>{s.specialty}</p>
                     </div>
                   )}
                 </div>
@@ -209,9 +212,9 @@ export default async function PersonalPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🧑‍🏫</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Aún no hay personal registrado.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Aún no hay personal registrado.</p>
         </div>
       )}
     </div>

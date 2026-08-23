@@ -61,17 +61,17 @@ export default async function FamiliasPage() {
 
       {/* Encabezado */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Familias
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           {families.length} familia{families.length !== 1 ? 's' : ''} registrada{families.length !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Lista de familias */}
       {familiesError && (
-        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+        <div role="alert" className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           <p className="font-semibold">No se pudo cargar la lista de familias.</p>
           <p className="mt-1 font-mono text-xs">{familiesError.message}</p>
         </div>
@@ -85,22 +85,22 @@ export default async function FamiliasPage() {
               <Link
                 href={`/dashboard/familias/${f.id}`}
                 key={f.id}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between gap-4 hover:border-primary/40 transition"
+                className="dash-card p-5 flex items-center justify-between gap-4 transition hover:border-[rgba(150,225,196,.4)]"
               >
                 <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white truncate">{f.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{f.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-muted)' }}>
                     {primary ? `${primary.first_name} ${primary.last_name} · ${primary.phone}` : 'Sin tutor principal registrado'}
                   </p>
                 </div>
                 <div className="flex gap-4 shrink-0 text-center">
                   <div>
-                    <p className="text-lg font-black text-primary dark:text-accent-light">{f.students?.length ?? 0}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Hijos</p>
+                    <p className="text-lg font-bold font-barlow" style={{ color: 'var(--dash-accent)' }}>{f.students?.length ?? 0}</p>
+                    <p className="text-[10px] font-barlow uppercase tracking-wider" style={{ color: 'var(--dash-text-faint)' }}>Hijos</p>
                   </div>
                   <div>
-                    <p className="text-lg font-black text-primary dark:text-accent-light">{f.guardians?.length ?? 0}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Tutores</p>
+                    <p className="text-lg font-bold font-barlow" style={{ color: 'var(--dash-accent)' }}>{f.guardians?.length ?? 0}</p>
+                    <p className="text-[10px] font-barlow uppercase tracking-wider" style={{ color: 'var(--dash-text-faint)' }}>Tutores</p>
                   </div>
                 </div>
               </Link>
@@ -108,9 +108,9 @@ export default async function FamiliasPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">👨‍👩‍👧</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             Aún no hay familias registradas.<br />Se crean automáticamente al dar de alta un estudiante nuevo.
           </p>
         </div>
