@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getPublicSiteUrl } from '@/lib/siteUrl'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube, Linkedin, Music2 } from 'lucide-react'
@@ -59,13 +60,37 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
   const school = await getSchool(subdomain)
   if (!school) return { title: 'Colegio no encontrado — MentorIA' }
   const website = getWebsiteSettings(school.website_settings)
+  const titulo = `${school.name} — Portal escolar`
+  const descripcion = website.heroSubtitle || school.tagline
+    || `Portal escolar de ${school.name}, construido con ${PLATFORM_NAME}.`
+  const url = `${getPublicSiteUrl() ?? ''}/colegio/${subdomain}`
+
   return {
-    title: `${school.name} — Portal escolar`,
-    description: website.heroSubtitle || school.tagline || `Portal escolar de ${school.name}, construido con ${PLATFORM_NAME}.`,
+    title: titulo,
+    description: descripcion,
     themeColor: website.primaryColor,
     manifest: `/colegio/${subdomain}/manifest.webmanifest`,
     appleWebApp: { capable: true, title: school.name, statusBarStyle: 'black-translucent' },
     icons: { apple: school.logo_url || '/icons/icon-192.png' },
+    alternates: { canonical: url },
+    // Open Graph: es lo que decide como se ve el enlace cuando alguien lo
+    // comparte por WhatsApp -- el canal por el que de verdad circulan estos
+    // enlaces entre familias. Sin esto sale como texto pelado.
+    openGraph: {
+      type: 'website',
+      siteName: school.name,
+      title: titulo,
+      description: descripcion,
+      url,
+      locale: 'es_DO',
+      images: school.logo_url ? [{ url: school.logo_url, alt: school.name }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: titulo,
+      description: descripcion,
+      images: school.logo_url ? [school.logo_url] : undefined,
+    },
   }
 }
 
