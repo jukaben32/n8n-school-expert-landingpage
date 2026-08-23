@@ -55,10 +55,10 @@ export default async function MensajesPage() {
       <QueryErrorBanner errors={[{ label: 'las conversaciones', error: conversationsError }]} />
 
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Mensajes
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Conversación privada de dos vías con cada familia — distinto de los comunicados (avisos a todos).
         </p>
       </div>
@@ -75,14 +75,14 @@ export default async function MensajesPage() {
               <Link
                 key={c.id}
                 href={`/dashboard/mensajes/${c.family_id}`}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-3 hover:border-primary/40 transition"
+                className="dash-card p-4 flex items-center justify-between gap-3 transition"
               >
                 <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white truncate">{c.families?.name ?? 'Familia'}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Último mensaje: {formatDate(c.last_message_at)}</p>
+                  <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{c.families?.name ?? 'Familia'}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>Último mensaje: {formatDate(c.last_message_at)}</p>
                 </div>
                 {unread > 0 && (
-                  <span className="shrink-0 rounded-full bg-coral text-white text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center px-1.5">
+                  <span className="shrink-0 rounded-full text-white text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center px-1.5" style={{ background: 'var(--dash-notify)' }}>
                     {unread}
                   </span>
                 )}
@@ -91,9 +91,9 @@ export default async function MensajesPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">💬</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Ninguna familia te ha escrito todavía.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Ninguna familia te ha escrito todavía.</p>
         </div>
       )}
     </div>

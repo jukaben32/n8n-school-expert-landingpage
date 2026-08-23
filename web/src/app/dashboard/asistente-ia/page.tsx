@@ -67,10 +67,10 @@ export default async function AsistenteIAPage() {
       <QueryErrorBanner errors={[{ label: 'las conversaciones', error: rowsError }]} />
 
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Asistente de IA
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Conversaciones de las familias con el asistente (chat, nota de voz, llamada). Las familias saben que
           esta actividad es visible para el colegio.
         </p>
@@ -82,32 +82,32 @@ export default async function AsistenteIAPage() {
             <Link
               key={f.familyId}
               href={`/dashboard/asistente-ia/${f.familyId}`}
-              className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between gap-4 hover:border-primary/40 transition"
+              className="dash-card p-5 flex items-center justify-between gap-4 transition"
             >
               <div className="min-w-0">
-                <p className="font-semibold text-slate-900 dark:text-white truncate">{f.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{f.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
                   Última actividad: {formatDate(f.lastActivity)}
                 </p>
                 <div className="flex gap-1.5 mt-1.5">
                   {Array.from(f.channels).map((ch) => (
-                    <span key={ch} className="text-[10px] rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-500 dark:text-slate-400">
+                    <span key={ch} className="dash-chip text-[10px]">
                       {channelLabels[ch] ?? ch}
                     </span>
                   ))}
                 </div>
               </div>
               <div className="text-center shrink-0">
-                <p className="text-lg font-black text-primary dark:text-accent-light">{f.count}</p>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Preguntas</p>
+                <p className="text-lg font-bold font-barlow" style={{ color: 'var(--dash-accent)' }}>{f.count}</p>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--dash-text-faint)' }}>Preguntas</p>
               </div>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🤖</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Ninguna familia ha usado el asistente todavía.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Ninguna familia ha usado el asistente todavía.</p>
         </div>
       )}
     </div>

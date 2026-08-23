@@ -137,10 +137,10 @@ export default async function PagosPage({
 
       {/* Encabezado */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Estado de Cuenta
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Consulta tus facturas y realiza seguimiento de pagos
         </p>
       </div>
@@ -182,9 +182,9 @@ export default async function PagosPage({
 
       {/* Estado vacío */}
       {invoices.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">💳</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             No hay facturas registradas aún.
           </p>
         </div>

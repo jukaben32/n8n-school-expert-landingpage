@@ -67,13 +67,13 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Mi horario</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tus clases asignadas, por día.</p>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Mi horario</h1>
+          <p className="text-sm text-slate-500 mt-1">Tus clases asignadas, por día.</p>
         </div>
         {mySlots.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+          <div className="dash-card border-dashed p-12 text-center">
             <p className="text-4xl mb-3" aria-hidden="true">🗓️</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no tienes clases asignadas en el horario.</p>
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no tienes clases asignadas en el horario.</p>
           </div>
         ) : (
           DAYS.map((day) => {
@@ -82,16 +82,16 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
               .sort((a, b) => (periodById.get(a.period_id)?.sort_order ?? 0) - (periodById.get(b.period_id)?.sort_order ?? 0))
             if (daySlots.length === 0) return null
             return (
-              <div key={day} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary dark:text-accent-light mb-2">{DAY_LABELS[day]}</p>
+              <div key={day} className="dash-card p-4">
+                <p className="text-xs font-semibold font-barlow uppercase tracking-wide mb-2" style={{ color: 'var(--dash-accent)' }}>{DAY_LABELS[day]}</p>
                 <div className="space-y-2">
                   {daySlots.map((s) => {
                     const period = periodById.get(s.period_id)
                     return (
                       <div key={`${s.day_of_week}-${s.period_id}`} className="flex items-center justify-between text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">{period ? `${period.start_time.slice(0, 5)}–${period.end_time.slice(0, 5)}` : '—'}</span>
-                        <span className="font-medium text-slate-900 dark:text-white">{s.subjects?.name ?? '—'}</span>
-                        <span className="text-slate-500 dark:text-slate-400">{s.grade_level}</span>
+                        <span style={{ color: 'var(--dash-text-faint)' }}>{period ? `${period.start_time.slice(0, 5)}–${period.end_time.slice(0, 5)}` : '—'}</span>
+                        <span className="font-medium" style={{ color: 'var(--dash-text)' }}>{s.subjects?.name ?? '—'}</span>
+                        <span style={{ color: 'var(--dash-text-faint)' }}>{s.grade_level}</span>
                       </div>
                     )
                   })}
@@ -117,9 +117,9 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
     if (myGrades.length === 0) {
       return (
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-6">Horario</h1>
-          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no hay un curso registrado para tu(s) hijo(s).</p>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight mb-6">Horario</h1>
+          <div className="dash-card border-dashed p-12 text-center">
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay un curso registrado para tu(s) hijo(s).</p>
           </div>
         </div>
       )
@@ -134,10 +134,10 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
 
     return (
       <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Horario</h1>
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Horario</h1>
         {myGrades.map((grade) => (
           <div key={grade}>
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{grade}</p>
+            <p className="text-sm font-semibold mb-2" style={{ color: 'var(--dash-text-muted)' }}>{grade}</p>
             <ReadOnlyGrid periods={periods} days={DAYS} dayLabels={DAY_LABELS} slots={slots.filter((s) => s.grade_level === grade)} />
           </div>
         ))}
@@ -172,27 +172,27 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Horarios</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Horarios</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {canEdit ? 'Organiza la materia y profesor de cada franja, por curso.' : 'Horario de clases por curso.'}
           </p>
         </div>
         {canEdit && (
-          <Link href="/dashboard/horarios/periodos" className="text-sm text-primary dark:text-accent-light hover:underline font-semibold">
+          <Link href="/dashboard/horarios/periodos" className="text-sm hover:underline font-semibold" style={{ color: 'var(--dash-accent)' }}>
             Franjas horarias
           </Link>
         )}
       </div>
 
       {gradeOptions.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no hay cursos con estudiantes asignados.</p>
+        <div className="dash-card border-dashed p-12 text-center">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay cursos con estudiantes asignados.</p>
         </div>
       ) : periods.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center space-y-3">
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no hay franjas horarias definidas.</p>
+        <div className="dash-card border-dashed p-12 text-center space-y-3">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay franjas horarias definidas.</p>
           {canEdit && (
-            <Link href="/dashboard/horarios/periodos" className="inline-block rounded-full bg-primary text-white text-sm font-semibold px-5 py-2.5">
+            <Link href="/dashboard/horarios/periodos" className="dash-btn-primary inline-block text-sm px-5 py-2.5">
               Crear la primera franja
             </Link>
           )}
@@ -204,11 +204,8 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
               <Link
                 key={grade}
                 href={`/dashboard/horarios?curso=${encodeURIComponent(grade)}`}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  selectedGrade === grade
-                    ? 'bg-primary text-white shadow-glow'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
+                className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
+                style={selectedGrade === grade ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { background: 'white', color: '#5f7a70', border: '1px solid #e2e8f0' }}
               >
                 {grade}
               </Link>
@@ -247,31 +244,31 @@ function ReadOnlyGrid({
 }) {
   const cell = (day: number, periodId: string) => slots.find((s) => s.day_of_week === day && s.period_id === periodId)
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-x-auto">
+    <div className="dash-card overflow-x-auto">
       <table className="w-full text-sm text-left border-collapse">
-        <thead className="bg-slate-50 dark:bg-slate-800/50">
-          <tr>
-            <th className="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Hora</th>
+        <thead>
+          <tr className="border-b" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
+            <th className="px-3 py-2.5 font-barlow uppercase tracking-wide text-xs whitespace-nowrap" style={{ color: 'var(--dash-text-muted)' }}>Hora</th>
             {days.map((d) => (
-              <th key={d} className="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">{dayLabels[d]}</th>
+              <th key={d} className="px-3 py-2.5 font-barlow uppercase tracking-wide text-xs whitespace-nowrap" style={{ color: 'var(--dash-text-muted)' }}>{dayLabels[d]}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+        <tbody className="divide-y" style={{ borderColor: 'rgba(150,225,196,.08)' }}>
           {periods.map((p) => (
             <tr key={p.id}>
-              <td className="px-3 py-2.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{p.name}<br />{p.start_time.slice(0, 5)}–{p.end_time.slice(0, 5)}</td>
+              <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'var(--dash-text-faint)' }}>{p.name}<br />{p.start_time.slice(0, 5)}–{p.end_time.slice(0, 5)}</td>
               {days.map((d) => {
                 const s = cell(d, p.id)
                 return (
                   <td key={d} className="px-3 py-2.5 align-top">
                     {s?.subjects?.name ? (
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-white">{s.subjects.name}</p>
-                        {s.staff && <p className="text-xs text-slate-400 dark:text-slate-500">{s.staff.first_name} {s.staff.last_name}</p>}
+                        <p className="font-medium" style={{ color: 'var(--dash-text)' }}>{s.subjects.name}</p>
+                        {s.staff && <p className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>{s.staff.first_name} {s.staff.last_name}</p>}
                       </div>
                     ) : (
-                      <span className="text-slate-300 dark:text-slate-700">—</span>
+                      <span style={{ color: 'var(--dash-text-faint)' }}>—</span>
                     )}
                   </td>
                 )
