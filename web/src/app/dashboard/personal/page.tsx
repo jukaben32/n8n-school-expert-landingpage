@@ -12,6 +12,7 @@ import EditStaffButton from './EditStaffButton'
 import DeleteStaffButton from './DeleteStaffButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { roleLabels, educationLabels } from '@/lib/staff/roleLabels'
+import type { MessageCategory } from '@/lib/messaging/categoryAccess'
 
 export const metadata: Metadata = {
   title: 'Personal — MentorIApp',
@@ -80,14 +81,14 @@ export default async function PersonalPage() {
   )
 
   const [{ data: assignments }, { data: studentsWithGrade }] = await Promise.all([
-    supabase.from('teacher_assignments').select('staff_id, grade_level').eq('school_id', schoolId),
+    supabase.from('teacher_assignments').select('staff_id, grade_level, category').eq('school_id', schoolId),
     supabase.from('students').select('grade_level').eq('school_id', schoolId).not('grade_level', 'is', null).is('deleted_at', null),
   ])
-  const gradesByStaff = new Map<string, string[]>()
+  const assignmentsByStaff = new Map<string, { category: MessageCategory; gradeLevel: string | null }[]>()
   for (const a of assignments ?? []) {
-    const list = gradesByStaff.get(a.staff_id as string) ?? []
-    list.push(a.grade_level as string)
-    gradesByStaff.set(a.staff_id as string, list)
+    const list = assignmentsByStaff.get(a.staff_id as string) ?? []
+    list.push({ category: a.category as MessageCategory, gradeLevel: a.grade_level as string | null })
+    assignmentsByStaff.set(a.staff_id as string, list)
   }
   const gradeLevelOptions = Array.from(
     new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))
@@ -181,7 +182,7 @@ export default async function PersonalPage() {
               {s.role === 'teacher' && (
                 <TeacherGradeAssignments
                   staffId={s.id}
-                  initialGrades={gradesByStaff.get(s.id) ?? []}
+                  initialAssignments={assignmentsByStaff.get(s.id) ?? []}
                   gradeLevelOptions={gradeLevelOptions}
                 />
               )}

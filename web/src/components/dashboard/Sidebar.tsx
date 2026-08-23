@@ -153,11 +153,14 @@ const navByRole: Record<string, NavGroup[]> = {
   reception: [{ items: [
     { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
+    { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/horarios',        label: 'Horarios', icon: 'horarios' },
     { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
+    { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
+    { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
   ] }],
   finance: [{ items: [

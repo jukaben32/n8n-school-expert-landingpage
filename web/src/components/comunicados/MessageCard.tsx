@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { MESSAGE_CATEGORY_LABELS, type MessageCategory } from '@/lib/messaging/categoryAccess'
 
 interface MessageCardProps {
   id: string
@@ -10,6 +11,7 @@ interface MessageCardProps {
   priority: 'normal' | 'urgent'
   publishedAt: string | null
   audienceLabel: string | null
+  category: MessageCategory
   isRead: boolean
   isStaff: boolean
   currentUserId: string
@@ -20,7 +22,7 @@ interface MessageCardProps {
  * La lectura se registra en Supabase (tabla message_reads) al hacer clic.
  */
 export default function MessageCard({
-  id, title, body, priority, publishedAt, audienceLabel, isRead, isStaff, currentUserId
+  id, title, body, priority, publishedAt, audienceLabel, category, isRead, isStaff, currentUserId
 }: MessageCardProps) {
   const [read, setRead] = useState(isRead)
   const [expanded, setExpanded] = useState(false)
@@ -78,6 +80,11 @@ export default function MessageCard({
             {priority === 'urgent' && (
               <span className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">
                 Urgente
+              </span>
+            )}
+            {category !== 'regular' && (
+              <span className="text-xs font-semibold text-accent-dark dark:text-accent-light bg-accent/10 px-2 py-0.5 rounded-full">
+                {MESSAGE_CATEGORY_LABELS[category]}
               </span>
             )}
             {isStaff && audienceLabel && (

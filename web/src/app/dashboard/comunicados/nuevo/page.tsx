@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
+import { getStaffAvailableCategories } from '@/lib/messaging/categoryAccess'
 import NewMessageForm from './NewMessageForm'
 
 export const metadata: Metadata = {
@@ -19,7 +21,7 @@ export default async function NuevoComunicadoPage() {
 
   const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
-    .select('id, role, school_id')
+    .select('id, role, school_id, staff_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -41,6 +43,12 @@ export default async function NuevoComunicadoPage() {
     new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))
   ).sort()
 
+  const availableCategories = await getStaffAvailableCategories(createAdminClient(), {
+    schoolId,
+    role: profile.role,
+    staffId: profile.staff_id,
+  })
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -52,7 +60,11 @@ export default async function NuevoComunicadoPage() {
         </p>
       </div>
 
-      <NewMessageForm gradeLevelOptions={gradeLevelOptions} forceGradeMode={profile.role === 'teacher'} />
+      <NewMessageForm
+        gradeLevelOptions={gradeLevelOptions}
+        forceGradeMode={profile.role === 'teacher'}
+        availableCategories={availableCategories}
+      />
     </div>
   )
 }

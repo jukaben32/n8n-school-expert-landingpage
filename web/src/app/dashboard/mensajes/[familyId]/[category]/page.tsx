@@ -5,21 +5,26 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
+import { markStaffReadAction } from '../../actions'
+import { staffCanAccessFamilyCategory, isMessageCategory, MESSAGE_CATEGORY_LABELS } from '@/lib/messaging/categoryAccess'
 import ThreadView from './ThreadView'
 
 export const metadata: Metadata = {
   title: 'Mensajes — MentorIApp',
 }
 
-export default async function ConversationPage({ params }: { params: Promise<{ familyId: string }> }) {
-  const { familyId } = await params
+export default async function ConversationPage({ params }: { params: Promise<{ familyId: string; category: string }> }) {
+  const { familyId, category: categoryParam } = await params
+  if (!isMessageCategory(categoryParam)) notFound()
+  const category = categoryParam
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('role, school_id')
+    .select('role, school_id, staff_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -38,15 +43,30 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
     .maybeSingle()
   if (!family) notFound()
 
-  // Cliente admin: la conversación puede no existir todavía (primera vez
-  // que este staff le escribe a esta familia) -- no hace falta crearla
-  // aquí, sendStaffMessageAction la crea al enviar el primer mensaje.
   const admin = createAdminClient()
+
+  // La lista (mensajes/page.tsx) ya filtra por RLS, pero esta página entra
+  // por URL directa -- hay que revalidar acá que este staff puede ver
+  // esta familia en esta categoría antes de tocar el cliente admin (que
+  // se salta RLS). Mismo motivo que en mensajes/actions.ts.
+  const allowed = await staffCanAccessFamilyCategory(admin, {
+    schoolId,
+    role: profile.role,
+    staffId: profile.staff_id,
+    familyId,
+    category,
+  })
+  if (!allowed) redirect('/dashboard/mensajes')
+
+  // La conversación puede no existir todavía (primera vez que este staff
+  // le escribe a esta familia en esta categoría) -- no hace falta crearla
+  // aquí, sendStaffMessageAction la crea al enviar el primer mensaje.
   const { data: conversation } = await admin
     .from('direct_conversations')
     .select('id')
     .eq('school_id', schoolId)
     .eq('family_id', familyId)
+    .eq('category', category)
     .maybeSingle()
 
   const { data: messages } = conversation
@@ -62,10 +82,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
   // Next.js -- esta página ya muestra datos frescos, no necesita invalidar
   // caché de /dashboard/mensajes para sí misma.
   if (conversation) {
-    await admin
-      .from('direct_conversations')
-      .update({ staff_last_read_at: new Date().toISOString() })
-      .eq('id', conversation.id)
+    await markStaffReadAction(familyId, category)
   }
 
   return (
@@ -75,10 +92,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
       </Link>
       <div>
         <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">{family.name}</h1>
-        <p className="text-sm text-slate-500 mt-1">Conversación privada — solo visible para el colegio y esta familia.</p>
+        <p className="text-sm text-slate-500 mt-1">
+          {MESSAGE_CATEGORY_LABELS[category]} — conversación privada, solo visible para el colegio y esta familia.
+        </p>
       </div>
 
-      <ThreadView familyId={familyId} initialMessages={messages ?? []} />
+      <ThreadView familyId={familyId} category={category} initialMessages={messages ?? []} />
     </div>
   )
 }
