@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
+import { staffCanAccessFamilyCategory, type MessageCategory } from '@/lib/messaging/categoryAccess'
 
 interface ActionResult {
   ok: boolean
@@ -19,7 +20,7 @@ async function resolveStaff() {
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('id, role, school_id')
+    .select('id, role, school_id, staff_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -28,28 +29,40 @@ async function resolveStaff() {
   }
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
-  return { ok: true as const, schoolId, profileId: profile.id as string }
+  return {
+    ok: true as const,
+    schoolId,
+    profileId: profile.id as string,
+    role: profile.role as string,
+    staffId: profile.staff_id as string | null,
+  }
 }
 
-async function getOrCreateConversation(admin: ReturnType<typeof createAdminClient>, schoolId: string, familyId: string) {
+async function getOrCreateConversation(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string,
+  familyId: string,
+  category: MessageCategory
+) {
   const { data: existing } = await admin
     .from('direct_conversations')
     .select('id')
     .eq('school_id', schoolId)
     .eq('family_id', familyId)
+    .eq('category', category)
     .maybeSingle()
   if (existing) return existing.id as string
 
   const { data: created, error } = await admin
     .from('direct_conversations')
-    .insert({ school_id: schoolId, family_id: familyId })
+    .insert({ school_id: schoolId, family_id: familyId, category })
     .select('id')
     .single()
   if (error || !created) throw new Error(error?.message ?? 'No se pudo crear la conversación.')
   return created.id as string
 }
 
-export async function sendStaffMessageAction(familyId: string, body: string): Promise<ActionResult> {
+export async function sendStaffMessageAction(familyId: string, category: MessageCategory, body: string): Promise<ActionResult> {
   const resolved = await resolveStaff()
   if (!resolved.ok) return { ok: false, error: resolved.error }
 
@@ -57,9 +70,23 @@ export async function sendStaffMessageAction(familyId: string, body: string): Pr
   if (!trimmed) return { ok: false, error: 'Escribe un mensaje.' }
 
   const admin = createAdminClient()
+
+  // resolveStaff() solo valida el módulo (mensajes_directos), no la
+  // categoría -- estos caminos usan el cliente admin, que se salta RLS,
+  // así que la autorización real de "esta familia en esta categoría" hay
+  // que hacerla acá explícitamente (ver categoryAccess.ts).
+  const allowed = await staffCanAccessFamilyCategory(admin, {
+    schoolId: resolved.schoolId,
+    role: resolved.role,
+    staffId: resolved.staffId,
+    familyId,
+    category,
+  })
+  if (!allowed) return { ok: false, error: 'No tienes permiso para escribir en esta categoría con esta familia.' }
+
   let conversationId: string
   try {
-    conversationId = await getOrCreateConversation(admin, resolved.schoolId, familyId)
+    conversationId = await getOrCreateConversation(admin, resolved.schoolId, familyId, category)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'No se pudo abrir la conversación.' }
   }
@@ -95,7 +122,33 @@ export async function sendStaffMessageAction(familyId: string, body: string): Pr
     })
   }
 
-  revalidatePath(`/dashboard/mensajes/${familyId}`)
+  revalidatePath(`/dashboard/mensajes/${familyId}/${category}`)
   revalidatePath('/dashboard/mensajes')
   return { ok: true }
 }
+
+export async function markStaffReadAction(familyId: string, category: MessageCategory): Promise<ActionResult> {
+  const resolved = await resolveStaff()
+  if (!resolved.ok) return { ok: false, error: resolved.error }
+
+  const admin = createAdminClient()
+  const allowed = await staffCanAccessFamilyCategory(admin, {
+    schoolId: resolved.schoolId,
+    role: resolved.role,
+    staffId: resolved.staffId,
+    familyId,
+    category,
+  })
+  if (!allowed) return { ok: false, error: 'No tienes permiso para ver esta conversación.' }
+
+  await admin
+    .from('direct_conversations')
+    .update({ staff_last_read_at: new Date().toISOString() })
+    .eq('school_id', resolved.schoolId)
+    .eq('family_id', familyId)
+    .eq('category', category)
+
+  revalidatePath('/dashboard/mensajes')
+  return { ok: true }
+}
+

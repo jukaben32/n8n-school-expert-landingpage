@@ -1602,6 +1602,280 @@ docentes del horario sí mapea con confianza alta usando el campo
 `403 error 1010` (bloqueo de Cloudflare por huella del cliente) si se llama
 con `urllib` de Python. Usar `curl` para estas consultas.
 
+## Colisión de números de migración — cómo se detectó y qué hacer (2026-08-23)
+
+Al traer a `main` la rama del enrutamiento por materia (PR #2, abierta desde
+el 2026-08-20) apareció un problema que no se ve en el diff: sus tres
+migraciones usaban números **ya ocupados por otras migraciones distintas que
+ya estaban aplicadas en producción**.
+
+| Número | En la rama del PR | En `main` (y aplicada) |
+|---|---|---|
+| `20260821000000` | communication_categories_teacher_assignments | calendar_events |
+| `20260821010000` | direct_conversations_category | class_schedules |
+| `20260821020000` | messages_category | lesson_plans |
+
+**Por qué es peligroso y silencioso**: `supabase db push` decide qué aplicar
+comparando el número contra `supabase_migrations.schema_migrations`. Como esos
+tres números ya constaban como aplicados (con otro contenido), habría dado las
+tres migraciones del PR por hechas y **las habría saltado sin avisar**. El
+código habría llegado a producción esperando columnas y funciones inexistentes.
+
+Se renumeraron a `20260823010000` / `20260823020000` / `20260823030000`, ya
+por encima de todo lo aplicado.
+
+**Detalle importante para no confundirse**: revisando la base se comprobó que
+el esquema de esas tres migraciones **ya estaba aplicado a mano en producción**
+(las columnas `category` de `teacher_assignments`/`direct_conversations`/
+`messages`, el índice `idx_teacher_assignments_unique_scoped`, las dos
+sobrecargas de `teacher_is_assigned_to_grade`, `staff_can_see_family_category`,
+y el unique viejo de `direct_conversations` ya eliminado). O sea: la base iba
+por delante del repo, y lo que faltaba era el código. Las tres migraciones son
+idempotentes (`add column if not exists`, `create or replace function`,
+`drop policy if exists`, y bloques `do $$` que eliminan constraints por
+introspección en vez de por nombre), así que volver a correrlas es inofensivo
+y sirve para dejarlas registradas.
+
+**Regla para el futuro**: antes de fusionar una rama que lleve días abierta,
+comparar sus números de migración contra `supabase migration list --linked`.
+Que el diff no muestre conflicto no significa que no lo haya: los nombres de
+archivo son distintos, y git los ve como archivos nuevos sin relación.
+
+## Bug real: `users_profiles` nunca tuvo policy de RLS para `insert`
+
+Reportado por el usuario con una captura real: al aprobar un registro de
+personal (Gladys Esther Vargas Tejeda, puesto Director) y darle acceso,
+`inviteStaffAccess`/`inviteGuardianAccess` fallaban con `new row violates
+row-level security policy for table "users_profiles"`, sin importar el rol
+elegido. Causa confirmada revisando las 27 migraciones: `users_profiles`
+tiene RLS habilitado (`20260703000000_rls_hardening.sql`) pero **jamás**
+
+> **Nota al fusionar (2026-08-23)**: `main` ya había corregido este mismo
+> bug por otra vía, y de forma más completa -- con el helper
+> `linkProfileForDualRole()`, que además cubre el caso de una persona que
+> es staff y tutora a la vez. Al traer esta rama se conservó la versión de
+> `main`; el diagnóstico de abajo se mantiene porque explica la causa raíz.
+tuvo una policy de `insert`, solo `select`/`update` -- el insert se hacía
+con el cliente de sesión del director (`supabase`, sujeto a RLS) en vez del
+cliente `admin` (service_role). Afectaba tanto a Personal como a Familias
+(mismo patrón copiado). Fix: los tres inserts (`inviteStaffAccess`,
+`inviteByEmail`, `createPhoneBasedAccess`) ahora usan el cliente `admin` --
+el permiso ya se valida arriba con `canAccess()`, así que esto es correcto
+y consistente con el resto de operaciones privilegiadas del proyecto. No
+hizo falta ninguna migración -- fue un bug de código, no de policy faltante
+que algún flujo legítimo necesitara desde el cliente de sesión.
+
+## Bug real: la invitación decía "enviada" aunque el correo ya existiera y no se mandara nada
+
+Reportado por el usuario: "los correos de invitación todavía no salen".
+Revisando `inviteStaffAccess` (Personal) e `inviteByEmail` (Familias):
+cuando `admin.auth.admin.inviteUserByEmail()` falla porque el correo **ya
+tiene una cuenta de Auth** (ej. la misma persona quedó registrada antes
+como tutor en otro colegio, o un intento anterior de invitación ya había
+creado la cuenta pero la persona nunca completó el proceso), el código
+detecta el error "already been registered" y **reusa la cuenta existente
+en silencio** -- pero nunca mandaba ningún correo nuevo en ese caso
+(`inviteUserByEmail` había fallado, así que no salió nada) y aun así el
+mensaje final decía "Invitación enviada a {email}." La persona quedaba
+vinculada al perfil pero sin ninguna forma real de enterarse o entrar.
+Fix: en ese caso ahora se llama a `admin.auth.resetPasswordForEmail()`
+para mandar un correo de verdad (restablecer contraseña), y el mensaje que
+ve quien invita distingue los dos casos en vez de decir siempre
+"Invitación enviada". Si ese segundo envío también falla, el mensaje lo
+dice explícitamente y sugiere que la persona entre con "Olvidé mi
+contraseña" en vez de mentir sobre el resultado.
+
+**Importante, sin resolver todavía y fuera del alcance de un cambio de
+código**: si el usuario ve que **ningún** correo de invitación llega
+(ni el primero, cuenta nueva) esto probablemente no es un bug de la
+aplicación -- `inviteUserByEmail`/`resetPasswordForEmail` envían el correo
+a través del servicio de email **propio de Supabase Auth** (configurado en
+el Dashboard de Supabase, Authentication → Emails → SMTP Settings), que es
+un sistema de envío totalmente distinto al de `pg_net`+Resend que ya usa
+este proyecto para los correos de leads (ver bug #7 y la nota de
+"resend_from_address" más arriba) -- ese Resend NO cubre las invitaciones
+de Auth a menos que también se configure un SMTP personalizado ahí. El
+correo por defecto de Supabase (sin SMTP propio configurado) tiene límites
+de envío muy bajos pensados solo para desarrollo, no para producción, y es
+la causa más común de "las invitaciones no llegan". Ninguna sesión de
+Claude Code ha podido verificar ni configurar esto: el conector MCP de
+Supabase de esta sesión sigue enlazado al proyecto vacío
+`hwrtwylnhhobnharthsx` (ahora además `INACTIVE`), no al proyecto real
+(`fssjgpqisfnmnkavsyld`) -- mismo bloqueo ya documentado en la sección de
+OCR más abajo. **Pendiente real para el usuario**: entrar al Dashboard de
+Supabase del proyecto real → Authentication → Emails → SMTP Settings, y
+configurar un SMTP personalizado (por ejemplo con Resend y el dominio ya
+verificado `resendcegmas.com`) en vez de depender del envío por defecto.
+
+## Mapeo de puesto → rol de acceso: Secretaría y Coordinación
+
+El usuario confirmó explícitamente el alcance de cada puesto (no se asumió):
+
+- **Secretaria**: se encargará de comunicaciones, mantenimiento de la base
+  de datos de estudiantes (nuevos ingresos, salidas), pagos y validación de
+  comprobantes, y ver las solicitudes de los padres que no son del maestro
+  (permisos, cartas de confirmación de estudio). **No existía un rol de
+  login "Secretaria"** -- el puesto (`secretary`/`teaching_secretary` en
+  `roleLabels.ts`) es distinto de los 5 roles de acceso
+  (`director`/`school_admin`/`teacher`/`finance`/`reception`). Se decidió
+  reusar `reception` (ya etiquetado "Secretaría" en `TopBar.tsx` desde
+  antes de esta tarea) en vez de crear un rol nuevo -- a nivel de RLS,
+  `reception` ya tenía acceso de lectura/escritura a `invoices`/`payments`/
+  `billing_concepts` desde la migración 004 (nunca expuesto en la interfaz
+  hasta ahora). Se amplió `ROLE_MODULES.reception` en `permissions.ts` con
+  `tesoreria`+`pagos` (ya tenía `estudiantes`/`familias`/`comunicados`/
+  `mensajes_directos`/`asistencia`), y se agregaron los links "Mensajes" y
+  "Tesorería" al nav de `reception` en `Sidebar.tsx` (existían los permisos
+  pero no el link, un gap que ya existía antes de esta tarea para
+  `mensajes_directos`).
+- **Facturas de proveedores/Alegra quedó fuera a propósito** -- no es parte
+  de lo que el usuario describió para Secretaria, y es gestión contable
+  (mapeo RNC→contacto, categoría→cuenta) que se decidió dejar solo en
+  Finanzas/Dirección. Como `tesoreria_proveedores` compartía el mismo
+  gate `canAccess(role,'tesoreria')` que el resto de Tesorería (todo el
+  módulo usaba un solo permiso, sin distinción), se separó en un módulo
+  nuevo `tesoreria_proveedores` (permissions.ts) para poder darle
+  `tesoreria`+`pagos` a Recepción/Secretaría sin regalarle también la
+  aprobación de facturas de proveedores. `finance` lo mantiene explícito;
+  `director`/`school_admin`/`super_admin` lo siguen teniendo vía
+  `FULL_ACCESS`. El link "Facturas de proveedores" en
+  `/dashboard/tesoreria` ahora se oculta si el rol no tiene ese módulo.
+- **Coordinadora**: el usuario confirmó "acceso igual a la Directora" --
+  no hizo falta ningún cambio de permisos, `director` (`FULL_ACCESS`) ya es
+  exactamente eso. Solo se ajustó la sugerencia automática del selector de
+  rol.
+- **Sugerencia automática del selector de rol** (`GrantAccessButton.tsx`):
+  antes, cualquier puesto que no calzara exactamente con uno de los 5
+  roles de login (ej. `secretary`, `coordinator`, `admin`) caía
+  silenciosamente en "Docente" por defecto -- riesgo real de que alguien
+  aprobara sin fijarse y la Secretaria quedara con permisos de Docente. Se
+  agregó una tabla `SUGGESTED_LOGIN_ROLE` explícita: `coordinator`→
+  `director`, `secretary`/`teaching_secretary`→`reception`,
+  `admin`/`administrator`→`school_admin`. Quien invita siempre puede
+  cambiar el rol sugerido antes de enviar -- esto solo mejora el valor por
+  defecto.
+
+**Pendiente real**: ningún dato de prueba se creó ni se verificó en vivo
+contra producción en esta tarea (no había credenciales de Supabase
+disponibles) -- se verificó con `tsc --noEmit`/`lint`/`build` limpios y
+lectura cuidadosa de las policies de RLS existentes, pero falta confirmar
+en producción que Gladys Esther (o cualquier Secretaria/Coordinadora real)
+recibe la invitación correctamente y ve los módulos esperados al iniciar
+sesión.
+
+## Estructura del área de Inglés (Amco) y enrutamiento de comunicaciones por materia -- implementado el 2026-08-20
+
+Contexto de negocio, dado por el usuario el 2026-08-20 (no asumido): el
+colegio piloto no es bilingüe, pero tiene una alianza con **Amco** para el
+área de Inglés -- una de sus fortalezas de mayor peso -- con su propia
+estructura paralela de coordinación y docentes por ciclo:
+
+| Puesto | Persona | Ciclo |
+|---|---|---|
+| Coordinadora de Inglés | María Angélica Vizcaíno | Todo el colegio (supervisión) |
+| Docente de Inglés | Nercy Rodríguez | Inicial (pre kínder, kínder, preprimario) |
+| Docente de Inglés | Yuleymis Lugo Ochoa | 1er ciclo primaria (1°, 2°, 3°) |
+| Docente de Inglés | Marianelis Calderón | 2do ciclo primaria (4°, 5°, 6°) |
+| Docente de Inglés | Orlando Antoine Natera | 1er ciclo secundaria (1°, 2°, 3°) |
+| Docente de Inglés | Yendry Paulino | 2do ciclo secundaria (4°, 5°, 6°) |
+
+**El requisito**: cuando un padre le escribe al colegio, el mensaje debe
+llegarle **solo** al equipo correspondiente según el tema -- si es sobre
+Inglés, solo al docente de Inglés de ese ciclo (o a quien tenga la
+categoría completa asignada); si es sobre Deporte, solo al único profesor
+de Educación Física de todo el colegio; de lo contrario, a los docentes
+regulares de siempre. Mismo criterio para la salida: los comunicados que
+publica el equipo de Inglés tienen una clasificación separada de los
+regulares. El usuario confirmó (vía `AskUserQuestion`) que quería una
+**conversación separada por categoría** (no un tag por mensaje dentro de
+un solo hilo), y que la Coordinadora de Inglés no debía quedar limitada a
+la vista de un docente de un solo ciclo.
+
+**Diseño elegido -- reutiliza `teacher_assignments` en vez de crear un
+concepto nuevo**: la tabla gana una columna `category` (`'regular' |
+'ingles' | 'deporte'`, default `'regular'`) y `grade_level` pasa a ser
+**nullable** -- una fila con `grade_level = null` significa "todos los
+grados del colegio para esta categoría" (para un docente único de todo el
+colegio en su materia, como Deporte). No hizo falta ningún rol de acceso
+nuevo ni tocar `permissions.ts`: Inglés y Deporte siguen entrando como
+`teacher`, la separación es 100% vía esta tabla + RLS, igual que ya pasaba
+con el grado. La Coordinadora de Inglés no necesita ninguna fila especial
+-- su rol de acceso ya es `director` (definido en la tarea anterior de
+Secretaría/Coordinación, "acceso igual a la Directora"), así que ya entra
+por la rama de acceso total en las policies, sin depender de
+`teacher_assignments`.
+
+**Migraciones** (`supabase/migrations/20260821000000..20260821020000`):
+1. `teacher_assignments`: columna `category`, `grade_level` nullable,
+   índice único `(staff_id, category, coalesce(grade_level, '*'))`
+   (reemplaza el `unique(staff_id, grade_level)` de la migración 033, que
+   se busca y elimina por introspección de `pg_constraint` en vez de
+   asumir su nombre generado). `teacher_is_assigned_to_grade()` gana un
+   tercer parámetro `category` con default `'regular'` -- retrocompatible,
+   las llamadas existentes de `students`/`attendance`/`class_updates` (2
+   argumentos) no cambian de comportamiento. Nueva función
+   `staff_can_see_family_category(school_id, family_id, category)`.
+2. `direct_conversations`: columna `category`, índice único cambia de
+   `(family_id)` a `(family_id, category)`. RLS de staff reescrita:
+   `super_admin`/`school_admin`/`director` ven las 3 categorías;
+   `'regular'` sigue exactamente como antes (`teacher`/`reception` ven
+   todas las familias sin filtrar por grado, a propósito, igual que
+   documentaba la migración 031); `'ingles'`/`'deporte'` solo para
+   `teacher` con una asignación que calce (`staff_can_see_family_category`)
+   -- `reception` no ve estas dos categorías. Las policies de guardian no
+   cambian: un tutor ve las 3 categorías de su propia familia.
+3. `messages` (Comunicados): columna `category` -- a diferencia de
+   Mensajes directos, es solo una **clasificación de salida**, no
+   restringe lectura de guardian (un padre sigue viendo todos los avisos
+   dirigidos a él). Quién puede publicar en cada categoría se valida en
+   `createMessageAction`, mismo patrón que ya usaba el cruce contra
+   `teacher_assignments` para el grado/sección.
+
+**Hallazgo de seguridad importante durante la implementación**: las Server
+Actions de Mensajes directos (`portal-familiar/actions.ts` y
+`dashboard/mensajes/actions.ts`) usan el cliente **admin** (service_role)
+para casi todas las lecturas/escrituras -- y bajo service_role
+`auth.uid()` es `null`, así que las policies de RLS de arriba **no
+alcanzan esos caminos** (protegen la lista de staff, que sí usa el
+cliente de sesión, y protegen a guardians). Se replicó la misma regla de
+autorización en TypeScript
+(`web/src/lib/messaging/categoryAccess.ts`,
+`staffCanAccessFamilyCategory()`) y se aplicó explícitamente en
+`sendStaffMessageAction`/`markStaffReadAction` y en la página de detalle
+de la conversación, antes de tocar el cliente admin -- documentado ahí
+mismo para que quede claro por qué la regla existe dos veces (RLS +
+TypeScript) y no es redundancia accidental.
+
+**Cambios de interfaz**:
+- `DirectMessagesWidget.tsx` (Portal Familiar): pestañas
+  Regular/Inglés/Deporte, cada una con su propia conversación y su propio
+  estado de carga.
+- `dashboard/mensajes`: pestañas por categoría (solo se muestran las que
+  el staff puede usar) + lista de "iniciar conversación" filtrada según
+  qué familias puede alcanzar en esa categoría
+  (`getEligibleFamilyIdsForCategory`); la ruta de detalle pasa de
+  `/mensajes/[familyId]` a `/mensajes/[familyId]/[category]`.
+- `TeacherGradeAssignments.tsx` (Personal): selector de categoría junto a
+  los chips de grado ya existentes, más un toggle "Todo el colegio" que
+  guarda la fila `grade_level = null`.
+- `NewMessageForm.tsx` (Comunicados): selector de categoría, solo visible
+  si quien publica tiene permiso en más de una (`getStaffAvailableCategories`);
+  `MessageCard.tsx` muestra un badge de categoría cuando no es Regular.
+
+**Verificado**: `tsc --noEmit`, `npm run lint` y `npm run build` limpios.
+**No verificado en producción** (mismo bloqueo de siempre -- sin acceso a
+Supabase desde este entorno): falta aplicar las 3 migraciones nuevas y
+probar con datos reales que cada persona ve exactamente lo que le
+corresponde.
+
+**Pendiente real (Fase 4, bloqueada por el usuario hasta que confirme la
+lista completa del equipo de Inglés)**: dar de alta en Personal a quienes
+falten de la tabla de arriba y asignarles categoría+grados (o "todo el
+colegio" para un docente único) con la UI ya extendida -- no necesita
+código nuevo, solo datos. El usuario dijo explícitamente que la prioridad
+es "amarilla" (puede esperar 1-2 días, antes de que arranque el año
+escolar 2026-2027 la semana del 24 de agosto).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

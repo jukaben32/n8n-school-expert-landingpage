@@ -101,15 +101,19 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   })
 
   let authId = invited?.user?.id
+  // Si queda en true, la cuenta de Auth ya existia y solo se reuso. Importa
+  // en dos sitios: para mandarle un correo de restablecer contrasena en vez
+  // de la invitacion, y para NO borrarla si algo falla despues -- esa cuenta
+  // es de otra persona o flujo y jamas debe tocarse aqui.
+  let reusedExistingAccount = false
 
-  // Marca si la cuenta de Auth se creó en ESTA llamada -- es la única que
-  // se puede revertir de forma segura si algo falla después. Si el correo
-  // ya tenía cuenta (ej. ya es tutor en otro colegio) y se reusa, esa
-  // cuenta es de otra persona/flujo y jamás debe tocarse ni borrarse aquí.
-  const authAccountCreatedHere = Boolean(invited?.user?.id)
-
-  // Si el correo ya tenía una cuenta de Auth, inviteUserByEmail falla --
-  // se reusa esa cuenta en vez de tratarlo como error.
+  // Si el correo ya tenía una cuenta de Auth (ej. ya es tutor en otro
+  // colegio), inviteUserByEmail falla -- se reusa esa cuenta en vez de
+  // tratarlo como error. BUG real corregido: este caso nunca mandaba
+  // ningún correo (inviteUserByEmail falló, así que no salió nada), pero
+  // el mensaje final siempre decía "Invitación enviada" de todos modos --
+  // la persona quedaba vinculada sin ninguna forma de enterarse o entrar.
+  // Ahora se le manda un correo de restablecer contraseña como sustituto.
   if (inviteError || !authId) {
     const isAlreadyRegistered = inviteError?.message?.toLowerCase().includes('already been registered')
     if (!isAlreadyRegistered) {
@@ -122,6 +126,7 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
       return { ok: false, message: 'Ese correo ya está registrado, pero no se pudo vincular. Contacta soporte.' }
     }
     authId = existingUser.id
+    reusedExistingAccount = true
   }
 
   // Vincular el perfil con el helper de doble rol: cubre el caso de quien
@@ -133,7 +138,7 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
     // Compensación, no transacción real: si la cuenta de Auth se creó
     // aquí mismo, se revierte para no dejar un usuario con credenciales
     // y sin perfil. Si la cuenta ya existía de antes, no se toca.
-    if (authAccountCreatedHere) {
+    if (!reusedExistingAccount) {
       const { error: deleteError } = await admin.auth.admin.deleteUser(authId)
 
       if (deleteError) {
@@ -165,7 +170,21 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   }
 
   revalidatePath('/dashboard/personal')
-  return { ok: true, message: `Invitación enviada a ${staff.email}.` }
+
+  if (!reusedExistingAccount) {
+    return { ok: true, message: `Invitación enviada a ${staff.email}.` }
+  }
+
+  const { error: resetError } = await admin.auth.resetPasswordForEmail(staff.email, {
+    redirectTo: `${siteUrl}/actualizar-contrasena`,
+  })
+  if (resetError) {
+    return {
+      ok: true,
+      message: `Se vinculó el acceso, pero no se pudo enviar el correo (${resetError.message}). Pídele que entre con "Olvidé mi contraseña" en ${staff.email}.`,
+    }
+  }
+  return { ok: true, message: `Ese correo ya tenía una cuenta -- se vinculó y le enviamos un correo a ${staff.email} para entrar.` }
 }
 
 export interface UpdateStaffInput {

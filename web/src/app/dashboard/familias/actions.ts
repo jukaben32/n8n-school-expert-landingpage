@@ -113,10 +113,16 @@ async function inviteByEmail(
   })
 
   let authId = invited?.user?.id
+  let reusedExistingAccount = false
 
   // Si el correo ya tenía una cuenta de Auth (ej. ya es personal del
   // colegio, o tutor de otro hijo en otro colegio), inviteUserByEmail
-  // falla -- se reusa esa cuenta en vez de tratarlo como error.
+  // falla -- se reusa esa cuenta en vez de tratarlo como error. BUG real
+  // corregido: este caso nunca mandaba ningún correo (inviteUserByEmail
+  // falló, así que no salió nada), pero el mensaje final siempre decía
+  // "Invitación enviada" de todos modos -- el tutor quedaba vinculado sin
+  // ninguna forma de enterarse o entrar. Ahora se le manda un correo de
+  // restablecer contraseña como sustituto.
   if (inviteError || !authId) {
     const isAlreadyRegistered = inviteError?.message?.toLowerCase().includes('already been registered')
     if (!isAlreadyRegistered) {
@@ -128,6 +134,7 @@ async function inviteByEmail(
       return { ok: false, message: 'Ese correo ya está registrado, pero no se pudo vincular. Contacta soporte.' }
     }
     authId = existingUser.id
+    reusedExistingAccount = true
   }
 
   const linkResult = await linkProfileForDualRole(admin, authId, schoolId, { guardianId: guardian.id })
@@ -137,7 +144,21 @@ async function inviteByEmail(
 
   revalidatePath('/dashboard/familias')
   revalidatePath('/dashboard/estudiantes/escaneos')
-  return { ok: true, message: `Invitación enviada a ${guardian.email}.` }
+
+  if (!reusedExistingAccount) {
+    return { ok: true, message: `Invitación enviada a ${guardian.email}.` }
+  }
+
+  const { error: resetError } = await admin.auth.resetPasswordForEmail(guardian.email!, {
+    redirectTo: `${siteUrl}/actualizar-contrasena`,
+  })
+  if (resetError) {
+    return {
+      ok: true,
+      message: `Se vinculó el acceso, pero no se pudo enviar el correo (${resetError.message}). Pídele que entre con "Olvidé mi contraseña" en ${guardian.email}.`,
+    }
+  }
+  return { ok: true, message: `Ese correo ya tenía una cuenta -- se vinculó y le enviamos un correo a ${guardian.email} para entrar.` }
 }
 
 /**
