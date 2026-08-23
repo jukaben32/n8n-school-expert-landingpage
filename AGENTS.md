@@ -1294,23 +1294,21 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
    solo campo, es más seguro un `PATCH` dirigido a la Management API (o
    hacerlo a mano en el Dashboard, como ya recomendaba este mismo
    documento) que un `config push` completo.
-6. **Discrepancia encontrada y NO resuelta** (fuera de alcance de esta
-   tarea, requiere decisión del usuario): el `site_url` restaurado en
-   producción es `https://n8n-school-expert-landingpage.vercel.app` (el
-   valor que ya tenía el proyecto antes de este incidente), pero la
-   sección "Dominios confirmados" más abajo en este mismo documento dice
-   que el dominio real de la app es `https://educacionmanantial.com`. No
-   se tocó `site_url` de nuevo para no repetir el mismo tipo de error sin
-   confirmación explícita -- **pendiente real**: confirmar con el usuario
-   si Auth debe apuntar a `educacionmanantial.com` en vez del dominio de
-   Vercel, y actualizarlo (a mano o con un `PATCH` puntual, no con
-   `config push`).
-7. También se corrigió `config.toml` para reflejar `sender_name =
-   "MentorIApp"` (el valor real que tenía producción antes del
-   incidente) -- distinto del `MentorIA` que documenta la sección de
-   SMTP más abajo (2026-08-20). Discrepancia menor sin resolver: no está
-   claro cuál de los dos es el nombre vigente que se quiere mostrar en
-   los correos; revisar con el usuario.
+6. **Discrepancia del `site_url` -- resuelta, confirmada con el usuario**:
+   Auth apuntaba al dominio viejo de Vercel en vez de
+   `https://educacionmanantial.com` (el paso de Auth se quedó fuera
+   cuando se hizo la migración de dominio del punto 6 del roadmap). Se
+   corrigió `site_url` y `additional_redirect_urls` en `config.toml` y se
+   aplicó a producción con `supabase config push` (diff limpio, un solo
+   campo) -- verificado con lectura de solo consulta:
+   `site_url = https://educacionmanantial.com`. Se dejó también
+   `https://n8n-school-expert-landingpage.vercel.app/**` en la lista de
+   redirects permitidos como respaldo, no se quitó.
+7. `sender_name = "MentorIApp"` -- confirmado con el usuario que es el
+   nombre correcto (coincide con lo que ya tenía producción antes del
+   incidente; el `MentorIA` sin "pp" que documenta la sección de SMTP más
+   abajo, 2026-08-20, quedó desactualizado -- no se corrigió esa nota
+   histórica, pero cualquier sesión futura debe confiar en "MentorIApp").
 8. `supabase/config.toml` corregido se subió en un PR nuevo (rama
    `fix/config-toml-produccion-real`, PR #4) -- el merge automático a
    `main` también fue bloqueado por el clasificador de seguridad
@@ -1400,17 +1398,15 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
     (necesita `OPENAI_API_KEY` con saldo) y confirmar que el visor
     `/dashboard/asistente-ia` muestra los datos correctamente.
 12. ~~Vencimiento del enlace de recuperar contraseña~~ — `otp_expiry` en
-    600s (10 min), confirmado en producción (ver sección "Vencimiento del
-    enlace de 'recuperar contraseña'" más arriba). PR #4
+    600s (10 min), confirmado en producción. ~~`site_url` de Auth
+    apuntando al dominio viejo de Vercel~~ — corregido a
+    `https://educacionmanantial.com`, confirmado con el usuario, cierra
+    el cabo suelto que había quedado del punto 6 (Dominio propio).
+    `sender_name = "MentorIApp"` confirmado como correcto. (Ver sección
+    "Vencimiento del enlace de 'recuperar contraseña'" más arriba para el
+    detalle completo, incluido el incidente del `config push`.) PR #4
     (`fix/config-toml-produccion-real`) pendiente de que el usuario lo
-    fusione a mano en GitHub. Dejó dos pendientes nuevos sin resolver,
-    relacionados con el punto 6 (Dominio propio):
-    - Confirmar si `site_url`/`additional_redirect_urls` de Supabase Auth
-      deben apuntar a `https://educacionmanantial.com` en vez del dominio
-      de Vercel (parece que ese paso se quedó fuera cuando se hizo la
-      migración de dominio).
-    - Confirmar el `sender_name` correcto del SMTP de Auth ("MentorIA" vs
-      "MentorIApp" -- hay dos fuentes de este documento que no coinciden).
+    fusione a mano en GitHub.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
