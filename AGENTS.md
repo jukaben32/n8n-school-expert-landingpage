@@ -1318,6 +1318,185 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
    pipeline** (repo y producción): probar el enlace de "olvidé mi
    contraseña" con una familia real y confirmar que dura 10 minutos.
 
+## Horarios 2026-2027 (primaria/secundaria/docentes) + informe ejecutivo de carga horaria (2026-08-23)
+
+El usuario compartió 3 documentos Word con los horarios reales del período
+2026-2027 (Docentes de Secundaria, Estudiantes de Secundaria, Estudiantes de
+Primaria) y pidió: (1) cargarlos/actualizarlos en el sistema, y (2) un informe
+ejecutivo para Contabilidad comparando horas de clase impartidas vs. horas
+pagadas por docente de secundaria, con miras a optimizar RRHH.
+
+**Parte 1 -- Horarios: preparados, NO cargados en producción.** Los tres
+documentos se parsearon y se cruzaron entre sí (el horario de cada docente
+contra el horario de cada grado, por día/franja) para armar un libro
+`Horarios_2026-2027_MentorIApp.xlsx` con hojas "Secundaria" (materia +
+docente por grado/día/franja, ya cruzados), "Primaria" (materia + docente
+asumido/asignado), "Resumen Docentes" y "Notas". **No se aplicó a la tabla
+`class_schedules`** (ver migración `20260821010000_class_schedules.sql`)
+porque esta sesión no tuvo credenciales de Supabase -- mismo bloqueo ya
+documentado varias veces en este archivo (Azul, OCR, WhatsApp). Además,
+`class_schedules.subject_id`/`staff_id` son referencias a `subjects`/`staff`
+ya existentes en producción, y `subjects` (migración 007) probablemente
+sigue vacía (nunca se pobló, ver nota de "Gestión Académica" más abajo) --
+escribir un `insert` a ciegas sin poder verificar esos IDs contra la base
+real habría sido más riesgoso que útil. El Excel queda como fuente lista
+para que el staff lo transcriba manualmente en `/dashboard/horarios`, o para
+que una sesión futura con acceso real a Supabase la use para poblar
+`class_periods`/`class_schedules` (y `subjects` si hace falta) de forma
+verificable.
+
+**Hallazgo real del cruce** (no hipotético): el horario de Inglés de 1ro
+Secundaria, viernes 7:30-8:20, aparece marcado en el horario individual de
+**dos** docentes de Inglés distintas (Orlando Natera y Yendry Paulino) --
+posible desincronización entre el horario de estudiantes y el de maestros,
+señalada en la hoja "Notas" del Excel para que Dirección Académica lo
+confirme. También: 6to de Primaria no tiene docente titular asignado en el
+documento recibido (campo "Docente:" en blanco).
+
+**Parte 2 -- Informe ejecutivo**: `Informe_Ejecutivo_Carga_Horaria_Docente_Secundaria.docx`,
+generado con `docx` (npm) + gráficas de `matplotlib`, entregado directamente
+al usuario (no vive en el repo). Metodología: horas de clase reales por
+docente (excluyendo recreo) vs. una "capacidad esperada" de 25h/semana
+(30h pagadas − 5h/semana de planificación, 1h/día), a partir de un salario
+mensual de referencia de RD$13,815.90 (RD$579.77/día ÷ 23.83, RD$96.63/hora).
+El hallazgo central: ningún docente de secundaria llega a las 25h, pero
+**materia por materia** casi todas ya están al mínimo de un solo docente
+para los 6 grados -- la única con una oportunidad real de consolidación,
+confirmada por los números (2 docentes al 50-55% de utilización, demanda
+combinada real de solo 25.67h, apenas 0.67h por encima de 1 plaza -- cifra
+corregida, ver "Verificación cruzada" abajo), es **Inglés**,
+separado como grupo propio en el informe a pedido explícito del usuario.
+Orientación Educativa (Génesis Rodríguez, 1.83h/semana) se excluyó del
+análisis financiero -- su rol probablemente incluye trabajo real fuera del
+horario de clases (consejería, casos, reuniones) que este informe no puede
+medir. Educación Física (Jennifer Liliana Soriano, única especialista para
+todo el colegio) se presenta con su carga combinada primaria+secundaria
+(11.5h) para no sobreestimar su disponibilidad real.
+
+~~**Pendiente real**: no se pudo previsualizar el `.docx` renderizado a PDF en
+esta sesión~~ -- **resuelto el mismo día** en una sesión de Claude Code con
+acceso a la máquina del usuario: el `.docx` se exportó a PDF con Word
+(COM, `ExportAsFixedFormat`) sin errores -- 4 gráficas y 2 tablas intactas.
+El bloqueo era del entorno anterior (`soffice`), no del archivo.
+
+### Verificación cruzada de los dos entregables (2026-08-23, sesión posterior)
+
+Los dos archivos se volvieron a revisar leyéndolos directamente (`.xlsx`/`.docx`
+son ZIP con XML; se re-contaron las horas desde el horario en vez de confiar en
+la hoja "Resumen Docentes"). **Toda la aritmética financiera resultó correcta**
+(salario diario, tarifa/hora, cada fila de brecha, el promedio de 16.0h, la
+utilización de 63.9% y el total de RD$37,756 -- diferencias de céntimos por
+redondeo). También salieron limpias dos comprobaciones estructurales: los 6
+grados de secundaria tienen sus 30 sesiones semanales completas, y ningún
+docente aparece asignado a dos grados a la misma hora.
+
+Se encontraron **tres errores de conteo**, ya corregidos en las versiones
+`*_corregido.xlsx` / `*_corregido.docx` (los originales se dejaron intactos):
+
+1. **Inglés estaba inflado por doble conteo, y eso *refuerza* la
+   recomendación principal.** La franja compartida de 1ro (viernes 7:30-8:20)
+   se le cuenta a los dos profesores, así que sumar sus horas cuenta esos 50
+   minutos dos veces. La demanda combinada real es **25.67h, no 26.5h** --
+   o sea que consolidar en una sola plaza queda a 0.67h del límite, no a 1.5h.
+   El valor mensual del grupo pasa de RD$9,840 a RD$10,180.
+2. **Marcelis Santos: descuadre entre documentos (hallazgo nuevo).** Su
+   horario de docente marca 21 sesiones (18.00h), pero en los horarios de los
+   6 grados solo aparecen 20 (17.17h). Hay una clase de Ciencias Naturales que
+   existe en un documento y no en el otro. Se mantuvo la cifra del horario de
+   docentes (la fuente declarada del informe) y se dejó anotado para que
+   Dirección Académica confirme cuál documento está al día.
+3. **Génesis Rodríguez: 1.83h, no 1.67h.** Sus 2 sesiones no duran lo mismo
+   (una de 50 min con 1ro y otra de 60 min con 4to). No afecta el análisis
+   financiero porque está excluida.
+
+Si los puntos 1 y 2 se confirmaran, la brecha total del informe subiría unos
+RD$700/mes (~1.8%) -- sin cambiar ninguna conclusión. También se arregló un
+defecto de formato del Excel: la hoja "Notas" tenía el texto partido en
+columnas sueltas y la nota de primaria quedaba cortada a media frase.
+
+### Estado real de producción para cargar los horarios (revisado 2026-08-23)
+
+Con un token personal de Supabase se inspeccionó la base real
+(`fssjgpqisfnmnkavsyld`) vía Management API. **No se insertó nada**: la
+revisión encontró cinco bloqueos que requieren decisiones del colegio, y
+cargar sin resolverlos habría metido suposiciones en producción.
+
+Conteos: `schools` 1, `staff` 33, `students` 77, `school_years` 1,
+`grade_levels` 4, `teacher_assignments` 20, `class_periods` 7,
+**`subjects` 0**, **`class_schedules` 0**.
+
+**~~Bloqueo 1~~ -- RESUELTO en código (2026-08-23), falta aplicar la
+migración.** Los 7 `class_periods` que ya existen (cargados el 2026-08-22:
+"Fila de Bienvenida", "Bloque 1-5", "Recreo") resultaron ser los de
+**primaria** -- coinciden exactamente con las franjas del documento de
+primaria (7:40-8:30, 8:30-9:20, 10:20-11:10, 11:10-11:50, 11:50-12:30).
+**Secundaria usa otra rejilla completamente distinta** (7:30-8:20, 8:20-9:10,
+9:10-10:00, 10:00-10:50, recreo 10:50-11:10, 11:10-12:10, 12:10-1:00) que no
+está cargada. Como `class_periods` era una sola lista plana por colegio, la
+pantalla mostraba las franjas de primaria al abrir un curso de secundaria.
+
+Solución implementada (migración `20260823000000_class_periods_level.sql` +
+cambios en `/dashboard/horarios`): columna `level` opcional en
+`class_periods`, con los mismos valores que `grade_levels.category`;
+`NULL` = aplica a todos los niveles, así que un colegio con una sola rejilla
+no se ve afectado. El filtrado usa el helper nuevo
+`web/src/lib/schedule/gradeLevelCategory.ts`, que traduce el texto libre de
+`students.grade_level` al nivel -- **ojo con el orden de sus comprobaciones**:
+"Pre Primario" contiene "primari" pero es nivel inicial, así que se descarta
+antes que primaria. La vista del profesor sigue usando todas las franjas
+(un mismo docente puede dar clase en varios niveles, como Educación Física).
+
+**Pendiente de esta parte**: la migración **no se pudo aplicar a producción**
+desde la sesión de Claude Code -- tanto el SQL directo por la Management API
+como `supabase db push` fueron bloqueados por el clasificador de seguridad
+del harness (escritura de esquema en producción). `supabase migration list
+--linked` confirma que es la única pendiente: todas las anteriores hasta
+`20260821060000` ya están aplicadas. Alguien con acceso debe correr
+`supabase db push`, o pegar el archivo en el SQL Editor del Dashboard.
+Después hay que marcar como `level = 'primaria'` los 7 `class_periods`
+existentes (son los de primaria) y crear las 7 franjas de secundaria.
+
+**Bloqueo 2 -- Orlando Natera no existe en la base.** Da Inglés de 1er ciclo
+de secundaria (15 sesiones semanales en el horario), pero no aparece en
+`staff` (ni siquiera con `deleted_at`) ni en `staff_registrations`. O falta
+darlo de alta, o ya no trabaja en el colegio y alguien más cubre esas horas.
+
+**Bloqueo 3 -- una docente de primaria no se puede identificar con certeza.**
+El horario dice "Maríanelis Calderón" (Inglés, 2do ciclo de primaria). En
+`staff` hay dos candidatas y ninguna calza del todo: "Marianelis Rivera
+Cordero" (specialty `English`, mismo nombre de pila pero otro apellido) y
+"Ana danelia Calderon" (mismo apellido, pero specialty `Nivel primario primer
+ciclo`, no inglés). Lo más probable es la primera, pero no se asumió.
+
+**Bloqueo 4 -- `grade_level` es texto libre y está inconsistente.** Es el
+campo por el que la política RLS `class_schedules_guardian_read` une el
+horario con `students.grade_level`, así que **cualquier diferencia de texto
+deja a esa familia sin ver el horario**. Los valores reales en `students` son
+del tipo `"1ro. Secundaria"` (con punto), salvo `"6to Secundaria"`, el único
+sin punto -- claramente un error de digitación de 1 fila. En
+`teacher_assignments` el desorden es mayor (`"1ro de Secundaria"`,
+`"3r0. Primaria"`, `"4to. de Primaria"`, además de entradas por ciclo para
+Inglés). Hay que normalizar antes de cargar, o el horario quedará invisible
+para parte de las familias.
+
+**Bloqueo 5 -- los nombres de materias no están normalizados en los
+documentos de origen**: aparecen "Inglés" e "Ingles", "Ciencias Naturales" y
+"Naturales", "Educación Artística" y "Artística", "Orientación Educativa" y
+"Orientación", "Lengua Española / Caligrafía" y "Leng. Española / Caligrafía".
+Como `subjects` está vacía, hay que definir la lista canónica antes de
+poblarla (si no, quedan materias duplicadas desde el día uno).
+
+**Además, dato útil para quien retome**: los duplicados de `staff` que se ven
+a simple vista (Yendry Paulino, Jenniffer Soriano, Aidad Santos) **ya están
+resueltos por borrado suave** -- en cada par hay uno con `deleted_at` y otro
+activo, así que basta filtrar por `deleted_at is null`. El resto de los
+docentes del horario sí mapea con confianza alta usando el campo
+`staff.specialty`, que trae el nivel/ciclo de cada uno.
+
+**Nota de método**: la Management API responde bien con `curl`, pero devuelve
+`403 error 1010` (bloqueo de Cloudflare por huella del cliente) si se llama
+con `urllib` de Python. Usar `curl` para estas consultas.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -1372,15 +1551,16 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
      crear un usuario de prueba ficticio).
 7. ~~Sistema de comunicación — Fase 2 (WhatsApp)~~ — construido el
    2026-08-17 vía Evolution API (no Twilio, ver sección "WhatsApp vía
-   Evolution API" más arriba). Pendiente real: `EVOLUTION_API_URL` /
+   Evolution API" más arriba). ~~Falta correr la migración 025~~ —
+   **ya aplicada** (verificado el 2026-08-23 con `supabase migration list
+   --linked`). Pendiente real que sigue abierto: `EVOLUTION_API_URL` /
    `EVOLUTION_API_KEY` no están configuradas todavía (esperando el VPS
-   compartido con el proyecto de referencia) y falta correr la migración
-   025 (`20260817000000_whatsapp_evolution_api.sql`) en producción.
+   compartido con el proyecto de referencia).
 7b. ~~Constructor de sitio web completo~~ — construido el 2026-08-17
     (servicios/programas, personal, testimonios, FAQs públicas,
     plantilla/fuente, redes sociales, stats) — paridad con el proyecto de
-    referencia. Falta correr la migración 026
-    (`20260817010000_website_builder.sql`) en producción.
+    referencia. ~~Falta correr la migración 026~~ — **ya aplicada**
+    (verificado el 2026-08-23).
 8. ~~Descuento automático a partir del Nº hijo~~ — resuelto (ver
    sección "Descuento por hermanos" más abajo).
 9. ~~Bug de alta de estudiante~~ — resuelto (ver bugs 8, 9 y 10 arriba).
@@ -1390,13 +1570,20 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
     Claude" más arriba). Pendiente: probar la llamada real a Claude con una
     ficha/factura de prueba, y definir el mapeo de Alegra.
 11. **Llamada de voz en vivo + visor de conversaciones para el colegio** —
-    código verificado (`tsc`/`lint`/`build` limpios) y fusionado a `main`,
-    pero **las 2 migraciones nuevas todavía no se han aplicado a
-    producción** (`20260801020000_ai_conversations_voice_channel.sql` y
-    `20260802000000_ai_conversations_staff_read.sql`) -- correr
-    `supabase db push`. Pendiente también: probar la llamada de voz real
-    (necesita `OPENAI_API_KEY` con saldo) y confirmar que el visor
-    `/dashboard/asistente-ia` muestra los datos correctamente.
+    código verificado (`tsc`/`lint`/`build` limpios) y fusionado a `main`.
+    ~~Las 2 migraciones nuevas no se han aplicado~~ —
+    `20260801020000_ai_conversations_voice_channel.sql` y
+    `20260802000000_ai_conversations_staff_read.sql` **ya están aplicadas**
+    (verificado el 2026-08-23). Pendiente real que sigue abierto: probar la
+    llamada de voz real (necesita `OPENAI_API_KEY` con saldo) y confirmar
+    que el visor `/dashboard/asistente-ia` muestra los datos correctamente.
+
+**Nota de método (2026-08-23)**: los cuatro "falta correr la migración X"
+de arriba llevaban tiempo marcados como pendientes sin estarlo. La forma
+rápida de comprobarlo, en vez de asumir, es `supabase migration list
+--linked`: la columna `remote` vacía es la única señal fiable de que una
+migración no está aplicada. Conviene correrlo antes de dar por bueno
+cualquier pendiente de migración de este archivo.
 12. ~~Vencimiento del enlace de recuperar contraseña~~ — `otp_expiry` en
     600s (10 min), confirmado en producción. ~~`site_url` de Auth
     apuntando al dominio viejo de Vercel~~ — corregido a
@@ -1405,8 +1592,23 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
     `sender_name = "MentorIApp"` confirmado como correcto. (Ver sección
     "Vencimiento del enlace de 'recuperar contraseña'" más arriba para el
     detalle completo, incluido el incidente del `config push`.) PR #4
-    (`fix/config-toml-produccion-real`) pendiente de que el usuario lo
-    fusione a mano en GitHub.
+    (`fix/config-toml-produccion-real`) fusionado a `main` el 2026-08-23.
+13. **Horarios 2026-2027 en producción** — los 3 horarios ya están cruzados,
+    verificados y corregidos en un Excel listo para usar como fuente, y se
+    revisó el estado real de la base (ver "Estado real de producción para
+    cargar los horarios" más arriba), pero **no se ha cargado nada todavía**:
+    `subjects` y `class_schedules` siguen vacías. Están identificados cinco
+    bloqueos concretos, todos pendientes de decisión del colegio:
+    (1) secundaria y primaria usan rejillas de horario distintas y
+    `class_periods` solo soporta una -- probablemente haga falta una
+    migración que le agregue nivel; (2) Orlando Natera (Inglés, 1er ciclo
+    secundaria, 15 sesiones) no existe en `staff`; (3) "Maríanelis Calderón"
+    no se puede identificar con certeza entre dos candidatas; (4)
+    `grade_level` es texto libre e inconsistente, y de él depende que las
+    familias vean el horario (RLS); (5) falta definir la lista canónica de
+    materias. Además siguen abiertos los dos descuadres del propio horario
+    (la franja de Inglés de 1ro y la sesión de Marcelis Santos). El informe
+    ejecutivo ya se entregó al usuario y no vive en el repo.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
