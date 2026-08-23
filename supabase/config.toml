@@ -156,11 +156,18 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://educacionmanantial.com"
+# Con "www" a propósito: en Vercel el dominio principal es
+# www.educacionmanantial.com, y el dominio raíz (sin www) responde 308
+# redirigiendo hacia él. Si Auth construye los enlaces de correo con el raíz,
+# cada enlace de "recuperar contraseña" pasa por un redirect antes de llegar
+# a la app -- justo el punto donde se pierden los parámetros de sesión.
+site_url = "https://www.educacionmanantial.com"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:3000/**", "https://educacionmanantial.com/**", "https://n8n-school-expert-landingpage.vercel.app/**"]
+# Van los dos dominios (con y sin www): si falta el que Vercel sirve de verdad,
+# Auth rechaza el redirect y la familia se queda sin poder entrar.
+additional_redirect_urls = ["http://localhost:3000/**", "https://www.educacionmanantial.com/**", "https://educacionmanantial.com/**", "https://n8n-school-expert-landingpage.vercel.app/**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
