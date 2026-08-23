@@ -1414,12 +1414,72 @@ RD$700/mes (~1.8%) -- sin cambiar ninguna conclusión. También se arregló un
 defecto de formato del Excel: la hoja "Notas" tenía el texto partido en
 columnas sueltas y la nota de primaria quedaba cortada a media frase.
 
-**Pendiente real que sigue abierto**: cargar los horarios en producción
-(`class_periods`/`class_schedules`, y `subjects` si hace falta). Nota para
-quien lo retome: ahora sí es viable -- ya se comprobó en esta misma fecha que
-`supabase link` + la Management API funcionan contra `fssjgpqisfnmnkavsyld`
-con un token personal. Antes de insertar, verificar que `subjects` y `staff`
-estén pobladas y usar el archivo **corregido** como fuente, no el original.
+### Estado real de producción para cargar los horarios (revisado 2026-08-23)
+
+Con un token personal de Supabase se inspeccionó la base real
+(`fssjgpqisfnmnkavsyld`) vía Management API. **No se insertó nada**: la
+revisión encontró cinco bloqueos que requieren decisiones del colegio, y
+cargar sin resolverlos habría metido suposiciones en producción.
+
+Conteos: `schools` 1, `staff` 33, `students` 77, `school_years` 1,
+`grade_levels` 4, `teacher_assignments` 20, `class_periods` 7,
+**`subjects` 0**, **`class_schedules` 0**.
+
+**Bloqueo 1 -- el colegio usa DOS rejillas de horario distintas y el esquema
+solo soporta una.** Los 7 `class_periods` que ya existen (cargados el
+2026-08-22: "Fila de Bienvenida", "Bloque 1-5", "Recreo") resultaron ser los
+de **primaria** -- coinciden exactamente con las franjas del documento de
+primaria (7:40-8:30, 8:30-9:20, 10:20-11:10, 11:10-11:50, 11:50-12:30).
+**Secundaria usa otra rejilla completamente distinta** (7:30-8:20, 8:20-9:10,
+9:10-10:00, 10:00-10:50, recreo 10:50-11:10, 11:10-12:10, 12:10-1:00) que no
+está cargada. Pero `class_periods` es una sola lista plana por colegio, sin
+columna de nivel/categoría, y `class_schedules.period_id` apunta ahí
+directamente. Hay que decidir entre: (a) meter las dos rejillas en la misma
+tabla con nombres que las distingan ("Sec. Bloque 1"...), a costa de que la
+pantalla de horarios muestre 13 franjas para cualquier grado; o (b) agregar
+una columna de nivel a `class_periods` (migración nueva) y filtrar por ella
+en `/dashboard/horarios`. La opción (b) es la correcta de fondo.
+
+**Bloqueo 2 -- Orlando Natera no existe en la base.** Da Inglés de 1er ciclo
+de secundaria (15 sesiones semanales en el horario), pero no aparece en
+`staff` (ni siquiera con `deleted_at`) ni en `staff_registrations`. O falta
+darlo de alta, o ya no trabaja en el colegio y alguien más cubre esas horas.
+
+**Bloqueo 3 -- una docente de primaria no se puede identificar con certeza.**
+El horario dice "Maríanelis Calderón" (Inglés, 2do ciclo de primaria). En
+`staff` hay dos candidatas y ninguna calza del todo: "Marianelis Rivera
+Cordero" (specialty `English`, mismo nombre de pila pero otro apellido) y
+"Ana danelia Calderon" (mismo apellido, pero specialty `Nivel primario primer
+ciclo`, no inglés). Lo más probable es la primera, pero no se asumió.
+
+**Bloqueo 4 -- `grade_level` es texto libre y está inconsistente.** Es el
+campo por el que la política RLS `class_schedules_guardian_read` une el
+horario con `students.grade_level`, así que **cualquier diferencia de texto
+deja a esa familia sin ver el horario**. Los valores reales en `students` son
+del tipo `"1ro. Secundaria"` (con punto), salvo `"6to Secundaria"`, el único
+sin punto -- claramente un error de digitación de 1 fila. En
+`teacher_assignments` el desorden es mayor (`"1ro de Secundaria"`,
+`"3r0. Primaria"`, `"4to. de Primaria"`, además de entradas por ciclo para
+Inglés). Hay que normalizar antes de cargar, o el horario quedará invisible
+para parte de las familias.
+
+**Bloqueo 5 -- los nombres de materias no están normalizados en los
+documentos de origen**: aparecen "Inglés" e "Ingles", "Ciencias Naturales" y
+"Naturales", "Educación Artística" y "Artística", "Orientación Educativa" y
+"Orientación", "Lengua Española / Caligrafía" y "Leng. Española / Caligrafía".
+Como `subjects` está vacía, hay que definir la lista canónica antes de
+poblarla (si no, quedan materias duplicadas desde el día uno).
+
+**Además, dato útil para quien retome**: los duplicados de `staff` que se ven
+a simple vista (Yendry Paulino, Jenniffer Soriano, Aidad Santos) **ya están
+resueltos por borrado suave** -- en cada par hay uno con `deleted_at` y otro
+activo, así que basta filtrar por `deleted_at is null`. El resto de los
+docentes del horario sí mapea con confianza alta usando el campo
+`staff.specialty`, que trae el nivel/ciclo de cada uno.
+
+**Nota de método**: la Management API responde bien con `curl`, pero devuelve
+`403 error 1010` (bloqueo de Cloudflare por huella del cliente) si se llama
+con `urllib` de Python. Usar `curl` para estas consultas.
 
 ## Convenciones de trabajo
 
@@ -1510,14 +1570,21 @@ estén pobladas y usar el archivo **corregido** como fuente, no el original.
     detalle completo, incluido el incidente del `config push`.) PR #4
     (`fix/config-toml-produccion-real`) fusionado a `main` el 2026-08-23.
 13. **Horarios 2026-2027 en producción** — los 3 horarios ya están cruzados,
-    verificados y corregidos en un Excel listo para usar como fuente (ver
-    sección "Horarios 2026-2027 ... + informe ejecutivo de carga horaria"
-    más arriba), pero **no se han cargado en `class_periods`/`class_schedules`**.
-    Antes de insertar: confirmar que `subjects` y `staff` estén pobladas, usar
-    el archivo `*_corregido.xlsx` (no el original), y resolver con Dirección
-    Académica los dos descuadres detectados (la franja de Inglés de 1ro y la
-    sesión de Marcelis Santos). El informe ejecutivo de carga horaria ya se
-    entregó al usuario y no vive en el repo.
+    verificados y corregidos en un Excel listo para usar como fuente, y se
+    revisó el estado real de la base (ver "Estado real de producción para
+    cargar los horarios" más arriba), pero **no se ha cargado nada todavía**:
+    `subjects` y `class_schedules` siguen vacías. Están identificados cinco
+    bloqueos concretos, todos pendientes de decisión del colegio:
+    (1) secundaria y primaria usan rejillas de horario distintas y
+    `class_periods` solo soporta una -- probablemente haga falta una
+    migración que le agregue nivel; (2) Orlando Natera (Inglés, 1er ciclo
+    secundaria, 15 sesiones) no existe en `staff`; (3) "Maríanelis Calderón"
+    no se puede identificar con certeza entre dos candidatas; (4)
+    `grade_level` es texto libre e inconsistente, y de él depende que las
+    familias vean el horario (RLS); (5) falta definir la lista canónica de
+    materias. Además siguen abiertos los dos descuadres del propio horario
+    (la franja de Inglés de 1ro y la sesión de Marcelis Santos). El informe
+    ejecutivo ya se entregó al usuario y no vive en el repo.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
