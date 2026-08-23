@@ -30,7 +30,7 @@ export default async function PeriodosPage() {
 
   const { data: periodsRaw } = await supabase
     .from('class_periods')
-    .select('id, name, start_time, end_time, sort_order')
+    .select('id, name, start_time, end_time, sort_order, level')
     .eq('school_id', schoolId)
     .order('sort_order', { ascending: true })
 
@@ -46,7 +46,9 @@ export default async function PeriodosPage() {
           Franjas horarias
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Define las horas del día una sola vez (ej. "Período 1: 8:00–8:45"). Se comparten entre todos los cursos.
+          Define las horas del día una sola vez (ej. &quot;Período 1: 8:00–8:45&quot;). Si primaria y
+          secundaria tienen horarios distintos, asigna el nivel a cada franja; las que no tengan
+          nivel se usan en todos los cursos.
         </p>
       </div>
 

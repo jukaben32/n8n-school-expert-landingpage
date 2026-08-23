@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import ScheduleGrid from './ScheduleGrid'
+import { periodsForGrade } from '@/lib/schedule/gradeLevelCategory'
 
 export const metadata: Metadata = {
   title: 'Horarios — MentorIApp',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 const DAY_LABELS: Record<number, string> = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' }
 const DAYS = [1, 2, 3, 4, 5]
 
-type Period = { id: string; name: string; start_time: string; end_time: string; sort_order: number }
+type Period = { id: string; name: string; start_time: string; end_time: string; sort_order: number; level: string | null }
 type ScheduleSlot = {
   day_of_week: number
   period_id: string
@@ -46,12 +47,16 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
 
   const canEdit = canAccess(role, 'horarios_gestionar')
 
+  // Se traen todas las franjas del colegio y se filtran por nivel más abajo,
+  // según el curso que se esté viendo: el colegio puede tener una rejilla
+  // distinta para primaria y para secundaria (ver migración
+  // 20260823000000_class_periods_level.sql).
   const { data: periodsRaw } = await supabase
     .from('class_periods')
-    .select('id, name, start_time, end_time, sort_order')
+    .select('id, name, start_time, end_time, sort_order, level')
     .eq('school_id', schoolId)
     .order('sort_order', { ascending: true })
-  const periods = (periodsRaw ?? []) as Period[]
+  const allPeriods = (periodsRaw ?? []) as Period[]
 
   // ── Profesor sin permiso de gestión: ve solo SU horario propio ──────────
   if (role === 'teacher' && !canEdit) {
@@ -62,7 +67,9 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
       .eq('staff_id', profile.staff_id ?? '')
     type MySlot = { day_of_week: number; period_id: string; grade_level: string; subjects: { name: string } | null }
     const mySlots = (mySlotsRaw ?? []) as unknown as MySlot[]
-    const periodById = new Map(periods.map((p) => [p.id, p]))
+    // Un profesor puede dar clase en varios niveles (ej. Educación Física en
+    // primaria y secundaria), así que aquí se usan todas las franjas.
+    const periodById = new Map(allPeriods.map((p) => [p.id, p]))
 
     return (
       <div className="max-w-2xl mx-auto space-y-6">
@@ -138,7 +145,7 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
         {myGrades.map((grade) => (
           <div key={grade}>
             <p className="text-sm font-semibold mb-2" style={{ color: 'var(--dash-text-muted)' }}>{grade}</p>
-            <ReadOnlyGrid periods={periods} days={DAYS} dayLabels={DAY_LABELS} slots={slots.filter((s) => s.grade_level === grade)} />
+            <ReadOnlyGrid periods={periodsForGrade(allPeriods, grade)} days={DAYS} dayLabels={DAY_LABELS} slots={slots.filter((s) => s.grade_level === grade)} />
           </div>
         ))}
       </div>
@@ -167,6 +174,9 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
     supabase.from('staff').select('id, first_name, last_name').eq('school_id', schoolId).eq('role', 'teacher').is('deleted_at', null).order('last_name'),
   ])
   const slots = (slotsRaw ?? []) as unknown as ScheduleSlot[]
+  // Solo las franjas del nivel del curso seleccionado (las que no tienen
+  // nivel aplican a todos).
+  const periods = periodsForGrade(allPeriods, selectedGrade)
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -188,17 +198,10 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
         <div className="dash-card border-dashed p-12 text-center">
           <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay cursos con estudiantes asignados.</p>
         </div>
-      ) : periods.length === 0 ? (
-        <div className="dash-card border-dashed p-12 text-center space-y-3">
-          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay franjas horarias definidas.</p>
-          {canEdit && (
-            <Link href="/dashboard/horarios/periodos" className="dash-btn-primary inline-block text-sm px-5 py-2.5">
-              Crear la primera franja
-            </Link>
-          )}
-        </div>
       ) : (
         <>
+          {/* Los cursos van siempre visibles: si el nivel del curso elegido
+              todavía no tiene franjas, hay que poder cambiar a otro. */}
           <div className="flex flex-wrap gap-2">
             {gradeOptions.map((grade) => (
               <Link
@@ -212,7 +215,20 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
             ))}
           </div>
 
-          {canEdit && selectedGrade ? (
+          {periods.length === 0 ? (
+            <div className="dash-card border-dashed p-12 text-center space-y-3">
+              <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
+                {allPeriods.length === 0
+                  ? 'Todavía no hay franjas horarias definidas.'
+                  : `No hay franjas horarias para el nivel de ${selectedGrade}. Las que existen son de otro nivel.`}
+              </p>
+              {canEdit && (
+                <Link href="/dashboard/horarios/periodos" className="dash-btn-primary inline-block text-sm px-5 py-2.5">
+                  {allPeriods.length === 0 ? 'Crear la primera franja' : 'Gestionar franjas horarias'}
+                </Link>
+              )}
+            </div>
+          ) : canEdit && selectedGrade ? (
             <ScheduleGrid
               gradeLevel={selectedGrade}
               periods={periods}

@@ -30,7 +30,19 @@ async function resolveAdmin() {
   return { ok: true as const, schoolId }
 }
 
-export async function createPeriodAction(name: string, startTime: string, endTime: string, sortOrder: number): Promise<ActionResult> {
+/**
+ * Niveles válidos para una franja, los mismos de `grade_levels.category` y
+ * del check de `class_periods.level`. Cadena vacía = todos los niveles.
+ */
+const VALID_LEVELS = ['parvulo', 'inicial', 'primaria', 'secundaria']
+
+export async function createPeriodAction(
+  name: string,
+  startTime: string,
+  endTime: string,
+  sortOrder: number,
+  level: string = ''
+): Promise<ActionResult> {
   const resolved = await resolveAdmin()
   if (!resolved.ok) return { ok: false, error: resolved.error }
 
@@ -38,6 +50,7 @@ export async function createPeriodAction(name: string, startTime: string, endTim
   if (!trimmed) return { ok: false, error: 'El nombre es obligatorio.' }
   if (!startTime || !endTime) return { ok: false, error: 'La hora de inicio y fin son obligatorias.' }
   if (endTime <= startTime) return { ok: false, error: 'La hora de fin debe ser después de la de inicio.' }
+  if (level && !VALID_LEVELS.includes(level)) return { ok: false, error: 'Nivel inválido.' }
 
   const admin = createAdminClient()
   const { error } = await admin.from('class_periods').insert({
@@ -46,6 +59,7 @@ export async function createPeriodAction(name: string, startTime: string, endTim
     start_time: startTime,
     end_time: endTime,
     sort_order: sortOrder,
+    level: level || null,
   })
   if (error) return { ok: false, error: 'No se pudo crear la franja horaria.' }
 
