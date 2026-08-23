@@ -88,7 +88,7 @@ export default function MessageCard({
               </span>
             )}
             {isStaff && audienceLabel && (
-              <span className="text-xs font-semibold text-primary dark:text-accent-light bg-primary/10 dark:bg-accent/10 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-semibold text-dash-accent bg-primary/10 dark:bg-accent/10 px-2 py-0.5 rounded-full">
                 Para: {audienceLabel}
               </span>
             )}
@@ -131,7 +131,7 @@ export default function MessageCard({
                 <button
                   id={`btn-confirmar-lectura-${id}`}
                   onClick={markAsRead}
-                  className="text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+                  className="text-xs font-semibold text-dash-accent hover:underline"
                 >
                   Confirmar lectura
                 </button>

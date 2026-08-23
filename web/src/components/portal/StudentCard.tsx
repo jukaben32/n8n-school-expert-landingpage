@@ -39,7 +39,7 @@ export default function StudentCard({
           className="w-12 h-12 rounded-full object-cover shrink-0"
         />
       ) : (
-        <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-accent/10 flex items-center justify-center text-primary dark:text-accent-light font-bold text-lg shrink-0">
+        <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-accent/10 flex items-center justify-center text-dash-accent font-bold text-lg shrink-0">
           {initials}
         </div>
       )}
