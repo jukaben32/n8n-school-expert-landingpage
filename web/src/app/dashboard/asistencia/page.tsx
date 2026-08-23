@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 }
 
 const statusConfig = {
-  presente:   { label: 'Presente',   color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  ausente:    { label: 'Ausente',    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-  tardanza:   { label: 'Tardanza',   color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  justificado:{ label: 'Justificado',color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  presente:    { label: 'Presente',    color: 'var(--dash-accent)' },
+  ausente:     { label: 'Ausente',     color: 'var(--dash-danger-strong)' },
+  tardanza:    { label: 'Tardanza',    color: 'var(--dash-warning)' },
+  justificado: { label: 'Justificado', color: '#6ee7b7' },
 }
 
 /**
@@ -82,12 +82,12 @@ export default async function AsistenciaPage() {
       <QueryErrorBanner errors={[{ label: 'la asistencia', error: recordsError }]} />
 
       {/* Encabezado */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
             Asistencia
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {isStaff
               ? `Registros del día: ${new Date(today).toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}`
               : 'Historial de asistencia (últimos 30 días)'}
@@ -99,7 +99,7 @@ export default async function AsistenciaPage() {
           <a
             id="btn-registrar-asistencia"
             href="/dashboard/asistencia/registrar"
-            className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
+            className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -111,42 +111,45 @@ export default async function AsistenciaPage() {
 
       {/* Tabla de registros */}
       {records.length > 0 ? (
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="dash-card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50">
+            <thead className="border-b" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
               <tr>
-                <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Estudiante</th>
-                <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Fecha</th>
-                <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Estado</th>
-                <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Notificado</th>
+                <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Estudiante</th>
+                <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Fecha</th>
+                <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Estado</th>
+                <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Notificado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y" style={{ borderColor: 'rgba(150,225,196,.08)' }}>
               {records.map((r) => {
                 const cfg = statusConfig[r.status as keyof typeof statusConfig]
                 return (
-                  <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                  <tr key={r.id} className="transition hover:bg-white/5">
+                    <td className="px-4 py-3 font-medium" style={{ color: 'var(--dash-text)' }}>
                       {r.student?.first_name} {r.student?.last_name}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                    <td className="px-4 py-3" style={{ color: 'var(--dash-text-muted)' }}>
                       {new Date(r.date).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${cfg?.color ?? ''}`}>
+                      <span
+                        className="text-xs font-semibold font-barlow uppercase px-2.5 py-1 rounded-full border"
+                        style={{ color: cfg?.color, borderColor: 'currentColor' }}
+                      >
                         {cfg?.label ?? r.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       {r.notified_at ? (
-                        <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
+                        <span className="flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--dash-accent)' }}>
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                           </svg>
                           Enviado
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400 dark:text-slate-600">—</span>
+                        <span className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>—</span>
                       )}
                     </td>
                   </tr>
@@ -156,9 +159,9 @@ export default async function AsistenciaPage() {
           </table>
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">📅</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             {isStaff ? 'No hay registros de asistencia para hoy.' : 'No hay registros en los últimos 30 días.'}
           </p>
         </div>

@@ -214,17 +214,17 @@ export default async function ReportesPage() {
       ]} />
 
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Analíticas
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Estudiantes, asistencia, finanzas, comunicación y Academia — de un vistazo.
         </p>
       </div>
 
       {/* ── Estudiantes ─────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-widest text-primary dark:text-accent-light">Estudiantes</h2>
+        <h2 className="text-xs font-bold font-barlow uppercase tracking-widest" style={{ color: 'var(--dash-accent)' }}>Estudiantes</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <ChartCard title="Por estado de inscripción">
             <DonutChart data={enrollmentDonut} centerLabel="Estudiantes" emptyMessage="Aún no hay estudiantes registrados." />
@@ -237,7 +237,7 @@ export default async function ReportesPage() {
 
       {/* ── Asistencia ──────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-widest text-primary dark:text-accent-light">Asistencia (30 días)</h2>
+        <h2 className="text-xs font-bold font-barlow uppercase tracking-widest" style={{ color: 'var(--dash-accent)' }}>Asistencia (30 días)</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <ChartCard title="% de presentes por día" subtitle="Últimos 30 días" className="sm:col-span-2">
             <TrendChart
@@ -254,20 +254,20 @@ export default async function ReportesPage() {
 
       {/* ── Finanzas ────────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-widest text-primary dark:text-accent-light">Finanzas</h2>
+        <h2 className="text-xs font-bold font-barlow uppercase tracking-widest" style={{ color: 'var(--dash-accent)' }}>Finanzas</h2>
         <ChartCard title="Cobros del mes en curso">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
             <div>
-              <p className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">{formatDOP(totalInvoiced)}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Facturado</p>
+              <p className="text-2xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-text)' }}>{formatDOP(totalInvoiced)}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>Facturado</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-green-600 dark:text-green-400 tabular-nums">{formatDOP(totalPaid)}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Cobrado</p>
+              <p className="text-2xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-accent)' }}>{formatDOP(totalPaid)}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>Cobrado</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-orange-600 dark:text-orange-400 tabular-nums">{formatDOP(totalPending)}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Pendiente / vencido</p>
+              <p className="text-2xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-warning)' }}>{formatDOP(totalPending)}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>Pendiente / vencido</p>
             </div>
           </div>
         </ChartCard>
@@ -285,7 +285,7 @@ export default async function ReportesPage() {
 
       {/* ── Comunicación ────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-widest text-primary dark:text-accent-light">Comunicación</h2>
+        <h2 className="text-xs font-bold font-barlow uppercase tracking-widest" style={{ color: 'var(--dash-accent)' }}>Comunicación</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <ChartCard title="Lecturas por comunicado" subtitle="Últimos publicados">
             <SimpleBarChart data={readsBar} horizontal emptyMessage="Aún no has publicado ningún comunicado." />
@@ -295,24 +295,24 @@ export default async function ReportesPage() {
           </ChartCard>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-            <p className="text-xl font-black text-slate-900 dark:text-white tabular-nums">{totalConversations}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">Conversaciones (Mensajes)</p>
+          <div className="dash-card p-4">
+            <p className="text-xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-text)' }}>{totalConversations}</p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--dash-text-faint)' }}>Conversaciones (Mensajes)</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-            <p className="text-xl font-black text-slate-900 dark:text-white tabular-nums">{totalDirectMessages}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">Mensajes intercambiados</p>
+          <div className="dash-card p-4">
+            <p className="text-xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-text)' }}>{totalDirectMessages}</p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--dash-text-faint)' }}>Mensajes intercambiados</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-            <p className="text-xl font-black text-coral tabular-nums">{unreadConversations}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">Sin responder</p>
+          <div className="dash-card p-4">
+            <p className="text-xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-danger-strong)' }}>{unreadConversations}</p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--dash-text-faint)' }}>Sin responder</p>
           </div>
         </div>
       </section>
 
       {/* ── Academia ────────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-widest text-primary dark:text-accent-light">Academia</h2>
+        <h2 className="text-xs font-bold font-barlow uppercase tracking-widest" style={{ color: 'var(--dash-accent)' }}>Academia</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <ChartCard title="Desempeño en cuestionarios">
             <DonutChart data={academiaDonut} centerLabel="Intentos" emptyMessage="Aún no hay cuestionarios completados." />
@@ -321,7 +321,7 @@ export default async function ReportesPage() {
             <SimpleBarChart data={lessonBar} horizontal valueFormat="percent" emptyMessage="Aún no hay intentos de cuestionario." />
           </ChartCard>
         </div>
-        <p className="text-xs text-slate-400 dark:text-slate-500">
+        <p className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>
           {updatesCount ?? 0} actualizaciones con foto publicadas en los últimos 30 días.
         </p>
       </section>

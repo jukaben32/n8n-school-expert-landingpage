@@ -48,7 +48,7 @@ export default function StackedBarChart({
             </>
           )}
           <Tooltip cursor={{ fill: CHART_GRID_COLOR }} content={<ChartTooltip formatter={(v) => (valueFormatter ? valueFormatter(Number(v)) : String(v))} />} />
-          <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" iconSize={8} />
+          <Legend wrapperStyle={{ fontSize: 12, color: 'var(--dash-text-muted)' }} iconType="circle" iconSize={8} />
           {series.map((s, i) => (
             <Bar
               key={s.key}

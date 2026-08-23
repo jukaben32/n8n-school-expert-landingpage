@@ -48,7 +48,7 @@ export default function TrendChart({
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_COLOR }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 11, fill: CHART_AXIS_COLOR }} tickFormatter={valueFormatter} axisLine={false} tickLine={false} width={40} />
           <Tooltip content={<ChartTooltip formatter={(v) => (valueFormatter ? valueFormatter(Number(v)) : String(v))} />} />
-          {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" iconSize={8} />}
+          {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12, color: 'var(--dash-text-muted)' }} iconType="circle" iconSize={8} />}
           {series.map((s, i) => {
             const color = s.color ?? CHART_PALETTE[i % CHART_PALETTE.length]
             return (

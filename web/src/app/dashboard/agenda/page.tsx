@@ -87,8 +87,8 @@ export default async function AgendaPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agenda</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Agenda</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {isStaff ? 'Próximos eventos del colegio' : 'Próximas fechas importantes'}
           </p>
         </div>
@@ -96,7 +96,7 @@ export default async function AgendaPage() {
           <Link
             id="btn-nuevo-evento"
             href="/dashboard/agenda/nuevo"
-            className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
+            className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -109,25 +109,25 @@ export default async function AgendaPage() {
       {events.length > 0 ? (
         <div className="space-y-3">
           {events.map((e) => (
-            <div key={e.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div key={e.id} className="dash-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary dark:text-accent-light">
+                  <p className="text-xs font-semibold font-barlow uppercase tracking-wide" style={{ color: 'var(--dash-accent)' }}>
                     {formatDate(e.event_date)}
                     {formatTime(e.start_time) && ` · ${formatTime(e.start_time)}${formatTime(e.end_time) ? `–${formatTime(e.end_time)}` : ''}`}
                   </p>
-                  <p className="font-semibold text-slate-900 dark:text-white mt-1">{e.title}</p>
-                  {e.description && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{e.description}</p>}
+                  <p className="font-semibold mt-1" style={{ color: 'var(--dash-text)' }}>{e.title}</p>
+                  {e.description && <p className="text-sm mt-1" style={{ color: 'var(--dash-text-muted)' }}>{e.description}</p>}
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${categoryStyles[e.category] ?? categoryStyles.general}`}>
                       {categoryLabels[e.category] ?? e.category}
                     </span>
                     {e.grade_level && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent-light/10 text-accent-light">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(110,231,183,.15)', color: 'var(--dash-accent-light)' }}>
                         {e.grade_level}
                       </span>
                     )}
-                    {e.location && <span className="text-xs text-slate-400 dark:text-slate-500">📍 {e.location}</span>}
+                    {e.location && <span className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>📍 {e.location}</span>}
                   </div>
                 </div>
                 {canCreate && <DeleteEventButton eventId={e.id} />}
@@ -136,9 +136,9 @@ export default async function AgendaPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🗓️</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">No hay eventos próximos.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No hay eventos próximos.</p>
         </div>
       )}
     </div>

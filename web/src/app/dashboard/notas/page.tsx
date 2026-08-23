@@ -114,30 +114,30 @@ export default async function NotasPage({
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Notas</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Notas</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {canEdit ? 'Registra las notas por curso y materia.' : 'Consulta las notas registradas.'}
           </p>
         </div>
         {isAdmin && (
-          <Link href="/dashboard/notas/periodos" className="text-sm text-primary dark:text-accent-light hover:underline font-semibold">
+          <Link href="/dashboard/notas/periodos" className="text-sm hover:underline font-semibold" style={{ color: 'var(--dash-accent)' }}>
             Periodos
           </Link>
         )}
       </div>
 
       {periods.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center space-y-3">
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no hay periodos de calificación definidos.</p>
+        <div className="dash-card border-dashed p-12 text-center space-y-3">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay periodos de calificación definidos.</p>
           {isAdmin && (
-            <Link href="/dashboard/notas/periodos" className="inline-block rounded-full bg-primary text-white text-sm font-semibold px-5 py-2.5">
+            <Link href="/dashboard/notas/periodos" className="dash-btn-primary inline-block text-sm px-5 py-2.5">
               Crear el primer periodo
             </Link>
           )}
         </div>
       ) : gradeSubjectOptions.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+        <div className="dash-card border-dashed p-12 text-center">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             {role === 'teacher' ? 'No tienes materias asignadas en el horario todavía.' : 'No hay cursos con materias disponibles.'}
           </p>
         </div>
@@ -148,9 +148,8 @@ export default async function NotasPage({
               <Link
                 key={p.id}
                 href={qs({ periodo: p.id })}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  selectedPeriod === p.id ? 'bg-primary text-white shadow-glow' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                }`}
+                className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
+                style={selectedPeriod === p.id ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { background: 'white', color: '#5f7a70', border: '1px solid #e2e8f0' }}
               >
                 {p.name}
               </Link>
@@ -162,9 +161,8 @@ export default async function NotasPage({
               <Link
                 key={g}
                 href={qs({ curso: g, materia: '' })}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  selectedGrade === g ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                }`}
+                className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
+                style={selectedGrade === g ? { background: 'var(--dash-accent-dark)', color: 'white' } : { background: 'white', color: '#5f7a70', border: '1px solid #e2e8f0' }}
               >
                 {g}
               </Link>
@@ -176,9 +174,8 @@ export default async function NotasPage({
               <Link
                 key={id}
                 href={qs({ materia: id })}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  selectedSubject === id ? 'bg-accent-light text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                }`}
+                className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
+                style={selectedSubject === id ? { background: 'var(--dash-accent-light)', color: 'var(--dash-bg)' } : { background: 'white', color: '#5f7a70', border: '1px solid #e2e8f0' }}
               >
                 {subjectName}
               </Link>
@@ -186,8 +183,8 @@ export default async function NotasPage({
           </div>
 
           {students.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
-              <p className="text-slate-500 dark:text-slate-400 text-sm">No hay estudiantes en este curso.</p>
+            <div className="dash-card border-dashed p-12 text-center">
+              <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No hay estudiantes en este curso.</p>
             </div>
           ) : selectedSubject && selectedPeriod ? (
             <GradesGrid
