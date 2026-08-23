@@ -39,13 +39,13 @@ export default async function PeriodosPage() {
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div>
-        <Link href="/dashboard/horarios" className="text-sm text-primary dark:text-accent-light hover:underline">
+        <Link href="/dashboard/horarios" className="text-sm hover:underline" style={{ color: 'var(--dash-accent)' }}>
           ← Horarios
         </Link>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight mt-1">
           Franjas horarias
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Define las horas del día una sola vez (ej. "Período 1: 8:00–8:45"). Se comparten entre todos los cursos.
         </p>
       </div>

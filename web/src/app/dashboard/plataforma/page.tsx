@@ -218,16 +218,16 @@ export default async function PlataformaPage() {
       ]} />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
             Plataforma
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {schools.length} colegio{schools.length !== 1 ? 's' : ''} en MentorIApp
           </p>
         </div>
         <Link
           href="/dashboard/plataforma/nuevo"
-          className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-glow"
+          className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
         >
           + Nuevo colegio
         </Link>
@@ -236,9 +236,9 @@ export default async function PlataformaPage() {
       {/* Resumen de toda la red */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {networkStats.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-            <p className="text-xl font-black text-primary dark:text-accent-light truncate">{s.value}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">{s.label}</p>
+          <div key={s.label} className="dash-card p-4">
+            <p className="text-xl font-bold font-barlow truncate" style={{ color: 'var(--dash-accent)' }}>{s.value}</p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--dash-text-faint)' }}>{s.label}</p>
           </div>
         ))}
       </div>
@@ -288,9 +288,9 @@ export default async function PlataformaPage() {
       {schools.length > 0 ? (
         <SchoolsComparisonTable schools={comparisonRows} enterSchoolAction={enterSchool} />
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🏫</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Aún no hay colegios registrados.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Aún no hay colegios registrados.</p>
         </div>
       )}
     </div>

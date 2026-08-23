@@ -96,8 +96,8 @@ export default async function PlanificacionPage({
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Planificación de clases</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Planificación de clases</h1>
+        <p className="text-sm text-slate-500 mt-1">
           {isAdmin ? 'Revisa lo que cada profesor tiene planificado.' : 'Planifica lo que vas a dar en cada clase.'}
         </p>
       </div>
@@ -105,14 +105,14 @@ export default async function PlanificacionPage({
       <div className="flex items-center justify-between gap-2">
         <Link
           href={`/dashboard/planificacion?fecha=${shiftDate(date, -1)}${selectedTeacherId ? `&profesor=${selectedTeacherId}` : ''}`}
-          className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
         >
           ← Día anterior
         </Link>
-        <p className="text-sm font-semibold text-slate-900 dark:text-white capitalize text-center">{formatDate(date)}</p>
+        <p className="text-sm font-semibold text-slate-900 capitalize text-center">{formatDate(date)}</p>
         <Link
           href={`/dashboard/planificacion?fecha=${shiftDate(date, 1)}${selectedTeacherId ? `&profesor=${selectedTeacherId}` : ''}`}
-          className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
         >
           Día siguiente →
         </Link>
@@ -122,9 +122,8 @@ export default async function PlanificacionPage({
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/dashboard/planificacion?fecha=${date}`}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-              !selectedTeacherId ? 'bg-primary text-white shadow-glow' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-            }`}
+            className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
+            style={!selectedTeacherId ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { background: 'white', color: '#5f7a70', border: '1px solid #e2e8f0' }}
           >
             Todos
           </Link>
@@ -132,9 +131,8 @@ export default async function PlanificacionPage({
             <Link
               key={t.id}
               href={`/dashboard/planificacion?fecha=${date}&profesor=${t.id}`}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                selectedTeacherId === t.id ? 'bg-primary text-white shadow-glow' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
+              className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
+              style={selectedTeacherId === t.id ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)' } : { background: 'white', color: '#5f7a70', border: '1px solid #e2e8f0' }}
             >
               {t.first_name} {t.last_name}
             </Link>
@@ -149,14 +147,14 @@ export default async function PlanificacionPage({
       )}
 
       {dayOfWeek === 0 || dayOfWeek === 6 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🌤️</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">No hay clases programadas para {DAY_LABELS[dayOfWeek].toLowerCase()}.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No hay clases programadas para {DAY_LABELS[dayOfWeek].toLowerCase()}.</p>
         </div>
       ) : schedule.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">📚</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             {isAdmin && !selectedTeacherId ? 'No hay clases programadas ese día.' : 'No tienes clases programadas ese día.'}
           </p>
         </div>
@@ -168,22 +166,22 @@ export default async function PlanificacionPage({
               <Link
                 key={s.id}
                 href={`/dashboard/planificacion/${s.id}?fecha=${date}`}
-                className="block rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 hover:border-primary/40 transition"
+                className="dash-card block p-4 transition"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary dark:text-accent-light">
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--dash-accent-light)' }}>
                       {s.class_periods ? `${s.class_periods.start_time.slice(0, 5)}–${s.class_periods.end_time.slice(0, 5)} · ${s.class_periods.name}` : '—'}
                     </p>
-                    <p className="font-semibold text-slate-900 dark:text-white mt-0.5">
+                    <p className="font-semibold mt-0.5" style={{ color: 'var(--dash-text)' }}>
                       {s.subjects?.name ?? 'Sin materia'} · {s.grade_level}
                       {isAdmin && s.staff && ` · ${s.staff.first_name} ${s.staff.last_name}`}
                     </p>
-                    <p className={`text-sm mt-1 truncate ${plan ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500 italic'}`}>
+                    <p className="text-sm mt-1 truncate" style={{ color: plan ? 'var(--dash-text-muted)' : 'var(--dash-text-faint)', fontStyle: plan ? 'normal' : 'italic' }}>
                       {plan || 'Sin planificar'}
                     </p>
                   </div>
-                  <svg className="w-5 h-5 shrink-0 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 shrink-0" style={{ color: 'var(--dash-text-faint)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </div>

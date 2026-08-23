@@ -57,43 +57,42 @@ export default async function AsistenteIAFamiliaPage({ params }: { params: Promi
       <QueryErrorBanner errors={[{ label: 'la conversación', error: rowsError }]} />
 
       <div>
-        <Link href="/dashboard/asistente-ia" className="text-xs font-semibold text-slate-400 hover:text-primary dark:hover:text-accent-light transition">
+        <Link href="/dashboard/asistente-ia" className="text-xs font-semibold transition" style={{ color: 'var(--dash-text-faint)' }}>
           ← Asistente de IA
         </Link>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-2">{family.name}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{turns.length} mensajes registrados</p>
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight mt-2">{family.name}</h1>
+        <p className="text-sm text-slate-500 mt-1">{turns.length} mensajes registrados</p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
+      <div className="dash-card p-5 space-y-3">
         {turns.length > 0 ? (
           turns.map((t, i) => {
             const prevChannel = i > 0 ? turns[i - 1].channel : null
             return (
               <div key={t.id}>
                 {t.channel !== prevChannel && (
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-4 mb-1.5 first:mt-0">
+                  <p className="text-[10px] uppercase tracking-wider mt-4 mb-1.5 first:mt-0" style={{ color: 'var(--dash-text-faint)' }}>
                     {channelLabels[t.channel] ?? t.channel}
                   </p>
                 )}
                 <div className={`flex ${t.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className="max-w-[85%]">
                     <div
-                      className={`rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${
-                        t.role === 'user'
-                          ? 'bg-primary text-white rounded-br-sm'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-bl-sm'
-                      }`}
+                      className="rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap"
+                      style={t.role === 'user'
+                        ? { background: 'var(--dash-accent)', color: 'var(--dash-bg)', borderBottomRightRadius: '0.125rem' }
+                        : { background: 'rgba(255,255,255,.06)', color: 'var(--dash-text-muted)', borderBottomLeftRadius: '0.125rem' }}
                     >
                       {t.content}
                     </div>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 px-1">{formatDate(t.created_at)}</p>
+                    <p className="text-[10px] mt-1 px-1" style={{ color: 'var(--dash-text-faint)' }}>{formatDate(t.created_at)}</p>
                   </div>
                 </div>
               </div>
             )
           })
         ) : (
-          <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">Sin conversaciones registradas.</p>
+          <p className="text-sm text-center py-6" style={{ color: 'var(--dash-text-faint)' }}>Sin conversaciones registradas.</p>
         )}
       </div>
     </div>

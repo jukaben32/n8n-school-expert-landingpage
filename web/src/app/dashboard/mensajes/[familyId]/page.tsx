@@ -70,12 +70,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      <Link href="/dashboard/mensajes" className="text-sm text-primary dark:text-accent-light hover:underline">
+      <Link href="/dashboard/mensajes" className="text-sm hover:underline" style={{ color: 'var(--dash-accent)' }}>
         ← Mensajes
       </Link>
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{family.name}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Conversación privada — solo visible para el colegio y esta familia.</p>
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">{family.name}</h1>
+        <p className="text-sm text-slate-500 mt-1">Conversación privada — solo visible para el colegio y esta familia.</p>
       </div>
 
       <ThreadView familyId={familyId} initialMessages={messages ?? []} />

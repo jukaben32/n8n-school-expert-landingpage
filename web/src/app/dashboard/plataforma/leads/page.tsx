@@ -71,8 +71,8 @@ export default async function LeadsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'los leads', error: leadsRawError }, { label: 'las notas', error: notesRawError }]} />
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Leads</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Leads</h1>
+        <p className="text-sm text-slate-500 mt-1">
           {leads.length} solicitud{leads.length !== 1 ? 'es' : ''} de demo · {newCount} nueva{newCount !== 1 ? 's' : ''}
         </p>
       </div>
@@ -80,34 +80,35 @@ export default async function LeadsPage() {
       {leads.length > 0 ? (
         <div className="grid gap-3">
           {leads.map((lead) => (
-            <div key={lead.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+            <div key={lead.id} className="dash-card p-5">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white">{lead.school_name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="font-semibold" style={{ color: 'var(--dash-text)' }}>{lead.school_name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
                     {lead.contact_name}{lead.role_title ? ` · ${lead.role_title}` : ''} · {lead.email}{lead.phone ? ` · ${lead.phone}` : ''}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(lead.created_at)}</span>
+                  <span className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>{formatDate(lead.created_at)}</span>
                   <LeadStatusSelect leadId={lead.id} initialStatus={lead.status} />
                 </div>
               </div>
 
               {(lead.interest || lead.student_count || lead.message) && (
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  {lead.student_count && <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-600 dark:text-slate-300">{lead.student_count} estudiantes</span>}
-                  {lead.interest && <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-600 dark:text-slate-300">{lead.interest}</span>}
-                  {lead.message && <p className="w-full text-slate-500 dark:text-slate-400 mt-1">{lead.message}</p>}
+                  {lead.student_count && <span className="dash-chip">{lead.student_count} estudiantes</span>}
+                  {lead.interest && <span className="dash-chip">{lead.interest}</span>}
+                  {lead.message && <p className="w-full mt-1" style={{ color: 'var(--dash-text-muted)' }}>{lead.message}</p>}
                 </div>
               )}
 
               {lead.converted_school_id ? (
-                <p className="mt-3 text-xs font-semibold text-green-600 dark:text-green-400">✓ Convertido a colegio activo</p>
+                <p className="mt-3 text-xs font-semibold" style={{ color: 'var(--dash-accent)' }}>✓ Convertido a colegio activo</p>
               ) : (
                 <Link
                   href={`/dashboard/plataforma/nuevo?school_name=${encodeURIComponent(lead.school_name)}&lead_id=${lead.id}`}
-                  className="inline-block mt-3 text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+                  className="inline-block mt-3 text-xs font-semibold hover:underline"
+                  style={{ color: 'var(--dash-accent-light)' }}
                 >
                   → Convertir en colegio
                 </Link>
@@ -118,9 +119,9 @@ export default async function LeadsPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">📭</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Aún no hay solicitudes de demo.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Aún no hay solicitudes de demo.</p>
         </div>
       )}
     </div>
