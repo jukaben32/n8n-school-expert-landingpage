@@ -1318,6 +1318,68 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
    pipeline** (repo y producción): probar el enlace de "olvidé mi
    contraseña" con una familia real y confirmar que dura 10 minutos.
 
+## Horarios 2026-2027 (primaria/secundaria/docentes) + informe ejecutivo de carga horaria (2026-08-23)
+
+El usuario compartió 3 documentos Word con los horarios reales del período
+2026-2027 (Docentes de Secundaria, Estudiantes de Secundaria, Estudiantes de
+Primaria) y pidió: (1) cargarlos/actualizarlos en el sistema, y (2) un informe
+ejecutivo para Contabilidad comparando horas de clase impartidas vs. horas
+pagadas por docente de secundaria, con miras a optimizar RRHH.
+
+**Parte 1 -- Horarios: preparados, NO cargados en producción.** Los tres
+documentos se parsearon y se cruzaron entre sí (el horario de cada docente
+contra el horario de cada grado, por día/franja) para armar un libro
+`Horarios_2026-2027_MentorIApp.xlsx` con hojas "Secundaria" (materia +
+docente por grado/día/franja, ya cruzados), "Primaria" (materia + docente
+asumido/asignado), "Resumen Docentes" y "Notas". **No se aplicó a la tabla
+`class_schedules`** (ver migración `20260821010000_class_schedules.sql`)
+porque esta sesión no tuvo credenciales de Supabase -- mismo bloqueo ya
+documentado varias veces en este archivo (Azul, OCR, WhatsApp). Además,
+`class_schedules.subject_id`/`staff_id` son referencias a `subjects`/`staff`
+ya existentes en producción, y `subjects` (migración 007) probablemente
+sigue vacía (nunca se pobló, ver nota de "Gestión Académica" más abajo) --
+escribir un `insert` a ciegas sin poder verificar esos IDs contra la base
+real habría sido más riesgoso que útil. El Excel queda como fuente lista
+para que el staff lo transcriba manualmente en `/dashboard/horarios`, o para
+que una sesión futura con acceso real a Supabase la use para poblar
+`class_periods`/`class_schedules` (y `subjects` si hace falta) de forma
+verificable.
+
+**Hallazgo real del cruce** (no hipotético): el horario de Inglés de 1ro
+Secundaria, viernes 7:30-8:20, aparece marcado en el horario individual de
+**dos** docentes de Inglés distintas (Orlando Natera y Yendry Paulino) --
+posible desincronización entre el horario de estudiantes y el de maestros,
+señalada en la hoja "Notas" del Excel para que Dirección Académica lo
+confirme. También: 6to de Primaria no tiene docente titular asignado en el
+documento recibido (campo "Docente:" en blanco).
+
+**Parte 2 -- Informe ejecutivo**: `Informe_Ejecutivo_Carga_Horaria_Docente_Secundaria.docx`,
+generado con `docx` (npm) + gráficas de `matplotlib`, entregado directamente
+al usuario (no vive en el repo). Metodología: horas de clase reales por
+docente (excluyendo recreo) vs. una "capacidad esperada" de 25h/semana
+(30h pagadas − 5h/semana de planificación, 1h/día), a partir de un salario
+mensual de referencia de RD$13,815.90 (RD$579.77/día ÷ 23.83, RD$96.63/hora).
+El hallazgo central: ningún docente de secundaria llega a las 25h, pero
+**materia por materia** casi todas ya están al mínimo de un solo docente
+para los 6 grados -- la única con una oportunidad real de consolidación,
+confirmada por los números (2 docentes al 50-55% de utilización, demanda
+combinada de solo 26.5h, apenas por encima de 1 plaza), es **Inglés**,
+separado como grupo propio en el informe a pedido explícito del usuario.
+Orientación Educativa (Génesis Rodríguez, 1.67h/semana) se excluyó del
+análisis financiero -- su rol probablemente incluye trabajo real fuera del
+horario de clases (consejería, casos, reuniones) que este informe no puede
+medir. Educación Física (Jennifer Liliana Soriano, única especialista para
+todo el colegio) se presenta con su carga combinada primaria+secundaria
+(11.5h) para no sobreestimar su disponibilidad real.
+
+**Pendiente real**: no se pudo previsualizar el `.docx` renderizado a PDF en
+esta sesión -- `soffice`/LibreOffice falla con "source file could not be
+loaded" incluso al convertir un `.docx`/`.txt` mínimo generado en el momento
+(problema del entorno, no del archivo -- confirmado con
+`validate.py`: XML bien formado, cero `NaN`/`undefined` en las cifras). Se
+recomienda que alguien lo abra una vez en Word/Google Docs para confirmar
+que el formato se ve como se espera antes de distribuirlo más ampliamente.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
