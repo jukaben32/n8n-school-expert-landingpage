@@ -89,10 +89,10 @@ export default async function PortalFamiliarPage() {
 
       {/* Encabezado */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Portal Familiar
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Consulta el estado de tus hijos en el colegio
         </p>
       </div>
@@ -141,8 +141,8 @@ export default async function PortalFamiliarPage() {
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-10 text-center">
-            <p className="text-slate-400 dark:text-slate-500 text-sm">
+          <div className="dash-card border-dashed p-10 text-center">
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
               No hay estudiantes vinculados a tu cuenta.<br />
               Contacta a la secretaría del colegio.
             </p>

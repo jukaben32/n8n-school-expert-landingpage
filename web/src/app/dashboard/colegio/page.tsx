@@ -52,10 +52,10 @@ export default async function ColegioConfigPage() {
           <Settings className="w-4.5 h-4.5" />
         </span>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
             Configuración
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm text-slate-500 mt-0.5">
             Perfil del colegio y configuración operativa.
           </p>
         </div>

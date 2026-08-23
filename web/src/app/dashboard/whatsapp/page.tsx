@@ -48,7 +48,7 @@ export default async function WhatsAppPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-primary dark:text-accent-light mb-2">
           Setup
         </p>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           WhatsApp
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-3xl">

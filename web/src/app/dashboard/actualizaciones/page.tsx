@@ -110,10 +110,10 @@ export default async function ActualizacionesPage() {
       <QueryErrorBanner errors={[{ label: 'las actualizaciones', error: updatesError }]} />
 
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Actualizaciones
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Fotos cortas del día a día para un estudiante o un grado/sección — las familias las ven en su Portal Familiar.
         </p>
       </div>
@@ -145,9 +145,9 @@ export default async function ActualizacionesPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+        <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">📸</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Todavía no hay actualizaciones publicadas.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay actualizaciones publicadas.</p>
         </div>
       )}
     </div>
