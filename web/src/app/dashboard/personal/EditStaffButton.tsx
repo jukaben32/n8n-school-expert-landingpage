@@ -57,7 +57,7 @@ export default function EditStaffButton({ staff }: { staff: StaffFields }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="text-xs font-semibold text-primary dark:text-accent-light hover:underline"
+        className="text-xs font-semibold text-dash-accent hover:underline"
       >
         ✏️ Editar
       </button>
