@@ -38,7 +38,7 @@ async function resolveInvoiceStaff() {
     .eq('auth_id', user.id)
     .single()
 
-  if (!profile || !canAccess(profile.role, 'tesoreria')) {
+  if (!profile || !canAccess(profile.role, 'tesoreria_proveedores')) {
     return { ok: false as const, error: 'No tienes permiso para revisar facturas de proveedores.' }
   }
 

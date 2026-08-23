@@ -78,10 +78,15 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   })
 
   let authId = invited?.user?.id
+  let reusedExistingAccount = false
 
   // Si el correo ya tenía una cuenta de Auth (ej. ya es tutor en otro
   // colegio), inviteUserByEmail falla -- se reusa esa cuenta en vez de
-  // tratarlo como error.
+  // tratarlo como error. BUG real corregido: este caso nunca mandaba
+  // ningún correo (inviteUserByEmail falló, así que no salió nada), pero
+  // el mensaje final siempre decía "Invitación enviada" de todos modos --
+  // la persona quedaba vinculada sin ninguna forma de enterarse o entrar.
+  // Ahora se le manda un correo de restablecer contraseña como sustituto.
   if (inviteError || !authId) {
     const isAlreadyRegistered = inviteError?.message?.toLowerCase().includes('already been registered')
     if (!isAlreadyRegistered) {
@@ -93,6 +98,7 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
       return { ok: false, message: 'Ese correo ya está registrado, pero no se pudo vincular. Contacta soporte.' }
     }
     authId = existingUser.id
+    reusedExistingAccount = true
   }
 
   const linkResult = await linkProfileForDualRole(admin, authId, schoolId, { staffId, role: loginRole })
@@ -101,7 +107,21 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
   }
 
   revalidatePath('/dashboard/personal')
-  return { ok: true, message: `Invitación enviada a ${staff.email}.` }
+
+  if (!reusedExistingAccount) {
+    return { ok: true, message: `Invitación enviada a ${staff.email}.` }
+  }
+
+  const { error: resetError } = await admin.auth.resetPasswordForEmail(staff.email, {
+    redirectTo: `${siteUrl}/actualizar-contrasena`,
+  })
+  if (resetError) {
+    return {
+      ok: true,
+      message: `Se vinculó el acceso, pero no se pudo enviar el correo (${resetError.message}). Pídele que entre con "Olvidé mi contraseña" en ${staff.email}.`,
+    }
+  }
+  return { ok: true, message: `Ese correo ya tenía una cuenta -- se vinculó y le enviamos un correo a ${staff.email} para entrar.` }
 }
 
 export interface UpdateStaffInput {

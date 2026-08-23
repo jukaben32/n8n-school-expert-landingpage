@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { sendStaffMessageAction } from '../actions'
+import { sendStaffMessageAction } from '../../actions'
 import DraftAssistant from '@/components/dashboard/DraftAssistant'
+import type { MessageCategory } from '@/lib/messaging/categoryAccess'
 
 interface Message {
   id: string
@@ -11,7 +12,15 @@ interface Message {
   created_at: string
 }
 
-export default function ThreadView({ familyId, initialMessages }: { familyId: string; initialMessages: Message[] }) {
+export default function ThreadView({
+  familyId,
+  category,
+  initialMessages,
+}: {
+  familyId: string
+  category: MessageCategory
+  initialMessages: Message[]
+}) {
   const [messages, setMessages] = useState(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -41,7 +50,7 @@ export default function ThreadView({ familyId, initialMessages }: { familyId: st
     setSending(true)
     setMessages((prev) => [...prev, { id: `temp-${Date.now()}`, sender_type: 'staff', body, created_at: new Date().toISOString() }])
 
-    const result = await sendStaffMessageAction(familyId, body)
+    const result = await sendStaffMessageAction(familyId, category, body)
     setSending(false)
     if (!result.ok) {
       setError(result.error ?? 'No se pudo enviar el mensaje.')

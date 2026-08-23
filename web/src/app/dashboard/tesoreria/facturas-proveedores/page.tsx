@@ -28,7 +28,7 @@ export default async function VendorInvoicesPage() {
 
   await getActiveSchool(profile?.role ?? '', profile?.school_id ?? '')
 
-  if (!profile || !canAccess(profile.role, 'tesoreria')) {
+  if (!profile || !canAccess(profile.role, 'tesoreria_proveedores')) {
     redirect('/dashboard/pagos')
   }
 

@@ -4,6 +4,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import MessageCard from '@/components/comunicados/MessageCard'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import type { MessageCategory } from '@/lib/messaging/categoryAccess'
 
 export const metadata: Metadata = {
   title: 'Comunicados — MentorIApp',
@@ -39,7 +40,7 @@ export default async function ComunicadosPage() {
   const query = supabase
     .from('messages')
     .select(`
-      id, title, body, priority, published_at, created_at, audience_label,
+      id, title, body, priority, published_at, created_at, audience_label, category,
       author:users_profiles!author_id(id),
       reads:message_reads(user_id)
     `)
@@ -98,6 +99,7 @@ export default async function ComunicadosPage() {
                 priority={msg.priority as 'normal' | 'urgent'}
                 publishedAt={msg.published_at}
                 audienceLabel={msg.audience_label}
+                category={msg.category as MessageCategory}
                 isRead={isRead}
                 isStaff={isStaff}
                 currentUserId={profile?.id ?? ''}
