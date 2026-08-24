@@ -1,5 +1,5 @@
 // ============================================================
-// SCRIPT DE CONFIGURACIÓN SMTP - MentorIA / educacionmanantial.com
+// SCRIPT DE CONFIGURACIÓN SMTP - MentorIApp / educacionmanantial.com
 // ============================================================
 // 
 // Propósito: Verificar y configurar SMTP en Supabase Auth usando Resend
@@ -32,12 +32,12 @@ const SMTP_CONFIG = {
   port: 587,
   username: 'resend',
   sender_email: 'no-reply@mail.resendcegmas.com',
-  sender_name: 'MentorIA'
+  sender_name: 'MentorIApp'
 };
 
 async function main() {
   console.log('========================================='.repeat(2));
-  console.log('VERIFICADOR DE CONFIGURACIÓN SMTP - MentorIA');
+  console.log('VERIFICADOR DE CONFIGURACIÓN SMTP - MentorIApp');
   console.log('========================================='.repeat(2));
   console.log('');
   

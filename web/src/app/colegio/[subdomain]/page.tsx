@@ -58,7 +58,7 @@ async function getWebsiteLists(schoolId: string) {
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params
   const school = await getSchool(subdomain)
-  if (!school) return { title: 'Colegio no encontrado — MentorIA' }
+  if (!school) return { title: 'Colegio no encontrado — MentorIApp' }
   const website = getWebsiteSettings(school.website_settings)
   const titulo = `${school.name} — Portal escolar`
   const descripcion = website.heroSubtitle || school.tagline

@@ -1,4 +1,4 @@
-export const PLATFORM_NAME = 'MentorIA'
+export const PLATFORM_NAME = 'MentorIApp'
 
 function cleanText(value: string | null | undefined): string {
   return typeof value === 'string' ? value.trim() : ''

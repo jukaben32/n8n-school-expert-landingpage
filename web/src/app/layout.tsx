@@ -38,7 +38,7 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "MentorIA — Sistema de Gestión Escolar",
+  title: "MentorIApp — Sistema de Gestión Escolar",
   description:
     "Una experiencia escolar más clara para dirección, secretaría y familias. Trazabilidad, comunicados inteligentes y portal familiar.",
   keywords: ["gestión escolar", "portal familiar", "asistencia", "pagos", "comunicados"],
