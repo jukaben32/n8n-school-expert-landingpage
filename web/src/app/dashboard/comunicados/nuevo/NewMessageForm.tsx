@@ -32,8 +32,18 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
   const [category, setCategory] = useState<MessageCategory>(availableCategories[0] ?? 'regular')
   const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>(forceGradeMode ? 'grades' : 'all')
   const [selectedGrades, setSelectedGrades] = useState<string[]>([])
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [saving, setSaving] = useState<'draft' | 'publish' | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  function handleImageChange(file: File | null) {
+    setImage(file)
+    setImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return file ? URL.createObjectURL(file) : null
+    })
+  }
 
   function toggleGrade(grade: string) {
     setSelectedGrades((prev) => (prev.includes(grade) ? prev.filter((g) => g !== grade) : [...prev, grade]))
@@ -41,8 +51,12 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
 
   async function handleSave(publish: boolean) {
     setError(null)
-    if (!title.trim() || !body.trim()) {
-      setError('El título y el contenido son obligatorios.')
+    if (!title.trim()) {
+      setError('El título es obligatorio.')
+      return
+    }
+    if (!body.trim() && !image) {
+      setError('Escribe el contenido o adjunta una imagen.')
       return
     }
     if (audienceMode === 'grades' && selectedGrades.length === 0) {
@@ -51,14 +65,16 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
     }
     setSaving(publish ? 'publish' : 'draft')
 
-    const result = await createMessageAction({
-      title,
-      body,
-      priority,
-      publish,
-      gradeLevels: audienceMode === 'grades' ? selectedGrades : [],
-      category,
-    })
+    const formData = new FormData()
+    formData.set('title', title)
+    formData.set('body', body)
+    formData.set('priority', priority)
+    formData.set('publish', String(publish))
+    formData.set('gradeLevels', JSON.stringify(audienceMode === 'grades' ? selectedGrades : []))
+    formData.set('category', category)
+    if (image) formData.set('image', image)
+
+    const result = await createMessageAction(formData)
 
     if (!result.ok) {
       setError(result.error ?? 'No se pudo guardar el comunicado. Intenta de nuevo.')
@@ -89,16 +105,50 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
           <label htmlFor="body" className={labelClass}>Contenido</label>
           <textarea
             id="body"
-            required
             rows={6}
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Escribe el mensaje que recibirán las familias..."
+            onPaste={(e) => {
+              const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
+              const file = item?.getAsFile()
+              if (file) {
+                e.preventDefault()
+                handleImageChange(file)
+              }
+            }}
+            placeholder="Escribe el mensaje que recibirán las familias... (también puedes pegar una imagen aquí)"
             className={`${inputClass} resize-none`}
           />
           <div className="mt-2">
             <DraftAssistant draft={body} context="comunicado" onApply={setBody} />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="image" className={labelClass}>Imagen (opcional)</label>
+          {imagePreview ? (
+            <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imagePreview} alt="Vista previa del comunicado" className="max-h-56 rounded-xl border border-slate-200 dark:border-slate-700 object-contain" />
+              <button
+                type="button"
+                onClick={() => handleImageChange(null)}
+                className="absolute -top-2 -right-2 rounded-full bg-slate-900/80 hover:bg-red-600 text-white w-6 h-6 flex items-center justify-center text-xs"
+                aria-label="Quitar imagen"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <input
+              id="image"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => handleImageChange(e.target.files?.[0] ?? null)}
+              className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+            />
+          )}
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">PNG, JPG o WEBP, máximo 5 MB — ej. un aviso ya diseñado como flyer.</p>
         </div>
 
         <div>
