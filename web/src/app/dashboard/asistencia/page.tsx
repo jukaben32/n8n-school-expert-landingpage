@@ -49,7 +49,7 @@ export default async function AsistenciaPage() {
     // Staff: registros de asistencia de HOY en este colegio
     const { data, error } = await supabase
       .from('attendance')
-      .select('id, date, status, notified_at, students(first_name, last_name)')
+      .select('id, date, status, notified_at, student:students(first_name, last_name)')
       .eq('school_id', schoolId)
       .eq('date', today)
       .order('created_at', { ascending: false })
@@ -68,7 +68,7 @@ export default async function AsistenciaPage() {
 
     const { data, error } = await supabase
       .from('attendance')
-      .select('id, date, status, notified_at, students(first_name, last_name)')
+      .select('id, date, status, notified_at, student:students(first_name, last_name)')
       .in('student_id', studentIdsData?.map((r: { student_id: string }) => r.student_id) ?? [])
       .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
       .order('date', { ascending: false })
