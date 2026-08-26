@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { extractQuizFromDocumentsAction, uploadQuestionImageAction } from './actions'
 
 interface Catalog { id: string; name: string }
 
@@ -14,7 +15,16 @@ interface NewLessonFormProps {
 }
 
 interface DraftOption { key: string; label: string; isCorrect: boolean }
-interface DraftQuestion { key: string; prompt: string; points: number; options: DraftOption[] }
+interface DraftQuestion {
+  key: string
+  prompt: string
+  points: number
+  options: DraftOption[]
+  /** Imagen de apoyo opcional (ej. un diagrama) -- ya subida, se guarda con la pregunta. */
+  imagePath: string | null
+  imagePreviewUrl: string | null
+  imageUploading: boolean
+}
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -29,6 +39,9 @@ function newQuestion(): DraftQuestion {
       { key: crypto.randomUUID(), label: '', isCorrect: true },
       { key: crypto.randomUUID(), label: '', isCorrect: false },
     ],
+    imagePath: null,
+    imagePreviewUrl: null,
+    imageUploading: false,
   }
 }
 
@@ -49,10 +62,17 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
     { key: 'q-initial', prompt: '', points: 10, options: [
       { key: 'o-initial-1', label: '', isCorrect: true },
       { key: 'o-initial-2', label: '', isCorrect: false },
-    ] },
+    ], imagePath: null, imagePreviewUrl: null, imageUploading: false },
   ])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Cargar cuestionario desde imagen/PDF del libro (OCR con Claude visión)
+  const [scanMode, setScanMode] = useState<'files' | 'multiPagePdf'>('files')
+  const [scanFiles, setScanFiles] = useState<File[]>([])
+  const [scanning, setScanning] = useState(false)
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [scanWarnings, setScanWarnings] = useState<string[]>([])
 
   // Catálogo rápido: crear materia/grado sin salir del formulario
   const [newSubjectName, setNewSubjectName] = useState('')
@@ -121,6 +141,72 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
     setQuestions((prev) => (prev.length <= 1 ? prev : prev.filter((q) => q.key !== key)))
   }
 
+  async function handleQuestionImageChange(qKey: string, file: File | null) {
+    if (!file) {
+      setQuestions((prev) => prev.map((q) => (q.key !== qKey ? q : { ...q, imagePath: null, imagePreviewUrl: null })))
+      return
+    }
+    setQuestions((prev) => prev.map((q) => (q.key !== qKey ? q : { ...q, imageUploading: true })))
+    const formData = new FormData()
+    formData.set('image', file)
+    const result = await uploadQuestionImageAction(formData)
+    setQuestions((prev) => prev.map((q) => {
+      if (q.key !== qKey) return q
+      if (!result.ok) return { ...q, imageUploading: false }
+      return { ...q, imageUploading: false, imagePath: result.imagePath, imagePreviewUrl: result.previewUrl }
+    }))
+    if (!result.ok) setError(result.error)
+  }
+
+  /**
+   * Cargar cuestionario desde imagen/PDF (OCR) -- extrae preguntas+opciones
+   * del libro de texto y las agrega al cuestionario para que el profesor
+   * las revise/corrija antes de guardar (nunca se guarda nada solo por
+   * escanear). Si la única pregunta presente es la inicial vacía por
+   * defecto, se reemplaza en vez de dejarla como una pregunta suelta sin
+   * completar.
+   */
+  async function handleExtractQuiz() {
+    if (scanFiles.length === 0) return
+    setScanning(true)
+    setScanError(null)
+    setScanWarnings([])
+
+    const formData = new FormData()
+    formData.set('mode', scanMode)
+    for (const f of scanFiles) formData.append('file', f)
+
+    const result = await extractQuizFromDocumentsAction(formData)
+    setScanning(false)
+
+    if (!result.ok) {
+      setScanError(result.error)
+      return
+    }
+
+    const extracted: DraftQuestion[] = result.questions.map((q) => ({
+      key: crypto.randomUUID(),
+      prompt: q.prompt,
+      points: 10,
+      options: q.options.map((label, idx) => ({
+        key: crypto.randomUUID(),
+        label,
+        isCorrect: q.correctOptionIndex === idx,
+      })),
+      imagePath: null,
+      imagePreviewUrl: null,
+      imageUploading: false,
+    }))
+
+    setQuestions((prev) => {
+      const isPristineDefault =
+        prev.length === 1 && !prev[0].prompt.trim() && prev[0].options.every((o) => !o.label.trim())
+      return isPristineDefault ? extracted : [...prev, ...extracted]
+    })
+    setScanWarnings(result.warnings)
+    setScanFiles([])
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -133,6 +219,7 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
       if (!q.prompt.trim()) { setError('Cada pregunta necesita un enunciado.'); return }
       if (q.options.some((o) => !o.label.trim())) { setError('Completa el texto de todas las opciones.'); return }
       if (!q.options.some((o) => o.isCorrect)) { setError('Marca la opción correcta en cada pregunta.'); return }
+      if (q.imageUploading) { setError('Espera a que termine de subirse la imagen de una pregunta.'); return }
     }
 
     setSaving(true)
@@ -160,7 +247,7 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
         const q = questions[i]
         const { data: question, error: qError } = await supabase
           .from('quiz_questions')
-          .insert({ lesson_id: lesson.id, prompt: q.prompt.trim(), points: q.points, sort_order: i })
+          .insert({ lesson_id: lesson.id, prompt: q.prompt.trim(), points: q.points, sort_order: i, image_path: q.imagePath })
           .select('id')
           .single()
         if (qError || !question) throw qError ?? new Error('No se pudo crear una pregunta.')
@@ -255,6 +342,53 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
           Cuestionario
         </p>
+
+        <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 dark:bg-primary/10 p-4 space-y-3">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            📄 Cargar cuestionario desde foto o PDF del libro
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Sube una o varias fotos del cuestionario (una por página) o un PDF de varias páginas, y la IA arma el borrador de preguntas y opciones para que las revises antes de guardar.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setScanMode('files'); setScanFiles([]) }}
+              className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${scanMode === 'files' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+            >
+              Fotos sueltas
+            </button>
+            <button
+              type="button"
+              onClick={() => { setScanMode('multiPagePdf'); setScanFiles([]) }}
+              className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${scanMode === 'multiPagePdf' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+            >
+              PDF multi-página
+            </button>
+          </div>
+          <input
+            type="file"
+            accept={scanMode === 'multiPagePdf' ? 'application/pdf' : 'image/png,image/jpeg,image/webp'}
+            multiple={scanMode === 'files'}
+            onChange={(e) => setScanFiles(Array.from(e.target.files ?? []))}
+            className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+          />
+          <button
+            type="button"
+            onClick={handleExtractQuiz}
+            disabled={scanFiles.length === 0 || scanning}
+            className="w-full rounded-full bg-primary hover:bg-primary-dark text-white font-semibold py-2 text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {scanning ? 'Extrayendo preguntas...' : 'Extraer preguntas con IA'}
+          </button>
+          {scanError && <p className="text-xs text-red-600 dark:text-red-400">{scanError}</p>}
+          {scanWarnings.length > 0 && (
+            <div className="text-xs text-amber-700 dark:text-amber-400 space-y-0.5">
+              {scanWarnings.map((w, i) => <p key={i}>⚠️ {w}</p>)}
+            </div>
+          )}
+        </div>
+
         {questions.map((q, qi) => (
           <div key={q.key} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
             <div className="flex items-center justify-between">
@@ -269,6 +403,35 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
               placeholder="Escribe la pregunta..."
               className={inputClass}
             />
+
+            <div>
+              {q.imagePreviewUrl ? (
+                <div className="relative inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={q.imagePreviewUrl} alt="Imagen de apoyo de la pregunta" className="max-h-40 rounded-xl border border-slate-200 dark:border-slate-700 object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => handleQuestionImageChange(q.key, null)}
+                    className="absolute -top-2 -right-2 rounded-full bg-slate-900/80 hover:bg-red-600 text-white w-6 h-6 flex items-center justify-center text-xs"
+                    aria-label="Quitar imagen"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <label className="inline-flex items-center gap-2 text-xs font-semibold text-primary dark:text-accent-light cursor-pointer">
+                  🖼️ {q.imageUploading ? 'Subiendo imagen...' : 'Agregar imagen de apoyo (opcional)'}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={q.imageUploading}
+                    onChange={(e) => handleQuestionImageChange(q.key, e.target.files?.[0] ?? null)}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
             <div className="space-y-2">
               {q.options.map((o) => (
                 <div key={o.key} className="flex items-center gap-2">

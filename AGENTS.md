@@ -2186,6 +2186,74 @@ Supabase (mismo bloqueo documentado repetidas veces en este archivo).
 a producción, y probar en vivo publicar un comunicado con imagen (con y sin
 texto) y confirmar que se ve tanto para staff como para una familia real.
 
+## Cuestionarios de Academia desde imagen (OCR) + imagen de apoyo por pregunta (2026-08-26)
+
+**Contexto real**: el usuario mostró una captura del formulario de Nueva
+Lección (video + cuestionario) y preguntó si se podía cargar imágenes en el
+cuestionario -- hay cuestionarios largos en libros de texto que sería mucho
+tiempo reescribir a mano. La inquietud que él mismo planteó: si la pregunta
+es una imagen, ¿cómo respondería el estudiante? Se combinaron dos soluciones
+(decisión explícita del usuario: "combinar"):
+
+1. **Imagen de apoyo por pregunta** (`quiz_questions.image_path`, nullable) --
+   para diagramas/gráficos que la pregunta necesita. Las opciones de
+   respuesta siguen siendo texto tecleado -- el estudiante responde con los
+   mismos botones de siempre, nunca tocando una imagen.
+2. **Extracción con Claude (visión) de páginas/fotos del cuestionario del
+   libro** -- reutiliza el mismo núcleo `extractStructuredDocument.ts` ya
+   usado para fichas de inscripción y facturas de proveedores ("un solo
+   cerebro", ver AGENTS.md). El profesor sube fotos sueltas o un PDF
+   multi-página del cuestionario; la IA arma preguntas+opciones en el propio
+   formulario de Nueva Lección para que las revise/corrija antes de
+   "Guardar lección" -- igual que los otros dos casos de OCR, **nunca se
+   persiste nada solo por escanear**.
+
+**Diferencia con los otros dos casos de OCR ya existentes**: aquí NO hizo
+falta una tabla de bandeja de revisión (`enrollment_form_scans`/
+`vendor_invoices`) porque Nueva Lección ya es un único formulario que no
+guarda nada hasta el clic final -- la extracción solo devuelve el borrador
+en memoria del cliente (`extractQuizFromDocumentsAction`, en
+`academia/nueva/actions.ts`, nunca sube ni inserta nada). Tampoco hizo falta
+`confianza` por pregunta individual en el schema -- una página trae varias
+preguntas, así que `quizPageSchema.ts` es un array (`preguntas[]`) con una
+sola confianza por página, a diferencia de `enrollmentFormSchema`/
+`vendorInvoiceSchema` (un documento = un registro).
+
+**Cómo se decide la respuesta correcta al extraer**: si el libro trae una
+clave de respuestas visible en la página, Claude la usa
+(`indice_correcta`); si no hay ninguna marca, queda `null` y ninguna opción
+sale premarcada -- la validación que ya existía en el formulario ("Marca la
+opción correcta en cada pregunta") obliga al profesor a elegirla a mano
+antes de poder guardar, así que nunca se puede publicar una pregunta sin
+respuesta correcta por accidente.
+
+**Storage**: bucket privado nuevo `academia-imagenes` (migración
+`20260826010000_academia_quiz_images.sql`), mismo principio de defensa en
+profundidad que `class-updates`/`comunicados-imagenes` -- sin políticas de
+`storage.objects`, todo pasa por `uploadQuestionImageAction` (cliente
+`service_role`) + signed URL de corta duración al mostrarla (tanto en el
+formulario del profesor como en `LessonPlayer.tsx` para el estudiante).
+
+**Detalle de implementación notable**: a diferencia del resto del módulo
+Academia (que inserta `lessons`/`quiz_questions`/`quiz_options` con el
+cliente de sesión del navegador, apoyándose en RLS -- ver
+`lessons_staff_all` etc. en la migración 016), la subida de imagen y la
+extracción OCR sí pasan por Server Actions con `service_role`, porque
+tocan Storage y la API de Anthropic -- mismo patrón ya establecido en el
+resto del proyecto para esos dos casos, no una inconsistencia nueva.
+
+**Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
+limpios. **No verificado en producción** -- la migración no se pudo aplicar
+desde esta sesión (sin acceso a Supabase) y el usuario mencionó que
+"pronto" resuelve el bloqueo de `ANTHROPIC_API_KEY` con saldo (ver bloqueo
+ya documentado varias veces en este archivo para OCR/asistente de IA).
+**Pendiente real**: aplicar `20260826010000_academia_quiz_images.sql` a
+producción, y probar en vivo -- subir una foto o PDF real de un cuestionario
+de libro de texto y confirmar que las preguntas/opciones extraídas son
+correctas, que la imagen de apoyo se ve tanto en el formulario del profesor
+como en `LessonPlayer.tsx` para un estudiante real, y borrar los datos de
+prueba al terminar.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
