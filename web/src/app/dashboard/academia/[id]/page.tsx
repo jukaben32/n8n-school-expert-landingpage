@@ -1,13 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect, notFound } from 'next/navigation'
 import LessonPlayer from './LessonPlayer'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+
+const IMAGE_BUCKET = 'academia-imagenes'
+const SIGNED_URL_TTL = 3600
 
 type QuestionWithOptions = {
   id: string
   prompt: string
   points: number
   sort_order: number
+  image_path: string | null
   quiz_options: { id: string; label: string; is_correct: boolean; sort_order: number }[]
 }
 
@@ -37,7 +42,7 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
 
   const { data: questionsRaw, error: questionsRawError } = await supabase
     .from('quiz_questions')
-    .select('id, prompt, points, sort_order, quiz_options(id, label, is_correct, sort_order)')
+    .select('id, prompt, points, sort_order, image_path, quiz_options(id, label, is_correct, sort_order)')
     .eq('lesson_id', id)
     .order('sort_order', { ascending: true })
 
@@ -51,6 +56,20 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
   const sortedQuestions = questions
     .map((q) => ({ ...q, quiz_options: [...q.quiz_options].sort((a, b) => a.sort_order - b.sort_order) }))
     .sort((a, b) => a.sort_order - b.sort_order)
+
+  // Imagen de apoyo de cada pregunta -- bucket privado, así que cada una
+  // necesita su propia signed URL (mismo patrón que Comunicados/Actualizaciones).
+  const admin = createAdminClient()
+  const imageUrlByQuestion = new Map<string, string>()
+  await Promise.all(
+    sortedQuestions
+      .filter((q) => q.image_path)
+      .map(async (q) => {
+        const { data: signed } = await admin.storage.from(IMAGE_BUCKET).createSignedUrl(q.image_path as string, SIGNED_URL_TTL)
+        if (signed?.signedUrl) imageUrlByQuestion.set(q.id, signed.signedUrl)
+      })
+  )
+  const questionsWithImages = sortedQuestions.map((q) => ({ ...q, imageUrl: imageUrlByQuestion.get(q.id) ?? null }))
 
   const { data: existingAttempt, error: existingAttemptError } = await supabase
     .from('quiz_attempts')
@@ -75,7 +94,7 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
         subjectName={(lesson.subjects as unknown as { name: string } | null)?.name ?? null}
         videoUrl={lesson.video_url}
         videoProvider={lesson.video_provider as 'youtube' | 'vimeo'}
-        questions={sortedQuestions}
+        questions={questionsWithImages}
         studentId={profile.student_id}
         existingAttempt={existingAttempt}
       />
