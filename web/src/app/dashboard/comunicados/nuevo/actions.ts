@@ -15,22 +15,18 @@ interface ActionResult {
 
 const FULL_ACCESS_ROLES = ['super_admin', 'school_admin', 'director']
 
-export interface CreateMessageInput {
-  title: string
-  body: string
-  priority: 'normal' | 'urgent'
-  publish: boolean
-  /** Grados/secciones elegidos (students.grade_level) -- vacío = todo el colegio. */
-  gradeLevels: string[]
-  /** Regular / Inglés / Deporte (ver migración 036) -- clasifica el comunicado, no restringe quién lo lee. */
-  category: MessageCategory
-}
+const IMAGE_BUCKET = 'comunicados-imagenes'
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 
 // Resuelve grados/secciones elegidos -> family_id de sus estudiantes activos,
 // y guarda el comunicado como audience_type='family' (mismo tipo ya
 // soportado desde la migración 002). audience_label queda como texto
 // legible para mostrar "Para: Kinder A" en la tarjeta del comunicado.
-export async function createMessageAction(input: CreateMessageInput): Promise<ActionResult> {
+//
+// Recibe FormData (no un objeto plano) porque ahora puede traer una imagen
+// adjunta -- mismo patrón que createClassUpdateAction/uploadPaymentReceipt.
+export async function createMessageAction(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'No hay sesión activa.' }
@@ -45,21 +41,50 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
     return { ok: false, error: 'No tienes permiso para crear comunicados.' }
   }
 
-  const title = input.title.trim()
-  const body = input.body.trim()
-  if (!title || !body) {
-    return { ok: false, error: 'El título y el contenido son obligatorios.' }
+  const title = String(formData.get('title') ?? '').trim()
+  const body = String(formData.get('body') ?? '').trim()
+  if (!title) {
+    return { ok: false, error: 'El título es obligatorio.' }
   }
+
+  const priority: 'normal' | 'urgent' = formData.get('priority') === 'urgent' ? 'urgent' : 'normal'
+  const publish = formData.get('publish') === 'true'
+
+  const image = formData.get('image')
+  const hasImage = image instanceof File && image.size > 0
+  if (!body && !hasImage) {
+    return { ok: false, error: 'Escribe el contenido o adjunta una imagen.' }
+  }
+  if (hasImage) {
+    if (!ALLOWED_IMAGE_TYPES.has(image.type)) {
+      return { ok: false, error: 'La imagen debe ser PNG, JPG o WEBP.' }
+    }
+    if (image.size > MAX_IMAGE_BYTES) {
+      return { ok: false, error: 'La imagen no puede pesar más de 5 MB.' }
+    }
+  }
+
+  let gradeLevels: string[] = []
+  const gradeLevelsRaw = formData.get('gradeLevels')
+  if (typeof gradeLevelsRaw === 'string' && gradeLevelsRaw) {
+    try {
+      const parsed = JSON.parse(gradeLevelsRaw)
+      if (Array.isArray(parsed)) gradeLevels = parsed.filter((g): g is string => typeof g === 'string')
+    } catch {
+      return { ok: false, error: 'Grados/secciones inválidos.' }
+    }
+  }
+
+  const category = String(formData.get('category') ?? 'regular') as MessageCategory
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
   const admin = createAdminClient()
 
-  const category = input.category
   if (!MESSAGE_CATEGORIES.includes(category)) {
     return { ok: false, error: 'Categoría inválida.' }
   }
 
-  const selectedGrades = Array.from(new Set(input.gradeLevels.map((g) => g.trim()).filter(Boolean)))
+  const selectedGrades = Array.from(new Set(gradeLevels.map((g) => g.trim()).filter(Boolean)))
 
   // RLS ya restringe lo que un 'teacher' puede LEER de otros grados, pero
   // este insert va con el cliente admin (bypassa RLS) -- así que la regla
@@ -121,6 +146,28 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
     audienceLabel = selectedGrades.join(', ')
   }
 
+  // Si hay imagen, se sube antes del insert -- si el insert falla después,
+  // se limpia el archivo para no dejar huérfanos (mismo patrón que
+  // uploadPaymentReceipt).
+  let imagePath: string | null = null
+  if (hasImage) {
+    const { data: buckets } = await admin.storage.listBuckets()
+    if (!buckets?.some((b) => b.name === IMAGE_BUCKET)) {
+      const { error: createBucketError } = await admin.storage.createBucket(IMAGE_BUCKET, { public: false, fileSizeLimit: MAX_IMAGE_BYTES })
+      if (createBucketError && !/already exists/i.test(createBucketError.message)) {
+        return { ok: false, error: `No se pudo preparar el almacenamiento: ${createBucketError.message}` }
+      }
+    }
+
+    const ext = image.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `${schoolId}/${crypto.randomUUID()}.${ext}`
+    const { error: uploadError } = await admin.storage.from(IMAGE_BUCKET).upload(path, image, { contentType: image.type })
+    if (uploadError) {
+      return { ok: false, error: `No se pudo subir la imagen: ${uploadError.message}` }
+    }
+    imagePath = path
+  }
+
   const { error: insertError } = await admin.from('messages').insert({
     school_id: schoolId,
     author_id: profile.id,
@@ -129,18 +176,20 @@ export async function createMessageAction(input: CreateMessageInput): Promise<Ac
     audience_type: audienceType,
     audience_ids: audienceIds,
     audience_label: audienceLabel,
-    priority: input.priority,
+    priority,
     category,
-    published_at: input.publish ? new Date().toISOString() : null,
+    image_path: imagePath,
+    published_at: publish ? new Date().toISOString() : null,
   })
   if (insertError) {
+    if (imagePath) await admin.storage.from(IMAGE_BUCKET).remove([imagePath])
     return { ok: false, error: 'No se pudo guardar el comunicado. Intenta de nuevo.' }
   }
 
   // Comunicado urgente y publicado ya (no borrador) -- avisa por correo a
   // un tutor por familia (el principal si tiene, si no el primero con
   // correo registrado). Best-effort, nunca falla la publicación.
-  if (input.publish && input.priority === 'urgent') {
+  if (publish && priority === 'urgent') {
     await notifyUrgentMessage({ admin, schoolId, audienceType, audienceIds, title, body })
   }
 

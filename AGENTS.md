@@ -2148,6 +2148,44 @@ dejarlo entrar, nunca para redirigir. Revisado por esta sesión tras el push (no
 5. Cuando el usuario defina la lista de becas, cargar `students.tuition_override_amount` para esos
    casos (columna ya lista, sin migración nueva).
 
+## Comunicados con imagen adjunta (2026-08-26)
+
+**Reporte real del usuario**: intentó pegar una imagen (un flyer ya
+diseñado, tipo aviso de suspensión de clases) en el campo de contenido de
+un comunicado nuevo, y no se podía -- el formulario solo aceptaba texto.
+
+**Implementación**: migración `20260826000000_comunicados_image.sql` ->
+columna `messages.image_path` (nullable) + bucket privado
+`comunicados-imagenes`, mismo principio de defensa en profundidad que
+`class-updates` (nunca políticas de `storage.objects` para
+anon/authenticated -- todo el acceso pasa por Server Actions con el
+cliente `service_role`, lectura vía signed URL de corta duración).
+
+- `createMessageAction` (`comunicados/nuevo/actions.ts`) pasó de recibir un
+  objeto plano a recibir `FormData` -- mismo cambio de forma que ya tienen
+  `createClassUpdateAction`/`uploadPaymentReceipt`, necesario para poder
+  traer un archivo. Si el bucket todavía no existe (migración sin aplicar
+  en ese entorno), lo crea al vuelo con `storage.createBucket()`, igual que
+  `createClassUpdateAction` -- así que la función de subir imagen no queda
+  bloqueada solo por la migración, aunque la columna `image_path` sí la
+  necesita (si la migración no está aplicada, el insert falla igual).
+- El contenido de texto pasó de obligatorio a "texto O imagen" (al menos
+  uno de los dos) -- un flyer que ya trae todo el aviso en la imagen no
+  debería obligar a repetirlo como texto. Validado en cliente
+  (`NewMessageForm.tsx`) y de nuevo en el servidor (nunca confiar solo en
+  la validación de cliente).
+- `comunicados/page.tsx` genera una signed URL por comunicado con imagen
+  (TTL 1h, mismo patrón que Actualizaciones) y se la pasa a `MessageCard`,
+  que la muestra dentro del comunicado expandido (badge 🖼️ en la cabecera
+  para saber que trae imagen sin tener que expandir).
+
+**Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
+limpios. **No verificado en producción** -- esta sesión no tuvo acceso a
+Supabase (mismo bloqueo documentado repetidas veces en este archivo).
+**Pendiente real**: aplicar la migración `20260826000000_comunicados_image.sql`
+a producción, y probar en vivo publicar un comunicado con imagen (con y sin
+texto) y confirmar que se ve tanto para staff como para una familia real.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
