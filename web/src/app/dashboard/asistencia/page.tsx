@@ -42,6 +42,20 @@ export default async function AsistenciaPage() {
 
   const today = todaySchoolDate()
 
+  // El aviso automático de ausencia/tardanza depende de que WhatsApp
+  // (Evolution API) esté conectado para este colegio — sin eso, el
+  // aviso siempre queda en "no enviado" aunque todo lo demás funcione.
+  // Solo le importa a staff, así que no se consulta para un guardian.
+  let whatsappConnected = false
+  if (isStaff) {
+    const { data: connection } = await supabase
+      .from('whatsapp_connections')
+      .select('status')
+      .eq('school_id', schoolId)
+      .maybeSingle()
+    whatsappConnected = connection?.status === 'connected'
+  }
+
   let records: { id: string; date: string; status: string; student: { first_name: string; last_name: string } | null; notified_at: string | null }[] = []
   let recordsError: { message: string } | null = null
 
@@ -77,9 +91,30 @@ export default async function AsistenciaPage() {
     recordsError = error
   }
 
+  const hasUnnotifiedAbsence = isStaff && !whatsappConnected &&
+    records.some((r) => ['ausente', 'tardanza'].includes(r.status) && !r.notified_at)
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'la asistencia', error: recordsError }]} />
+
+      {hasUnnotifiedAbsence && (
+        <div
+          role="alert"
+          className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex gap-2.5"
+        >
+          <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <div>
+            <p className="font-semibold">Los avisos automáticos por WhatsApp no están activos</p>
+            <p className="mt-0.5">
+              Todavía no se ha contratado el VPS de Evolution API, así que las ausencias/tardanzas de hoy marcadas
+              con &quot;—&quot; en Notificado no llegaron al tutor. Avísales manualmente mientras tanto.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Encabezado */}
       <div className="flex items-center justify-between flex-wrap gap-3">
