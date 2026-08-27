@@ -102,7 +102,10 @@ const D = {
   collected: { amount: 'RD$ 2.41M', pctOfGoal: 78 },
   overdue: { amount: 'RD$ 386K', invoices: 31, families: 24 },
   enrollment: { enrolled: 417, inProcess: 43, withdrawn: 26 },
+  // Año escolar de este colegio: agosto (medio mes, el período inicia el 17)
+  // a junio -- julio queda fuera, vacaciones colectivas sin cobro.
   cashflow: [
+    { label: 'Ago', paid: 66, pending: 12, overdue: 9 },
     { label: 'Sep', paid: 62, pending: 8, overdue: 4 },
     { label: 'Oct', paid: 66, pending: 7, overdue: 5 },
     { label: 'Nov', paid: 59, pending: 10, overdue: 6 },
@@ -113,8 +116,6 @@ const D = {
     { label: 'Abr', paid: 63, pending: 11, overdue: 7 },
     { label: 'May', paid: 70, pending: 9, overdue: 6 },
     { label: 'Jun', paid: 58, pending: 13, overdue: 11 },
-    { label: 'Jul', paid: 44, pending: 15, overdue: 14 },
-    { label: 'Ago', paid: 66, pending: 12, overdue: 9 },
   ] as CashflowMonth[],
   overdueRows: [
     { family: 'Familia Rodríguez Paulino', students: 'Sofía, Diego', due: '02 ago', amount: 'RD$ 42,300', status: '+21 días', level: 'alto' },
@@ -276,12 +277,15 @@ export default function PanelCentroControl(p: PanelProps) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              {cashflow.map((m) => (
+              {cashflow.map((m, i) => (
                 <div key={m.label} style={{
                   flex: 1, textAlign: 'center', fontFamily: C.cond, fontSize: 12,
                   letterSpacing: '.1em', textTransform: 'uppercase', color: C.muted,
-                }}>{m.label}</div>
+                }}>{m.label}{i === 0 ? '*' : ''}</div>
               ))}
+            </div>
+            <div style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>
+              * Agosto es medio mes (el período inicia el 17) — julio no se muestra por las vacaciones colectivas de los estudiantes. El año escolar completo son 10.5 meses de cobro.
             </div>
           </div>
 
