@@ -105,6 +105,9 @@ export default async function TesoreriaPage() {
           <a href="/dashboard/tesoreria/comprobantes" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold px-5 py-2.5 transition">
             Comprobantes
           </a>
+          <a href="/dashboard/tesoreria/cuentas-por-cobrar" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold px-5 py-2.5 transition">
+            Cuentas por cobrar
+          </a>
           {/* Recepción/Secretaría ahora llega a Tesorería, pero las facturas
               de proveedores (Alegra) son gestión contable: solo Finanzas. */}
           {canAccess(profile.role, 'tesoreria_proveedores') && (

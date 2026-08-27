@@ -33,7 +33,7 @@ export default async function ColegioConfigPage() {
 
   const { data: school, error: schoolError } = await supabase
     .from('schools')
-    .select('id, name, tagline, subdomain, address, phone, email, sibling_discount_min_children, sibling_discount_percent, faq_document')
+    .select('id, name, tagline, subdomain, address, phone, email, sibling_discount_min_children, sibling_discount_percent, faq_document, tuition_parvulo_amount, tuition_inicial_amount, tuition_primaria_amount, tuition_secundaria_amount, tuition_installments_count, tuition_due_day, tuition_grace_days, late_fee_percent')
     .eq('id', schoolId)
     .single()
 
