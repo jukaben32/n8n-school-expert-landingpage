@@ -1414,6 +1414,47 @@ reciente**:
    de correo personalizado, si existe, o un límite hardcodeado de GoTrue
    ajeno a este config).
 
+**Causa raíz real, encontrada leyendo el código fuente instalado
+(`node_modules/@supabase/auth-js`), no la expiración (2026-08-27)**:
+
+4. El punto 3 de arriba tenía razón en sospechar de otro mecanismo.
+   `actualizar-contrasena/page.tsx` solo sabía procesar `?code=...`
+   (flujo PKCE, vía `exchangeCodeForSession`). Pero los enlaces
+   disparados **desde el panel** -- "reenviar acceso" en
+   Personal/Familias (`admin.auth.resetPasswordForEmail`) y la
+   invitación inicial (`admin.auth.admin.inviteUserByEmail`) -- corren
+   en el servidor con `createAdminClient()` (`lib/supabase/admin.ts`),
+   que usa `@supabase/supabase-js` sin `flowType: 'pkce'` -- cae en
+   `'implicit'` por defecto. La propia librería lo documenta:
+   `GoTrueAdminApi.inviteUserByEmail` trae un aviso explícito ("PKCE is
+   not supported... the browser initiating the invite is often
+   different from the browser accepting it"). Esos enlaces llegan como
+   fragmento `#access_token=...&refresh_token=...`, no como `?code=`.
+5. Verificado en `GoTrueClient.js` (`_getSessionFromURL`, alrededor de
+   la línea 3181): cuando el cliente está fijado en `flowType: 'pkce'`
+   (como el de este proyecto, vía `@supabase/ssr`) y la URL trae un
+   callback de tipo `'implicit'`, la librería lanza
+   `AuthPKCEGrantCodeExchangeError('Not a valid PKCE flow url.')` en su
+   auto-detección interna y no crea sesión -- **sin importar cuánto
+   tiempo haya pasado desde que se envió el correo**. Esto explica el
+   patrón real: no era que el enlace "expirara rápido", es que los
+   enlaces disparados por un admin nunca llegaron a funcionar, sin
+   importar qué tan rápido se probaran. El error se detecta silenciado
+   (atrapado internamente), así que la persona solo ve "Enlace vencido o
+   inválido" -- indistinguible en la UI de una expiración real.
+6. **Fix aplicado** (rama `fix/actualizar-contrasena-enlaces-admin`):
+   `actualizar-contrasena/page.tsx` ahora también revisa
+   `window.location.hash` cuando no hay `?code=`, y si trae
+   `access_token`/`refresh_token` llama a `supabase.auth.setSession()`
+   directamente -- sin depender de PKCE ni tocar `createAdminClient()`
+   ni las plantillas de correo. `tsc`/`eslint`/`next build` limpios.
+   **Pendiente**: confirmar con una prueba real (botón "reenviar
+   acceso" con una cuenta real, una vez fusionado a `main` y desplegado)
+   que el enlace del admin ahora sí abre la pantalla de cambiar
+   contraseña. El punto 3 (expiración de `otp_expiry`/`mailer_otp_exp`)
+   sigue aplicando solo al flujo de autoservicio (`/recuperar-contrasena`),
+   que nunca tuvo este problema de formato.
+
 ## Horarios 2026-2027 (primaria/secundaria/docentes) + informe ejecutivo de carga horaria (2026-08-23)
 
 El usuario compartió 3 documentos Word con los horarios reales del período
