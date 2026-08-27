@@ -232,11 +232,16 @@ max_frequency = "1s"
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 # Controla también el enlace de "recuperar contraseña" (resetPasswordForEmail).
-# Subido a 600s (10 min) a pedido del usuario 2026-08-23: muchas familias no
-# usan correo con frecuencia y no llegaban a tiempo con el valor por defecto
-# reportado en producción (~1 minuto -- ver nota abajo, el valor de este
-# archivo no coincidía con lo configurado en el Dashboard remoto).
-otp_expiry = 600
+# Subido a 600s (10 min) el 2026-08-23, y a 660s (11 min) ese mismo día tras
+# una prueba real: con el valor viejo, un usuario real (Jennifer Liliana
+# Soriano) probó el enlace y le dieron solo 44 segundos -- MENOS que el
+# ~1 minuto original reportado. Esto confirma que el valor de este archivo
+# no es lo que realmente rige en producción (ver nota en AGENTS.md,
+# sección "Vencimiento del enlace de recuperar contraseña") -- el ajuste
+# real todavía depende de un cambio manual en el Dashboard de Supabase
+# (Authentication -> Emails) que nadie ha podido confirmar ni aplicar
+# desde una sesión de Claude Code todavía.
+otp_expiry = 660
 
 # Use a production-ready SMTP server
 # Producción: mismo proveedor y dominio verificado que ya usa notify-attendance

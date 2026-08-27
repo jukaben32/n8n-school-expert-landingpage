@@ -1257,9 +1257,28 @@ correo), no leyendo este `config.toml` -- esta sesión no tuvo acceso al
 Dashboard ni a un token de la API de administración de Supabase para
 confirmar o corregir el valor remoto directamente. **Falta**: entrar al
 Dashboard del proyecto remoto (`fssjgpqisfnmnkavsyld`) → Authentication →
-Emails, y poner el tiempo de expiración del OTP de correo en 600 segundos
-(10 minutos) a mano, luego probar de nuevo el enlace de recuperación con
+Emails, y poner el tiempo de expiración del OTP de correo en 660 segundos
+(11 minutos) a mano, luego probar de nuevo el enlace de recuperación con
 una familia real para confirmar el nuevo vencimiento.
+
+**Actualización con prueba real (2026-08-23, mismo día, después del PR
+#3 ya fusionado)**: el usuario probó personalmente el flujo con una
+cuenta real -- Jennifer Liliana Soriano, docente de Educación Física del
+colegio piloto -- y el enlace le dio **44 segundos**, incluso *menos* que
+el `~1 minuto` original que había reportado antes de este cambio. Esto
+confirma con evidencia real (no solo sospecha) que **el valor de
+`otp_expiry` en este repo no es lo que gobierna el vencimiento real en
+producción** -- el PR #3 (que subió el valor de `config.toml` a 600s) ya
+está fusionado a `main`, y aun así el comportamiento real en producción
+sigue siendo de segundos, no minutos. La causa más probable sigue siendo
+la misma: el ajuste real vive únicamente en el Dashboard de Supabase
+(Authentication → Emails), nunca se aplicó ahí, y **esta sesión tampoco
+tuvo forma de aplicarlo** (mismo bloqueo de siempre: sin credenciales de
+Supabase). A pedido del usuario, se subió `otp_expiry` de `600` a `660`
+segundos (11 minutos) en este mismo commit, pero **hasta que alguien con
+acceso al Dashboard haga el cambio a mano ahí, el número en este archivo
+no tiene ningún efecto real en producción** -- no asumir que este commit
+por sí solo resuelve el problema que reportó el usuario.
 
 ## Horarios 2026-2027 (primaria/secundaria/docentes) + informe ejecutivo de carga horaria (2026-08-23)
 
