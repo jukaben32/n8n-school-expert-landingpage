@@ -1378,6 +1378,42 @@ tener en cuenta para cualquier sesión futura que toque este proyecto**:
    pipeline** (repo y producción): probar el enlace de "olvidé mi
    contraseña" con una familia real y confirmar que dura 10 minutos.
 
+**Continuación (2026-08-27) -- el punto 9 se probó y falló; no dar por
+buena la palabra "confirmado" de este documento sin una prueba real
+reciente**:
+
+1. Bethania probó el flujo con una cuenta real (Jennifer Liliana
+   Soriano) y el enlace le dio **44 segundos** -- MENOS que el ~1 minuto
+   original, a pesar de que `otp_expiry`/`mailer_otp_exp` llevaba desde
+   el 23 de agosto confirmado en `600` tanto en el repo como en
+   producción (ver puntos 1-8 de arriba). Esto quedó documentado en una
+   rama sin fusionar (`claude/password-reset-expiry-time-syz7ac`,
+   commit `aa2b72e`) que subió el valor a `660` sin poder aplicarlo,
+   porque esa sesión tampoco tenía token de la Management API.
+2. El usuario reportó el mismo problema de nuevo, por separado, sin
+   saber que ya se había investigado -- pidiendo esta vez 10 minutos
+   explícitamente. Se le dio el token (`sbp_...`, un solo uso, no vive
+   en el repo) y se aplicó un `PATCH` directo a
+   `https://api.supabase.com/v1/projects/fssjgpqisfnmnkavsyld/config/auth`
+   con `{"mailer_otp_exp": 600}` (no `supabase config push` -- ver la
+   regla del punto 5, un PATCH de un solo campo es más seguro). Respuesta
+   200, `mailer_otp_exp` confirmado en `600` en el cuerpo de la
+   respuesta.
+3. **Lo que esto NO prueba**: que el enlace vaya a durar 10 minutos de
+   verdad. El mismo valor (`600`) ya estaba puesto el 23 de agosto y aun
+   así el enlace duró 44 segundos en la prueba real más reciente. Es
+   posible que `mailer_otp_exp` controle el código OTP de 6 dígitos
+   (`verifyOtp`) pero NO el parámetro `code` del flujo PKCE que usa
+   `exchangeCodeForSession` en `actualizar-contrasena/page.tsx` -- no
+   hay evidencia todavía de que sean el mismo mecanismo. **Cualquier
+   sesión futura**: no repetir "confirmado" solo porque la API devuelve
+   el valor esperado; pedir al usuario una prueba real de extremo a
+   extremo (clic al enlace del correo, cronometrado) antes de cerrar
+   este punto. Si vuelve a fallar con `mailer_otp_exp` ya en `600`,
+   buscar otro parámetro (posiblemente algo relacionado al hook de envío
+   de correo personalizado, si existe, o un límite hardcodeado de GoTrue
+   ajeno a este config).
+
 ## Horarios 2026-2027 (primaria/secundaria/docentes) + informe ejecutivo de carga horaria (2026-08-23)
 
 El usuario compartió 3 documentos Word con los horarios reales del período
