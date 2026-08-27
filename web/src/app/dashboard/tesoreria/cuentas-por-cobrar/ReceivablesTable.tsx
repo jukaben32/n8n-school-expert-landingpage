@@ -28,8 +28,9 @@ const LEVEL_LABELS: Record<string, string> = {
   secundaria: 'Secundaria',
 }
 
-const BUCKET_ORDER = ['6-9', '10-14', '15-19', '20-30', '31-60', '61+']
+const BUCKET_ORDER = ['1-5', '6-9', '10-14', '15-19', '20-30', '31-60', '61+']
 const BUCKET_COLORS: Record<string, string> = {
+  '1-5': 'var(--dash-warning)',
   '6-9': 'var(--dash-warning)',
   '10-14': 'var(--dash-warning)',
   '15-19': 'var(--dash-danger)',
@@ -52,6 +53,7 @@ export default function ReceivablesTable({
 }) {
   const [levelFilter, setLevelFilter] = useState('todos')
   const [gradeFilter, setGradeFilter] = useState('todos')
+  const [nameQuery, setNameQuery] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Record<string, string>>({})
 
@@ -68,9 +70,16 @@ export default function ReceivablesTable({
     return Array.from(new Set(pool.map((r) => r.grade_level).filter((v): v is string => !!v))).sort()
   }, [overdue, levelFilter])
 
+  const normalizedQuery = nameQuery.trim().toLowerCase()
+
   const filtered = overdue
     .filter((r) => levelFilter === 'todos' || r.school_level === levelFilter)
     .filter((r) => gradeFilter === 'todos' || r.grade_level === gradeFilter)
+    .filter((r) => {
+      if (!normalizedQuery) return true
+      const haystack = `${r.first_name} ${r.last_name} ${r.family_name ?? ''}`.toLowerCase()
+      return haystack.includes(normalizedQuery)
+    })
     .sort((a, b) => (b.days_overdue ?? 0) - (a.days_overdue ?? 0))
 
   const totalOverdue = filtered.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
@@ -119,6 +128,13 @@ export default function ReceivablesTable({
       </div>
 
       <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          value={nameQuery}
+          onChange={(e) => setNameQuery(e.target.value)}
+          placeholder="Buscar estudiante o familia en esta lista…"
+          className="rounded-full border border-slate-200 bg-white text-sm px-4 py-2 text-slate-700 min-w-[240px]"
+        />
         <select
           value={levelFilter}
           onChange={(e) => { setLevelFilter(e.target.value); setGradeFilter('todos') }}
@@ -141,7 +157,9 @@ export default function ReceivablesTable({
         <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">✅</p>
           <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
-            Ningún estudiante tiene cuentas vencidas por más de {graceDays} días.
+            {normalizedQuery || levelFilter !== 'todos' || gradeFilter !== 'todos'
+              ? 'Ningún estudiante coincide con este filtro.'
+              : `Ningún estudiante tiene cuentas vencidas (corriente hasta el día ${graceDays} del mes siguiente a cada cuota).`}
           </p>
         </div>
       ) : (
