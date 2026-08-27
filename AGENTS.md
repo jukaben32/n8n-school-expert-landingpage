@@ -1960,14 +1960,44 @@ producción (mismo valor, ya idempotente) y en el archivo de la migración para 
 pasar en otro entorno. `school_years` sí tenía ya una fila `is_current=true` para 2026-2027
 (`start_date 2026-08-01`), así que no hizo falta cargarla.
 
+**Corrección de negocio real, encontrada al probar contra datos reales (2026-08-27, mismo día,
+push directo del usuario a la rama del PR)**: dos supuestos de la migración original resultaron
+incorrectos, confirmados con el reglamento de familia del colegio.
+
+1. **El corte de "corriente" no es el día `tuition_grace_days` del MISMO mes de la cuota** -- eso
+   hacía que la cuota de agosto ya apareciera vencida desde el 6 de agosto (gestión de cobro falsa
+   el mismo mes en que se genera la cuota). La regla real: cada cuota está en corriente hasta el
+   día `tuition_grace_days` (5) del mes **SIGUIENTE** al de la cuota -- ej. la cuota de agosto está
+   en corriente hasta el 5 de septiembre, y el 6 de septiembre ya tiene 1 día vencido. Se agregó el
+   tramo **"1-5"** a la tabla de antigüedad (antes el primero era "6-9", dejando esos primeros 5
+   días de mora bajo el nuevo corte sin clasificar).
+2. **La cuota parcial (la fracción de `tuition_installments_count`, ej. el `.5` de `10.5`) va en
+   AGOSTO (la primera cuota), no en junio (la última)** como asumió la migración original -- el
+   período 2026-2027 arrancó el 17 de agosto de 2026 (`school_years.start_date` corregido de
+   `2026-08-01` a `2026-08-17`), así que agosto es un mes parcial de clases. Sigue siendo un 50%
+   plano del monto mensual, sin prorratear por día exacto de inicio -- decisión de alcance ya
+   confirmada, no un cálculo de días.
+
+Corregido en `20260827100000_accounts_receivable_fix_grace_cutoff.sql` (nueva migración, la
+anterior no se tocó -- `create or replace` de `calculate_receivable_status`, comentario de columna
+actualizado en `schools.tuition_grace_days`, y el `update` de `school_years.start_date` acotado por
+nombre real + solo si seguía en el valor por defecto, para no pisar una fecha ya corregida a mano).
+`ReceivablesTable.tsx` también ganó un buscador por estudiante/familia dentro de la propia pantalla
+(el buscador global del panel navega fuera de Tesorería en vez de filtrar esta tabla). Verificado
+`tsc --noEmit` limpio tras el cambio. **Pendiente confirmar**: si esta migración nueva ya se aplicó
+a producción igual que la anterior (vía SQL Editor) -- sin eso, la pantalla real seguiría mostrando
+el corte de gracia viejo aunque el código del PR ya esté corregido.
+
 **Pantalla nueva** `/dashboard/tesoreria/cuentas-por-cobrar` (mismo gate `canAccess(role,
 'tesoreria')` que el resto del módulo -- no se creó un permiso nuevo, Secretaría/Recepción ya lo
 alcanza igual que el resto de Tesorería):
-- Filtro por nivel y por curso (mismo texto libre de `grade_level`), tarjetas de resumen (total
-  vencido, estudiantes vencidos, familias afectadas), tabla con los 6 tramos de antigüedad pedidos
-  (6-9, 10-14, 15-19, 20-30, 31-60, 61+) -- "corriente" (≤5 días) nunca aparece en la tabla, solo
-  cuenta para el filtro. Aviso aparte (no oculto) para estudiantes cuyo nivel no tiene mensualidad
-  configurada, con enlace directo a Configuración.
+- Filtro por nivel, por curso (mismo texto libre de `grade_level`) y por nombre de estudiante/
+  familia (buscador local a esta pantalla, agregado el 2026-08-27), tarjetas de resumen (total
+  vencido, estudiantes vencidos, familias afectadas), tabla con los 7 tramos de antigüedad
+  (1-5, 6-9, 10-14, 15-19, 20-30, 31-60, 61+ -- el tramo "1-5" se agregó en la corrección del corte
+  de gracia, ver arriba) -- "corriente" (dentro de los días de gracia del mes siguiente a cada
+  cuota) nunca aparece en la tabla, solo cuenta para el filtro. Aviso aparte (no oculto) para
+  estudiantes cuyo nivel no tiene mensualidad configurada, con enlace directo a Configuración.
 - **Referencia**: 3 primeras letras del mes en español + año de la cuota vencida más antigua (ej.
   `ago2026`), calculada en la misma función SQL. **Recargo**: botón "Generar recargo" -- crea una
   factura real (única acción de esta pantalla que escribe algo) con descripción `Recargo por mora —
