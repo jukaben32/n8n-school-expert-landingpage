@@ -2254,6 +2254,47 @@ correctas, que la imagen de apoyo se ve tanto en el formulario del profesor
 como en `LessonPlayer.tsx` para un estudiante real, y borrar los datos de
 prueba al terminar.
 
+## Flujo de Cobranza del Panel: alineado al año escolar real (2026-08-27)
+
+**Reporte del usuario**: el gráfico "Flujo de Cobranza · Año Escolar" del
+Panel de Secretaría/Director mostraba una ventana de 12 meses corrida desde
+"hoy" hacia atrás (sept-ago genérico), en vez del calendario real del
+colegio piloto: el período escolar inicia el **17 de agosto** y corre hasta
+**junio**; **julio queda fuera** (vacaciones colectivas de los estudiantes,
+sin cobro). Como agosto empieza a mitad de mes, el año escolar completo son
+**10.5 meses de cobro**, nunca 12.
+
+**Implementación** (`secretaria/page.tsx`): `schoolYearStartYear` se calcula
+a partir de `now` -- si el mes actual es agosto o después, el año escolar en
+curso empezó en agosto de este año calendario; si no (enero-julio), empezó
+en agosto del año calendario anterior. `monthKeys` pasó de "últimos 12 meses
+desde hoy" a los 11 meses reales del año escolar (agosto..junio, saltando
+julio) anclados a `schoolYearStartYear` -- la consulta a `invoices`
+(`schoolYearStart` en vez de `twelveMonthsAgo`) ahora arranca el 1 de agosto
+en vez de 11 meses atrás desde "hoy". El resto del cálculo (sumar
+cobrado/pendiente/vencido por mes desde las facturas reales) no cambió --
+solo la ventana de meses que se muestra.
+
+**No se tocó ningún monto**: el "medio mes" de agosto no se implementó como
+una regla de facturación (eso ya lo decide Tesorería al emitir la factura de
+agosto, fuera del alcance de este cambio) -- aquí solo se corrigió qué
+meses aparecen en el gráfico. Se agregó un asterisco en la barra de agosto +
+una nota al pie ("Agosto es medio mes... julio no se muestra... 10.5 meses
+de cobro") para que quede visualmente claro sin tener que adivinar por qué
+agosto suele verse más bajo que los demás meses.
+
+También se reordenaron los datos de muestra de `PanelCentroControl.tsx`
+(`D.cashflow`, usados solo cuando no hay props reales) para que empiecen en
+agosto y terminen en junio, sin julio -- mismo criterio.
+
+**Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
+limpios. **No verificado en producción** -- esta sesión no tuvo acceso a
+Supabase (mismo bloqueo documentado repetidas veces en este archivo).
+**Pendiente real**: confirmar en vivo que el gráfico muestra Ago→Jun sin
+julio con datos reales de facturación, y revisar en algún momento si el
+monto de la factura de agosto en Tesorería ya refleja el medio mes -- ese
+es un tema de facturación, no de este gráfico.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
