@@ -5,12 +5,25 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 /**
- * Actualizar contraseña — pantalla común para dos flujos de Supabase Auth:
- * 1) Invitación (alguien recibe acceso por primera vez, admin.inviteUserByEmail)
- * 2) Recuperación (alguien olvidó su contraseña, resetPasswordForEmail)
- * En ambos casos, el enlace del correo trae un parámetro `?code=...` (flujo
- * PKCE) que hay que intercambiar explícitamente por una sesión real -- no
- * basta con asumir que Supabase ya la creó sola al cargar la página.
+ * Actualizar contraseña — pantalla común para dos orígenes de enlace, que
+ * NO comparten el mismo formato de URL:
+ *
+ * 1) Autoservicio (`/recuperar-contrasena`, la propia persona pide su
+ *    enlace desde su navegador) -- usa flujo PKCE, trae `?code=...` y se
+ *    intercambia con `exchangeCodeForSession`.
+ * 2) Disparado desde el panel por un admin ("reenviar acceso" en
+ *    Personal/Familias, o la invitación inicial) -- corre en el SERVIDOR
+ *    (`createAdminClient()`), y Supabase no soporta PKCE ahí (ver el
+ *    aviso de la propia librería en `GoTrueAdminApi.inviteUserByEmail`:
+ *    "PKCE is not supported... the browser initiating the invite is
+ *    often different from the browser accepting it"). Ese enlace llega
+ *    en cambio como fragmento `#access_token=...&refresh_token=...`
+ *    (flujo implícito) -- si no se maneja aparte, la librería lo
+ *    descarta en su auto-detección interna (choca con el `flowType:
+ *    'pkce'` fijo del cliente) y la página nunca ve una sesión, sin
+ *    importar cuánto tiempo haya pasado desde que se envió el correo.
+ *    Bug real reportado por un usuario: esto se confundió con un
+ *    problema de "el enlace expira muy rápido" (ver AGENTS.md).
  */
 export default function ActualizarContrasenaFallback() {
   return (
@@ -43,6 +56,21 @@ function ActualizarContrasenaPage() {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
         if (exchangeError) {
           console.error('[actualizar-contrasena] exchangeCodeForSession', exchangeError)
+        }
+      } else if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+        // Enlace disparado desde el panel (inviteUserByEmail / resetPasswordForEmail
+        // del admin client) -- no es PKCE, así que no trae `?code=`. Supabase lo
+        // manda como fragmento de URL en su lugar; se lee a mano porque el
+        // cliente (configurado en flowType 'pkce') no lo procesa solo.
+        const hashParams = new URLSearchParams(window.location.hash.slice(1))
+        const access_token = hashParams.get('access_token')
+        const refresh_token = hashParams.get('refresh_token')
+        if (access_token && refresh_token) {
+          const { error: setSessionError } = await supabase.auth.setSession({ access_token, refresh_token })
+          if (setSessionError) {
+            console.error('[actualizar-contrasena] setSession (enlace de admin)', setSessionError)
+          }
+          window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
         }
       }
       const { data: { session } } = await supabase.auth.getSession()
