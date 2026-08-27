@@ -52,12 +52,19 @@ comment on column schools.late_fee_percent is
 -- Colegio piloto: mensualidades reales dadas por el usuario (2026-08-27).
 -- Idempotente y acotado por nombre -- si alguien ya las configuró a mano
 -- desde /dashboard/colegio, esto no las pisa.
+--
+-- OJO: el nombre real en producción es "Centro Educativo Gran Manantial de
+-- Sabiduría" (con el prefijo "Centro Educativo"), no "Gran Manantial de
+-- Sabiduría" como se abrevia en el resto de este proyecto -- el primer
+-- intento de este backfill usó el nombre corto y no encontró ninguna fila
+-- (0 rows), dejando las 4 columnas en null hasta que se corrigió a mano en
+-- producción el 2026-08-27 y se corrigió aquí para que no vuelva a pasar.
 update schools set
   tuition_parvulo_amount = coalesce(tuition_parvulo_amount, 3500.00),
   tuition_inicial_amount = coalesce(tuition_inicial_amount, 3900.00),
   tuition_primaria_amount = coalesce(tuition_primaria_amount, 4100.00),
   tuition_secundaria_amount = coalesce(tuition_secundaria_amount, 4500.00)
-where name = 'Gran Manantial de Sabiduría';
+where name = 'Centro Educativo Gran Manantial de Sabiduría';
 
 -- Para becas (casos mínimos, pendientes de que el usuario los suministre):
 -- un monto de mensualidad propio por estudiante que ignora el monto por

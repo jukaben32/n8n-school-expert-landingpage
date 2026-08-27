@@ -1940,7 +1940,25 @@ para poder tener un monto de mensualidad distinto por nivel, configurable por co
   (10.5 -- la 11va cuota sale exactamente a la mitad). Los 8 dieron el resultado esperado.
   **Lo que esto NO verifica**: RLS real contra roles de producción, ni el flujo desde la interfaz
   contra la base real -- sigue sin haber credenciales de Supabase en este entorno, mismo bloqueo de
-  siempre. **La migración no está aplicada a producción todavía.**
+  siempre.
+
+**Aplicada y verificada en producción (2026-08-27, sesión siguiente)**: el usuario y su colega
+corrieron el SQL completo en el SQL Editor de Supabase; se verificó con un PAT de un solo uso
+(`sbp_...`, no guardado en el repo, se le indicó rotarlo) vía la Management API
+(`POST /v1/projects/{ref}/database/query`) que las 9 columnas nuevas, `students.tuition_override_amount`
+y las 3 funciones existen, y con `list_school_receivables()` contra datos reales que el cálculo
+funciona de punta a punta (77 estudiantes, todos con la cuota de agosto vencida a 26 días, tramo
+`20-30`, referencia `ago2026` -- coherente con la fecha real de verificación).
+
+**Bug real encontrado y corregido en el camino**: el backfill de las 4 mensualidades del colegio
+piloto (`update schools ... where name = 'Gran Manantial de Sabiduría'`) no encontró ninguna fila
+-- el nombre real en producción es **"Centro Educativo Gran Manantial de Sabiduría"** (con el
+prefijo "Centro Educativo"; el resto de este documento usa el nombre corto como apodo, pero la
+columna `schools.name` real lo lleva completo). Las columnas quedaron en `null` silenciosamente
+hasta que se detectó al listar `schools` completo. Corregido con un `update` puntual contra
+producción (mismo valor, ya idempotente) y en el archivo de la migración para que no vuelva a
+pasar en otro entorno. `school_years` sí tenía ya una fila `is_current=true` para 2026-2027
+(`start_date 2026-08-01`), así que no hizo falta cargarla.
 
 **Pantalla nueva** `/dashboard/tesoreria/cuentas-por-cobrar` (mismo gate `canAccess(role,
 'tesoreria')` que el resto del módulo -- no se creó un permiso nuevo, Secretaría/Recepción ya lo
@@ -1980,13 +1998,13 @@ estudiante. Queda anotada para cuando el usuario confirme que quiere activarla (
 la pidió como "segunda etapa" para no arriesgar el lanzamiento).
 
 **Pendiente para cerrar esta tarea por completo**, en orden:
-1. Aplicar `supabase/migrations/20260827000000_accounts_receivable.sql` a producción (mismo
-   bloqueo de siempre -- sin credenciales de Supabase en este entorno).
-2. Cargar `school_years` con una fila `is_current = true` para el período 2026-2027 si todavía no
-   existe -- sin eso, `calculate_receivable_status()` devuelve `sin_configurar` para todos.
-3. Probar en vivo con un estudiante real: enviar un aviso de verdad y confirmar que llega, generar
-   un recargo de prueba y confirmar el NCF/factura, luego decidir si se anula esa factura de prueba
-   o se deja como registro real.
+1. ~~Aplicar la migración a producción~~ -- hecho y verificado el 2026-08-27 (ver arriba).
+2. ~~Cargar `school_years` con una fila `is_current = true`~~ -- ya existía (`2026-2027`,
+   `start_date 2026-08-01`).
+3. Probar en vivo desde la interfaz (`/dashboard/tesoreria/cuentas-por-cobrar`) con un estudiante
+   real: enviar un aviso de verdad y confirmar que llega, generar un recargo de prueba y confirmar
+   el NCF/factura, luego decidir si se anula esa factura de prueba o se deja como registro real --
+   lo verificado hasta ahora fue directo por SQL (Management API), no desde la pantalla.
 4. Decidir con el usuario la Fase 2 (redirección a Pagos) y el punto abierto de facturar
    mensualidad por estudiante en vez de por familia completa.
 5. Cuando el usuario defina la lista de becas, cargar `students.tuition_override_amount` para esos
@@ -2101,15 +2119,18 @@ cualquier pendiente de migración de este archivo.
     al usuario y no vive en el repo. **Quedan tres cabos sueltos menores**:
     el correo de Orlando es un marcador, 6to de Primaria no tiene docente
     titular, y `teacher_assignments.category` sigue todo en `'regular'`.
-14. **Cuentas por Cobrar (deuda implícita por antigüedad)** — código y migración
-    listos (`20260827000000_accounts_receivable.sql`), verificados con datos
-    reales contra un Postgres local (ver sección "Cuentas por Cobrar" más
-    arriba), pero **la migración no está aplicada a producción**. Pendiente:
-    aplicarla, confirmar que `school_years` tiene una fila `is_current` para
-    2026-2027, probar en vivo el aviso de vencimiento y el recargo, y decidir
-    con el usuario la Fase 2 (redirección a Pagos a los +60 días) y si migrar
-    la facturación de mensualidad a Alegra-al-momento-del-cobro para evitar
-    duplicidad de NCF/e-CF con el POS.
+14. **Cuentas por Cobrar (deuda implícita por antigüedad)** — ~~código y
+    migración listos~~ **aplicada y verificada en producción el 2026-08-27**
+    (ver sección "Cuentas por Cobrar" más arriba): las 9 columnas nuevas,
+    `students.tuition_override_amount` y las 3 funciones existen, y
+    `list_school_receivables()` ya devuelve deuda real de los 77 estudiantes
+    inscritos. Se corrigió en el camino un bug real (el backfill de
+    mensualidades no encontraba el colegio piloto por el nombre completo
+    real, "Centro Educativo Gran Manantial de Sabiduría"). Pendiente:
+    probar el flujo completo desde `/dashboard/tesoreria/cuentas-por-cobrar`
+    (no solo por SQL), y decidir con el usuario la Fase 2 (redirección a
+    Pagos a los +60 días) y si migrar la facturación de mensualidad a
+    Alegra-al-momento-del-cobro para evitar duplicidad de NCF/e-CF con el POS.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`
