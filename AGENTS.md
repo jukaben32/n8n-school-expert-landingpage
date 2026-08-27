@@ -1984,9 +1984,19 @@ actualizado en `schools.tuition_grace_days`, y el `update` de `school_years.star
 nombre real + solo si seguía en el valor por defecto, para no pisar una fecha ya corregida a mano).
 `ReceivablesTable.tsx` también ganó un buscador por estudiante/familia dentro de la propia pantalla
 (el buscador global del panel navega fuera de Tesorería en vez de filtrar esta tabla). Verificado
-`tsc --noEmit` limpio tras el cambio. **Pendiente confirmar**: si esta migración nueva ya se aplicó
-a producción igual que la anterior (vía SQL Editor) -- sin eso, la pantalla real seguiría mostrando
-el corte de gracia viejo aunque el código del PR ya esté corregido.
+`tsc --noEmit` limpio tras el cambio.
+
+**Confirmado con evidencia real que esta migración sí se aplicó y se probó en vivo** (no solo
+supuesto): el siguiente commit a la rama (`20260827110000_invoices_student_index.sql`) documenta
+un `"canceling statement due to statement timeout"` real al abrir
+`/dashboard/tesoreria/cuentas-por-cobrar` en producción -- eso solo pasa si la pantalla ya estaba
+corriendo contra las funciones corregidas. Causa: `calculate_receivable_status()` consulta
+`invoices where student_id = ...` y `list_school_receivables()` la llama una vez por cada
+estudiante inscrito (`cross join lateral`) -- sin índice en `invoices.student_id`, cada llamada
+era un escaneo completo de la tabla, repetido por estudiante. Los índices existentes de `invoices`
+(`school_id`, `family_id`, `due_date`) no cubrían esta consulta. Fix: `create index if not exists
+idx_invoices_student on invoices(student_id) where deleted_at is null` -- mismo patrón de índice
+parcial que ya usaban los otros tres.
 
 **Pantalla nueva** `/dashboard/tesoreria/cuentas-por-cobrar` (mismo gate `canAccess(role,
 'tesoreria')` que el resto del módulo -- no se creó un permiso nuevo, Secretaría/Recepción ya lo
