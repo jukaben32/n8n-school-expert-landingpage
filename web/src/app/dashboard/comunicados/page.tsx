@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import MessageCard from '@/components/comunicados/MessageCard'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import type { MessageCategory } from '@/lib/messaging/categoryAccess'
+
+const IMAGE_BUCKET = 'comunicados-imagenes'
+const SIGNED_URL_TTL = 3600
 
 export const metadata: Metadata = {
   title: 'Comunicados — MentorIApp',
@@ -40,7 +44,7 @@ export default async function ComunicadosPage() {
   const query = supabase
     .from('messages')
     .select(`
-      id, title, body, priority, published_at, created_at, audience_label, category,
+      id, title, body, priority, published_at, created_at, audience_label, category, image_path,
       author:users_profiles!author_id(id),
       reads:message_reads(user_id)
     `)
@@ -52,6 +56,19 @@ export default async function ComunicadosPage() {
   if (!isStaff) query.not('published_at', 'is', null)
 
   const { data: messages, error: messagesError } = await query
+
+  // Comunicados con imagen -- el bucket es privado, así que cada tarjeta
+  // necesita su propia signed URL (mismo patrón que Actualizaciones).
+  const admin = createAdminClient()
+  const imageUrlById = new Map<string, string>()
+  await Promise.all(
+    (messages ?? [])
+      .filter((m) => m.image_path)
+      .map(async (m) => {
+        const { data: signed } = await admin.storage.from(IMAGE_BUCKET).createSignedUrl(m.image_path as string, SIGNED_URL_TTL)
+        if (signed?.signedUrl) imageUrlById.set(m.id, signed.signedUrl)
+      })
+  )
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -100,6 +117,7 @@ export default async function ComunicadosPage() {
                 publishedAt={msg.published_at}
                 audienceLabel={msg.audience_label}
                 category={msg.category as MessageCategory}
+                imageUrl={imageUrlById.get(msg.id) ?? null}
                 isRead={isRead}
                 isStaff={isStaff}
                 currentUserId={profile?.id ?? ''}

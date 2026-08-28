@@ -2148,6 +2148,153 @@ dejarlo entrar, nunca para redirigir. Revisado por esta sesión tras el push (no
 5. Cuando el usuario defina la lista de becas, cargar `students.tuition_override_amount` para esos
    casos (columna ya lista, sin migración nueva).
 
+## Comunicados con imagen adjunta (2026-08-26)
+
+**Reporte real del usuario**: intentó pegar una imagen (un flyer ya
+diseñado, tipo aviso de suspensión de clases) en el campo de contenido de
+un comunicado nuevo, y no se podía -- el formulario solo aceptaba texto.
+
+**Implementación**: migración `20260826000000_comunicados_image.sql` ->
+columna `messages.image_path` (nullable) + bucket privado
+`comunicados-imagenes`, mismo principio de defensa en profundidad que
+`class-updates` (nunca políticas de `storage.objects` para
+anon/authenticated -- todo el acceso pasa por Server Actions con el
+cliente `service_role`, lectura vía signed URL de corta duración).
+
+- `createMessageAction` (`comunicados/nuevo/actions.ts`) pasó de recibir un
+  objeto plano a recibir `FormData` -- mismo cambio de forma que ya tienen
+  `createClassUpdateAction`/`uploadPaymentReceipt`, necesario para poder
+  traer un archivo. Si el bucket todavía no existe (migración sin aplicar
+  en ese entorno), lo crea al vuelo con `storage.createBucket()`, igual que
+  `createClassUpdateAction` -- así que la función de subir imagen no queda
+  bloqueada solo por la migración, aunque la columna `image_path` sí la
+  necesita (si la migración no está aplicada, el insert falla igual).
+- El contenido de texto pasó de obligatorio a "texto O imagen" (al menos
+  uno de los dos) -- un flyer que ya trae todo el aviso en la imagen no
+  debería obligar a repetirlo como texto. Validado en cliente
+  (`NewMessageForm.tsx`) y de nuevo en el servidor (nunca confiar solo en
+  la validación de cliente).
+- `comunicados/page.tsx` genera una signed URL por comunicado con imagen
+  (TTL 1h, mismo patrón que Actualizaciones) y se la pasa a `MessageCard`,
+  que la muestra dentro del comunicado expandido (badge 🖼️ en la cabecera
+  para saber que trae imagen sin tener que expandir).
+
+**Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
+limpios. **No verificado en producción** -- esta sesión no tuvo acceso a
+Supabase (mismo bloqueo documentado repetidas veces en este archivo).
+**Pendiente real**: aplicar la migración `20260826000000_comunicados_image.sql`
+a producción, y probar en vivo publicar un comunicado con imagen (con y sin
+texto) y confirmar que se ve tanto para staff como para una familia real.
+
+## Cuestionarios de Academia desde imagen (OCR) + imagen de apoyo por pregunta (2026-08-26)
+
+**Contexto real**: el usuario mostró una captura del formulario de Nueva
+Lección (video + cuestionario) y preguntó si se podía cargar imágenes en el
+cuestionario -- hay cuestionarios largos en libros de texto que sería mucho
+tiempo reescribir a mano. La inquietud que él mismo planteó: si la pregunta
+es una imagen, ¿cómo respondería el estudiante? Se combinaron dos soluciones
+(decisión explícita del usuario: "combinar"):
+
+1. **Imagen de apoyo por pregunta** (`quiz_questions.image_path`, nullable) --
+   para diagramas/gráficos que la pregunta necesita. Las opciones de
+   respuesta siguen siendo texto tecleado -- el estudiante responde con los
+   mismos botones de siempre, nunca tocando una imagen.
+2. **Extracción con Claude (visión) de páginas/fotos del cuestionario del
+   libro** -- reutiliza el mismo núcleo `extractStructuredDocument.ts` ya
+   usado para fichas de inscripción y facturas de proveedores ("un solo
+   cerebro", ver AGENTS.md). El profesor sube fotos sueltas o un PDF
+   multi-página del cuestionario; la IA arma preguntas+opciones en el propio
+   formulario de Nueva Lección para que las revise/corrija antes de
+   "Guardar lección" -- igual que los otros dos casos de OCR, **nunca se
+   persiste nada solo por escanear**.
+
+**Diferencia con los otros dos casos de OCR ya existentes**: aquí NO hizo
+falta una tabla de bandeja de revisión (`enrollment_form_scans`/
+`vendor_invoices`) porque Nueva Lección ya es un único formulario que no
+guarda nada hasta el clic final -- la extracción solo devuelve el borrador
+en memoria del cliente (`extractQuizFromDocumentsAction`, en
+`academia/nueva/actions.ts`, nunca sube ni inserta nada). Tampoco hizo falta
+`confianza` por pregunta individual en el schema -- una página trae varias
+preguntas, así que `quizPageSchema.ts` es un array (`preguntas[]`) con una
+sola confianza por página, a diferencia de `enrollmentFormSchema`/
+`vendorInvoiceSchema` (un documento = un registro).
+
+**Cómo se decide la respuesta correcta al extraer**: si el libro trae una
+clave de respuestas visible en la página, Claude la usa
+(`indice_correcta`); si no hay ninguna marca, queda `null` y ninguna opción
+sale premarcada -- la validación que ya existía en el formulario ("Marca la
+opción correcta en cada pregunta") obliga al profesor a elegirla a mano
+antes de poder guardar, así que nunca se puede publicar una pregunta sin
+respuesta correcta por accidente.
+
+**Storage**: bucket privado nuevo `academia-imagenes` (migración
+`20260826010000_academia_quiz_images.sql`), mismo principio de defensa en
+profundidad que `class-updates`/`comunicados-imagenes` -- sin políticas de
+`storage.objects`, todo pasa por `uploadQuestionImageAction` (cliente
+`service_role`) + signed URL de corta duración al mostrarla (tanto en el
+formulario del profesor como en `LessonPlayer.tsx` para el estudiante).
+
+**Detalle de implementación notable**: a diferencia del resto del módulo
+Academia (que inserta `lessons`/`quiz_questions`/`quiz_options` con el
+cliente de sesión del navegador, apoyándose en RLS -- ver
+`lessons_staff_all` etc. en la migración 016), la subida de imagen y la
+extracción OCR sí pasan por Server Actions con `service_role`, porque
+tocan Storage y la API de Anthropic -- mismo patrón ya establecido en el
+resto del proyecto para esos dos casos, no una inconsistencia nueva.
+
+**Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
+limpios. **No verificado en producción** -- la migración no se pudo aplicar
+desde esta sesión (sin acceso a Supabase) y el usuario mencionó que
+"pronto" resuelve el bloqueo de `ANTHROPIC_API_KEY` con saldo (ver bloqueo
+ya documentado varias veces en este archivo para OCR/asistente de IA).
+**Pendiente real**: aplicar `20260826010000_academia_quiz_images.sql` a
+producción, y probar en vivo -- subir una foto o PDF real de un cuestionario
+de libro de texto y confirmar que las preguntas/opciones extraídas son
+correctas, que la imagen de apoyo se ve tanto en el formulario del profesor
+como en `LessonPlayer.tsx` para un estudiante real, y borrar los datos de
+prueba al terminar.
+
+## Flujo de Cobranza del Panel: alineado al año escolar real (2026-08-27)
+
+**Reporte del usuario**: el gráfico "Flujo de Cobranza · Año Escolar" del
+Panel de Secretaría/Director mostraba una ventana de 12 meses corrida desde
+"hoy" hacia atrás (sept-ago genérico), en vez del calendario real del
+colegio piloto: el período escolar inicia el **17 de agosto** y corre hasta
+**junio**; **julio queda fuera** (vacaciones colectivas de los estudiantes,
+sin cobro). Como agosto empieza a mitad de mes, el año escolar completo son
+**10.5 meses de cobro**, nunca 12.
+
+**Implementación** (`secretaria/page.tsx`): `schoolYearStartYear` se calcula
+a partir de `now` -- si el mes actual es agosto o después, el año escolar en
+curso empezó en agosto de este año calendario; si no (enero-julio), empezó
+en agosto del año calendario anterior. `monthKeys` pasó de "últimos 12 meses
+desde hoy" a los 11 meses reales del año escolar (agosto..junio, saltando
+julio) anclados a `schoolYearStartYear` -- la consulta a `invoices`
+(`schoolYearStart` en vez de `twelveMonthsAgo`) ahora arranca el 1 de agosto
+en vez de 11 meses atrás desde "hoy". El resto del cálculo (sumar
+cobrado/pendiente/vencido por mes desde las facturas reales) no cambió --
+solo la ventana de meses que se muestra.
+
+**No se tocó ningún monto**: el "medio mes" de agosto no se implementó como
+una regla de facturación (eso ya lo decide Tesorería al emitir la factura de
+agosto, fuera del alcance de este cambio) -- aquí solo se corrigió qué
+meses aparecen en el gráfico. Se agregó un asterisco en la barra de agosto +
+una nota al pie ("Agosto es medio mes... julio no se muestra... 10.5 meses
+de cobro") para que quede visualmente claro sin tener que adivinar por qué
+agosto suele verse más bajo que los demás meses.
+
+También se reordenaron los datos de muestra de `PanelCentroControl.tsx`
+(`D.cashflow`, usados solo cuando no hay props reales) para que empiecen en
+agosto y terminen en junio, sin julio -- mismo criterio.
+
+**Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
+limpios. **No verificado en producción** -- esta sesión no tuvo acceso a
+Supabase (mismo bloqueo documentado repetidas veces en este archivo).
+**Pendiente real**: confirmar en vivo que el gráfico muestra Ago→Jun sin
+julio con datos reales de facturación, y revisar en algún momento si el
+monto de la factura de agosto en Tesorería ya refleja el medio mes -- ese
+es un tema de facturación, no de este gráfico.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

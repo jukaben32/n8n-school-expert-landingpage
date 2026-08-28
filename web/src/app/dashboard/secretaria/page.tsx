@@ -75,7 +75,12 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
   const twentyEightDaysAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
-  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+  // El período escolar de este colegio inicia el 17 de agosto y corre hasta
+  // junio -- julio es de vacaciones colectivas, sin cobro. Si "ahora" cae
+  // entre enero y julio, el año escolar en curso empezó en agosto del año
+  // calendario anterior.
+  const schoolYearStartYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1
+  const schoolYearStart = new Date(schoolYearStartYear, 7, 1) // 1 de agosto
 
   const [
     { data: studentsInRange, error: studentsRangeError },
@@ -105,7 +110,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(sevenDaysAgo)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(fourteenDaysAgo)).lt('date', isoDate(sevenDaysAgo)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(twentyEightDaysAgo)),
-    supabase.from('invoices').select('status, total_amount, issued_at').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', twelveMonthsAgo.toISOString()),
+    supabase.from('invoices').select('status, total_amount, issued_at').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', schoolYearStart.toISOString()),
     supabase.from('students').select('created_at').eq('school_id', schoolId).is('deleted_at', null).gte('created_at', new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString()),
     supabase.from('attendance').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('date', todayIso).eq('status', 'ausente'),
     supabase.from('payment_receipts').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('status', 'pendiente'),
@@ -181,12 +186,15 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     }
   })
 
-  // ── Flujo de cobranza -- año escolar (12 meses) ──────────────────────
+  // ── Flujo de cobranza -- año escolar (agosto a junio, sin julio) ──────
+  // Agosto es medio mes (el período inicia el 17) -- el año escolar completo
+  // son 10.5 meses de cobro, nunca 12: julio queda fuera por las vacaciones
+  // colectivas de los estudiantes.
   type InvoiceRow = { status: string; total_amount: number; issued_at: string }
   const invoiceRows = (invoicesYear ?? []) as InvoiceRow[]
   const monthKeys: string[] = []
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+  for (let i = 0; i < 11; i++) {
+    const d = new Date(schoolYearStartYear, 7 + i, 1) // ago(7)..jun(18 -> 6 del año siguiente), Date normaliza el año
     monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
   }
   const byMonth = new Map(monthKeys.map((k) => [k, { cobrado: 0, pendiente: 0, vencido: 0 }]))

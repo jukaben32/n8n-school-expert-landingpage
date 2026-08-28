@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 interface Option { id: string; label: string; is_correct: boolean; sort_order: number }
-interface Question { id: string; prompt: string; points: number; sort_order: number; quiz_options: Option[] }
+interface Question { id: string; prompt: string; points: number; sort_order: number; imageUrl: string | null; quiz_options: Option[] }
 
 interface LessonPlayerProps {
   lessonId: string
@@ -177,6 +177,14 @@ export default function LessonPlayer(props: LessonPlayerProps) {
 
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4">
             <p className="font-bold text-lg text-slate-900 dark:text-white">{question.prompt}</p>
+            {question.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={question.imageUrl}
+                alt="Imagen de apoyo de la pregunta"
+                className="w-full max-h-72 object-contain rounded-xl border border-slate-200 dark:border-slate-800"
+              />
+            )}
             <div className="space-y-2">
               {question.quiz_options.map((opt) => {
                 const isSelected = selectedId === opt.id

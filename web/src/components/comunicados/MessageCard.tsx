@@ -12,6 +12,7 @@ interface MessageCardProps {
   publishedAt: string | null
   audienceLabel: string | null
   category: MessageCategory
+  imageUrl: string | null
   isRead: boolean
   isStaff: boolean
   currentUserId: string
@@ -22,7 +23,7 @@ interface MessageCardProps {
  * La lectura se registra en Supabase (tabla message_reads) al hacer clic.
  */
 export default function MessageCard({
-  id, title, body, priority, publishedAt, audienceLabel, category, isRead, isStaff, currentUserId
+  id, title, body, priority, publishedAt, audienceLabel, category, imageUrl, isRead, isStaff, currentUserId
 }: MessageCardProps) {
   const [read, setRead] = useState(isRead)
   const [expanded, setExpanded] = useState(false)
@@ -95,6 +96,7 @@ export default function MessageCard({
             <h3 className={`text-sm font-semibold truncate ${!read ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
               {title}
             </h3>
+            {imageUrl && <span aria-hidden="true" title="Incluye imagen">🖼️</span>}
           </div>
           {/* suppressHydrationWarning: el formato "short" de dia/mes puede variar
               entre el motor ICU del servidor y el del navegador */}
@@ -113,9 +115,19 @@ export default function MessageCard({
       {/* Cuerpo expandido */}
       {expanded && (
         <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800 pt-3">
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-            {body}
-          </p>
+          {imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full max-h-[32rem] object-contain rounded-xl border border-slate-200 dark:border-slate-800 mb-3"
+            />
+          )}
+          {body && (
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+              {body}
+            </p>
+          )}
 
           {/* Botón "Confirmar lectura" para padres */}
           {!isStaff && (
