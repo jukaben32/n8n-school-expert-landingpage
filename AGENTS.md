@@ -229,9 +229,13 @@ exportación de datos).
     el correo real, se confirmó el email de la cuenta de prueba
     directamente vía `admin.updateUserById({ email_confirm: true })`
     (equivalente a lo que haría el clic en el enlace del correo).
-    **Pendiente**: conseguir acceso a los logs de Resend (o subir
-    `rate_limit_email_sent` a un valor razonable) para confirmar si
-    esto también afecta invitaciones reales del colegio piloto.
+    **Resuelto (2026-08-28)**: confirmado vía Management API
+    (`GET /v1/projects/{ref}/config/auth`) que `rate_limit_email_sent`
+    ya está en `100` en producción -- el usuario lo había subido
+    directo desde el Dashboard de Supabase (Authentication -> Rate
+    Limits) en una sesión anterior, un cambio de configuración que no
+    deja rastro en git/código, por eso este punto seguía marcado como
+    pendiente aquí. No hace falta ninguna acción más sobre esto.
 
 ## Descuento por hermanos (Tesorería)
 
