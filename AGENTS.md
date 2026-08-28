@@ -2034,19 +2034,28 @@ pendiente de confirmar con el usuario: facturar mensualidad siempre por estudian
 
 **Fase 2 -- construida el 2026-08-27 (push directo del usuario a la rama del PR, sin pasar por esta
 sesión)**: un tutor puro (`role === 'guardian'`, nunca un perfil de doble rol staff+tutor) con algún
-hijo inscrito cuya cuota más vieja está en el tramo `61+` se redirige siempre a `/dashboard/pagos`
-al cargar cualquier página de `/dashboard/*`, con un aviso rojo fijo arriba y el menú lateral
-reducido a un solo enlace (`Sidebar.tsx`, rol sintético `guardian_blocked`). Nunca aplica al
-estudiante, por ley -- el chequeo vive en `dashboard/layout.tsx`
-(`checkGuardianOverdueBlock(guardianId)`), que llama a `calculate_receivable_status()` una vez por
-cada hijo inscrito de la familia del tutor vía cliente `admin` (esas tablas no tienen RLS para
-tutores) y solo usa el resultado para decidir la redirección server-side, nunca lo expone al
-cliente. `proxy.ts` ahora reenvía la ruta actual a los Server Components vía el header `x-pathname`
-(no existía antes) para que el layout sepa si ya está en `/dashboard/pagos` sin depender de un hook
-de cliente. Revisado por esta sesión tras el push (no escrito aquí): `tsc --noEmit`, `lint` y
-`next build` completos limpios, y el diseño (guardián puro vs. doble rol, redirect server-side,
-nunca toca al estudiante) es consistente con el resto del proyecto. **Sin probar en vivo todavía**
-con una cuenta de tutor real que de verdad tenga 61+ días de mora.
+hijo inscrito cuya cuota más vieja está en el tramo `61+` queda confinado a `/dashboard/pagos`, con
+un aviso rojo fijo arriba y el menú lateral reducido a un solo enlace (`Sidebar.tsx`, rol sintético
+`guardian_blocked`). Nunca aplica al estudiante, por ley. La lógica de "¿está bloqueado?"
+(`checkGuardianOverdueBlock(guardianId)`, que llama a `calculate_receivable_status()` una vez por
+cada hijo inscrito de la familia del tutor vía cliente `admin` -- esas tablas no tienen RLS para
+tutores) vive en un módulo compartido nuevo, `web/src/lib/receivables/guardianBlock.ts`.
+
+**Bug real encontrado en producción y corregido el mismo día**: la primera versión hacía el
+`redirect()` duro dentro de `dashboard/layout.tsx` (un Server Component), usando un header
+`x-pathname` inyectado por `proxy.ts` para saber si ya estaba en `/dashboard/pagos`. Al probarlo en
+vivo, un tutor bloqueado quedaba con la pantalla en blanco en un bucle infinito de refetch RSC,
+curable solo con un recargo manual de la página -- un `redirect()` lanzado desde dentro del árbol
+de Server Components durante la navegación de cliente que dispara `LoginForm.tsx`
+(`router.push` + `router.refresh()`) entra en conflicto con cómo el App Router resuelve esa
+redirección. Corregido moviendo la redirección dura al middleware (`proxy.ts`): ahí se resuelve con
+un `NextResponse.redirect()` (un 307 HTTP normal, antes de que arranque el árbol de RSC), consultando
+`users_profiles` solo para peticiones a `/dashboard/*` que no sean ya `/dashboard/pagos`. El header
+`x-pathname` que se había agregado para esto ya no existe -- se revirtió junto con el resto del
+enfoque viejo. `dashboard/layout.tsx` sigue llamando a `checkGuardianOverdueBlock()`, pero ahora
+solo para decidir el banner/menú restringido de la página en la que el middleware ya decidió
+dejarlo entrar, nunca para redirigir. Revisado por esta sesión tras el push (no escrito aquí):
+`tsc --noEmit`, `lint` y `next build` completos limpios.
 
 **Pendiente para cerrar esta tarea por completo**, en orden:
 1. ~~Aplicar la migración a producción~~ -- hecho y verificado el 2026-08-27 (ver arriba).
