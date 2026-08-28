@@ -59,9 +59,29 @@ export default async function PagosPage({
 
   if (profileError) console.error('[perfil]', profileError)
 
-  // Staff redirige al módulo de tesorería
+  // Staff con acceso a Tesorería redirige ahí.
   if (profile && canAccess(profile?.role, 'pagos')) {
     redirect('/dashboard/tesoreria')
+  }
+
+  // El resto del personal (roles sin acceso a Tesorería, ej. teacher) va a
+  // su panel normal, salvo que también sea tutor de algún hijo aquí (doble
+  // rol, guardian_id vinculado). Bug real corregido (reportado desde el
+  // colegio): esta página no cubría estos roles en absoluto -- un profesor
+  // que llegara aquí por cualquier vía se quedaba viendo el Estado de
+  // Cuenta en vez de que lo mandaran de vuelta a su panel de trabajo. No
+  // exponía facturas de otras familias (la consulta sale vacía sin
+  // guardian_id), pero sí era un hueco real de control de acceso -- mismo
+  // patrón que el de portal-familiar/page.tsx.
+  const staffHomeRoute: Record<string, string> = {
+    super_admin: '/dashboard/plataforma',
+    school_admin: '/dashboard/secretaria',
+    director: '/dashboard/secretaria',
+    teacher: '/dashboard/asistencia',
+    student: '/dashboard/academia',
+  }
+  if (profile?.role && profile.role in staffHomeRoute && !profile?.guardian_id) {
+    redirect(staffHomeRoute[profile.role])
   }
 
   // Obtener family_id del guardian

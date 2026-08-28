@@ -33,11 +33,27 @@ export default async function PortalFamiliarPage() {
 
   if (profileError) console.error('[perfil]', profileError)
 
-  // school_admin/director van a su panel normal, salvo que también sean
-  // tutores de algún hijo (doble rol) -- en ese caso sí pueden entrar a
-  // ver su Vista de Familia.
-  if ((profile?.role === 'school_admin' || profile?.role === 'director') && !profile?.guardian_id) {
-    redirect('/dashboard/secretaria')
+  // Todo el personal (no solo school_admin/director) va a su panel normal,
+  // salvo que también sea tutor de algún hijo aquí (doble rol, guardian_id
+  // vinculado) -- en ese caso sí puede entrar a ver su Vista de Familia.
+  // Bug real corregido (reportado desde el colegio): esta condición solo
+  // cubría school_admin/director -- un profesor (u otro rol de personal)
+  // sin guardian_id que llegara a esta URL por cualquier vía (un enlace
+  // público, un marcador...) se quedaba viendo el Portal Familiar en vez
+  // de que lo mandaran de vuelta a su panel de trabajo. No exponía datos
+  // de otras familias (la lista de hijos sale vacía sin guardian_id), pero
+  // sí era un hueco real de control de acceso.
+  const staffHomeRoute: Record<string, string> = {
+    super_admin: '/dashboard/plataforma',
+    school_admin: '/dashboard/secretaria',
+    director: '/dashboard/secretaria',
+    teacher: '/dashboard/asistencia',
+    finance: '/dashboard/tesoreria',
+    reception: '/dashboard/estudiantes',
+    student: '/dashboard/academia',
+  }
+  if (profile?.role && profile.role in staffHomeRoute && !profile?.guardian_id) {
+    redirect(staffHomeRoute[profile.role])
   }
 
   // Obtener los estudiantes vinculados a este guardian
