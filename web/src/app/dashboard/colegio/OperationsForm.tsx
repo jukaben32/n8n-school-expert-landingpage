@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Percent, Sparkles } from 'lucide-react'
+import { Percent, Sparkles, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface School {
@@ -10,6 +10,14 @@ interface School {
   sibling_discount_min_children: number
   sibling_discount_percent: number
   faq_document: string | null
+  tuition_parvulo_amount: number | null
+  tuition_inicial_amount: number | null
+  tuition_primaria_amount: number | null
+  tuition_secundaria_amount: number | null
+  tuition_installments_count: number
+  tuition_due_day: number
+  tuition_grace_days: number
+  late_fee_percent: number
 }
 
 const inputClass =
@@ -22,9 +30,19 @@ export default function OperationsForm({ school }: { school: School }) {
   const [siblingMinChildren, setSiblingMinChildren] = useState(String(school.sibling_discount_min_children))
   const [siblingPercent, setSiblingPercent] = useState(String(school.sibling_discount_percent))
   const [faqDocument, setFaqDocument] = useState(school.faq_document ?? '')
+  const [tuitionParvulo, setTuitionParvulo] = useState(school.tuition_parvulo_amount != null ? String(school.tuition_parvulo_amount) : '')
+  const [tuitionInicial, setTuitionInicial] = useState(school.tuition_inicial_amount != null ? String(school.tuition_inicial_amount) : '')
+  const [tuitionPrimaria, setTuitionPrimaria] = useState(school.tuition_primaria_amount != null ? String(school.tuition_primaria_amount) : '')
+  const [tuitionSecundaria, setTuitionSecundaria] = useState(school.tuition_secundaria_amount != null ? String(school.tuition_secundaria_amount) : '')
+  const [installmentsCount, setInstallmentsCount] = useState(String(school.tuition_installments_count))
+  const [dueDay, setDueDay] = useState(String(school.tuition_due_day))
+  const [graceDays, setGraceDays] = useState(String(school.tuition_grace_days))
+  const [lateFeePercent, setLateFeePercent] = useState(String(school.late_fee_percent))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const toAmountOrNull = (value: string) => (value.trim() === '' ? null : Math.max(0, Number(value) || 0))
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,6 +56,14 @@ export default function OperationsForm({ school }: { school: School }) {
         sibling_discount_min_children: Math.max(1, Number(siblingMinChildren) || 3),
         sibling_discount_percent: Math.min(100, Math.max(0, Number(siblingPercent) || 0)),
         faq_document: faqDocument.trim() || null,
+        tuition_parvulo_amount: toAmountOrNull(tuitionParvulo),
+        tuition_inicial_amount: toAmountOrNull(tuitionInicial),
+        tuition_primaria_amount: toAmountOrNull(tuitionPrimaria),
+        tuition_secundaria_amount: toAmountOrNull(tuitionSecundaria),
+        tuition_installments_count: Math.max(0.5, Number(installmentsCount) || 10.5),
+        tuition_due_day: Math.min(28, Math.max(1, Number(dueDay) || 1)),
+        tuition_grace_days: Math.max(0, Number(graceDays) || 0),
+        late_fee_percent: Math.min(100, Math.max(0, Number(lateFeePercent) || 0)),
       })
       .eq('id', school.id)
 
@@ -52,6 +78,56 @@ export default function OperationsForm({ school }: { school: School }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div className={sectionClass}>
+        <div className="flex items-center gap-2">
+          <Wallet className="w-4 h-4 text-primary dark:text-accent-light" />
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Mensualidades y Cuentas por Cobrar</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="tuitionParvulo" className={labelClass}>Párvulos (RD$)</label>
+            <input id="tuitionParvulo" type="number" min="0" step="0.01" value={tuitionParvulo} onChange={(e) => setTuitionParvulo(e.target.value)} className={inputClass} placeholder="Sin configurar" />
+          </div>
+          <div>
+            <label htmlFor="tuitionInicial" className={labelClass}>Inicial (RD$)</label>
+            <input id="tuitionInicial" type="number" min="0" step="0.01" value={tuitionInicial} onChange={(e) => setTuitionInicial(e.target.value)} className={inputClass} placeholder="Sin configurar" />
+          </div>
+          <div>
+            <label htmlFor="tuitionPrimaria" className={labelClass}>Primaria (RD$)</label>
+            <input id="tuitionPrimaria" type="number" min="0" step="0.01" value={tuitionPrimaria} onChange={(e) => setTuitionPrimaria(e.target.value)} className={inputClass} placeholder="Sin configurar" />
+          </div>
+          <div>
+            <label htmlFor="tuitionSecundaria" className={labelClass}>Secundaria (RD$)</label>
+            <input id="tuitionSecundaria" type="number" min="0" step="0.01" value={tuitionSecundaria} onChange={(e) => setTuitionSecundaria(e.target.value)} className={inputClass} placeholder="Sin configurar" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label htmlFor="installmentsCount" className={labelClass}>Cuotas del año</label>
+            <input id="installmentsCount" type="number" min="0.5" step="0.5" value={installmentsCount} onChange={(e) => setInstallmentsCount(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="dueDay" className={labelClass}>Día de vencimiento</label>
+            <input id="dueDay" type="number" min="1" max="28" step="1" value={dueDay} onChange={(e) => setDueDay(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="graceDays" className={labelClass}>Días de gracia</label>
+            <input id="graceDays" type="number" min="0" step="1" value={graceDays} onChange={(e) => setGraceDays(e.target.value)} className={inputClass} />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="lateFeePercent" className={labelClass}>% de recargo por mora</label>
+          <input id="lateFeePercent" type="number" min="0" max="100" step="0.5" value={lateFeePercent} onChange={(e) => setLateFeePercent(e.target.value)} className={`${inputClass} max-w-[160px]`} />
+        </div>
+        <p className="text-xs text-slate-400 dark:text-slate-500">
+          Estos montos alimentan la deuda implícita de <strong>Tesorería → Cuentas por Cobrar</strong>: como no se
+          facturan meses futuros (el colegio reporta por lo percibido), el sistema compara cuántas cuotas ya
+          debieron vencer contra lo realmente cobrado, por alumno. Un nivel sin monto configurado no aparecerá en
+          ese reporte hasta que lo llenes aquí. Con 5 días de gracia, una cuota queda &quot;corriente&quot; hasta
+          el día 5 de cada mes; del día 6 en adelante se considera vencida.
+        </p>
+      </div>
+
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <Percent className="w-4 h-4 text-primary dark:text-accent-light" />

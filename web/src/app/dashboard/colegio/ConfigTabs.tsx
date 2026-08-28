@@ -19,6 +19,14 @@ interface School {
   sibling_discount_min_children: number
   sibling_discount_percent: number
   faq_document: string | null
+  tuition_parvulo_amount: number | null
+  tuition_inicial_amount: number | null
+  tuition_primaria_amount: number | null
+  tuition_secundaria_amount: number | null
+  tuition_installments_count: number
+  tuition_due_day: number
+  tuition_grace_days: number
+  late_fee_percent: number
 }
 
 const TABS = [

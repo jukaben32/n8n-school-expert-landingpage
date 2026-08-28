@@ -5,6 +5,18 @@ import TopBar from '@/components/dashboard/TopBar'
 import { MobileNavProvider } from '@/components/dashboard/MobileNavContext'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { exitSchoolView } from './plataforma/actions'
+import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
+
+// La redirección dura (Fase 2 de Cuentas por Cobrar) vive en el middleware
+// (proxy.ts), no aquí -- un redirect() lanzado desde un Server Component
+// durante la navegación de cliente que dispara LoginForm.tsx
+// (router.push + router.refresh()) entra en conflicto con cómo el App
+// Router resuelve esa redirección: se comprobó en producción que deja al
+// tutor bloqueado con la pantalla en blanco, atrapado en un bucle infinito
+// de refetch RSC que solo se cura con un recargo manual de la página.
+// Aquí solo se usa el resultado para el banner y el menú restringido de la
+// página en la que el middleware ya decidió dejarlo entrar (siempre
+// /dashboard/pagos si está bloqueado).
 
 /**
  * Layout del Dashboard — MentorIApp
@@ -31,6 +43,13 @@ export default async function DashboardLayout({
 
   const role = profile?.role ?? 'guardian'
   const { schoolId, isViewingOtherSchool, schoolName: overrideSchoolName } = await getActiveSchool(role, profile?.school_id ?? '')
+
+  // Fase 2 de Cuentas por Cobrar: solo aplica a tutores puros -- un perfil
+  // de personal con doble rol (guardian_id secundario) tiene `role` distinto
+  // a 'guardian', así que nunca cae aquí.
+  const isBlockedByOverdue = role === 'guardian' && profile?.guardian_id
+    ? await checkGuardianOverdueBlock(profile.guardian_id)
+    : false
 
   // Leads nuevos sin atender, solo relevante para el súper administrador
   let newLeadsCount = 0
@@ -88,7 +107,7 @@ export default async function DashboardLayout({
         <div className="dash-shell flex h-[calc(100vh-1rem)] sm:h-[calc(100vh-1.5rem)] overflow-hidden rounded-2xl shadow-2xl">
           {/* Sidebar de navegación lateral -- cajón deslizable en móvil, fijo en escritorio */}
           <Sidebar
-            role={isViewingOtherSchool ? 'director' : role}
+            role={isViewingOtherSchool ? 'director' : (isBlockedByOverdue ? 'guardian_blocked' : role)}
             schoolName={schoolName}
             newLeadsCount={newLeadsCount}
             newMessagesCount={newMessagesCount}
@@ -107,6 +126,13 @@ export default async function DashboardLayout({
                     Volver a Plataforma
                   </button>
                 </form>
+              </div>
+            )}
+            {isBlockedByOverdue && (
+              <div className="bg-red-900/20 border-b border-red-800 px-4 sm:px-6 py-2 text-sm">
+                <span className="text-red-300 font-medium">
+                  ⚠️ Tienes una mensualidad vencida hace más de 60 días. Ponte al día en Pagos para volver a ver el resto del portal.
+                </span>
               </div>
             )}
             <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} />

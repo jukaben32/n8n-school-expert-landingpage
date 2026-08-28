@@ -1953,6 +1953,201 @@ código nuevo, solo datos. El usuario dijo explícitamente que la prioridad
 es "amarilla" (puede esperar 1-2 días, antes de que arranque el año
 escolar 2026-2027 la semana del 24 de agosto).
 
+## Cuentas por Cobrar — deuda implícita por antigüedad, sin facturar meses futuros (2026-08-27)
+
+**Contexto de negocio confirmado con el usuario**: el colegio no puede facturar la colegiatura de
+meses futuros (contabilidad por lo percibido, no por lo devengado; el ITBIS se lleva al costo, no
+se factura a las familias) -- solo se factura en el momento en que llega el pago. Pero necesitaba,
+solo para análisis y gestión de cobro, ver la deuda "implícita" (lo que ya debió cobrarse a la
+fecha según la mensualidad) contra lo realmente cobrado, por alumno/curso/nivel, con antigüedad.
+
+**Pregunta aparte del usuario, respondida pero no implementada esta sesión** (fuera del alcance de
+código, es una decisión de arquitectura fiscal): cómo evitar NCF/e-CF duplicados entre Alegra (POS,
+certificado Vía Firma, rangos autorizados de la DGII) y un eventual pago con tarjeta desde esta
+plataforma. Hallazgo importante: `generate_ncf()` (migración 004) **nunca firmó ni transmitió nada
+a la DGII** -- solo arma un texto con formato correcto (`B02########`). Sea NCF clásico o e-CF, el
+certificado y la autorización de rangos viven solo en Alegra. Recomendación dada al usuario (no
+construida todavía): que esta plataforma nunca emita el comprobante ella misma -- que cada cobro
+real (efectivo/transferencia/tarjeta) dispare la creación de la factura en Alegra vía su API
+(mismo patrón ya pendiente para facturas de proveedores, `web/src/lib/accounting/alegra.ts`), y que
+Alegra sea la única fuente de verdad del NCF/e-CF. El recargo por mora de esta tarea (abajo) sigue
+usando `generate_ncf()` porque es el mismo patrón que ya usa "Generar factura" hoy -- hereda la
+misma limitación, no la resuelve; migrar toda la facturación real a Alegra-al-momento-del-cobro
+queda pendiente como tarea aparte (bloqueada por las mismas credenciales/mapeo de Alegra que ya
+bloquean el punto 10 del roadmap).
+
+**`billing_concepts.applies_to`** (`'all'|'grade'|'student'`, migración 004) nunca se conectó a
+nada real -- no había columna que dijera a qué grado aplicaba. En vez de resucitarlo, se reutilizó
+el mismo mecanismo que ya usan Horarios/Notas: `students.grade_level` es texto libre, y
+`gradeLevelToCategory()` (`web/src/lib/schedule/gradeLevelCategory.ts`) ya sabe traducirlo a un
+nivel (`parvulo`/`inicial`/`primaria`/`secundaria`). Esa misma lógica se portó a SQL
+(`school_level_for_grade()`, mismo orden de comprobación -- "Pre Primario" es inicial, no primaria)
+para poder tener un monto de mensualidad distinto por nivel, configurable por colegio.
+
+**Migración** `20260827000000_accounts_receivable.sql`:
+- `schools`: 4 montos de mensualidad (`tuition_parvulo_amount`/`inicial`/`primaria`/`secundaria`,
+  nullables -- un nivel sin monto configurado no aparece en el reporte, con aviso explícito en vez
+  de mostrar cero), `tuition_installments_count` (default `10.5`), `tuition_due_day` (default `1`),
+  `tuition_grace_days` (default `5`), `late_fee_percent` (default `5.00` -- mismo valor que ya
+  tenía la config del proyecto n8n legado, `db/configuracion_sistema.csv`, confirmado por el
+  usuario como el porcentaje real a usar). Backfill idempotente (por nombre, sin pisar si ya se
+  configuró a mano) de los 4 montos reales del colegio piloto: Párvulos RD$3,500, Inicial
+  RD$3,900, Primaria RD$4,100, Secundaria RD$4,500.
+- `students.tuition_override_amount`: monto de mensualidad propio por estudiante, para becas
+  (casos mínimos, el usuario los suministrará después) -- NULL usa el monto del nivel del colegio.
+- `calculate_receivable_status(student_id, as_of date)`: genera las cuotas del año escolar
+  actual (`school_years.is_current`) desde su `start_date`, con el monto del nivel del estudiante
+  (o su beca) menos el descuento por hermanos ya existente (reutiliza
+  `calculate_sibling_discount()`, migración 20260718 -- no se duplicó esa lógica), y las compara
+  contra lo cobrado de verdad, cuota por cuota en orden (FIFO): un pago parcial no libera la cuota
+  más vieja, solo la reduce. `tuition_installments_count` fraccionario (ej. `10.5`) genera una
+  cuota final a esa fracción del monto mensual completo. Nunca escribe nada -- es 100% cálculo,
+  `security invoker` (respeta RLS igual que `calculate_sibling_discount`).
+- `list_school_receivables(school_id, as_of)`: la misma función anterior aplicada a todos los
+  inscritos de un colegio en una sola llamada (`cross join lateral`), para que la pantalla de
+  Cuentas por Cobrar no tenga que llamar la RPC estudiante por estudiante.
+- **Verificado con datos reales antes de escribir el archivo final**, no solo revisado: se levantó
+  un Postgres local (`sudo service postgresql start`, ya viene instalado en este entorno) con un
+  esquema espejo mínimo de las tablas reales + una copia fiel de `calculate_sibling_discount()`, se
+  aplicó el archivo de migración tal cual (detectó que las funciones compilan sin errores de
+  sintaxis) y se corrieron 8 escenarios: sin pagar, 3 hermanos con descuento acumulado sobre el
+  monto de su nivel, ya pagado (no debe aparecer vencido), colegio sin mensualidad configurada
+  (`sin_configurar`), pago parcial (la cuota sigue vencida), vista en el futuro (varias cuotas
+  acumuladas), dentro de los 5 días de gracia (`corriente`), y la cuota parcial de fin de año
+  (10.5 -- la 11va cuota sale exactamente a la mitad). Los 8 dieron el resultado esperado.
+  **Lo que esto NO verifica**: RLS real contra roles de producción, ni el flujo desde la interfaz
+  contra la base real -- sigue sin haber credenciales de Supabase en este entorno, mismo bloqueo de
+  siempre.
+
+**Aplicada y verificada en producción (2026-08-27, sesión siguiente)**: el usuario y su colega
+corrieron el SQL completo en el SQL Editor de Supabase; se verificó con un PAT de un solo uso
+(`sbp_...`, no guardado en el repo, se le indicó rotarlo) vía la Management API
+(`POST /v1/projects/{ref}/database/query`) que las 9 columnas nuevas, `students.tuition_override_amount`
+y las 3 funciones existen, y con `list_school_receivables()` contra datos reales que el cálculo
+funciona de punta a punta (77 estudiantes, todos con la cuota de agosto vencida a 26 días, tramo
+`20-30`, referencia `ago2026` -- coherente con la fecha real de verificación).
+
+**Bug real encontrado y corregido en el camino**: el backfill de las 4 mensualidades del colegio
+piloto (`update schools ... where name = 'Gran Manantial de Sabiduría'`) no encontró ninguna fila
+-- el nombre real en producción es **"Centro Educativo Gran Manantial de Sabiduría"** (con el
+prefijo "Centro Educativo"; el resto de este documento usa el nombre corto como apodo, pero la
+columna `schools.name` real lo lleva completo). Las columnas quedaron en `null` silenciosamente
+hasta que se detectó al listar `schools` completo. Corregido con un `update` puntual contra
+producción (mismo valor, ya idempotente) y en el archivo de la migración para que no vuelva a
+pasar en otro entorno. `school_years` sí tenía ya una fila `is_current=true` para 2026-2027
+(`start_date 2026-08-01`), así que no hizo falta cargarla.
+
+**Corrección de negocio real, encontrada al probar contra datos reales (2026-08-27, mismo día,
+push directo del usuario a la rama del PR)**: dos supuestos de la migración original resultaron
+incorrectos, confirmados con el reglamento de familia del colegio.
+
+1. **El corte de "corriente" no es el día `tuition_grace_days` del MISMO mes de la cuota** -- eso
+   hacía que la cuota de agosto ya apareciera vencida desde el 6 de agosto (gestión de cobro falsa
+   el mismo mes en que se genera la cuota). La regla real: cada cuota está en corriente hasta el
+   día `tuition_grace_days` (5) del mes **SIGUIENTE** al de la cuota -- ej. la cuota de agosto está
+   en corriente hasta el 5 de septiembre, y el 6 de septiembre ya tiene 1 día vencido. Se agregó el
+   tramo **"1-5"** a la tabla de antigüedad (antes el primero era "6-9", dejando esos primeros 5
+   días de mora bajo el nuevo corte sin clasificar).
+2. **La cuota parcial (la fracción de `tuition_installments_count`, ej. el `.5` de `10.5`) va en
+   AGOSTO (la primera cuota), no en junio (la última)** como asumió la migración original -- el
+   período 2026-2027 arrancó el 17 de agosto de 2026 (`school_years.start_date` corregido de
+   `2026-08-01` a `2026-08-17`), así que agosto es un mes parcial de clases. Sigue siendo un 50%
+   plano del monto mensual, sin prorratear por día exacto de inicio -- decisión de alcance ya
+   confirmada, no un cálculo de días.
+
+Corregido en `20260827100000_accounts_receivable_fix_grace_cutoff.sql` (nueva migración, la
+anterior no se tocó -- `create or replace` de `calculate_receivable_status`, comentario de columna
+actualizado en `schools.tuition_grace_days`, y el `update` de `school_years.start_date` acotado por
+nombre real + solo si seguía en el valor por defecto, para no pisar una fecha ya corregida a mano).
+`ReceivablesTable.tsx` también ganó un buscador por estudiante/familia dentro de la propia pantalla
+(el buscador global del panel navega fuera de Tesorería en vez de filtrar esta tabla). Verificado
+`tsc --noEmit` limpio tras el cambio.
+
+**Confirmado con evidencia real que esta migración sí se aplicó y se probó en vivo** (no solo
+supuesto): el siguiente commit a la rama (`20260827110000_invoices_student_index.sql`) documenta
+un `"canceling statement due to statement timeout"` real al abrir
+`/dashboard/tesoreria/cuentas-por-cobrar` en producción -- eso solo pasa si la pantalla ya estaba
+corriendo contra las funciones corregidas. Causa: `calculate_receivable_status()` consulta
+`invoices where student_id = ...` y `list_school_receivables()` la llama una vez por cada
+estudiante inscrito (`cross join lateral`) -- sin índice en `invoices.student_id`, cada llamada
+era un escaneo completo de la tabla, repetido por estudiante. Los índices existentes de `invoices`
+(`school_id`, `family_id`, `due_date`) no cubrían esta consulta. Fix: `create index if not exists
+idx_invoices_student on invoices(student_id) where deleted_at is null` -- mismo patrón de índice
+parcial que ya usaban los otros tres.
+
+**Pantalla nueva** `/dashboard/tesoreria/cuentas-por-cobrar` (mismo gate `canAccess(role,
+'tesoreria')` que el resto del módulo -- no se creó un permiso nuevo, Secretaría/Recepción ya lo
+alcanza igual que el resto de Tesorería):
+- Filtro por nivel, por curso (mismo texto libre de `grade_level`) y por nombre de estudiante/
+  familia (buscador local a esta pantalla, agregado el 2026-08-27), tarjetas de resumen (total
+  vencido, estudiantes vencidos, familias afectadas), tabla con los 7 tramos de antigüedad
+  (1-5, 6-9, 10-14, 15-19, 20-30, 31-60, 61+ -- el tramo "1-5" se agregó en la corrección del corte
+  de gracia, ver arriba) -- "corriente" (dentro de los días de gracia del mes siguiente a cada
+  cuota) nunca aparece en la tabla, solo cuenta para el filtro. Aviso aparte (no oculto) para
+  estudiantes cuyo nivel no tiene mensualidad configurada, con enlace directo a Configuración.
+- **Referencia**: 3 primeras letras del mes en español + año de la cuota vencida más antigua (ej.
+  `ago2026`), calculada en la misma función SQL. **Recargo**: botón "Generar recargo" -- crea una
+  factura real (única acción de esta pantalla que escribe algo) con descripción `Recargo por mora —
+  Rec-<mes actual><año actual>` (ej. `Rec-ago2026` si se genera en agosto, sea cual sea el mes de
+  la cuota vencida -- "mes en curso" se interpretó como el mes en que se aplica el recargo, no el
+  de la cuota vieja), por el `late_fee_percent` configurado sobre el monto vencido. Nunca automático
+  -- siempre requiere que el staff lo dispare viendo la deuda en pantalla, con confirmación.
+- **Aviso de vencimiento**: botón "Enviar aviso" -- reutiliza `notifyGuardianByEmail`/
+  `notify-message` (el mismo mecanismo ya usado por Mensajes directos y Comunicados urgentes), con
+  un mensaje que invita a pagar antes de que se aplique el recargo -- no aplica ningún cargo.
+- Configuración de los 4 montos por nivel + cuotas/día de vencimiento/gracia/% de recargo agregada
+  a `OperationsForm.tsx` (`/dashboard/colegio`, pestaña Operación), mismo patrón visual que el
+  descuento por hermanos.
+
+**Limitación conocida, no resuelta esta sesión**: "lo cobrado" se calcula sumando solo las
+facturas con `student_id` explícito (concepto "Mensualidad", `status='pagado'`) -- una factura de
+"toda la familia" (sin `student_id`, ver la nota de descuento por hermanos más arriba) no se puede
+atribuir a un hijo en particular, así que **no cuenta** como cobrado en este reporte. Si Gran
+Manantial de Sabiduría sigue facturando mensualidad por familia completa en vez de por estudiante,
+Cuentas por Cobrar mostrará más deuda de la real para esas familias. No se inventó una heurística
+de reparto (dividir entre hermanos) a propósito -- sería fabricar un dato financiero. Recomendación
+pendiente de confirmar con el usuario: facturar mensualidad siempre por estudiante individual
+(la opción ya existe en "Generar factura").
+
+**Fase 2 -- construida el 2026-08-27 (push directo del usuario a la rama del PR, sin pasar por esta
+sesión)**: un tutor puro (`role === 'guardian'`, nunca un perfil de doble rol staff+tutor) con algún
+hijo inscrito cuya cuota más vieja está en el tramo `61+` queda confinado a `/dashboard/pagos`, con
+un aviso rojo fijo arriba y el menú lateral reducido a un solo enlace (`Sidebar.tsx`, rol sintético
+`guardian_blocked`). Nunca aplica al estudiante, por ley. La lógica de "¿está bloqueado?"
+(`checkGuardianOverdueBlock(guardianId)`, que llama a `calculate_receivable_status()` una vez por
+cada hijo inscrito de la familia del tutor vía cliente `admin` -- esas tablas no tienen RLS para
+tutores) vive en un módulo compartido nuevo, `web/src/lib/receivables/guardianBlock.ts`.
+
+**Bug real encontrado en producción y corregido el mismo día**: la primera versión hacía el
+`redirect()` duro dentro de `dashboard/layout.tsx` (un Server Component), usando un header
+`x-pathname` inyectado por `proxy.ts` para saber si ya estaba en `/dashboard/pagos`. Al probarlo en
+vivo, un tutor bloqueado quedaba con la pantalla en blanco en un bucle infinito de refetch RSC,
+curable solo con un recargo manual de la página -- un `redirect()` lanzado desde dentro del árbol
+de Server Components durante la navegación de cliente que dispara `LoginForm.tsx`
+(`router.push` + `router.refresh()`) entra en conflicto con cómo el App Router resuelve esa
+redirección. Corregido moviendo la redirección dura al middleware (`proxy.ts`): ahí se resuelve con
+un `NextResponse.redirect()` (un 307 HTTP normal, antes de que arranque el árbol de RSC), consultando
+`users_profiles` solo para peticiones a `/dashboard/*` que no sean ya `/dashboard/pagos`. El header
+`x-pathname` que se había agregado para esto ya no existe -- se revirtió junto con el resto del
+enfoque viejo. `dashboard/layout.tsx` sigue llamando a `checkGuardianOverdueBlock()`, pero ahora
+solo para decidir el banner/menú restringido de la página en la que el middleware ya decidió
+dejarlo entrar, nunca para redirigir. Revisado por esta sesión tras el push (no escrito aquí):
+`tsc --noEmit`, `lint` y `next build` completos limpios.
+
+**Pendiente para cerrar esta tarea por completo**, en orden:
+1. ~~Aplicar la migración a producción~~ -- hecho y verificado el 2026-08-27 (ver arriba).
+2. ~~Cargar `school_years` con una fila `is_current = true`~~ -- ya existía (`2026-2027`,
+   `start_date 2026-08-01`).
+3. Probar en vivo desde la interfaz (`/dashboard/tesoreria/cuentas-por-cobrar`) con un estudiante
+   real: enviar un aviso de verdad y confirmar que llega, generar un recargo de prueba y confirmar
+   el NCF/factura, luego decidir si se anula esa factura de prueba o se deja como registro real --
+   lo verificado hasta ahora fue directo por SQL (Management API), no desde la pantalla.
+4. ~~Decidir con el usuario la Fase 2~~ -- construida (ver arriba); falta solo probarla en vivo con
+   un tutor real en mora de 61+ días. Sigue abierto el punto de facturar mensualidad por estudiante
+   en vez de por familia completa.
+5. Cuando el usuario defina la lista de becas, cargar `students.tuition_override_amount` para esos
+   casos (columna ya lista, sin migración nueva).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -2062,6 +2257,18 @@ cualquier pendiente de migración de este archivo.
     al usuario y no vive en el repo. **Quedan tres cabos sueltos menores**:
     el correo de Orlando es un marcador, 6to de Primaria no tiene docente
     titular, y `teacher_assignments.category` sigue todo en `'regular'`.
+14. **Cuentas por Cobrar (deuda implícita por antigüedad)** — ~~código y
+    migración listos~~ **aplicada y verificada en producción el 2026-08-27**
+    (ver sección "Cuentas por Cobrar" más arriba): las 9 columnas nuevas,
+    `students.tuition_override_amount` y las 3 funciones existen, y
+    `list_school_receivables()` ya devuelve deuda real de los 77 estudiantes
+    inscritos. Se corrigió en el camino un bug real (el backfill de
+    mensualidades no encontraba el colegio piloto por el nombre completo
+    real, "Centro Educativo Gran Manantial de Sabiduría"). Pendiente:
+    probar el flujo completo desde `/dashboard/tesoreria/cuentas-por-cobrar`
+    (no solo por SQL), y decidir con el usuario la Fase 2 (redirección a
+    Pagos a los +60 días) y si migrar la facturación de mensualidad a
+    Alegra-al-momento-del-cobro para evitar duplicidad de NCF/e-CF con el POS.
 ### Dominios confirmados
 
 - App / producciÃ³n: `educacionmanantial.com`

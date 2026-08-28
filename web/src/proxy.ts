@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
 
 /**
  * Middleware de Autenticación — MentorIApp
@@ -12,6 +13,8 @@ import { NextResponse, type NextRequest } from 'next/server'
  *    e intenta acceder a /login o /registro.
  */
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -37,8 +40,6 @@ export async function proxy(request: NextRequest) {
 
   // Refrescar la sesión (importante para tokens expirados)
   const { data: { user } } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
 
   // Rutas públicas que NO requieren autenticación.
   // OJO: '/' se compara con igualdad exacta, nunca con startsWith, porque
@@ -68,6 +69,35 @@ export async function proxy(request: NextRequest) {
     const dashboardUrl = request.nextUrl.clone()
     dashboardUrl.pathname = '/dashboard'
     return NextResponse.redirect(dashboardUrl)
+  }
+
+  // Fase 2 de Cuentas por Cobrar: un tutor (guardian) con algún hijo con más
+  // de 60 días de mora queda confinado a /dashboard/pagos. Se resuelve aquí
+  // (middleware, un 307 HTTP normal, antes de que arranque el árbol de
+  // Server Components) y NO dentro de dashboard/layout.tsx -- un redirect()
+  // lanzado desde dentro de ese árbol durante la navegación de cliente que
+  // dispara LoginForm.tsx (router.push + router.refresh()) entra en
+  // conflicto con cómo el App Router resuelve esa redirección: se
+  // reprodujo en producción un bucle infinito de refetch RSC que dejaba al
+  // tutor con la pantalla en blanco, curable solo con un recargo manual.
+  // Consulta el perfil solo cuando hace falta (rutas /dashboard/* que no
+  // sean ya /dashboard/pagos) para no gastar una consulta extra en cada
+  // petición de cada rol.
+  if (user && pathname.startsWith('/dashboard/') && !pathname.startsWith('/dashboard/pagos')) {
+    const { data: profile } = await supabase
+      .from('users_profiles')
+      .select('role, guardian_id')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (profile?.role === 'guardian' && profile.guardian_id) {
+      const isBlocked = await checkGuardianOverdueBlock(profile.guardian_id)
+      if (isBlocked) {
+        const pagosUrl = request.nextUrl.clone()
+        pagosUrl.pathname = '/dashboard/pagos'
+        return NextResponse.redirect(pagosUrl)
+      }
+    }
   }
 
   return supabaseResponse
