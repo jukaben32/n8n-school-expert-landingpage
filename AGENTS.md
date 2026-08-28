@@ -2032,10 +2032,21 @@ de reparto (dividir entre hermanos) a propósito -- sería fabricar un dato fina
 pendiente de confirmar con el usuario: facturar mensualidad siempre por estudiante individual
 (la opción ya existe en "Generar factura").
 
-**Fase 2 (pedida explícitamente, no construida)**: redirigir a los tutores con deuda vencida a más
-de 60 días directo a Pagos al entrar al Portal Familiar, inhabilitando el resto -- nunca al
-estudiante. Queda anotada para cuando el usuario confirme que quiere activarla (el propio usuario
-la pidió como "segunda etapa" para no arriesgar el lanzamiento).
+**Fase 2 -- construida el 2026-08-27 (push directo del usuario a la rama del PR, sin pasar por esta
+sesión)**: un tutor puro (`role === 'guardian'`, nunca un perfil de doble rol staff+tutor) con algún
+hijo inscrito cuya cuota más vieja está en el tramo `61+` se redirige siempre a `/dashboard/pagos`
+al cargar cualquier página de `/dashboard/*`, con un aviso rojo fijo arriba y el menú lateral
+reducido a un solo enlace (`Sidebar.tsx`, rol sintético `guardian_blocked`). Nunca aplica al
+estudiante, por ley -- el chequeo vive en `dashboard/layout.tsx`
+(`checkGuardianOverdueBlock(guardianId)`), que llama a `calculate_receivable_status()` una vez por
+cada hijo inscrito de la familia del tutor vía cliente `admin` (esas tablas no tienen RLS para
+tutores) y solo usa el resultado para decidir la redirección server-side, nunca lo expone al
+cliente. `proxy.ts` ahora reenvía la ruta actual a los Server Components vía el header `x-pathname`
+(no existía antes) para que el layout sepa si ya está en `/dashboard/pagos` sin depender de un hook
+de cliente. Revisado por esta sesión tras el push (no escrito aquí): `tsc --noEmit`, `lint` y
+`next build` completos limpios, y el diseño (guardián puro vs. doble rol, redirect server-side,
+nunca toca al estudiante) es consistente con el resto del proyecto. **Sin probar en vivo todavía**
+con una cuenta de tutor real que de verdad tenga 61+ días de mora.
 
 **Pendiente para cerrar esta tarea por completo**, en orden:
 1. ~~Aplicar la migración a producción~~ -- hecho y verificado el 2026-08-27 (ver arriba).
@@ -2045,8 +2056,9 @@ la pidió como "segunda etapa" para no arriesgar el lanzamiento).
    real: enviar un aviso de verdad y confirmar que llega, generar un recargo de prueba y confirmar
    el NCF/factura, luego decidir si se anula esa factura de prueba o se deja como registro real --
    lo verificado hasta ahora fue directo por SQL (Management API), no desde la pantalla.
-4. Decidir con el usuario la Fase 2 (redirección a Pagos) y el punto abierto de facturar
-   mensualidad por estudiante en vez de por familia completa.
+4. ~~Decidir con el usuario la Fase 2~~ -- construida (ver arriba); falta solo probarla en vivo con
+   un tutor real en mora de 61+ días. Sigue abierto el punto de facturar mensualidad por estudiante
+   en vez de por familia completa.
 5. Cuando el usuario defina la lista de becas, cargar `students.tuition_override_amount` para esos
    casos (columna ya lista, sin migración nueva).
 
