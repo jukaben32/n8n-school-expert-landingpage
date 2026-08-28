@@ -12,7 +12,16 @@ import { NextResponse, type NextRequest } from 'next/server'
  *    e intenta acceder a /login o /registro.
  */
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const { pathname } = request.nextUrl
+
+  // Reenvía la ruta actual a los Server Components vía header -- lo usa
+  // dashboard/layout.tsx para saber si ya está en /dashboard/pagos antes
+  // de decidir si redirige a un tutor con mora de más de 60 días (Fase 2
+  // de Cuentas por Cobrar), sin depender de un hook de cliente.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
+
+  let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +35,7 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -37,8 +46,6 @@ export async function proxy(request: NextRequest) {
 
   // Refrescar la sesión (importante para tokens expirados)
   const { data: { user } } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
 
   // Rutas públicas que NO requieren autenticación.
   // OJO: '/' se compara con igualdad exacta, nunca con startsWith, porque

@@ -131,6 +131,13 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
   ] }],
+  // Tutor con algún hijo con mora de más de 60 días (Fase 2 de Cuentas por
+  // Cobrar) -- dashboard/layout.tsx ya redirige a /dashboard/pagos en cada
+  // navegación, esto solo evita mostrar en el menú opciones a las que de
+  // todas formas será redirigido si las toca. Nunca se aplica al estudiante.
+  guardian_blocked: [{ items: [
+    { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
+  ] }],
   student: [{ items: [
     { href: '/dashboard/academia',        label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
