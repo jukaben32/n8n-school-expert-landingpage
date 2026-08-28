@@ -1,50 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
 import { MobileNavProvider } from '@/components/dashboard/MobileNavContext'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { exitSchoolView } from './plataforma/actions'
+import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
 
-/**
- * Fase 2 de Cuentas por Cobrar (pedida explícitamente por el usuario, "para
- * no arriesgar el lanzamiento" -- ver AGENTS.md): un tutor con algún hijo
- * cuya cuota más vieja lleva más de 60 días vencida (tramo "61+" de
- * `calculate_receivable_status`) se redirige siempre a /dashboard/pagos y
- * pierde el resto del menú, hasta que se ponga al día. Nunca se aplica al
- * estudiante (rol `student`), solo al tutor (`guardian`) -- por ley el
- * colegio no puede negarle acceso académico al alumno por deuda de los
- * padres. Usa el cliente admin (service_role) porque calculate_receivable_status
- * lee schools/school_years/billing_concepts, tablas sin política RLS para
- * tutores -- el resultado nunca se expone al cliente, solo decide la
- * redirección server-side.
- */
-async function checkGuardianOverdueBlock(guardianId: string): Promise<boolean> {
-  const admin = createAdminClient()
-
-  const { data: guardian } = await admin
-    .from('guardians')
-    .select('family_id')
-    .eq('id', guardianId)
-    .single()
-  if (!guardian?.family_id) return false
-
-  const { data: students } = await admin
-    .from('students')
-    .select('id')
-    .eq('family_id', guardian.family_id)
-    .eq('enrollment_status', 'inscrito')
-    .is('deleted_at', null)
-  if (!students || students.length === 0) return false
-
-  const results = await Promise.all(
-    students.map((s) => admin.rpc('calculate_receivable_status', { p_student_id: s.id }).single())
-  )
-
-  return results.some((r) => (r.data as { aging_bucket?: string } | null)?.aging_bucket === '61+')
-}
+// La redirección dura (Fase 2 de Cuentas por Cobrar) vive en el middleware
+// (proxy.ts), no aquí -- un redirect() lanzado desde un Server Component
+// durante la navegación de cliente que dispara LoginForm.tsx
+// (router.push + router.refresh()) entra en conflicto con cómo el App
+// Router resuelve esa redirección: se comprobó en producción que deja al
+// tutor bloqueado con la pantalla en blanco, atrapado en un bucle infinito
+// de refetch RSC que solo se cura con un recargo manual de la página.
+// Aquí solo se usa el resultado para el banner y el menú restringido de la
+// página en la que el middleware ya decidió dejarlo entrar (siempre
+// /dashboard/pagos si está bloqueado).
 
 /**
  * Layout del Dashboard — MentorIApp
@@ -78,13 +50,6 @@ export default async function DashboardLayout({
   const isBlockedByOverdue = role === 'guardian' && profile?.guardian_id
     ? await checkGuardianOverdueBlock(profile.guardian_id)
     : false
-
-  if (isBlockedByOverdue) {
-    const pathname = (await headers()).get('x-pathname') ?? ''
-    if (!pathname.startsWith('/dashboard/pagos')) {
-      redirect('/dashboard/pagos')
-    }
-  }
 
   // Leads nuevos sin atender, solo relevante para el súper administrador
   let newLeadsCount = 0
