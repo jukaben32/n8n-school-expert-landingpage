@@ -173,12 +173,28 @@ export default function LoginForm() {
               const supabase = createClient()
               const { error: otpError } = await supabase.auth.signInWithOtp({
                 email,
-                options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined }
+                options: {
+                  // shouldCreateUser: false -- este correo debe tener ya una
+                  // cuenta creada por invitación del colegio (personal o
+                  // tutor). Sin esto, cualquiera podía escribir un correo no
+                  // invitado aquí y Supabase le creaba una cuenta nueva y
+                  // vacía en el momento -- sin perfil, sin rol, cayendo por
+                  // defecto en el portal de padres (ver dashboard/layout.tsx).
+                  // Así fue como 2 profesores del colegio terminaron ahí sin
+                  // haber sido invitados todavía.
+                  shouldCreateUser: false,
+                  emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined,
+                },
               })
               if (otpError) throw otpError
               setNotice('Te enviamos un enlace mágico a tu correo. Revísalo para acceder sin contraseña.')
             } catch (e) {
-              setError('No pudimos enviar el enlace mágico. Verifica el correo o inténtalo más tarde.')
+              const message = e instanceof Error ? e.message.toLowerCase() : ''
+              if (message.includes('signups not allowed') || message.includes('user not found')) {
+                setError('Ese correo todavía no tiene una cuenta. Pide a tu colegio que te invite primero.')
+              } else {
+                setError('No pudimos enviar el enlace mágico. Verifica el correo o inténtalo más tarde.')
+              }
             }
           }}
           className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary dark:hover:border-accent-light dark:hover:text-accent-light disabled:opacity-60"
