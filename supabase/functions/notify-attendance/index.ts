@@ -37,6 +37,7 @@ interface AttendanceRecord {
   id: string
   school_id: string
   student_id: string
+  subject_id: string | null
   status: 'ausente' | 'tardanza' | 'presente' | 'justificado'
   date: string
   notes: string | null
@@ -119,6 +120,18 @@ Deno.serve(async (req: Request) => {
     .eq('id', record.school_id)
     .single()
 
+  // Nombre de la materia (null en registros históricos previos a la
+  // migración de asistencia por materia -- el mensaje queda genérico ahí)
+  let subjectName: string | null = null
+  if (record.subject_id) {
+    const { data: subject } = await supabase
+      .from('subjects')
+      .select('name')
+      .eq('id', record.subject_id)
+      .single()
+    subjectName = subject?.name ?? null
+  }
+
   // Guardians del estudiante (priorizamos el primario)
   const { data: guardianLinks } = await supabase
     .from('student_guardians')
@@ -162,8 +175,8 @@ Deno.serve(async (req: Request) => {
       weekday: 'long', day: 'numeric', month: 'long'
     })
 
-    const prompt = `Eres el sistema de comunicación de ${context.school_name}. 
-Redacta un mensaje breve (máximo 3 oraciones) y cálido para notificar a ${primaryGuardian.first_name} ${primaryGuardian.last_name} sobre la ${statusText} de su hijo/a ${context.first_name} ${context.last_name} el día ${dateFormatted}.
+    const prompt = `Eres el sistema de comunicación de ${context.school_name}.
+Redacta un mensaje breve (máximo 3 oraciones) y cálido para notificar a ${primaryGuardian.first_name} ${primaryGuardian.last_name} sobre la ${statusText} de su hijo/a ${context.first_name} ${context.last_name} el día ${dateFormatted}${subjectName ? ` en la clase de ${subjectName}` : ''}.
 ${record.notes ? `Nota adicional del colegio: "${record.notes}"` : ''}
 El tono debe ser profesional pero empático. No uses emojis. No incluyas saludos con "Estimado/a". Empieza directamente con la notificación.`
 
@@ -196,7 +209,8 @@ El tono debe ser profesional pero empático. No uses emojis. No incluyas saludos
   // Fallback si la IA no está disponible o falla
   if (!aiMessage) {
     const statusText = record.status === 'ausente' ? 'ausencia' : 'tardanza'
-    aiMessage = `Le informamos que ${context.first_name} ${context.last_name} registró una ${statusText} el día de hoy en ${context.school_name}. Por favor comuníquese con la secretaría si tiene alguna consulta.`
+    const subjectText = subjectName ? ` en la clase de ${subjectName}` : ''
+    aiMessage = `Le informamos que ${context.first_name} ${context.last_name} registró una ${statusText}${subjectText} el día de hoy en ${context.school_name}. Por favor comuníquese con la secretaría si tiene alguna consulta.`
   }
 
   // ── 4. ACCIÓN ───────────────────────────────────────────────────────────────
@@ -302,6 +316,7 @@ El tono debe ser profesional pero empático. No uses emojis. No incluyas saludos
     record_id: record.id,
     after_state: {
       student: `${context.first_name} ${context.last_name}`,
+      subject: subjectName,
       status: record.status,
       notified_to: primaryGuardian.phone || primaryGuardian.email,
       channel: notificationChannel,

@@ -268,15 +268,17 @@ export async function gatherFamilyContext(admin: AdminClient, schoolId: string, 
     return { ok: false, error: 'No se encontró la familia.' }
   }
 
+  type AttendanceRow = { student_id: string; date: string; status: string; subject: { name: string } | null }
   const studentIds = (studentsRes.data ?? []).map((s) => s.id)
-  const { data: attendanceRows } = studentIds.length
+  const { data: attendanceRowsRaw } = studentIds.length
     ? await admin
         .from('attendance')
-        .select('student_id, date, status')
+        .select('student_id, date, status, subject:subjects(name)')
         .in('student_id', studentIds)
         .order('date', { ascending: false })
         .limit(30)
-    : { data: [] as { student_id: string; date: string; status: string }[] }
+    : { data: [] as AttendanceRow[] }
+  const attendanceRows = (attendanceRowsRaw ?? []) as unknown as AttendanceRow[]
 
   const schoolName = getSchoolOrPlatformName(schoolRes.data?.name)
 
@@ -285,9 +287,9 @@ export async function gatherFamilyContext(admin: AdminClient, schoolId: string, 
     .join('\n') || 'No hay estudiantes registrados en esta familia.'
 
   const studentNameById = new Map((studentsRes.data ?? []).map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
-  const attendanceText = (attendanceRows ?? [])
+  const attendanceText = attendanceRows
     .slice(0, 15)
-    .map((a) => `- ${studentNameById.get(a.student_id) ?? 'estudiante'}: ${a.date} — ${a.status}`)
+    .map((a) => `- ${studentNameById.get(a.student_id) ?? 'estudiante'}: ${a.date} — ${a.status}${a.subject?.name ? ` (${a.subject.name})` : ''}`)
     .join('\n') || 'No hay registros de asistencia recientes.'
 
   const invoicesText = (invoicesRes.data ?? [])

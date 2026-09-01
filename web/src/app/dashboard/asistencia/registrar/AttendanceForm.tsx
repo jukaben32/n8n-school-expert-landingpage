@@ -8,6 +8,7 @@ import DateInputES from '@/components/DateInputES'
 type AttendanceStatus = 'presente' | 'ausente' | 'tardanza' | 'justificado'
 
 interface Student { id: string; first_name: string; last_name: string }
+interface Subject { id: string; name: string }
 
 interface StudentRow {
   studentId: string
@@ -17,6 +18,7 @@ interface StudentRow {
 
 interface AttendanceFormProps {
   students: Student[]
+  subjects: Subject[]
   defaultDate: string
   recorderProfileId: string
   schoolId: string
@@ -31,15 +33,18 @@ const statusOptions: { value: AttendanceStatus; label: string; color: string }[]
 
 /**
  * AttendanceForm — Formulario de registro de asistencia para el staff.
- * Al guardar, inserta en la tabla `attendance` de Supabase.
+ * Al guardar, inserta en la tabla `attendance` de Supabase, una fila por
+ * alumno + fecha + materia (un profesor puede pasar lista de varias
+ * materias el mismo día sin pisar los registros de otras clases).
  * El trigger de BD invoca automáticamente la Edge Function notify-attendance
  * para ausencias y tardanzas.
  */
 export default function AttendanceForm({
-  students, defaultDate, recorderProfileId, schoolId
+  students, subjects, defaultDate, recorderProfileId, schoolId
 }: AttendanceFormProps) {
   const router = useRouter()
   const [date, setDate] = useState(defaultDate)
+  const [subjectId, setSubjectId] = useState(subjects[0]?.id ?? '')
   const [rows, setRows] = useState<StudentRow[]>(
     students.map((s) => ({ studentId: s.id, status: 'presente', notes: '' }))
   )
@@ -63,6 +68,11 @@ export default function AttendanceForm({
   }, {} as Record<string, number>)
 
   async function handleSave() {
+    if (!subjectId) {
+      setError('Selecciona la materia antes de guardar.')
+      return
+    }
+
     setSaving(true)
     setError(null)
     const supabase = createClient()
@@ -72,14 +82,17 @@ export default function AttendanceForm({
       student_id: r.studentId,
       recorded_by: recorderProfileId,
       date,
+      subject_id: subjectId,
       status: r.status,
       notes: r.notes || null,
     }))
 
-    // Upsert: si ya existe un registro para ese estudiante+fecha, lo actualiza
+    // Upsert: si ya existe un registro para ese estudiante+fecha+materia, lo
+    // actualiza. Al incluir subject_id en el onConflict, pasar lista de otra
+    // materia el mismo día ya no pisa el registro de la materia anterior.
     const { error: dbError } = await supabase
       .from('attendance')
-      .upsert(records, { onConflict: 'student_id,date' })
+      .upsert(records, { onConflict: 'student_id,date,subject_id' })
 
     if (dbError) {
       setError('Error al guardar. Por favor intenta de nuevo.')
@@ -93,17 +106,36 @@ export default function AttendanceForm({
 
   return (
     <div className="space-y-5">
-      {/* Selector de fecha */}
-      <div className="flex items-center gap-4">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Fecha:
-        </label>
-        <DateInputES
-          id="attendance-date"
-          value={date}
-          onChange={(v) => setDate(v && v > defaultDate ? defaultDate : v)}
-          fieldClassName="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+      {/* Selector de fecha y materia */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Fecha:
+          </label>
+          <DateInputES
+            id="attendance-date"
+            value={date}
+            onChange={(v) => setDate(v && v > defaultDate ? defaultDate : v)}
+            fieldClassName="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="attendance-subject" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Materia:
+          </label>
+          <select
+            id="attendance-subject"
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {subjects.length === 0 && <option value="">No hay materias configuradas</option>}
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Resumen del día */}
@@ -191,7 +223,7 @@ export default function AttendanceForm({
         id="btn-guardar-asistencia"
         type="button"
         onClick={handleSave}
-        disabled={saving || saved}
+        disabled={saving || saved || !subjectId}
         className="w-full flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 text-sm transition shadow-glow disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {saved ? (

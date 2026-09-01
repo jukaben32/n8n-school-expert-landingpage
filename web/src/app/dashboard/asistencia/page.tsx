@@ -56,14 +56,14 @@ export default async function AsistenciaPage() {
     whatsappConnected = connection?.status === 'connected'
   }
 
-  let records: { id: string; date: string; status: string; student: { first_name: string; last_name: string } | null; notified_at: string | null }[] = []
+  let records: { id: string; date: string; status: string; student: { first_name: string; last_name: string } | null; subject: { name: string } | null; notified_at: string | null }[] = []
   let recordsError: { message: string } | null = null
 
   if (isStaff) {
     // Staff: registros de asistencia de HOY en este colegio
     const { data, error } = await supabase
       .from('attendance')
-      .select('id, date, status, notified_at, student:students(first_name, last_name)')
+      .select('id, date, status, notified_at, student:students(first_name, last_name), subject:subjects(name)')
       .eq('school_id', schoolId)
       .eq('date', today)
       .order('created_at', { ascending: false })
@@ -82,7 +82,7 @@ export default async function AsistenciaPage() {
 
     const { data, error } = await supabase
       .from('attendance')
-      .select('id, date, status, notified_at, student:students(first_name, last_name)')
+      .select('id, date, status, notified_at, student:students(first_name, last_name), subject:subjects(name)')
       .in('student_id', studentIdsData?.map((r: { student_id: string }) => r.student_id) ?? [])
       .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
       .order('date', { ascending: false })
@@ -151,6 +151,7 @@ export default async function AsistenciaPage() {
             <thead className="border-b" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
               <tr>
                 <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Estudiante</th>
+                <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Materia</th>
                 <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Fecha</th>
                 <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Estado</th>
                 <th className="text-left px-4 py-3 font-barlow uppercase tracking-wide text-xs" style={{ color: 'var(--dash-text-muted)' }}>Notificado</th>
@@ -163,6 +164,9 @@ export default async function AsistenciaPage() {
                   <tr key={r.id} className="transition hover:bg-white/5">
                     <td className="px-4 py-3 font-medium" style={{ color: 'var(--dash-text)' }}>
                       {r.student?.first_name} {r.student?.last_name}
+                    </td>
+                    <td className="px-4 py-3" style={{ color: 'var(--dash-text-muted)' }}>
+                      {r.subject?.name ?? 'General'}
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--dash-text-muted)' }}>
                       {new Date(r.date).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })}
