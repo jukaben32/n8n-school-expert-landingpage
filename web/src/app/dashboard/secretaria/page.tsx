@@ -38,8 +38,12 @@ function isoDate(d: Date): string {
  * Centro de Control — Vista principal para administradores, dirección y recepción.
  * Rediseño agosto 2026 (Claude Design), corregido contra el código fuente
  * real del diseño (no solo las capturas) el 22 de agosto. El selector
- * Hoy/Semana/Mes mueve la ventana de "Estudiantes inscritos" y "Cobrado" --
- * el resto de las tarjetas usan ventanas fijas, tal como dice su título.
+ * Hoy/Semana/Mes mueve la ventana de "Estudiantes inscritos", "Cobrado" y
+ * "Asistencia" (esta última hasta el 2026-09-01 tenía una ventana fija de 7
+ * días sin importar el selector -- confundía porque el selector está justo
+ * encima de la tarjeta). El gráfico de "Asistencia diaria · últimas 4
+ * semanas" más abajo sí sigue siendo una ventana fija a propósito -- lo
+ * dice su propio título.
  *
  * "Lectura del día" del diseño original estaba narrada por IA con datos de
  * ejemplo -- aquí es una versión real pero más simple: 1-2 hallazgos
@@ -72,8 +76,6 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
 
   const now = new Date()
   const todayIso = isoDate(now)
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
   const twentyEightDaysAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
   // El período escolar de este colegio inicia el 17 de agosto y corre hasta
   // junio -- julio es de vacaciones colectivas, sin cobro. Si "ahora" cae
@@ -90,8 +92,8 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     { data: paymentsInRange, error: paymentsRangeError },
     { data: invoicedInRange, error: invoicedRangeError },
     { data: overdueInvoicesRaw, error: overdueError },
-    { data: attendanceWeek, error: attendanceWeekError },
-    { data: attendancePrevWeek, error: attendancePrevError },
+    { data: attendanceInRange, error: attendanceRangeError },
+    { data: attendancePrevRange, error: attendancePrevError },
     { data: attendance4Weeks, error: attendance4WeeksError },
     { data: invoicesYear, error: invoicesYearError },
     { data: last10DaysStudents, error: last10DaysError },
@@ -107,8 +109,8 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     supabase.from('payments').select('amount_paid').eq('school_id', schoolId).gte('paid_at', rangeStart.toISOString()),
     supabase.from('invoices').select('total_amount').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', rangeStart.toISOString()),
     supabase.from('invoices').select('id, total_amount, family_id, due_date, families(name)').eq('school_id', schoolId).eq('status', 'vencido').is('deleted_at', null).order('due_date', { ascending: true }).limit(5),
-    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(sevenDaysAgo)),
-    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(fourteenDaysAgo)).lt('date', isoDate(sevenDaysAgo)),
+    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(rangeStart)),
+    supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(prevStart)).lt('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(twentyEightDaysAgo)),
     supabase.from('invoices').select('status, total_amount, issued_at').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', schoolYearStart.toISOString()),
     supabase.from('students').select('created_at').eq('school_id', schoolId).is('deleted_at', null).gte('created_at', new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString()),
@@ -137,14 +139,17 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   const totalFamilies = new Set((allGuardians ?? []).map((g) => g.family_id as string)).size
   const accessPercent = totalFamilies > 0 ? Math.round((familiesWithAccess.size / totalFamilies) * 100) : 0
 
-  // ── Asistencia (7 días) + delta vs. semana previa ────────────────────
+  // ── Asistencia en el rango seleccionado + delta vs. período anterior de
+  // igual duración ── antes esta tarjeta ignoraba el selector Hoy/Semana/Mes
+  // y siempre mostraba una ventana fija de 7 días, aunque el título del
+  // selector daba a entender que controlaba toda la página.
   function attendancePercent(rows: { status: string }[] | null): number | null {
     const list = rows ?? []
     if (list.length === 0) return null
     return Math.round((list.filter((a) => a.status === 'presente').length / list.length) * 1000) / 10
   }
-  const asistenciaPercent = attendancePercent(attendanceWeek)
-  const asistenciaPrevPercent = attendancePercent(attendancePrevWeek)
+  const asistenciaPercent = attendancePercent(attendanceInRange)
+  const asistenciaPrevPercent = attendancePercent(attendancePrevRange)
   const asistenciaDelta = asistenciaPercent !== null && asistenciaPrevPercent !== null
     ? Math.round((asistenciaPercent - asistenciaPrevPercent) * 10) / 10
     : null
@@ -289,7 +294,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   }
   if (asistenciaDelta !== null && asistenciaDelta <= -1) {
     insights.push({
-      text: `La asistencia bajó ${Math.abs(asistenciaDelta)} puntos esta semana frente a la anterior.`,
+      text: `La asistencia bajó ${Math.abs(asistenciaDelta)} puntos ${rangeLabel} frente al período anterior.`,
       href: '/dashboard/asistencia', action: 'Ver asistencia →',
     })
   }
@@ -331,7 +336,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
         { label: 'familias y acceso', error: guardiansError || accessError },
         { label: 'cobros', error: paymentsRangeError || invoicedRangeError },
         { label: 'cartera vencida', error: overdueError },
-        { label: 'asistencia', error: attendanceWeekError || attendancePrevError || attendance4WeeksError || ausenciasHoyError },
+        { label: 'asistencia', error: attendanceRangeError || attendancePrevError || attendance4WeeksError || ausenciasHoyError },
         { label: 'facturación del año', error: invoicesYearError },
         { label: 'comprobantes', error: comprobantesError },
         { label: 'registros de personal', error: personalPendienteError },
@@ -366,6 +371,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
         attendance={{
           pct: asistenciaPercent !== null ? `${asistenciaPercent}%` : '—',
           delta: asistenciaDelta !== null ? `${asistenciaDelta >= 0 ? '+' : ''}${asistenciaDelta} pts` : 'Sin datos previos',
+          label: RANGE_LABELS[range],
           spark: asistenciaSpark,
           series: asistenciaSeries,
           note: promedio4Semanas !== null

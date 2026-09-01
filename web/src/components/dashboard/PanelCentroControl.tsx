@@ -72,7 +72,7 @@ export type Insight = { text: string; action: string; href?: string }
 export interface PanelProps {
   students?: { total: number; delta: string; spark: number[] }
   families?: { total: number; withAccess: number; pct: number }
-  attendance?: { pct: string; delta: string; spark: number[]; series: number[]; note: string }
+  attendance?: { pct: string; delta: string; spark: number[]; series: number[]; note: string; label: string }
   collected?: { amount: string; pctOfGoal: number }
   overdue?: { amount: string; invoices: number; families: number }
   enrollment?: { enrolled: number; inProcess: number; withdrawn: number }
@@ -94,7 +94,7 @@ const D = {
   students: { total: 486, delta: '+12 este mes', spark: [42, 48, 45, 55, 60, 58, 66, 72, 70, 78, 85, 92] },
   families: { total: 312, withAccess: 274, pct: 88 },
   attendance: {
-    pct: '94.2%', delta: '-1.4 pts',
+    pct: '94.2%', delta: '-1.4 pts', label: '7 días',
     spark: [88, 92, 95, 91, 96, 94, 97, 93, 90, 95, 92, 89],
     series: [96, 95, 97, 94, 93, 95, 96, 94, 92, 95, 96, 93, 91, 94, 95, 96, 94, 88, 92, 95],
     note: 'Promedio 94.2% · mínimo 88.1% el lunes 12',
@@ -217,7 +217,7 @@ export default function PanelCentroControl(p: PanelProps) {
         </div>
 
         <div style={{ ...card, flex: '1 1 180px', minWidth: 0, padding: 16 }}>
-          <div style={kicker}>Asistencia (7 días)</div>
+          <div style={kicker}>Asistencia ({attendance.label})</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginTop: 8 }}>
             <div style={bigNum}>{attendance.pct}</div>
             <div style={{ fontSize: 12, color: C.warning, paddingBottom: 5, whiteSpace: 'nowrap' }}>{attendance.delta}</div>
