@@ -127,12 +127,23 @@ interface DirectMessagesResult {
   error?: string
 }
 
-async function getOrCreateFamilyConversation(
+/**
+ * Busca la conversación de (familia, categoría) sin crearla -- para lecturas
+ * (getFamilyDirectMessages). NO usar getOrCreateFamilyConversation acá: esa
+ * función inserta una fila nueva con solo abrir la pestaña, y
+ * direct_conversations.last_message_at tiene `default now()` -- eso creaba
+ * conversaciones "fantasma" con fecha reciente pero cero mensajes reales,
+ * cada vez que un tutor solo miraba una pestaña (Inglés/Deporte) sin
+ * escribir nada. El staff las veía como "mensaje nuevo sin leer" (por
+ * last_message_at) sin que hubiera ningún mensaje que leer -- caso real
+ * reportado por el colegio el 2026-09-02.
+ */
+async function getFamilyConversationId(
   admin: ReturnType<typeof createAdminClient>,
   schoolId: string,
   familyId: string,
   category: MessageCategory
-) {
+): Promise<string | null> {
   const { data: existing } = await admin
     .from('direct_conversations')
     .select('id')
@@ -140,7 +151,18 @@ async function getOrCreateFamilyConversation(
     .eq('family_id', familyId)
     .eq('category', category)
     .maybeSingle()
-  if (existing) return existing.id as string
+  return (existing?.id as string) ?? null
+}
+
+/** Crea la conversación si no existe -- solo se usa al ENVIAR un mensaje real (sendFamilyDirectMessage). */
+async function getOrCreateFamilyConversation(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string,
+  familyId: string,
+  category: MessageCategory
+) {
+  const existingId = await getFamilyConversationId(admin, schoolId, familyId, category)
+  if (existingId) return existingId
 
   const { data: created, error } = await admin
     .from('direct_conversations')
@@ -163,7 +185,7 @@ export async function getFamilyDirectMessages(category: MessageCategory = 'regul
   if (!identity.ok) return { ok: false, error: identity.error }
 
   const admin = createAdminClient()
-  const conversationId = await getOrCreateFamilyConversation(admin, identity.schoolId, identity.familyId, category).catch(() => null)
+  const conversationId = await getFamilyConversationId(admin, identity.schoolId, identity.familyId, category)
   if (!conversationId) return { ok: true, messages: [] }
 
   await admin.from('direct_conversations').update({ guardian_last_read_at: new Date().toISOString() }).eq('id', conversationId)
