@@ -44,7 +44,10 @@ export default function AttendanceForm({
 }: AttendanceFormProps) {
   const router = useRouter()
   const [date, setDate] = useState(defaultDate)
-  const [subjectId, setSubjectId] = useState(subjects[0]?.id ?? '')
+  // '' = "Todas (General)", elegido por defecto -- para primaria/kinder/
+  // parvulo, donde no hay rotación de materias, un pase de lista general
+  // basta. Secundaria puede elegir una materia específica del desplegable.
+  const [subjectId, setSubjectId] = useState('')
   const [rows, setRows] = useState<StudentRow[]>(
     students.map((s) => ({ studentId: s.id, status: 'presente', notes: '' }))
   )
@@ -68,11 +71,6 @@ export default function AttendanceForm({
   }, {} as Record<string, number>)
 
   async function handleSave() {
-    if (!subjectId) {
-      setError('Selecciona la materia antes de guardar.')
-      return
-    }
-
     setSaving(true)
     setError(null)
     const supabase = createClient()
@@ -82,17 +80,20 @@ export default function AttendanceForm({
       student_id: r.studentId,
       recorded_by: recorderProfileId,
       date,
-      subject_id: subjectId,
+      subject_id: subjectId || null,
       status: r.status,
       notes: r.notes || null,
     }))
 
     // Upsert: si ya existe un registro para ese estudiante+fecha+materia, lo
-    // actualiza. Al incluir subject_id en el onConflict, pasar lista de otra
-    // materia el mismo día ya no pisa el registro de la materia anterior.
+    // actualiza. Con una materia real, el conflicto se resuelve por
+    // (student_id,date,subject_id); en "Todas (General)" subject_id es
+    // null, y esa combinación la cubre el índice único parcial de la
+    // migración 037 (student_id,date) where subject_id is null -- por eso
+    // el onConflict cambia según el caso.
     const { error: dbError } = await supabase
       .from('attendance')
-      .upsert(records, { onConflict: 'student_id,date,subject_id' })
+      .upsert(records, { onConflict: subjectId ? 'student_id,date,subject_id' : 'student_id,date' })
 
     if (dbError) {
       setError('Error al guardar. Por favor intenta de nuevo.')
@@ -130,7 +131,7 @@ export default function AttendanceForm({
             onChange={(e) => setSubjectId(e.target.value)}
             className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {subjects.length === 0 && <option value="">No hay materias configuradas</option>}
+            <option value="">Todas (General)</option>
             {subjects.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
@@ -223,7 +224,7 @@ export default function AttendanceForm({
         id="btn-guardar-asistencia"
         type="button"
         onClick={handleSave}
-        disabled={saving || saved || !subjectId}
+        disabled={saving || saved}
         className="w-full flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 text-sm transition shadow-glow disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {saved ? (

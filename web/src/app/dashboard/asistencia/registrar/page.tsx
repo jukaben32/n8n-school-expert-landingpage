@@ -36,8 +36,9 @@ export default async function RegistrarAsistenciaPage() {
 
   // Cargar estudiantes inscritos y materias del colegio. Un profesor da
   // varias materias (o la misma materia a varios grupos) en secundaria, así
-  // que el formulario necesita saber qué materias existen para poder pedir
-  // que se elija una antes de pasar lista.
+  // que el formulario necesita saber qué materias existen para ofrecerlas
+  // como filtro -- "Todas (General)" sigue siendo la opción por defecto,
+  // útil para primaria/kinder/parvulo sin rotación de materias.
   const [
     { data: students, error: studentsError },
     { data: subjects, error: subjectsError },
@@ -71,8 +72,9 @@ export default async function RegistrarAsistenciaPage() {
 
       {subjects?.length === 0 && (
         <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
-          Este colegio todavía no tiene materias configuradas. Pide a un administrador que las cree en{' '}
-          <a href="/dashboard/horarios" className="underline font-semibold">Horarios</a> antes de pasar lista.
+          Este colegio todavía no tiene materias configuradas -- puedes pasar lista con &quot;Todas (General)&quot; igual.
+          Si necesitas registrar por materia específica (ej. secundaria), pide a un administrador que las cree en{' '}
+          <a href="/dashboard/horarios" className="underline font-semibold">Horarios</a>.
         </div>
       )}
 
