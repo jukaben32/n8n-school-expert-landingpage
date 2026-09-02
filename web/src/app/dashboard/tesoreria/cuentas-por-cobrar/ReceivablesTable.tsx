@@ -28,8 +28,11 @@ const LEVEL_LABELS: Record<string, string> = {
   secundaria: 'Secundaria',
 }
 
-const BUCKET_ORDER = ['1-5', '6-9', '10-14', '15-19', '20-30', '31-60', '61+']
+const OVERDUE_BUCKETS = ['1-5', '6-9', '10-14', '15-19', '20-30', '31-60', '61+']
+const BUCKET_ORDER = ['corriente', ...OVERDUE_BUCKETS]
+const BUCKET_LABELS: Record<string, string> = { corriente: 'Corriente' }
 const BUCKET_COLORS: Record<string, string> = {
+  corriente: 'var(--dash-accent)',
   '1-5': 'var(--dash-warning)',
   '6-9': 'var(--dash-warning)',
   '10-14': 'var(--dash-warning)',
@@ -58,21 +61,26 @@ export default function ReceivablesTable({
   const [feedback, setFeedback] = useState<Record<string, string>>({})
 
   const notConfigured = rows.filter((r) => r.aging_bucket === 'sin_configurar')
-  const overdue = rows.filter((r) => r.aging_bucket && BUCKET_ORDER.includes(r.aging_bucket))
+  // Todo estudiante con algún saldo pendiente -- incluye "corriente" (ya
+  // vencido su recibo pero todavía dentro de los días de gracia): antes
+  // esos estudiantes no aparecían en ningún lado de esta pantalla, cuando
+  // debían mostrarse en la columna "Corriente" y de ahí ir pasando a los
+  // tramos de antigüedad conforme pasan los días sin pagarse.
+  const pending = rows.filter((r) => r.aging_bucket && BUCKET_ORDER.includes(r.aging_bucket))
 
   const levels = useMemo(
-    () => Array.from(new Set(overdue.map((r) => r.school_level).filter((v): v is string => !!v))),
-    [overdue]
+    () => Array.from(new Set(pending.map((r) => r.school_level).filter((v): v is string => !!v))),
+    [pending]
   )
 
   const gradesForLevel = useMemo(() => {
-    const pool = levelFilter === 'todos' ? overdue : overdue.filter((r) => r.school_level === levelFilter)
+    const pool = levelFilter === 'todos' ? pending : pending.filter((r) => r.school_level === levelFilter)
     return Array.from(new Set(pool.map((r) => r.grade_level).filter((v): v is string => !!v))).sort()
-  }, [overdue, levelFilter])
+  }, [pending, levelFilter])
 
   const normalizedQuery = nameQuery.trim().toLowerCase()
 
-  const filtered = overdue
+  const filtered = pending
     .filter((r) => levelFilter === 'todos' || r.school_level === levelFilter)
     .filter((r) => gradeFilter === 'todos' || r.grade_level === gradeFilter)
     .filter((r) => {
@@ -82,8 +90,11 @@ export default function ReceivablesTable({
     })
     .sort((a, b) => (b.days_overdue ?? 0) - (a.days_overdue ?? 0))
 
-  const totalOverdue = filtered.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
-  const familiesCount = new Set(filtered.map((r) => r.family_id)).size
+  const overdueRows = filtered.filter((r) => r.aging_bucket !== 'corriente')
+  const currentRows = filtered.filter((r) => r.aging_bucket === 'corriente')
+  const totalOverdue = overdueRows.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
+  const totalCurrent = currentRows.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
+  const familiesCount = new Set(overdueRows.map((r) => r.family_id)).size
 
   async function handleReminder(studentId: string) {
     setBusyId(studentId)
@@ -112,14 +123,18 @@ export default function ReceivablesTable({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="dash-card p-5">
+          <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Total corriente</p>
+          <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-accent)' }}>{formatDOP.format(totalCurrent)}</p>
+        </div>
         <div className="dash-card p-5">
           <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Total vencido</p>
           <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-text)' }}>{formatDOP.format(totalOverdue)}</p>
         </div>
         <div className="dash-card p-5">
           <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Estudiantes vencidos</p>
-          <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-text)' }}>{filtered.length}</p>
+          <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-text)' }}>{overdueRows.length}</p>
         </div>
         <div className="dash-card p-5">
           <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Familias afectadas</p>
@@ -159,7 +174,7 @@ export default function ReceivablesTable({
           <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             {normalizedQuery || levelFilter !== 'todos' || gradeFilter !== 'todos'
               ? 'Ningún estudiante coincide con este filtro.'
-              : `Ningún estudiante tiene cuentas vencidas (corriente hasta el día ${graceDays} del mes siguiente a cada cuota).`}
+              : `Ningún estudiante tiene saldo pendiente (corriente hasta el día ${graceDays} del mes siguiente a cada cuota).`}
           </p>
         </div>
       ) : (
@@ -170,7 +185,7 @@ export default function ReceivablesTable({
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Estudiante</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Curso</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Familia</th>
-                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Monto vencido</th>
+                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Saldo pendiente</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Referencia</th>
                 <th className={`${thClass} text-center`} style={{ color: 'var(--dash-text-muted)' }}>Tramo</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Acciones</th>
@@ -195,30 +210,36 @@ export default function ReceivablesTable({
                       className="px-2 py-1 rounded-full text-[10px] font-bold font-barlow uppercase tracking-wider border"
                       style={{ color: BUCKET_COLORS[r.aging_bucket ?? ''], borderColor: 'currentColor' }}
                     >
-                      {r.aging_bucket} días
+                      {BUCKET_LABELS[r.aging_bucket ?? ''] ?? `${r.aging_bucket} días`}
                     </span>
                   </td>
                   <td className="px-4 py-3 space-y-1.5">
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        disabled={busyId === r.student_id}
-                        onClick={() => handleReminder(r.student_id)}
-                        className="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
-                      >
-                        Enviar aviso
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busyId === r.student_id}
-                        onClick={() => handleLateFee(r.student_id)}
-                        className="rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
-                      >
-                        Generar recargo
-                      </button>
-                    </div>
-                    {feedback[r.student_id] && (
-                      <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>{feedback[r.student_id]}</p>
+                    {r.aging_bucket === 'corriente' ? (
+                      <span className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>Aún no vence</span>
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            disabled={busyId === r.student_id}
+                            onClick={() => handleReminder(r.student_id)}
+                            className="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
+                          >
+                            Enviar aviso
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busyId === r.student_id}
+                            onClick={() => handleLateFee(r.student_id)}
+                            className="rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
+                          >
+                            Generar recargo
+                          </button>
+                        </div>
+                        {feedback[r.student_id] && (
+                          <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>{feedback[r.student_id]}</p>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>
