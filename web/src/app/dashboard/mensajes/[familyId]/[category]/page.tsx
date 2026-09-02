@@ -5,7 +5,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
-import { markStaffReadAction } from '../../actions'
 import { staffCanAccessFamilyCategory, isMessageCategory, MESSAGE_CATEGORY_LABELS } from '@/lib/messaging/categoryAccess'
 import ThreadView from './ThreadView'
 
@@ -77,12 +76,18 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
         .order('created_at', { ascending: true })
     : { data: [] }
 
-  // Marca la conversación como leída directo aquí (no vía Server Action):
-  // llamar revalidatePath() durante el render de una página no es válido en
-  // Next.js -- esta página ya muestra datos frescos, no necesita invalidar
-  // caché de /dashboard/mensajes para sí misma.
+  // Marca la conversación como leída con un update directo, sin pasar por
+  // markStaffReadAction: esa Server Action llama revalidatePath('/dashboard/mensajes'),
+  // y Next.js no permite invocar revalidatePath durante el render de una
+  // página (bug real -- rompía esta pantalla con "Algo salió mal" cada vez
+  // que se abría una conversación existente). El permiso ya se validó
+  // arriba (`allowed`), así que el update es seguro sin repetir esa
+  // comprobación.
   if (conversation) {
-    await markStaffReadAction(familyId, category)
+    await admin
+      .from('direct_conversations')
+      .update({ staff_last_read_at: new Date().toISOString() })
+      .eq('id', conversation.id)
   }
 
   return (
