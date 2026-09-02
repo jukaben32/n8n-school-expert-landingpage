@@ -11,13 +11,27 @@ import {
   type StudentFieldsInput,
 } from '@/lib/students/createStudentWithFamily'
 
-export type SubmitNewStudentInput =
+export type SubmitNewStudentInput = (
   | { mode: 'new'; student: StudentFieldsInput; familyName: string; guardians: DraftGuardianInput[] }
   | { mode: 'existing'; student: StudentFieldsInput; familyId: string }
+) & {
+  /** true cuando el usuario ya vio la alerta de posible duplicado y confirmó crear igual. */
+  confirmDuplicate?: boolean
+}
+
+export interface DuplicateStudentMatch {
+  id: string
+  firstName: string
+  lastName: string
+  gradeLevel: string | null
+  enrollmentStatus: string
+}
 
 interface ActionResult {
   ok: boolean
   error?: string
+  /** Presente solo cuando hay coincidencias por nombre y todavía no se confirmó -- el formulario debe pedir confirmación en vez de guardar. */
+  duplicates?: DuplicateStudentMatch[]
 }
 
 /**
@@ -41,6 +55,34 @@ export async function submitNewStudent(input: SubmitNewStudentInput): Promise<Ac
   }
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
+
+  // Alerta de posible duplicado -- antes se podía crear el mismo estudiante
+  // dos veces (mismo nombre y apellido) sin ningún aviso (reporte real del
+  // colegio, 2026-09-02). No se bloquea -- puede haber dos hermanos o dos
+  // niños distintos con el mismo nombre -- solo se pide confirmar una vez
+  // que la persona ve que ya existe alguien con ese nombre.
+  if (!input.confirmDuplicate) {
+    const { data: matches } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, grade_level, enrollment_status')
+      .eq('school_id', schoolId)
+      .is('deleted_at', null)
+      .ilike('first_name', input.student.firstName.trim())
+      .ilike('last_name', input.student.lastName.trim())
+    if (matches && matches.length > 0) {
+      return {
+        ok: false,
+        error: 'Ya existe un estudiante con este nombre y apellido.',
+        duplicates: matches.map((m) => ({
+          id: m.id as string,
+          firstName: m.first_name as string,
+          lastName: m.last_name as string,
+          gradeLevel: m.grade_level as string | null,
+          enrollmentStatus: m.enrollment_status as string,
+        })),
+      }
+    }
+  }
 
   const fullInput: CreateStudentWithFamilyInput =
     input.mode === 'new'

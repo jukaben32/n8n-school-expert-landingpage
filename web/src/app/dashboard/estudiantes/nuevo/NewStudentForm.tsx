@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { submitNewStudent } from './actions'
+import { submitNewStudent, type DuplicateStudentMatch } from './actions'
 import DateInputES from '@/components/DateInputES'
 
 interface Family { id: string; name: string }
@@ -50,6 +50,7 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
   const [mode, setMode] = useState<'existing' | 'new'>(families.length > 0 ? 'existing' : 'new')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [duplicates, setDuplicates] = useState<DuplicateStudentMatch[] | null>(null)
 
   // Datos del estudiante
   const [firstName, setFirstName] = useState('')
@@ -59,8 +60,14 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
   const [enrollmentStatus, setEnrollmentStatus] = useState('inscrito')
   const [gradeLevel, setGradeLevel] = useState('')
 
-  // Familia existente
-  const [familyId, setFamilyId] = useState(families[0]?.id ?? '')
+  // Familia existente -- campo de búsqueda por nombre (no un <select>): con
+  // muchas familias, un <select> obliga a hacer scroll y no se siente como
+  // "puedo escribir para buscar". Arranca vacío a propósito -- antes venía
+  // preseleccionada la primera familia alfabéticamente, y el personal creía
+  // que el campo estaba "trabado" porque ya tenía un nombre escrito que no
+  // era el que buscaban (reporte real del colegio, 2026-09-02).
+  const [familyQuery, setFamilyQuery] = useState('')
+  const selectedFamily = families.find((f) => f.name === familyQuery) ?? null
 
   // Familia nueva + uno o varios tutores
   const [familyName, setFamilyName] = useState('')
@@ -80,12 +87,13 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
     setGuardians((prev) => (prev.length <= 1 ? prev : prev.filter((g) => g.key !== key)))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent, confirmDuplicate = false) {
     e.preventDefault()
     setError(null)
+    if (!confirmDuplicate) setDuplicates(null)
 
-    if (mode === 'existing' && !familyId) {
-      setError('Selecciona una familia.')
+    if (mode === 'existing' && !selectedFamily) {
+      setError('Escribe el nombre de la familia y selecciónala de la lista.')
       return
     }
     if (mode === 'new') {
@@ -118,8 +126,15 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
               relationship: g.relationship as 'madre' | 'padre' | 'tutor_legal' | 'otro',
               nationalId: g.nationalId || null,
             })),
+            confirmDuplicate,
           })
-        : await submitNewStudent({ mode: 'existing', student, familyId })
+        : await submitNewStudent({ mode: 'existing', student, familyId: selectedFamily!.id, confirmDuplicate })
+
+    if (result.duplicates) {
+      setDuplicates(result.duplicates)
+      setSaving(false)
+      return
+    }
 
     if (!result.ok) {
       setError(result.error ?? 'Ocurrió un error al guardar. Intenta de nuevo.')
@@ -165,16 +180,18 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
         {mode === 'existing' ? (
           <div>
             <label htmlFor="family" className={labelClass}>Familia</label>
-            <select
+            <input
               id="family"
-              value={familyId}
-              onChange={(e) => setFamilyId(e.target.value)}
+              list="familyOptions"
+              autoComplete="off"
+              value={familyQuery}
+              onChange={(e) => setFamilyQuery(e.target.value)}
+              placeholder="Escribe el nombre de la familia…"
               className={inputClass}
-            >
-              {families.map((f) => (
-                <option key={f.id} value={f.id}>{f.name}</option>
-              ))}
-            </select>
+            />
+            <datalist id="familyOptions">
+              {families.map((f) => <option key={f.id} value={f.name} />)}
+            </datalist>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
               El estudiante quedará vinculado a todos los tutores ya registrados en esta familia.
             </p>
@@ -311,6 +328,28 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
       {error && (
         <div role="alert" className="flex items-start gap-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
           {error}
+        </div>
+      )}
+
+      {duplicates && duplicates.length > 0 && (
+        <div role="alert" className="space-y-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          <p className="font-semibold">Ya existe un estudiante con este nombre y apellido:</p>
+          <ul className="space-y-1 text-xs">
+            {duplicates.map((d) => (
+              <li key={d.id}>
+                {d.firstName} {d.lastName} — {d.gradeLevel ?? 'sin grado'} ({d.enrollmentStatus})
+              </li>
+            ))}
+          </ul>
+          <p>Si son dos niños distintos con el mismo nombre, puedes crearlo igual. Si crees que es un error, revisa los datos antes de continuar.</p>
+          <button
+            type="button"
+            onClick={(e) => handleSubmit(e, true)}
+            disabled={saving}
+            className="rounded-full bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 text-xs transition disabled:opacity-60"
+          >
+            {saving ? 'Guardando...' : 'Crear de todas formas'}
+          </button>
         </div>
       )}
 
