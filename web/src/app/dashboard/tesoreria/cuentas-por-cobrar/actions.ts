@@ -168,3 +168,106 @@ export async function generateLateFeeCharge(studentId: string): Promise<ActionRe
   revalidatePath('/dashboard/tesoreria')
   return { ok: true }
 }
+
+export const EXTERNAL_PAYMENT_SOURCES = [
+  { value: 'alegra', label: 'Alegra (POS)' },
+  { value: 'otro', label: 'Otra plataforma' },
+  { value: 'efectivo', label: 'Efectivo' },
+  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'tarjeta', label: 'Tarjeta' },
+  { value: 'cheque', label: 'Cheque' },
+] as const
+
+const SOURCE_LABELS: Record<string, string> = Object.fromEntries(EXTERNAL_PAYMENT_SOURCES.map((s) => [s.value, s.label]))
+
+/**
+ * Registra un cobro que ya ocurrió fuera de esta plataforma (Alegra POS, u
+ * otra plataforma) -- mientras los pagos en línea todavía no están
+ * habilitados aquí, este es el único lugar para que Cuentas por Cobrar
+ * refleje la realidad. A propósito NUNCA genera NCF (`ncf` queda null):
+ * el comprobante fiscal real ya existe en el sistema donde se cobró
+ * (Alegra u otro) -- generar uno aquí sería un documento fantasma que no
+ * corresponde a ningún cobro real ante la DGII. Esto es puramente un
+ * registro interno para que la deuda implícita deje de contar ese dinero
+ * como pendiente.
+ */
+export async function recordExternalPayment(
+  studentId: string,
+  amount: number,
+  source: string,
+  paidAt: string,
+  note: string
+): Promise<ActionResult> {
+  const staff = await resolveTesoreriaStaff()
+  if (!staff.ok) return { ok: false, error: staff.error }
+
+  if (!amount || amount <= 0) return { ok: false, error: 'Indica un monto mayor a cero.' }
+  if (!SOURCE_LABELS[source]) return { ok: false, error: 'Fuente de pago inválida.' }
+  if (!paidAt) return { ok: false, error: 'Indica la fecha del pago.' }
+
+  const admin = createAdminClient()
+
+  const { data: student } = await admin
+    .from('students')
+    .select('id, family_id, school_id')
+    .eq('id', studentId)
+    .eq('school_id', staff.schoolId)
+    .single()
+  if (!student) return { ok: false, error: 'No se encontró el estudiante.' }
+
+  let { data: concept } = await admin
+    .from('billing_concepts')
+    .select('id')
+    .eq('school_id', staff.schoolId)
+    .eq('recurrence', 'monthly')
+    .ilike('name', '%mensualidad%')
+    .is('deleted_at', null)
+    .limit(1)
+    .maybeSingle()
+
+  if (!concept) {
+    const { data: newConcept, error: conceptError } = await admin
+      .from('billing_concepts')
+      .insert({ school_id: staff.schoolId, name: 'Mensualidad', amount, recurrence: 'monthly', applies_to: 'student' })
+      .select('id')
+      .single()
+    if (conceptError) return { ok: false, error: 'No se pudo preparar el concepto de mensualidad.' }
+    concept = newConcept
+  }
+
+  const roundedAmount = Math.round(amount * 100) / 100
+  const description = `Mensualidad — cobro ya registrado (${SOURCE_LABELS[source]})${note.trim() ? ': ' + note.trim() : ''}`
+
+  const { data: invoice, error: invoiceError } = await admin.from('invoices').insert({
+    school_id: staff.schoolId,
+    family_id: student.family_id,
+    student_id: studentId,
+    concept_id: concept.id,
+    description,
+    amount: roundedAmount,
+    tax_amount: 0,
+    total_amount: roundedAmount,
+    due_date: paidAt,
+    status: 'pagado',
+    paid_at: new Date(`${paidAt}T00:00:00`).toISOString(),
+    ncf: null,
+    ncf_type: null,
+    created_by: staff.staffProfileId,
+  }).select('id').single()
+  if (invoiceError) return { ok: false, error: `No se pudo registrar el pago: ${invoiceError.message}` }
+
+  const { error: paymentError } = await admin.from('payments').insert({
+    school_id: staff.schoolId,
+    invoice_id: invoice.id,
+    amount_paid: roundedAmount,
+    payment_method: source,
+    received_by: staff.staffProfileId,
+    paid_at: new Date(`${paidAt}T00:00:00`).toISOString(),
+    notes: note.trim() || null,
+  })
+  if (paymentError) return { ok: false, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
+
+  revalidatePath('/dashboard/tesoreria/cuentas-por-cobrar')
+  revalidatePath('/dashboard/tesoreria')
+  return { ok: true }
+}

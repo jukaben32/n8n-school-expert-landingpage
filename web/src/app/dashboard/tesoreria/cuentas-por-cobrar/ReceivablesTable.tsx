@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { sendOverdueReminder, generateLateFeeCharge } from './actions'
+import { sendOverdueReminder, generateLateFeeCharge, recordExternalPayment, EXTERNAL_PAYMENT_SOURCES } from './actions'
 
 export interface ReceivableRow {
   student_id: string
@@ -59,6 +59,11 @@ export default function ReceivablesTable({
   const [nameQuery, setNameQuery] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Record<string, string>>({})
+  const [payingId, setPayingId] = useState<string | null>(null)
+  const [payAmount, setPayAmount] = useState('')
+  const [paySource, setPaySource] = useState<string>(EXTERNAL_PAYMENT_SOURCES[0].value)
+  const [payDate, setPayDate] = useState('')
+  const [payNote, setPayNote] = useState('')
 
   const notConfigured = rows.filter((r) => r.aging_bucket === 'sin_configurar')
   // Todo estudiante con algún saldo pendiente -- incluye "corriente" (ya
@@ -111,6 +116,23 @@ export default function ReceivablesTable({
     const result = await generateLateFeeCharge(studentId)
     setBusyId(null)
     setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Recargo generado.' : (result.error ?? 'No se pudo generar.') }))
+  }
+
+  function startPayment(r: ReceivableRow) {
+    setPayingId(r.student_id)
+    setPayAmount(String(r.overdue_amount ?? ''))
+    setPaySource(EXTERNAL_PAYMENT_SOURCES[0].value)
+    setPayDate(new Date().toISOString().slice(0, 10))
+    setPayNote('')
+    setFeedback((prev) => ({ ...prev, [r.student_id]: '' }))
+  }
+
+  async function confirmPayment(studentId: string) {
+    setBusyId(studentId)
+    const result = await recordExternalPayment(studentId, Number(payAmount), paySource, payDate, payNote)
+    setBusyId(null)
+    if (result.ok) setPayingId(null)
+    setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Pago registrado.' : (result.error ?? 'No se pudo registrar.') }))
   }
 
   return (
@@ -213,28 +235,82 @@ export default function ReceivablesTable({
                       {BUCKET_LABELS[r.aging_bucket ?? ''] ?? `${r.aging_bucket} días`}
                     </span>
                   </td>
-                  <td className="px-4 py-3 space-y-1.5">
-                    {r.aging_bucket === 'corriente' ? (
-                      <span className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>Aún no vence</span>
+                  <td className="px-4 py-3 space-y-1.5 min-w-[220px]">
+                    {payingId === r.student_id ? (
+                      <div className="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800/50 p-2">
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <input
+                            type="number" min="0" step="0.01" value={payAmount}
+                            onChange={(e) => setPayAmount(e.target.value)}
+                            placeholder="Monto"
+                            className="rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                          />
+                          <input
+                            type="date" value={payDate}
+                            onChange={(e) => setPayDate(e.target.value)}
+                            className="rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                          />
+                        </div>
+                        <select
+                          value={paySource}
+                          onChange={(e) => setPaySource(e.target.value)}
+                          className="w-full rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                        >
+                          {EXTERNAL_PAYMENT_SOURCES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </select>
+                        <input
+                          type="text" value={payNote} onChange={(e) => setPayNote(e.target.value)}
+                          placeholder="Nota (ej. Nº de recibo Alegra)"
+                          className="w-full rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                        />
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            disabled={busyId === r.student_id}
+                            onClick={() => confirmPayment(r.student_id)}
+                            className="rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1 transition disabled:opacity-50"
+                          >
+                            Confirmar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPayingId(null)}
+                            className="rounded-full border border-slate-200 bg-white text-slate-600 text-xs font-semibold px-3 py-1 transition"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <>
                         <div className="flex flex-wrap gap-1.5">
                           <button
                             type="button"
-                            disabled={busyId === r.student_id}
-                            onClick={() => handleReminder(r.student_id)}
-                            className="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
+                            onClick={() => startPayment(r)}
+                            className="rounded-full border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 text-xs font-semibold px-3 py-1.5 transition"
                           >
-                            Enviar aviso
+                            Registrar pago
                           </button>
-                          <button
-                            type="button"
-                            disabled={busyId === r.student_id}
-                            onClick={() => handleLateFee(r.student_id)}
-                            className="rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
-                          >
-                            Generar recargo
-                          </button>
+                          {r.aging_bucket !== 'corriente' && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={busyId === r.student_id}
+                                onClick={() => handleReminder(r.student_id)}
+                                className="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
+                              >
+                                Enviar aviso
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busyId === r.student_id}
+                                onClick={() => handleLateFee(r.student_id)}
+                                className="rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
+                              >
+                                Generar recargo
+                              </button>
+                            </>
+                          )}
                         </div>
                         {feedback[r.student_id] && (
                           <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>{feedback[r.student_id]}</p>
