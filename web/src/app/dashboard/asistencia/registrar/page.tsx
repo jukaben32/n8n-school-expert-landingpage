@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
@@ -45,7 +46,7 @@ export default async function RegistrarAsistenciaPage() {
   ] = await Promise.all([
     supabase
       .from('students')
-      .select('id, first_name, last_name')
+      .select('id, first_name, last_name, grade_level')
       .eq('school_id', schoolId)
       .is('deleted_at', null)
       .order('last_name', { ascending: true }),
@@ -55,6 +56,16 @@ export default async function RegistrarAsistenciaPage() {
       .eq('school_id', schoolId)
       .order('name', { ascending: true }),
   ])
+
+  // Grado por defecto -- a diferencia de la materia ("Todas" es seguro
+  // porque no cambia a quién afecta guardar, solo la etiqueta), el grado
+  // SÍ decide a quién se le guarda asistencia. Sin un grado concreto
+  // seleccionado desde el inicio, "Guardar" marcaría presente a los 200+
+  // estudiantes de todo el colegio de un solo clic -- por eso arranca en
+  // el primer grado real, nunca en un "todos" sin acotar.
+  const gradeLevelOptions = Array.from(
+    new Set((students ?? []).map((s) => s.grade_level as string | null).filter((g): g is string => Boolean(g)))
+  ).sort()
 
   const today = todaySchoolDate()
 
@@ -66,9 +77,16 @@ export default async function RegistrarAsistenciaPage() {
           Registrar Asistencia
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Elige la materia y la fecha. Al marcar una ausencia o tardanza, los padres recibirán un aviso automático.
+          Elige el grado, la materia y la fecha. Al marcar una ausencia o tardanza, los padres recibirán un aviso automático.
         </p>
       </div>
+
+      {gradeLevelOptions.length === 0 && (
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          Ningún estudiante tiene grado asignado todavía, así que se muestra el colegio completo. Asígnales grado en{' '}
+          <Link href="/dashboard/estudiantes" className="underline font-semibold">Estudiantes</Link> para poder filtrar por grupo.
+        </div>
+      )}
 
       {subjects?.length === 0 && (
         <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
@@ -81,6 +99,7 @@ export default async function RegistrarAsistenciaPage() {
       <AttendanceForm
         students={students ?? []}
         subjects={subjects ?? []}
+        gradeLevelOptions={gradeLevelOptions}
         defaultDate={today}
         recorderProfileId={profile.id}
         schoolId={schoolId}

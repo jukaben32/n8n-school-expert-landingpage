@@ -7,7 +7,7 @@ import DateInputES from '@/components/DateInputES'
 
 type AttendanceStatus = 'presente' | 'ausente' | 'tardanza' | 'justificado'
 
-interface Student { id: string; first_name: string; last_name: string }
+interface Student { id: string; first_name: string; last_name: string; grade_level: string | null }
 interface Subject { id: string; name: string }
 
 interface StudentRow {
@@ -19,6 +19,7 @@ interface StudentRow {
 interface AttendanceFormProps {
   students: Student[]
   subjects: Subject[]
+  gradeLevelOptions: string[]
   defaultDate: string
   recorderProfileId: string
   schoolId: string
@@ -40,10 +41,18 @@ const statusOptions: { value: AttendanceStatus; label: string; color: string }[]
  * para ausencias y tardanzas.
  */
 export default function AttendanceForm({
-  students, subjects, defaultDate, recorderProfileId, schoolId
+  students, subjects, gradeLevelOptions, defaultDate, recorderProfileId, schoolId
 }: AttendanceFormProps) {
   const router = useRouter()
   const [date, setDate] = useState(defaultDate)
+  // Grado seleccionado -- a diferencia de la materia, el grado sí decide
+  // A QUIÉN se le guarda asistencia (la materia solo etiqueta lo mismo que
+  // se hubiera guardado igual). Por eso arranca en el primer grado real y
+  // nunca en un "todos" sin acotar: sin esto, un clic en "Guardar" marcaría
+  // presente a los 200+ estudiantes de todo el colegio de una vez -- caso
+  // real reportado por el colegio (2026-09-02): la lista mostraba los 229
+  // estudiantes al elegir "Biología" en vez de solo su grupo.
+  const [gradeLevel, setGradeLevel] = useState(gradeLevelOptions[0] ?? '')
   // '' = "Todas (General)", elegido por defecto -- para primaria/kinder/
   // parvulo, donde no hay rotación de materias, un pase de lista general
   // basta. Secundaria puede elegir una materia específica del desplegable.
@@ -58,14 +67,22 @@ export default function AttendanceForm({
   // Mapa rápido studentId → nombre
   const studentMap = Object.fromEntries(students.map((s) => [s.id, s]))
 
+  // Estudiantes/filas visibles según el grado elegido -- sin grados
+  // configurados en el colegio (gradeLevelOptions vacío), no hay forma de
+  // acotar, así que se muestra el colegio completo como única opción.
+  const visibleStudentIds = new Set(
+    gradeLevel ? students.filter((s) => s.grade_level === gradeLevel).map((s) => s.id) : students.map((s) => s.id)
+  )
+  const visibleRows = rows.filter((r) => visibleStudentIds.has(r.studentId))
+
   function updateRow(studentId: string, field: 'status' | 'notes', value: string) {
     setRows((prev) =>
       prev.map((r) => r.studentId === studentId ? { ...r, [field]: value } : r)
     )
   }
 
-  // Estadísticas del día
-  const counts = rows.reduce((acc, r) => {
+  // Estadísticas del grupo visible (no de todo el colegio)
+  const counts = visibleRows.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -75,7 +92,9 @@ export default function AttendanceForm({
     setError(null)
     const supabase = createClient()
 
-    const records = rows.map((r) => ({
+    // Solo se guarda el grupo visible (el grado elegido) -- nunca todo el
+    // colegio de un clic.
+    const records = visibleRows.map((r) => ({
       school_id: schoolId,
       student_id: r.studentId,
       recorded_by: recorderProfileId,
@@ -121,6 +140,24 @@ export default function AttendanceForm({
           />
         </div>
 
+        {gradeLevelOptions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label htmlFor="attendance-grade" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Grado:
+            </label>
+            <select
+              id="attendance-grade"
+              value={gradeLevel}
+              onChange={(e) => setGradeLevel(e.target.value)}
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {gradeLevelOptions.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           <label htmlFor="attendance-subject" className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Materia:
@@ -153,12 +190,12 @@ export default function AttendanceForm({
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            {students.length} estudiantes
+            {visibleRows.length} estudiantes{gradeLevel ? ` — ${gradeLevel}` : ''}
           </p>
         </div>
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
-          {rows.map((row) => {
+          {visibleRows.map((row) => {
             const s = studentMap[row.studentId]
             const currentOpt = statusOptions.find((o) => o.value === row.status)!
             return (
