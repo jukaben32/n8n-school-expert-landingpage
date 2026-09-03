@@ -10,6 +10,77 @@ cualquier sesión nueva pueda seguir sin repetir descubrimientos ni preguntas.
 encuentres un bug nuevo digno de recordar, actualiza este archivo en el mismo
 commit.
 
+---
+
+# ⛔ PROTOCOLO OBLIGATORIO — no romper lo que ya funciona
+
+**Léelo antes de tocar código. No es opcional.**
+
+Esto no es producción teórica: el Centro Educativo Gran Manantial de Sabiduría
+usa esta plataforma todos los días con 286 estudiantes. Cuando algo se rompe,
+el dueño del proyecto queda mal ante el colegio — y durante semanas no pasó un
+día sin que le escribieran que "tal cosa ya no funciona". Casi siempre la causa
+fue la misma: **un arreglo que rompió en silencio otra cosa.** Un fix que
+genera un reporte nuevo mañana no es progreso; es el bucle que hay que cortar.
+
+## Antes de escribir código
+
+1. **Mapear el alcance.** ¿Qué otras pantallas, roles o tablas leen o escriben
+   eso mismo? Búscalo (`grep`), no lo supongas.
+2. **Elegir el menor radio de impacto**, aunque sea menos elegante. Ejemplo
+   real (2026-09-03): para que el profesor pudiera escribirle a un padre se
+   leyó la lista de familias con el cliente de servicio en **dos pantallas
+   concretas**, en vez de abrirle la RLS de `families` al rol `teacher` — eso
+   último le habría dado el directorio completo de familias en toda la app.
+3. **Decir explícitamente qué NO se toca y por qué**, antes de empezar.
+
+## Antes de dar algo por terminado (y siempre antes de desplegar)
+
+```bash
+cd web && npm run build      # el build completo, no solo tsc
+cd web && npm run smoke      # 31 comprobaciones, todos los roles, contra producción
+```
+
+`npm run smoke` (→ `scripts/smoke-roles.mjs`) entra como un usuario **real** de
+cada rol, simula su sesión igual que PostgREST y ejecuta las mismas consultas
+que hacen las pantallas — incluido el INSERT de pasar lista. Todo dentro de una
+transacción con `ROLLBACK`, así que no toca datos. Si una policy quedó rota,
+revienta ahí y no en el colegio a las 7:50am. **Al agregar una pantalla o
+cambiar una policy, agrega su comprobación al script.**
+
+Si el cambio toca RLS, policies o funciones SQL, además: simula la sesión del
+rol afectado y prueba la escritura real con rollback antes de considerarlo
+hecho.
+
+## Trampas ya conocidas de este repo (cada una costó un día del colegio)
+
+- **`permissions.ts` y `Sidebar.tsx` se desincronizan.** Un módulo concedido en
+  la matriz pero sin enlace en el menú de ese rol = función que existe y nadie
+  puede alcanzar. Le pasó a Mensajes y Actualizaciones con `teacher`: estaban
+  permitidos desde siempre, sin enlace. **Revisa los dos archivos, siempre.**
+- **Leer con el cliente del usuario lo que la RLS no le abre a ese rol no da
+  error: devuelve vacío.** Se ve como "la opción está deshabilitada". Le pasó a
+  Mensajes con `families` (al profesor le llegaban 0 familias).
+- **Sobrecargas con parámetro por defecto rompen las llamadas existentes.**
+  Al crear `f(a, b, c default x)` junto a `f(a, b)`, toda llamada de 2
+  argumentos queda ambigua (`42725: is not unique`) — incluidas las que están
+  dentro de policies escritas meses antes. Rompió Asistencia y Actualizaciones
+  el 2026-09-03. Si agregas una sobrecarga, **busca y actualiza todos los
+  llamadores** (`pg_policies` incluidos), o mejor: usa otro nombre de función.
+- **Las escrituras del navegador contra Supabase no aparecen en los logs de
+  Vercel.** `AttendanceForm` escribe directo con el cliente del navegador: si
+  la RLS la bloquea, en Vercel no hay ni rastro. Por eso existe el smoke test.
+- **Las migraciones no siempre se aplican en orden cronológico** (no hay Docker
+  en la máquina; se aplican vía API en lotes). Una migración vieja puede
+  activarse hoy y despertar un bug latente. Ver "Colisión de números de
+  migración" más abajo.
+- **El cliente admin (`createAdminClient`) se salta la RLS.** Toda Server
+  Action que lo use tiene que repetir la autorización en código
+  (`staffCanAccessFamilyCategory`, `assertTeacherCanTargetGrade`, etc.). No
+  basta con que la policy exista.
+
+---
+
 ## Qué es esto
 
 Una plataforma multi-colegio ("SaaS" para colegios afiliados) construida sobre
@@ -2562,3 +2633,70 @@ cualquier pendiente de migración de este archivo.
   que ya mejoramos; no debe asumirse publicada todavia.
 - La app principal mantiene su landing aparte, asi que ambos flujos siguen
   aislados y no deben mezclarse.
+
+## 2026-09-03 — Día completo sin asistencia + Mensajes/Fotos invisibles para el profesor
+
+Tres cosas el mismo día, y las tres comparten la misma raíz de fondo: **nadie
+verificó el efecto de un cambio sobre los otros roles.** De aquí salió el
+protocolo del principio de este archivo y el script `scripts/smoke-roles.mjs`.
+
+### 1. Ningún profesor pudo pasar lista en todo el día
+
+Síntoma reportado: "no muestra la asistencia". La pantalla estaba bien — lo
+que pasaba es que había **0 registros** ese día, cuando cualquier otro día ya
+había filas desde las 7:50-8:30am.
+
+Causa: la policy `attendance_staff_all` (creada en `20260817100000`) llama a
+`teacher_is_assigned_to_grade(school, grade)` con **2 argumentos**. La
+migración `20260823010000` creó una sobrecarga
+`teacher_is_assigned_to_grade(uuid, text, text default 'regular')`. Con las dos
+coexistiendo, Postgres ya no puede resolver la llamada de 2 argumentos:
+
+```
+ERROR: 42725: function teacher_is_assigned_to_grade(uuid, text) is not unique
+```
+
+Toda lectura/escritura de asistencia hecha por un `teacher` reventaba ahí.
+`students_read` y `class_schedules_staff_read` ya habían sido corregidas a 3
+argumentos por este mismo motivo (ver `20260821060000`), pero
+`attendance_staff_all` y `class_updates_staff_all` nunca se actualizaron —
+**se arregló una y se dejaron dos rotas.** Corregido en
+`20260906000000_fix_ambiguous_teacher_is_assigned_to_grade.sql`.
+
+Detalle importante para el futuro: **esto no aparecía en los logs de Vercel**,
+porque `AttendanceForm` escribe con el cliente del navegador directo contra
+Supabase. El diagnóstico salió de consultar la base, no los logs.
+
+### 2. El profesor no tenía Mensajes ni Actualizaciones
+
+Reporte del colegio: "los docentes tienen deshabilitada la opción de mensajes,
+solo tienen comunicado, que le llega a todos los padres de su curso; si quieren
+un mensaje específico a un padre, no lo tienen — ni el padre ni la madre
+habilitada". Y sobre las fotos: la autorización de uso de imagen ya la están
+firmando los padres, así que la opción debía habilitarse (ese día se cayó una
+bebé y la profesora tuvo que mandar la foto por fuera de la plataforma).
+
+Eran **dos bloqueos distintos**, y encontrar solo el primero no habría
+resuelto nada:
+
+- `mensajes_directos` y `actualizaciones` estaban en la matriz de permisos del
+  profesor desde siempre, pero **nunca se agregó el enlace en `Sidebar.tsx`**.
+- Las dos pantallas de Mensajes leían `families` con el cliente del usuario, y
+  la RLS de esa tabla solo la abre a dirección/finanzas/recepción: al profesor
+  le llegaban **0 familias** (verificado simulando su sesión en producción), y
+  por eso el selector salía vacío. La pantalla de conversación, además, le
+  respondía "no encontrado".
+
+Se resolvió leyendo la lista con el cliente de servicio **solo en esas dos
+pantallas**, filtrada por la autorización que ya existía
+(`getEligibleFamilyIdsForCategory` para ofrecer, `staffCanAccessFamilyCategory`
+para abrir y enviar). No se abrió la RLS de `families` al profesor a propósito.
+
+### 3. Estado de la autorización de uso de imagen (pendiente del colegio)
+
+La autorización existe desde el 2026-08-23, pero solo hay **6 respuestas
+registradas de 286 estudiantes**. La pantalla de Actualizaciones no bloquea
+publicar: muestra una advertencia roja por cada estudiante sin autorización
+registrada (Ley 136-03). Mientras el colegio no cargue en la plataforma las
+firmas que está recogiendo en papel, la profesora verá esa advertencia en casi
+todos los casos. **Es un pendiente de datos, no de código.**
