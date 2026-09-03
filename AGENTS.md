@@ -2152,6 +2152,52 @@ dejarlo entrar, nunca para redirigir. Revisado por esta sesión tras el push (no
 5. Cuando el usuario defina la lista de becas, cargar `students.tuition_override_amount` para esos
    casos (columna ya lista, sin migración nueva).
 
+**Columna "Corriente" (2026-09-02, PR #19)**: `calculate_receivable_status()` ya calculaba bien el
+saldo pendiente de un estudiante dentro de los días de gracia (`aging_bucket = 'corriente'`), pero
+`ReceivablesTable.tsx` filtraba esas filas por completo -- el saldo del día de hoy no aparecía en
+ningún lado hasta que el estudiante se volvía vencido de verdad. Reportado por el usuario contra la
+pantalla real en producción (captura adjunta), comparando con la plantilla de Excel de referencia
+que sí tenía una columna "Current"/"Corriente". Corregido puramente en la interfaz -- sin
+migración, el cálculo en SQL ya era correcto: ahora la tabla muestra a todo estudiante con saldo
+pendiente, "Corriente" como el primer tramo (verde) junto a los de antigüedad, con una tarjeta
+"Total corriente" en el resumen. Los botones de aviso/recargo se ocultan para esas filas (nada que
+cobrar todavía).
+
+**Registrar pagos ya cobrados fuera de la plataforma (2026-09-02)**: el colegio todavía no tiene
+habilitados los pagos en línea aquí -- todo lo que se ha cobrado hasta ahora pasó por Alegra POS u
+otra plataforma, y esos cobros no existían en `invoices`/`payments`, así que Cuentas por Cobrar
+mostraba deuda que en realidad ya se pagó. El flujo existente ("Generar factura" en
+`/dashboard/tesoreria/facturar`) no servía para esto: siempre llama a `generate_ncf()`, y generar un
+NCF local para un cobro que ya tiene su comprobante fiscal real en Alegra sería un documento fantasma
+que no corresponde a nada real ante la DGII -- el mismo riesgo de duplicidad ya discutido con el
+usuario en la sección de NCF/Alegra más abajo.
+- Migración `20260902000000_external_payment_methods.sql`: amplía el `check` de
+  `payments.payment_method` (antes solo `efectivo`/`transferencia`/`tarjeta`/`azul`/`cheque`) para
+  aceptar también `alegra` y `otro`. Verificado contra Postgres local: acepta los dos valores
+  nuevos y sigue rechazando cualquier otro.
+- `recordExternalPayment(studentId, amount, source, paidAt, note)` (nueva Server Action en
+  `cuentas-por-cobrar/actions.ts`): busca o crea el concepto "Mensualidad" (mismo patrón de
+  find-or-create que ya usa `generateLateFeeCharge` para "Recargo por Mora"), inserta una factura
+  con `status='pagado'` y **`ncf`/`ncf_type` siempre `null`** -- a propósito, nunca genera
+  comprobante -- y su pago correspondiente. El monto, la fecha y la nota (ej. número de recibo de
+  Alegra) los captura el staff; el monto viene precargado con el saldo pendiente de esa fila pero
+  es editable, por si el cobro real fue parcial.
+- `ReceivablesTable.tsx`: botón "Registrar pago" en cada fila (vencida o corriente) que despliega
+  un mini-formulario en línea (monto, fecha, fuente -- Alegra/otra plataforma/efectivo/
+  transferencia/tarjeta/cheque -- y nota), mismo patrón de UI que el "Rechazar con motivo" ya usado
+  en otras bandejas de revisión del proyecto.
+- **Verificado de punta a punta contra Postgres local** (no solo revisado): estudiante de prueba
+  con RD$6,150 de deuda implícita (cuota parcial de agosto + cuota completa de septiembre, sin
+  pagar); se simuló exactamente el insert que hace la Server Action (concepto "Mensualidad",
+  factura `pagado` con `ncf null`, pago con `payment_method='alegra'`) por RD$4,100 -- el saldo
+  bajó a RD$2,050 (FIFO, cubre primero la cuota más vieja) y la factura quedó confirmada con
+  `ncf`/`ncf_type` en `null`, nunca un comprobante fantasma.
+- `tsc --noEmit`, `lint` y `build` completos limpios.
+
+**Pendiente**: aplicar `20260902000000_external_payment_methods.sql` a producción y registrar ahí
+los cobros reales ya hechos por Alegra/otra plataforma -- no se cargó ningún dato real desde esta
+sesión, solo se construyó y verificó la herramienta.
+
 ## Comunicados con imagen adjunta (2026-08-26)
 
 **Reporte real del usuario**: intentó pegar una imagen (un flyer ya
