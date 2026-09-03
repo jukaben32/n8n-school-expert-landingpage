@@ -32,7 +32,7 @@ export default async function CuentasPorCobrarPage() {
 
   const [{ data: school, error: schoolError }, { data: familiesRaw, error: familiesError }, { data: receivablesRaw, error: receivablesError }] =
     await Promise.all([
-      supabase.from('schools').select('tuition_grace_days, late_fee_percent').eq('id', schoolId).single(),
+      supabase.from('schools').select('tuition_grace_days').eq('id', schoolId).single(),
       supabase.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null),
       supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
     ])
@@ -63,7 +63,6 @@ export default async function CuentasPorCobrarPage() {
       <ReceivablesTable
         rows={rows}
         graceDays={school?.tuition_grace_days ?? 5}
-        lateFeePercent={school?.late_fee_percent ?? 0}
       />
     </div>
   )

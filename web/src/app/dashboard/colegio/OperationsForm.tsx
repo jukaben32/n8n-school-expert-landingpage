@@ -18,6 +18,12 @@ interface School {
   tuition_due_day: number
   tuition_grace_days: number
   late_fee_percent: number
+  late_fee_stage2_days: number
+  late_fee_stage2_percent: number
+  late_fee_stage3_days: number
+  late_fee_stage3_percent: number
+  late_fee_stage4_days: number
+  late_fee_stage4_percent: number
 }
 
 const inputClass =
@@ -38,6 +44,12 @@ export default function OperationsForm({ school }: { school: School }) {
   const [dueDay, setDueDay] = useState(String(school.tuition_due_day))
   const [graceDays, setGraceDays] = useState(String(school.tuition_grace_days))
   const [lateFeePercent, setLateFeePercent] = useState(String(school.late_fee_percent))
+  const [stage2Days, setStage2Days] = useState(String(school.late_fee_stage2_days))
+  const [stage2Percent, setStage2Percent] = useState(String(school.late_fee_stage2_percent))
+  const [stage3Days, setStage3Days] = useState(String(school.late_fee_stage3_days))
+  const [stage3Percent, setStage3Percent] = useState(String(school.late_fee_stage3_percent))
+  const [stage4Days, setStage4Days] = useState(String(school.late_fee_stage4_days))
+  const [stage4Percent, setStage4Percent] = useState(String(school.late_fee_stage4_percent))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -64,6 +76,12 @@ export default function OperationsForm({ school }: { school: School }) {
         tuition_due_day: Math.min(28, Math.max(1, Number(dueDay) || 1)),
         tuition_grace_days: Math.max(0, Number(graceDays) || 0),
         late_fee_percent: Math.min(100, Math.max(0, Number(lateFeePercent) || 0)),
+        late_fee_stage2_days: Math.max(0, Number(stage2Days) || 0),
+        late_fee_stage2_percent: Math.min(100, Math.max(0, Number(stage2Percent) || 0)),
+        late_fee_stage3_days: Math.max(0, Number(stage3Days) || 0),
+        late_fee_stage3_percent: Math.min(100, Math.max(0, Number(stage3Percent) || 0)),
+        late_fee_stage4_days: Math.max(0, Number(stage4Days) || 0),
+        late_fee_stage4_percent: Math.min(100, Math.max(0, Number(stage4Percent) || 0)),
       })
       .eq('id', school.id)
 
@@ -101,7 +119,7 @@ export default function OperationsForm({ school }: { school: School }) {
             <input id="tuitionSecundaria" type="number" min="0" step="0.01" value={tuitionSecundaria} onChange={(e) => setTuitionSecundaria(e.target.value)} className={inputClass} placeholder="Sin configurar" />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="installmentsCount" className={labelClass}>Cuotas del año</label>
             <input id="installmentsCount" type="number" min="0.5" step="0.5" value={installmentsCount} onChange={(e) => setInstallmentsCount(e.target.value)} className={inputClass} />
@@ -110,21 +128,48 @@ export default function OperationsForm({ school }: { school: School }) {
             <label htmlFor="dueDay" className={labelClass}>Día de vencimiento</label>
             <input id="dueDay" type="number" min="1" max="28" step="1" value={dueDay} onChange={(e) => setDueDay(e.target.value)} className={inputClass} />
           </div>
-          <div>
-            <label htmlFor="graceDays" className={labelClass}>Días de gracia</label>
-            <input id="graceDays" type="number" min="0" step="1" value={graceDays} onChange={(e) => setGraceDays(e.target.value)} className={inputClass} />
-          </div>
         </div>
         <div>
-          <label htmlFor="lateFeePercent" className={labelClass}>% de recargo por mora</label>
-          <input id="lateFeePercent" type="number" min="0" max="100" step="0.5" value={lateFeePercent} onChange={(e) => setLateFeePercent(e.target.value)} className={`${inputClass} max-w-[160px]`} />
+          <p className={labelClass}>Recargo por mora — escalonado (manual de familia)</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label htmlFor="graceDays" className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Etapa 1: días de gracia + %</label>
+              <div className="flex gap-1.5">
+                <input id="graceDays" type="number" min="0" step="1" value={graceDays} onChange={(e) => setGraceDays(e.target.value)} className={inputClass} title="Días de gracia (etapa 1)" />
+                <input id="lateFeePercent" type="number" min="0" max="100" step="0.5" value={lateFeePercent} onChange={(e) => setLateFeePercent(e.target.value)} className={inputClass} title="% etapa 1" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="stage2Days" className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Etapa 2: días + %</label>
+              <div className="flex gap-1.5">
+                <input id="stage2Days" type="number" min="0" step="1" value={stage2Days} onChange={(e) => setStage2Days(e.target.value)} className={inputClass} />
+                <input id="stage2Percent" type="number" min="0" max="100" step="0.5" value={stage2Percent} onChange={(e) => setStage2Percent(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="stage3Days" className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Etapa 3: días + %</label>
+              <div className="flex gap-1.5">
+                <input id="stage3Days" type="number" min="0" step="1" value={stage3Days} onChange={(e) => setStage3Days(e.target.value)} className={inputClass} />
+                <input id="stage3Percent" type="number" min="0" max="100" step="0.5" value={stage3Percent} onChange={(e) => setStage3Percent(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="stage4Days" className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Etapa 4: días + %</label>
+              <div className="flex gap-1.5">
+                <input id="stage4Days" type="number" min="0" step="1" value={stage4Days} onChange={(e) => setStage4Days(e.target.value)} className={inputClass} />
+                <input id="stage4Percent" type="number" min="0" max="100" step="0.5" value={stage4Percent} onChange={(e) => setStage4Percent(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+          </div>
         </div>
         <p className="text-xs text-slate-400 dark:text-slate-500">
           Estos montos alimentan la deuda implícita de <strong>Tesorería → Cuentas por Cobrar</strong>: como no se
           facturan meses futuros (el colegio reporta por lo percibido), el sistema compara cuántas cuotas ya
           debieron vencer contra lo realmente cobrado, por alumno. Un nivel sin monto configurado no aparecerá en
-          ese reporte hasta que lo llenes aquí. Con 5 días de gracia, una cuota queda &quot;corriente&quot; hasta
-          el día 5 de cada mes; del día 6 en adelante se considera vencida.
+          ese reporte hasta que lo llenes aquí. El recargo es escalonado: cada &quot;días&quot; es cuántos días de
+          atraso disparan esa etapa, y cada &quot;%&quot; se suma <strong>encima del saldo ya recargado</strong> por
+          la etapa anterior (no sobre el monto original) — igual que el manual de familia: día 6 (5 días de atraso)
+          +5%, día 10 (9 días) +3% más, día 15 (14 días) +3% más, día 20 (19 días) +3% más.
         </p>
       </div>
 

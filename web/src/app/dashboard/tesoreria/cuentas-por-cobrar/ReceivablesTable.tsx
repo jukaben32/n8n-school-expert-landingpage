@@ -16,6 +16,7 @@ export interface ReceivableRow {
   expected_to_date: number | null
   collected_amount: number | null
   overdue_amount: number | null
+  late_fee_amount: number | null
   oldest_overdue_due_date: string | null
   oldest_overdue_reference: string | null
   days_overdue: number | null
@@ -48,11 +49,9 @@ const thClass = 'px-4 py-3 font-barlow uppercase tracking-wide text-xs'
 export default function ReceivablesTable({
   rows,
   graceDays,
-  lateFeePercent,
 }: {
   rows: ReceivableRow[]
   graceDays: number
-  lateFeePercent: number
 }) {
   const [levelFilter, setLevelFilter] = useState('todos')
   const [gradeFilter, setGradeFilter] = useState('todos')
@@ -109,8 +108,8 @@ export default function ReceivablesTable({
     setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Aviso enviado.' : (result.error ?? 'No se pudo enviar.') }))
   }
 
-  async function handleLateFee(studentId: string) {
-    if (!confirm(`¿Generar el recargo por mora (${lateFeePercent}%) para este estudiante? Esto crea una factura real.`)) return
+  async function handleLateFee(studentId: string, lateFeeAmount: number) {
+    if (!confirm(`¿Generar el recargo por mora de ${formatDOP.format(lateFeeAmount)} para este estudiante? Esto crea una factura real.`)) return
     setBusyId(studentId)
     setFeedback((prev) => ({ ...prev, [studentId]: '' }))
     const result = await generateLateFeeCharge(studentId)
@@ -208,6 +207,7 @@ export default function ReceivablesTable({
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Curso</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Familia</th>
                 <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Saldo pendiente</th>
+                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Recargo</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Referencia</th>
                 <th className={`${thClass} text-center`} style={{ color: 'var(--dash-text-muted)' }}>Tramo</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Acciones</th>
@@ -223,6 +223,9 @@ export default function ReceivablesTable({
                   <td className="px-4 py-3" style={{ color: 'var(--dash-text-muted)' }}>{r.family_name ?? 'Familia N/A'}</td>
                   <td className="px-4 py-3 text-right font-semibold" style={{ color: 'var(--dash-text)' }}>
                     {formatDOP.format(r.overdue_amount ?? 0)}
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold" style={{ color: 'var(--dash-danger, #dc2626)' }}>
+                    {(r.late_fee_amount ?? 0) > 0 ? formatDOP.format(r.late_fee_amount ?? 0) : '—'}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--dash-text-faint)' }}>
                     {r.oldest_overdue_reference}
@@ -304,7 +307,7 @@ export default function ReceivablesTable({
                               <button
                                 type="button"
                                 disabled={busyId === r.student_id}
-                                onClick={() => handleLateFee(r.student_id)}
+                                onClick={() => handleLateFee(r.student_id, r.late_fee_amount ?? 0)}
                                 className="rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
                               >
                                 Generar recargo

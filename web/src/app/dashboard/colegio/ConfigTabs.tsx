@@ -27,6 +27,12 @@ interface School {
   tuition_due_day: number
   tuition_grace_days: number
   late_fee_percent: number
+  late_fee_stage2_days: number
+  late_fee_stage2_percent: number
+  late_fee_stage3_days: number
+  late_fee_stage3_percent: number
+  late_fee_stage4_days: number
+  late_fee_stage4_percent: number
 }
 
 const TABS = [

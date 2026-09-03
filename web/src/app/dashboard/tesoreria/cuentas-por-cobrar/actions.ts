@@ -54,12 +54,13 @@ export async function sendOverdueReminder(studentId: string): Promise<ActionResu
 
   const [{ data: receivable }, { data: school }, { data: guardians }] = await Promise.all([
     admin.rpc('calculate_receivable_status', { p_student_id: studentId }).single(),
-    admin.from('schools').select('name, late_fee_percent').eq('id', staff.schoolId).single(),
+    admin.from('schools').select('name').eq('id', staff.schoolId).single(),
     admin.from('guardians').select('email, is_primary').eq('family_id', student.family_id).order('is_primary', { ascending: false }),
   ])
 
   const status = receivable as {
     overdue_amount: number | null
+    late_fee_amount: number | null
     oldest_overdue_due_date: string | null
     aging_bucket: string | null
   } | null
@@ -76,14 +77,20 @@ export async function sendOverdueReminder(studentId: string): Promise<ActionResu
     day: 'numeric', month: 'long', year: 'numeric',
   })
 
+  // El recargo es escalonado por días de atraso (manual de familia, sección
+  // 9) -- ya no un único porcentaje plano, así que el aviso menciona el
+  // monto de recargo ya calculado para HOY en vez de un "%" genérico que
+  // dejó de representar la política real.
+  const lateFeeNote = (status.late_fee_amount ?? 0) > 0
+    ? ` Con la mora actual, el recargo ya acumulado es de ${formatDOP.format(status.late_fee_amount ?? 0)}.`
+    : ' Puedes ponerte al día ahora para evitar que se aplique el recargo por mora.'
+
   await notifyGuardianByEmail({
     schoolName: school?.name ?? null,
     guardianEmail: recipient.email,
     subject: `Aviso de mensualidad pendiente — ${student.first_name} ${student.last_name}`,
     body: `La mensualidad de ${student.first_name} ${student.last_name} vence desde el ${dueDateLabel} ` +
-      `y sigue pendiente (${formatDOP.format(status.overdue_amount ?? 0)}). ` +
-      `Puedes ponerte al día ahora para evitar que se aplique el recargo por mora ` +
-      `(${school?.late_fee_percent ?? 0}% sobre el monto vencido).`,
+      `y sigue pendiente (${formatDOP.format(status.overdue_amount ?? 0)}).${lateFeeNote}`,
   })
 
   return { ok: true }
@@ -108,20 +115,20 @@ export async function generateLateFeeCharge(studentId: string): Promise<ActionRe
     .single()
   if (!student) return { ok: false, error: 'No se encontró el estudiante.' }
 
-  const [{ data: receivable }, { data: school }] = await Promise.all([
-    admin.rpc('calculate_receivable_status', { p_student_id: studentId }).single(),
-    admin.from('schools').select('late_fee_percent').eq('id', staff.schoolId).single(),
-  ])
+  const { data: receivable } = await admin.rpc('calculate_receivable_status', { p_student_id: studentId }).single()
 
-  const status = receivable as { overdue_amount: number | null; aging_bucket: string | null } | null
+  // late_fee_amount ya viene calculado por etapas (manual de familia,
+  // sección 9: día 6 +5%, día 10 +3% más, día 15 +3% más, día 20 +3% más,
+  // cada etapa compuesta sobre el saldo ya recargado por la anterior) --
+  // ver calculate_receivable_status en la migración 20260903000000.
+  const status = receivable as { overdue_amount: number | null; late_fee_amount: number | null; aging_bucket: string | null } | null
   if (!status || !status.overdue_amount || status.overdue_amount <= 0 ||
       status.aging_bucket === 'corriente' || status.aging_bucket === 'sin_configurar' || !status.aging_bucket) {
     return { ok: false, error: 'Este estudiante no tiene deuda vencida sobre la cual aplicar recargo.' }
   }
 
-  const lateFeePercent = school?.late_fee_percent ?? 0
-  const feeAmount = Math.round(status.overdue_amount * (lateFeePercent / 100) * 100) / 100
-  if (feeAmount <= 0) return { ok: false, error: 'El porcentaje de recargo configurado es 0%.' }
+  const feeAmount = status.late_fee_amount ?? 0
+  if (feeAmount <= 0) return { ok: false, error: 'No hay recargo configurado para este tramo de atraso.' }
 
   let { data: concept } = await admin
     .from('billing_concepts')
