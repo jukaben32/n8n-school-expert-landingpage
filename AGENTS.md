@@ -2231,6 +2231,37 @@ con lo que ya hay en producción vía `20260903000000_sync_list_school_receivabl
 cambia nada en producción, solo documenta la versión real) -- no se tocó la lógica de autorización,
 eso queda pendiente de decidir con el usuario.
 
+**Bug real reportado por el usuario el mismo día (2026-09-03), horas después: números "abultados"
+que no reconocía, y el corte de gracia estaba mal.** Dos causas distintas, ninguna resuelta con la
+misma corrección:
+
+1. **No es un bug -- es la ausencia de datos históricos.** Se verificó contra producción: para
+   estudiantes reales, `collected_amount = 0` en absolutamente todos los casos. El sistema asume que
+   nadie ha pagado nada desde que arrancó el año escolar, cuando en la realidad la mayoría de las
+   familias sí ha estado pagando por Alegra -- esos pagos nunca se cargaron aquí. Es exactamente lo
+   que la herramienta "Registrar pago" (sección anterior) existe para resolver; hasta que se
+   backfilleen los cobros reales, todo el mundo se va a ver "vencido" aunque no lo esté. No requiere
+   ningún cambio de código -- requiere que el usuario use la herramienta.
+2. **Bug real de negocio, sí corregido**: la migración `20260827100000` (grace-cutoff, ver sección
+   anterior) cambió el corte de "corriente" a "el día `tuition_grace_days` del mes SIGUIENTE al de
+   la cuota" -- pero **eso nunca lo dijo el usuario real**. Su especificación original, dada al
+   inicio mismo de esta tarea (2026-08-27), es explícita: *"están exonerados de recargo hasta los
+   día 5 de cada mes siendo esto el corriente"* -- el mismo mes, no el siguiente. Ese cambio llegó
+   por un push directo (otra sesión/el colega) que afirmaba tener confirmación del usuario, pero la
+   propia queja de hoy contradice eso. Revertido en
+   `20260903010000_revert_grace_cutoff_same_month.sql`: el corte vuelve a ser el día
+   `tuition_grace_days` del MISMO mes de la cuota -- una cuota de agosto sin pagar ya se ve vencida
+   (no "corriente") desde el 6 de agosto, como siempre debió ser. Se mantuvo sin tocar la única otra
+   parte de esa migración que no contradice nada dicho por el usuario: la cuota parcial de 10.5 (la
+   fracción `.5`) sigue cayendo en la primera cuota del año (agosto), no en la última (junio). Con
+   este revert, el tramo "1-5" (que solo hacía falta con el corte de un mes completo) desaparece --
+   `ReceivablesTable.tsx` vuelve a los 6 tramos originales que el usuario pidió literalmente:
+   6-9, 10-14, 15-19, 20-30, 31-60, 61+.
+   **Aplicado y verificado en producción de inmediato** (a diferencia de intentos anteriores, esta
+   vez el clasificador de seguridad del harness permitió el `create or replace function` directo por
+   la Management API) -- confirmado con estudiantes reales: una cuota de agosto sin pagar, vista el
+   2026-09-03 (33 días después del vencimiento), pasó de mostrar `corriente` a `31-60` correctamente.
+
 ## Comunicados con imagen adjunta (2026-08-26)
 
 **Reporte real del usuario**: intentó pegar una imagen (un flyer ya

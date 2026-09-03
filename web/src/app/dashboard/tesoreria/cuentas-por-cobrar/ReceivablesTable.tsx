@@ -29,12 +29,11 @@ const LEVEL_LABELS: Record<string, string> = {
   secundaria: 'Secundaria',
 }
 
-const OVERDUE_BUCKETS = ['1-5', '6-9', '10-14', '15-19', '20-30', '31-60', '61+']
+const OVERDUE_BUCKETS = ['6-9', '10-14', '15-19', '20-30', '31-60', '61+']
 const BUCKET_ORDER = ['corriente', ...OVERDUE_BUCKETS]
 const BUCKET_LABELS: Record<string, string> = { corriente: 'Corriente' }
 const BUCKET_COLORS: Record<string, string> = {
   corriente: 'var(--dash-accent)',
-  '1-5': 'var(--dash-warning)',
   '6-9': 'var(--dash-warning)',
   '10-14': 'var(--dash-warning)',
   '15-19': 'var(--dash-danger)',
@@ -197,7 +196,7 @@ export default function ReceivablesTable({
           <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
             {normalizedQuery || levelFilter !== 'todos' || gradeFilter !== 'todos'
               ? 'Ningún estudiante coincide con este filtro.'
-              : `Ningún estudiante tiene saldo pendiente (corriente hasta el día ${graceDays} del mes siguiente a cada cuota).`}
+              : `Ningún estudiante tiene saldo pendiente (corriente hasta el día ${graceDays} de cada mes).`}
           </p>
         </div>
       ) : (
