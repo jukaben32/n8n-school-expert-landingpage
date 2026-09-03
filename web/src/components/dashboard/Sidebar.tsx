@@ -151,10 +151,20 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/academia',        label: 'Academia', icon: 'academia' },
     { href: '/dashboard/encuestas',       label: 'Encuestas', icon: 'encuestas' },
   ] }],
+  // Mensajes y Actualizaciones estaban en la matriz de permisos del profesor
+  // ('mensajes_directos' y 'actualizaciones') desde siempre, pero el enlace
+  // nunca se agregó acá -- así que en la práctica no existían para él.
+  // Reporte real del colegio (2026-09-03): "los docentes tienen deshabilitada
+  // la opción de mensajes, solo tienen comunicado, que le llega a todos los
+  // padres del curso; si quieren un mensaje específico a un padre, no lo
+  // tienen" y "la opción de la foto la deben habilitar" (la autorización de
+  // uso de imagen ya la están firmando los padres).
   teacher: [{ items: [
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
+    { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
+    { href: '/dashboard/actualizaciones', label: 'Actualizaciones', icon: 'academia' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/horarios',        label: 'Horario', icon: 'horarios' },
     { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },

@@ -53,14 +53,25 @@ export default async function MensajesPage({
       ? categoria
       : (availableCategories[0] ?? 'regular')
 
+  // Qué conversaciones ve este staff lo sigue decidiendo la RLS de
+  // direct_conversations (dirección ve todo; profesor/recepción ven la
+  // categoría Regular; Inglés/Deporte solo con asignación) -- eso no cambia.
+  //
+  // La LISTA DE FAMILIAS, en cambio, se lee con el cliente de servicio: la
+  // RLS de `families` solo la abre a dirección/finanzas/recepción, así que
+  // al profesor le llegaba vacía y se quedaba sin poder escribirle a un
+  // padre concreto -- reporte real del colegio (2026-09-03). Quién puede
+  // escribirle a quién ya lo decide getEligibleFamilyIdsForCategory (abajo)
+  // y, en el envío, staffCanAccessFamilyCategory en actions.ts; no hace
+  // falta abrirle `families` al profesor en toda la aplicación para esto.
   const [{ data: conversations, error: conversationsError }, { data: allFamilies }] = await Promise.all([
     supabase
       .from('direct_conversations')
-      .select('id, family_id, last_message_at, staff_last_read_at, families(name), direct_messages(sender_type, created_at)')
+      .select('id, family_id, last_message_at, staff_last_read_at, direct_messages(sender_type, created_at)')
       .eq('school_id', schoolId)
       .eq('category', category)
       .order('last_message_at', { ascending: false }),
-    supabase.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null).order('name'),
+    admin.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null).order('name'),
   ])
 
   type ConversationRow = {
@@ -68,12 +79,16 @@ export default async function MensajesPage({
     family_id: string
     last_message_at: string
     staff_last_read_at: string | null
-    families: { name: string } | null
     direct_messages: { sender_type: string; created_at: string }[]
   }
   const rows = (conversations ?? []) as unknown as ConversationRow[]
 
   const families = allFamilies ?? []
+  // El nombre de cada conversación sale de esta misma lista (antes venía de
+  // un `families(name)` embebido en la consulta de conversaciones, que la
+  // RLS de families dejaba en null para el profesor -- todas las filas le
+  // habrían salido como "Familia").
+  const familyNameById = new Map(families.map((f) => [f.id as string, f.name as string]))
   const eligibleFamilyIds = await getEligibleFamilyIdsForCategory(admin, {
     schoolId,
     role: profile.role,
@@ -131,7 +146,7 @@ export default async function MensajesPage({
                 className="dash-card p-4 flex items-center justify-between gap-3 transition"
               >
                 <div className="min-w-0">
-                  <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{c.families?.name ?? 'Familia'}</p>
+                  <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{familyNameById.get(c.family_id) ?? 'Familia'}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>Último mensaje: {formatDate(c.last_message_at)}</p>
                 </div>
                 {unread > 0 && (

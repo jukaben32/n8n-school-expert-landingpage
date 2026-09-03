@@ -33,21 +33,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
 
-  const { data: family } = await supabase
-    .from('families')
-    .select('id, name')
-    .eq('id', familyId)
-    .eq('school_id', schoolId)
-    .is('deleted_at', null)
-    .maybeSingle()
-  if (!family) notFound()
-
   const admin = createAdminClient()
 
   // La lista (mensajes/page.tsx) ya filtra por RLS, pero esta página entra
   // por URL directa -- hay que revalidar acá que este staff puede ver
   // esta familia en esta categoría antes de tocar el cliente admin (que
-  // se salta RLS). Mismo motivo que en mensajes/actions.ts.
+  // se salta RLS). Mismo motivo que en mensajes/actions.ts. Va de primero
+  // para que quien no tenga permiso ni siquiera llegue a leer la ficha.
   const allowed = await staffCanAccessFamilyCategory(admin, {
     schoolId,
     role: profile.role,
@@ -56,6 +48,20 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
     category,
   })
   if (!allowed) redirect('/dashboard/mensajes')
+
+  // La familia se lee con el cliente de servicio y no con el del usuario:
+  // la RLS de `families` no incluye al profesor, así que esta pantalla le
+  // respondía "no encontrado" aunque sí tuviera permiso sobre la
+  // conversación -- mismo motivo que en mensajes/page.tsx. El permiso ya
+  // quedó validado arriba.
+  const { data: family } = await admin
+    .from('families')
+    .select('id, name')
+    .eq('id', familyId)
+    .eq('school_id', schoolId)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (!family) notFound()
 
   // La conversación puede no existir todavía (primera vez que este staff
   // le escribe a esta familia en esta categoría) -- no hace falta crearla
