@@ -7,6 +7,7 @@ import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
 import { lateFeeReference } from '@/lib/receivables/monthReference'
+import { EXTERNAL_PAYMENT_SOURCE_LABELS } from '@/lib/receivables/externalPaymentSources'
 
 interface ActionResult {
   ok: boolean
@@ -169,17 +170,6 @@ export async function generateLateFeeCharge(studentId: string): Promise<ActionRe
   return { ok: true }
 }
 
-export const EXTERNAL_PAYMENT_SOURCES = [
-  { value: 'alegra', label: 'Alegra (POS)' },
-  { value: 'otro', label: 'Otra plataforma' },
-  { value: 'efectivo', label: 'Efectivo' },
-  { value: 'transferencia', label: 'Transferencia' },
-  { value: 'tarjeta', label: 'Tarjeta' },
-  { value: 'cheque', label: 'Cheque' },
-] as const
-
-const SOURCE_LABELS: Record<string, string> = Object.fromEntries(EXTERNAL_PAYMENT_SOURCES.map((s) => [s.value, s.label]))
-
 /**
  * Registra un cobro que ya ocurrió fuera de esta plataforma (Alegra POS, u
  * otra plataforma) -- mientras los pagos en línea todavía no están
@@ -202,7 +192,7 @@ export async function recordExternalPayment(
   if (!staff.ok) return { ok: false, error: staff.error }
 
   if (!amount || amount <= 0) return { ok: false, error: 'Indica un monto mayor a cero.' }
-  if (!SOURCE_LABELS[source]) return { ok: false, error: 'Fuente de pago inválida.' }
+  if (!EXTERNAL_PAYMENT_SOURCE_LABELS[source]) return { ok: false, error: 'Fuente de pago inválida.' }
   if (!paidAt) return { ok: false, error: 'Indica la fecha del pago.' }
 
   const admin = createAdminClient()
@@ -236,7 +226,7 @@ export async function recordExternalPayment(
   }
 
   const roundedAmount = Math.round(amount * 100) / 100
-  const description = `Mensualidad — cobro ya registrado (${SOURCE_LABELS[source]})${note.trim() ? ': ' + note.trim() : ''}`
+  const description = `Mensualidad — cobro ya registrado (${EXTERNAL_PAYMENT_SOURCE_LABELS[source]})${note.trim() ? ': ' + note.trim() : ''}`
 
   const { data: invoice, error: invoiceError } = await admin.from('invoices').insert({
     school_id: staff.schoolId,

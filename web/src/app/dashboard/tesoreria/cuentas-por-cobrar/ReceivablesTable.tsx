@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { sendOverdueReminder, generateLateFeeCharge, recordExternalPayment, EXTERNAL_PAYMENT_SOURCES } from './actions'
+import { sendOverdueReminder, generateLateFeeCharge, recordExternalPayment } from './actions'
+import { EXTERNAL_PAYMENT_SOURCES } from '@/lib/receivables/externalPaymentSources'
 
 export interface ReceivableRow {
   student_id: string

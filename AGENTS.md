@@ -2194,9 +2194,42 @@ usuario en la sección de NCF/Alegra más abajo.
   `ncf`/`ncf_type` en `null`, nunca un comprobante fantasma.
 - `tsc --noEmit`, `lint` y `build` completos limpios.
 
-**Pendiente**: aplicar `20260902000000_external_payment_methods.sql` a producción y registrar ahí
-los cobros reales ya hechos por Alegra/otra plataforma -- no se cargó ningún dato real desde esta
-sesión, solo se construyó y verificó la herramienta.
+**Pendiente**: ~~aplicar `20260902000000_external_payment_methods.sql` a producción~~ -- hecho el
+2026-09-03, verificado leyendo `pg_get_constraintdef` en producción. Falta registrar ahí los cobros
+reales ya hechos por Alegra/otra plataforma -- no se cargó ningún dato real desde esta sesión, solo
+se construyó y verificó la herramienta.
+
+**Bug real en producción y corregido el mismo día (2026-09-03): la pantalla completa reventaba**
+("Algo salió mal") al entrar a `/dashboard/tesoreria/cuentas-por-cobrar`, reportado por el usuario
+con una captura real después de fusionar el PR de "Registrar pago externo". Causa: `actions.ts`
+lleva `'use server'` arriba del archivo -- una restricción de React/Next.js (no específica de este
+proyecto) exige que un archivo así **solo exporte funciones async**. Se había exportado
+`EXTERNAL_PAYMENT_SOURCES` (un array plano) desde ese mismo archivo para que `ReceivablesTable.tsx`
+lo usara al inicializar estado (`useState(EXTERNAL_PAYMENT_SOURCES[0].value)`) -- el bundler
+convierte ese export en una referencia de servidor en vez de dejar pasar el valor real, así que en
+el cliente `EXTERNAL_PAYMENT_SOURCES` no es el array esperado y la línea revienta apenas se monta
+el componente, antes de cualquier llamada a Supabase (confirmado con los logs de producción: cero
+llamadas a `list_school_receivables` registradas nunca -- la pantalla nunca llegó a pedir datos).
+Ni `tsc`, ni `eslint`, ni `next build` avisan de este error -- es puramente de runtime en el
+navegador. Corregido moviendo `EXTERNAL_PAYMENT_SOURCES` a un módulo plano nuevo,
+`web/src/lib/receivables/externalPaymentSources.ts` (mismo patrón ya usado por
+`monthReference.ts`) -- `actions.ts` lo importa para validar internamente, nunca lo re-exporta.
+**Regla para el futuro**: un archivo `'use server'` de este proyecto nunca debe exportar nada que
+no sea una función async -- cualquier constante/tipo/dato compartido con un componente cliente va
+en un módulo aparte sin la directiva.
+
+**Hallazgo aparte durante el diagnóstico (sin resolver por esta sesión)**: revisando producción
+para diagnosticar lo anterior, se encontró que `list_school_receivables()` **ya no es la función
+que se migró** -- en algún momento, fuera de esta sesión y sin ninguna migración nueva en el repo,
+alguien la cambió directo en la base a `security definer` con una comprobación explícita de
+autorización (`raise exception` si el perfil no pertenece a ese colegio con un rol de staff
+válido). Es un endurecimiento razonable, pero **tiene un caso límite sin resolver**: exige
+`users_profiles.school_id = p_school_id`, lo cual excluye al `super_admin` viendo "Entrar como
+director" un colegio que no es el suyo (`getActiveSchool()`) -- con un solo colegio afiliado hoy no
+se manifiesta, pero hay que revisarlo antes de afiliar un segundo colegio. Se sincronizó el repo
+con lo que ya hay en producción vía `20260903000000_sync_list_school_receivables_definer.sql` (no
+cambia nada en producción, solo documenta la versión real) -- no se tocó la lógica de autorización,
+eso queda pendiente de decidir con el usuario.
 
 ## Comunicados con imagen adjunta (2026-08-26)
 
