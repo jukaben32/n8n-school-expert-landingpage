@@ -15,6 +15,14 @@ import { getActiveSchool } from '@/lib/activeSchool'
  * mientras la votación está abierta, y que nadie pueda leer ni modificar
  * un voto. Si esto usara el cliente admin (service_role) se saltaría todo
  * eso y las garantías se perderían.
+ *
+ * Y desde que los estudiantes tienen cuenta propia (migración
+ * 20260905000000), NINGUNA de estas funciones escribe el voto: padrón y
+ * papeleta se insertan juntos, en una sola transacción, dentro de las
+ * funciones cast_student_vote / cast_urna_vote / submit_poll_response.
+ * Con dos escrituras sueltas desde aquí, un estudiante con credenciales
+ * podía marcarse una vez en el padrón y meter todas las papeletas que
+ * quisiera por la API.
  */
 
 interface ActionResult {
@@ -35,6 +43,12 @@ async function resolveStaff() {
 
   if (!profile || !canAccess(profile.role, 'encuestas')) {
     return { ok: false as const, error: 'No tienes permiso para usar Encuestas.' }
+  }
+  // El estudiante también tiene el módulo 'encuestas' (para votar), pero
+  // nada de lo que pasa por aquí -- cargar candidatos, abrir, cerrar,
+  // operar la urna -- es suyo. Vota por castOwnVote().
+  if (profile.role === 'student') {
+    return { ok: false as const, error: 'Los estudiantes solo pueden votar y responder encuestas.' }
   }
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
@@ -87,7 +101,7 @@ export async function createVotacion(input: NewVotacionInput): Promise<ActionRes
 export interface NewEncuestaInput {
   title: string
   description: string
-  audience: 'staff' | 'familias' | 'ambos'
+  audience: 'staff' | 'familias' | 'ambos' | 'estudiantes' | 'todos'
   questions: { text: string; kind: 'opcion' | 'escala' | 'texto'; options: string[] }[]
 }
 
@@ -184,17 +198,14 @@ export async function setPollStatus(pollId: string, status: 'abierta' | 'cerrada
 }
 
 /**
- * Registra el voto de un estudiante en la urna del aula.
+ * URNA DEL AULA: el profesor supervisa y el estudiante marca en su
+ * dispositivo. Sigue siendo la única vía para los cursos donde los
+ * estudiantes no tienen cuenta (Párvulo, Kinder...).
  *
- * Dos escrituras separadas y en este orden:
- *   1. El PADRÓN (`poll_voters`): marca que este estudiante ya votó. Si ya
- *      estaba marcado, el índice único lo rechaza -- nadie vota dos veces.
- *   2. La URNA (`poll_ballots`): los votos, sin ninguna referencia al
- *      estudiante ni hora, así no hay forma de saber quién votó qué.
- *
- * Si el paso 2 fallara, el estudiante queda marcado sin voto en la urna y
- * el cuadre del acta lo delata (votantes > votos) -- preferible a
- * permitirle votar de nuevo, que sí abriría la puerta al fraude.
+ * El padrón (que este estudiante ya votó) y las papeletas se escriben
+ * juntos dentro de `cast_urna_vote`. Antes eran dos escrituras separadas
+ * desde aquí y, si la segunda fallaba, el estudiante quedaba marcado sin
+ * voto: perdía su derecho a votar y el acta no cuadraba.
  */
 export async function castVote(
   pollId: string,
@@ -203,55 +214,66 @@ export async function castVote(
 ): Promise<ActionResult> {
   const staff = await resolveStaff()
   if (!staff.ok) return { ok: false, error: staff.error }
-  if (choices.length === 0) return { ok: false, error: 'No se seleccionó ningún candidato.' }
 
-  const { error: voterError } = await staff.supabase.from('poll_voters').insert({
-    poll_id: pollId,
-    student_id: studentId,
-    recorded_by: staff.profileId,
+  const { error } = await staff.supabase.rpc('cast_urna_vote', {
+    p_poll_id: pollId,
+    p_student_id: studentId,
+    p_choices: choices,
   })
-  if (voterError) {
-    if (voterError.code === '23505') return { ok: false, error: 'Este estudiante ya votó.' }
-    return { ok: false, error: 'No se pudo registrar el votante (¿está abierta la votación?).' }
-  }
-
-  const { error: ballotError } = await staff.supabase.from('poll_ballots').insert(
-    choices.map((c) => ({ poll_id: pollId, position_id: c.positionId, candidate_id: c.candidateId }))
-  )
-  if (ballotError) return { ok: false, error: 'El votante quedó marcado pero el voto no se guardó. Avisa a dirección.' }
+  if (error) return { ok: false, error: error.message }
 
   revalidatePath(`/dashboard/encuestas/${pollId}`)
   return { ok: true }
 }
 
-/** Responde una encuesta (staff o familia, una sola vez por persona). */
+/**
+ * EL ESTUDIANTE VOTA DESDE SU PROPIA CUENTA.
+ *
+ * No recibe ningún `studentId`: quién vota lo decide la base de datos a
+ * partir de la sesión (`current_student_id()`), así que nadie puede votar
+ * en nombre de otro ni siquiera armando la petición a mano.
+ */
+export async function castOwnVote(
+  pollId: string,
+  choices: { positionId: string; candidateId: string }[]
+): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'No hay sesión activa.' }
+
+  const { error } = await supabase.rpc('cast_student_vote', {
+    p_poll_id: pollId,
+    p_choices: choices,
+  })
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath(`/dashboard/encuestas/${pollId}`)
+  return { ok: true }
+}
+
+/**
+ * Responde una encuesta: personal, familia o estudiante, según a quién
+ * vaya dirigida, y una sola vez por persona. Quién puede responder lo
+ * decide `can_answer_encuesta()` en la base de datos.
+ */
 export async function submitEncuesta(
   pollId: string,
   answers: { questionId: string; option?: string; scale?: number; text?: string }[]
 ): Promise<ActionResult> {
-  const staff = await resolveStaff()
-  if (!staff.ok) return { ok: false, error: staff.error }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'No hay sesión activa.' }
 
-  const { error: voterError } = await staff.supabase.from('poll_voters').insert({
-    poll_id: pollId,
-    profile_id: staff.profileId,
-    recorded_by: staff.profileId,
+  const { error } = await supabase.rpc('submit_poll_response', {
+    p_poll_id: pollId,
+    p_answers: answers.map((a) => ({
+      questionId: a.questionId,
+      option: a.option ?? null,
+      scale: a.scale ?? null,
+      text: a.text ?? null,
+    })),
   })
-  if (voterError) {
-    if (voterError.code === '23505') return { ok: false, error: 'Ya respondiste esta encuesta.' }
-    return { ok: false, error: 'No se pudo registrar tu respuesta (¿está abierta la encuesta?).' }
-  }
-
-  const { error: ballotError } = await staff.supabase.from('poll_ballots').insert(
-    answers.map((a) => ({
-      poll_id: pollId,
-      question_id: a.questionId,
-      answer_option: a.option ?? null,
-      answer_scale: a.scale ?? null,
-      answer_text: a.text ?? null,
-    }))
-  )
-  if (ballotError) return { ok: false, error: 'No se pudieron guardar tus respuestas.' }
+  if (error) return { ok: false, error: error.message }
 
   revalidatePath(`/dashboard/encuestas/${pollId}`)
   return { ok: true }

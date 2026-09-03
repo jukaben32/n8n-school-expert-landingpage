@@ -18,6 +18,14 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   cerrada: { label: 'Cerrada', color: 'var(--dash-text-muted)' },
 }
 
+const AUDIENCE_LABELS: Record<string, string> = {
+  staff: 'el personal',
+  familias: 'las familias',
+  ambos: 'el personal y las familias',
+  estudiantes: 'los estudiantes',
+  todos: 'toda la comunidad',
+}
+
 export default async function EncuestasPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,20 +44,26 @@ export default async function EncuestasPage() {
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
   const puedeGestionar = canAccess(profile.role, 'encuestas_gestionar')
+  const esEstudiante = profile.role === 'student'
 
+  // Al estudiante la RLS (polls_student_read) ya le deja ver solo la
+  // votación de SU curso y las encuestas dirigidas a estudiantes, y nunca
+  // los borradores -- la consulta es la misma para todos.
   const [{ data: polls, error: pollsError }, { data: studentsWithGrade }] = await Promise.all([
     supabase
       .from('polls')
       .select('id, type, title, description, grade_level, audience, status, created_at')
       .eq('school_id', schoolId)
       .order('created_at', { ascending: false }),
-    supabase
-      .from('students')
-      .select('grade_level')
-      .eq('school_id', schoolId)
-      .eq('enrollment_status', 'inscrito')
-      .not('grade_level', 'is', null)
-      .is('deleted_at', null),
+    puedeGestionar
+      ? supabase
+          .from('students')
+          .select('grade_level')
+          .eq('school_id', schoolId)
+          .eq('enrollment_status', 'inscrito')
+          .not('grade_level', 'is', null)
+          .is('deleted_at', null)
+      : Promise.resolve({ data: [] as { grade_level: string | null }[] }),
   ])
 
   const gradeLevelOptions = Array.from(
@@ -65,11 +79,12 @@ export default async function EncuestasPage() {
 
       <div>
         <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
-          Encuestas y Votaciones
+          {esEstudiante ? 'Encuestas y votaciones' : 'Encuestas y Votaciones'}
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Encuestas al personal y a las familias, y votaciones de junta directiva por curso — con voto
-          secreto y conteo automático.
+          {esEstudiante
+            ? 'Aquí votas por la junta directiva de tu curso y respondes las encuestas del colegio. Tu voto es secreto.'
+            : 'Encuestas al personal y a las familias, y votaciones de junta directiva por curso — con voto secreto y conteo automático.'}
         </p>
       </div>
 
@@ -82,7 +97,7 @@ export default async function EncuestasPage() {
         {votaciones.length === 0 ? (
           <div className="dash-card border-dashed p-8 text-center">
             <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
-              Todavía no hay votaciones.
+              {esEstudiante ? 'Tu curso no tiene ninguna votación por ahora.' : 'Todavía no hay votaciones.'}
             </p>
           </div>
         ) : (
@@ -112,7 +127,7 @@ export default async function EncuestasPage() {
         {encuestas.length === 0 ? (
           <div className="dash-card border-dashed p-8 text-center">
             <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
-              Todavía no hay encuestas.
+              {esEstudiante ? 'No hay ninguna encuesta para ti por ahora.' : 'Todavía no hay encuestas.'}
             </p>
           </div>
         ) : (
@@ -121,7 +136,7 @@ export default async function EncuestasPage() {
               <div className="min-w-0">
                 <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{p.title}</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
-                  Dirigida a: {p.audience === 'ambos' ? 'personal y familias' : p.audience}
+                  Dirigida a {AUDIENCE_LABELS[p.audience ?? ''] ?? p.audience}
                 </p>
               </div>
               <span

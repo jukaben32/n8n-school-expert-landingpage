@@ -143,10 +143,13 @@ const navByRole: Record<string, NavGroup[]> = {
   guardian_blocked: [{ items: [
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
   ] }],
+  // Estudiante: exactamente lo que pidió el colegio -- Academia y
+  // Encuestas. A propósito NO lleva Comunicados ni Agenda: esas pantallas
+  // están escritas para el personal y los tutores (sus policies filtran
+  // por guardian_id/staff), así que a un estudiante le saldrían vacías.
   student: [{ items: [
     { href: '/dashboard/academia',        label: 'Academia', icon: 'academia' },
-    { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
-    { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
+    { href: '/dashboard/encuestas',       label: 'Encuestas', icon: 'encuestas' },
   ] }],
   teacher: [{ items: [
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },

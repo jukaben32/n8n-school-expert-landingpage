@@ -18,6 +18,8 @@ const AUDIENCE_LABELS: Record<string, string> = {
   staff: 'el personal',
   familias: 'las familias',
   ambos: 'el personal y las familias',
+  estudiantes: 'los estudiantes',
+  todos: 'toda la comunidad',
 }
 
 export default function EncuestaPanel({ poll, questions, alreadyAnswered, results, puedeGestionar }: Props) {

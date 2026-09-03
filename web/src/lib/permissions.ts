@@ -22,6 +22,7 @@ export type Role =
 export type Module =
   | 'secretaria'
   | 'estudiantes' | 'estudiantes_nuevo' | 'estudiantes_escaneos'
+  | 'estudiantes_accesos' // crear el login de los estudiantes (código + contraseña impresa)
   | 'familias'
   | 'personal'
   | 'tesoreria' | 'pagos' | 'tesoreria_proveedores'
@@ -37,6 +38,7 @@ export type Module =
   | 'mensajes_directos' // conversación privada de dos vías con una familia
   | 'asistencia' | 'asistencia_registrar'
   | 'reportes'
+  | 'academia' // vista del estudiante: sus lecciones, tareas y cuestionarios
   | 'academia_gestionar' // crear lecciones + ver progreso
   | 'actualizaciones' // fotos cortas del día a día, por estudiante o por grado
   | 'whatsapp' // configuración del canal WhatsApp / Evolution API
@@ -47,7 +49,7 @@ export type Module =
   | 'encuestas_gestionar' // crear encuestas/votaciones, abrirlas y cerrarlas
 
 const FULL_ACCESS: Module[] = [
-  'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
+  'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'estudiantes_accesos', 'familias', 'personal',
   'tesoreria', 'pagos', 'tesoreria_proveedores', 'comunicados', 'comunicados_nuevo',
   'agenda', 'agenda_nuevo', 'mensajes_directos',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar', 'actualizaciones',
@@ -79,17 +81,24 @@ const ROLE_MODULES: Record<Role, Module[]> = {
   // comprobantes de transferencia). No incluye 'tesoreria_proveedores'
   // (facturas de proveedores/Alegra -- eso es gestión contable, se queda en
   // Finanzas) ni contenido de Academia.
-  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'horarios', 'notas', 'autorizaciones', 'autorizaciones_nuevo', 'tesoreria', 'pagos'],
+  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'estudiantes_accesos', 'familias', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'horarios', 'notas', 'autorizaciones', 'autorizaciones_nuevo', 'tesoreria', 'pagos'],
 
   // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, facturas de
   // proveedores/Alegra, reportes, y solo lectura de familias para
   // facturar. No toca estudiantes, asistencia, comunicados ni Academia.
   finance: ['tesoreria', 'pagos', 'tesoreria_proveedores', 'reportes', 'familias'],
 
-  // Estos dos no usan este mapa (tienen sus propias páginas dedicadas:
-  // portal-familiar y academia), se listan por completitud de tipos.
+  // El tutor no usa este mapa: tiene su propia página dedicada
+  // (portal-familiar). Se lista por completitud de tipos.
   guardian: [],
-  student: [],
+
+  // Estudiante: desde 2026-09-04 tiene login propio. Solo dos cosas --
+  // Academia (sus lecciones, tareas y cuestionarios) y Encuestas, donde
+  // vota en la junta directiva de SU curso y responde las encuestas
+  // dirigidas a estudiantes. Qué votación le toca y que no pueda votar
+  // dos veces lo impone la base de datos (student_can_see_poll +
+  // cast_student_vote), no esta lista.
+  student: ['academia', 'encuestas'],
 }
 
 /** ¿Puede este rol acceder a este módulo? */

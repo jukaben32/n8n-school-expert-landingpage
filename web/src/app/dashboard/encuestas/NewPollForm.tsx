@@ -12,6 +12,7 @@ const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300
 const CARGOS_POR_DEFECTO = ['Presidente', 'Secretario', 'Vocal']
 
 type Kind = 'opcion' | 'escala' | 'texto'
+type Audience = 'staff' | 'familias' | 'ambos' | 'estudiantes' | 'todos'
 interface DraftQuestion { key: string; text: string; kind: Kind; options: string }
 
 function newQuestion(): DraftQuestion {
@@ -33,7 +34,7 @@ export default function NewPollForm({ gradeLevelOptions }: { gradeLevelOptions: 
   const [cargos, setCargos] = useState(CARGOS_POR_DEFECTO.join(', '))
 
   // Encuesta
-  const [audience, setAudience] = useState<'staff' | 'familias' | 'ambos'>('ambos')
+  const [audience, setAudience] = useState<Audience>('ambos')
   const [questions, setQuestions] = useState<DraftQuestion[]>([newQuestion()])
 
   function updateQuestion(key: string, patch: Partial<DraftQuestion>) {
@@ -148,13 +149,18 @@ export default function NewPollForm({ gradeLevelOptions }: { gradeLevelOptions: 
             <label htmlFor="pollAudience" className={labelClass}>¿A quién va dirigida?</label>
             <select
               id="pollAudience" value={audience}
-              onChange={(e) => setAudience(e.target.value as 'staff' | 'familias' | 'ambos')}
+              onChange={(e) => setAudience(e.target.value as Audience)}
               className={inputClass}
             >
               <option value="ambos">Personal y familias</option>
               <option value="staff">Solo el personal</option>
               <option value="familias">Solo las familias</option>
+              <option value="estudiantes">Solo los estudiantes</option>
+              <option value="todos">Toda la comunidad (personal, familias y estudiantes)</option>
             </select>
+            <p className="text-xs text-slate-400 mt-1.5">
+              Los estudiantes solo pueden responder si tienen acceso creado (Estudiantes → Accesos).
+            </p>
           </div>
 
           <div className="space-y-3">

@@ -101,6 +101,18 @@ export default async function EstudiantesPage({
           </p>
         </div>
         <div className="flex gap-2">
+          {canAccess(profile.role, 'estudiantes_accesos') && (
+            <Link
+              id="btn-accesos-estudiantes"
+              href="/dashboard/estudiantes/accesos"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 transition hover:bg-slate-50"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 12.75v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              Accesos
+            </Link>
+          )}
           {canAccess(profile.role, 'estudiantes_escaneos') && (
             <Link
               id="btn-escanear-fichas"

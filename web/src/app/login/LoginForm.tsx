@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { normalizeLoginIdentifier } from '@/lib/auth/studentAccess'
 
 /**
  * Formulario de Login — Client Component
@@ -24,15 +25,18 @@ export default function LoginForm() {
     setError(null)
 
     const supabase = createClient()
+    // El personal y los tutores escriben su correo; los estudiantes solo
+    // su código de acceso (no tienen correo), y aquí se le agrega el
+    // dominio interno para convertirlo en la identidad de Auth.
     const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizeLoginIdentifier(email),
       password,
     })
 
     if (authError) {
       // Mensaje amigable en español
       if (authError.message.includes('Invalid login')) {
-        setError('Correo o contraseña incorrectos. Intenta de nuevo.')
+        setError('Correo/código o contraseña incorrectos. Intenta de nuevo.')
       } else {
         setError('Ocurrió un error. Por favor intenta más tarde.')
       }
@@ -66,16 +70,18 @@ export default function LoginForm() {
       {/* Campo email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Correo electrónico
+          Correo electrónico o código de estudiante
         </label>
         <input
           id="email"
-          type="email"
+          type="text"
           required
-          autoComplete="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="tu@correo.com"
+          placeholder="tu@correo.com  ó  K7MPQ34"
           className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
       </div>
@@ -171,6 +177,10 @@ export default function LoginForm() {
               setError(null)
               setNotice(null)
               const supabase = createClient()
+              if (!email.includes('@')) {
+                setError('El enlace mágico solo funciona con un correo. Si eres estudiante, entra con tu código y contraseña.')
+                return
+              }
               const { error: otpError } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
