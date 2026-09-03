@@ -43,6 +43,8 @@ export type Module =
   | 'website' // constructor del sitio público del colegio
   | 'configuracion_colegio'
   | 'asistente_ia' // ver conversaciones del asistente de IA con las familias
+  | 'encuestas' // ver encuestas/votaciones y operar la urna del propio curso (profesor)
+  | 'encuestas_gestionar' // crear encuestas/votaciones, abrirlas y cerrarlas
 
 const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'familias', 'personal',
@@ -51,6 +53,7 @@ const FULL_ACCESS: Module[] = [
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar', 'actualizaciones',
   'horarios', 'horarios_gestionar', 'planificacion', 'notas', 'notas_gestionar',
   'autorizaciones', 'autorizaciones_nuevo',
+  'encuestas', 'encuestas_gestionar',
   'whatsapp',
   'website',
   'configuracion_colegio', 'asistente_ia',
@@ -64,7 +67,10 @@ const ROLE_MODULES: Record<Role, Module[]> = {
 
   // Profesor: su salón de clases -- asistencia, academia, avisos.
   // No gestiona familias completas ni dinero.
-  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion', 'notas', 'notas_gestionar', 'autorizaciones', 'autorizaciones_nuevo'],
+  // 'encuestas' (sin '_gestionar'): el profesor carga los candidatos y
+  // opera la urna de SU curso -- crear/abrir/cerrar la votación es de
+  // dirección. El alcance por curso lo impone la RLS (can_run_poll).
+  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion', 'notas', 'notas_gestionar', 'autorizaciones', 'autorizaciones_nuevo', 'encuestas'],
 
   // Recepción/Secretaría: la puerta de entrada -- estudiantes (ingresos y
   // salidas), familias, avisos, agenda, asistencia, horarios, notas,
