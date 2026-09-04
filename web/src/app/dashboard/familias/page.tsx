@@ -16,8 +16,10 @@ type FamilyRow = {
   name: string
   billing_email: string | null
   billing_phone: string | null
-  students: { id: string }[]
-  guardians: { id: string; first_name: string; last_name: string; phone: string; is_primary: boolean }[]
+  // `deleted_at` viaja a propósito: el conteo de esta lista tiene que
+  // descartar los borrados igual que lo hace el detalle de la familia.
+  students: { id: string; deleted_at: string | null }[]
+  guardians: { id: string; first_name: string; last_name: string; phone: string; is_primary: boolean; deleted_at: string | null }[]
 }
 
 /**
@@ -42,18 +44,37 @@ export default async function FamiliasPage() {
     redirect('/dashboard/portal-familiar')
   }
 
+  // El `.is('deleted_at', null)` de abajo filtra las FAMILIAS, no los
+  // estudiantes ni los tutores anidados -- por eso ambos traen su propio
+  // `deleted_at` y se descartan en memoria (ver `families`, más abajo).
+  //
+  // Sin eso, esta tabla contaba a los estudiantes borrados: reporte real del
+  // colegio (2026-09-03), la familia Juan George salía con 3 hijos (tenía un
+  // Ellian duplicado, borrado ese mismo día) mientras el detalle mostraba 2,
+  // y el colegio creyó que le tocaba el descuento por 3 hermanos. El
+  // descuento en sí nunca estuvo mal -- calculate_sibling_discount() sí
+  // descarta borrados --, pero este número los llevó a pensar que sí.
+  //
+  // El descarte se hace en memoria y NO con un filtro sobre la relación
+  // anidada (`students.deleted_at`), porque ese filtro puede cambiar el
+  // join y dejar fuera familias sin hijos: aquí no se puede alterar qué
+  // familias aparecen, solo cómo se cuentan.
   const { data: familiesRaw, error: familiesError } = await supabase
     .from('families')
     .select(`
       id, name, billing_email, billing_phone,
-      students(id),
-      guardians(id, first_name, last_name, phone, is_primary)
+      students(id, deleted_at),
+      guardians(id, first_name, last_name, phone, is_primary, deleted_at)
     `)
     .eq('school_id', schoolId)
     .is('deleted_at', null)
     .order('name', { ascending: true })
 
-  const families = (familiesRaw ?? []) as unknown as FamilyRow[]
+  const families = ((familiesRaw ?? []) as unknown as FamilyRow[]).map((f) => ({
+    ...f,
+    students: (f.students ?? []).filter((s) => !s.deleted_at),
+    guardians: (f.guardians ?? []).filter((g) => !g.deleted_at),
+  }))
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

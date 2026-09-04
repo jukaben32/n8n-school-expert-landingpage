@@ -29,10 +29,20 @@ export default async function FacturarPage() {
     redirect('/dashboard')
   }
 
-  const [{ data: families, error: familiesError }, { data: concepts, error: conceptsError }] = await Promise.all([
-    supabase.from('families').select('id, name, students(id, first_name, last_name)').eq('school_id', schoolId).is('deleted_at', null).order('name'),
+  // Igual que en el listado de Familias: el `.is('deleted_at', null)` filtra
+  // las FAMILIAS, no los estudiantes anidados -- sin descartarlos aquí, el
+  // selector de "a quién se le factura" ofrecía estudiantes ya eliminados.
+  const [{ data: familiesRaw, error: familiesError }, { data: concepts, error: conceptsError }] = await Promise.all([
+    supabase.from('families').select('id, name, students(id, first_name, last_name, deleted_at)').eq('school_id', schoolId).is('deleted_at', null).order('name'),
     supabase.from('billing_concepts').select('id, name, amount, recurrence').eq('school_id', schoolId).eq('is_active', true).order('name'),
   ])
+
+  type FamilyRow = { id: string; name: string; students: { id: string; first_name: string; last_name: string; deleted_at: string | null }[] }
+  const families = ((familiesRaw ?? []) as unknown as FamilyRow[]).map((f) => ({
+    id: f.id,
+    name: f.name,
+    students: (f.students ?? []).filter((s) => !s.deleted_at).map((s) => ({ id: s.id, first_name: s.first_name, last_name: s.last_name })),
+  }))
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -48,7 +58,7 @@ export default async function FacturarPage() {
       <NewInvoiceForm
         schoolId={schoolId}
         authorProfileId={profile.id}
-        families={families ?? []}
+        families={families}
         concepts={concepts ?? []}
       />
     </div>
