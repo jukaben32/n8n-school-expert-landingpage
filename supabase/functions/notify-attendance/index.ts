@@ -169,12 +169,17 @@ Deno.serve(async (req: Request) => {
   const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY')
   let aiMessage = ''
 
-  if (claudeApiKey) {
-    const statusText = record.status === 'ausente' ? 'ausencia' : 'tardanza'
-    const dateFormatted = new Date(record.date).toLocaleDateString('es-DO', {
-      weekday: 'long', day: 'numeric', month: 'long'
-    })
+  const statusText = record.status === 'ausente' ? 'ausencia' : 'tardanza'
+  // `record.date` es una fecha suelta (YYYY-MM-DD), que `new Date()`
+  // interpreta como medianoche UTC. Hay que formatearla en UTC a propósito:
+  // sin el `timeZone`, el runtime la pasaría a su propia zona y podría
+  // mostrar el día anterior -- el mismo bug que ya se corrigió una vez en la
+  // página de Asistencia (ver web/src/lib/schoolDate.ts).
+  const dateFormatted = new Date(record.date).toLocaleDateString('es-DO', {
+    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC',
+  })
 
+  if (claudeApiKey) {
     const prompt = `Eres el sistema de comunicación de ${context.school_name}.
 Redacta un mensaje breve (máximo 3 oraciones) y cálido para notificar a ${primaryGuardian.first_name} ${primaryGuardian.last_name} sobre la ${statusText} de su hijo/a ${context.first_name} ${context.last_name} el día ${dateFormatted}${subjectName ? ` en la clase de ${subjectName}` : ''}.
 ${record.notes ? `Nota adicional del colegio: "${record.notes}"` : ''}
@@ -206,11 +211,15 @@ El tono debe ser profesional pero empático. No uses emojis. No incluyas saludos
     }
   }
 
-  // Fallback si la IA no está disponible o falla
+  // Fallback si la IA no está disponible o falla. Hoy es SIEMPRE este el
+  // mensaje que sale: ANTHROPIC_API_KEY no está configurada en producción.
+  //
+  // Dice la fecha real del registro, no "el día de hoy": ese texto fijo
+  // habría dicho "hoy" también al cargar asistencia atrasada, avisándole a
+  // un padre de una falta de hace semanas como si fuera de esta mañana.
   if (!aiMessage) {
-    const statusText = record.status === 'ausente' ? 'ausencia' : 'tardanza'
     const subjectText = subjectName ? ` en la clase de ${subjectName}` : ''
-    aiMessage = `Le informamos que ${context.first_name} ${context.last_name} registró una ${statusText}${subjectText} el día de hoy en ${context.school_name}. Por favor comuníquese con la secretaría si tiene alguna consulta.`
+    aiMessage = `Le informamos que ${context.first_name} ${context.last_name} registró una ${statusText}${subjectText} el ${dateFormatted} en ${context.school_name}. Por favor comuníquese con la secretaría si tiene alguna consulta.`
   }
 
   // ── 4. ACCIÓN ───────────────────────────────────────────────────────────────
