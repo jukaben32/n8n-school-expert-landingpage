@@ -120,10 +120,18 @@ const CHECKS = {
 }
 
 /**
- * El insert de asistencia es el caso especial: es la escritura que el
+ * El guardado de asistencia es el caso especial: es la escritura que el
  * navegador hace directo contra Supabase (AttendanceForm), la que se rompió
  * el 2026-09-03 sin que apareciera en ningún log. Se prueba de verdad, con
  * un alumno que ese profesor sí tenga a su alcance, y se revierte.
+ *
+ * IMPORTANTE: tiene que replicar el `upsert` EXACTO del formulario, con su
+ * ON CONFLICT y con subject_id null ("Todas (General)", la opción por
+ * defecto). Antes esto era un insert simple, y por eso no detectó el fallo
+ * del 2026-09-04: el ON CONFLICT apuntaba a un índice parcial inalcanzable
+ * y toda lista guardada como "General" moría con "Error al guardar", pero
+ * un insert pelado pasaba sin problema. Si cambias AttendanceForm, cambia
+ * esto igual.
  */
 function insertAttendanceSql() {
   return `
@@ -132,7 +140,8 @@ function insertAttendanceSql() {
     from users_profiles up
     join students s on s.school_id = up.school_id and s.deleted_at is null
     where up.auth_id = auth.uid()
-    limit 1;
+    limit 1
+    on conflict (student_id, date, subject_id) do update set status = excluded.status;
   `
 }
 

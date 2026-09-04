@@ -105,14 +105,21 @@ export default function AttendanceForm({
     }))
 
     // Upsert: si ya existe un registro para ese estudiante+fecha+materia, lo
-    // actualiza. Con una materia real, el conflicto se resuelve por
-    // (student_id,date,subject_id); en "Todas (General)" subject_id es
-    // null, y esa combinación la cubre el índice único parcial de la
-    // migración 037 (student_id,date) where subject_id is null -- por eso
-    // el onConflict cambia según el caso.
+    // actualiza en vez de duplicarlo.
+    //
+    // Un solo onConflict para los dos casos (materia concreta y "Todas
+    // (General)", donde subject_id es null): la restricción
+    // attendance_student_date_subject_key es NULLS NOT DISTINCT, así que
+    // también cubre las filas con subject_id null.
+    //
+    // Antes esto cambiaba según el caso y apuntaba a un índice PARCIAL para
+    // el caso General -- Postgres no acepta un índice parcial como árbitro
+    // de ON CONFLICT si la sentencia no repite su WHERE, y PostgREST no lo
+    // genera. Resultado: "Error al guardar" en todo pase de lista General,
+    // que es la opción por defecto (reporte del colegio, 2026-09-04).
     const { error: dbError } = await supabase
       .from('attendance')
-      .upsert(records, { onConflict: subjectId ? 'student_id,date,subject_id' : 'student_id,date' })
+      .upsert(records, { onConflict: 'student_id,date,subject_id' })
 
     if (dbError) {
       setError('Error al guardar. Por favor intenta de nuevo.')
