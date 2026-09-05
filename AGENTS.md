@@ -2700,3 +2700,42 @@ publicar: muestra una advertencia roja por cada estudiante sin autorización
 registrada (Ley 136-03). Mientras el colegio no cargue en la plataforma las
 firmas que está recogiendo en papel, la profesora verá esa advertencia en casi
 todos los casos. **Es un pendiente de datos, no de código.**
+
+## Personal: lista compacta, y la duplicación pendiente de "quién da qué" (2026-09-04)
+
+La pantalla de Personal mostraba, por cada empleado, una tarjeta con CINCO
+bloques abiertos a la vez: identidad, editar/eliminar, acceso al sistema,
+asignación de grados y formación académica. Con 30 empleados dejaba de
+servir para lo más básico -- consultar quién trabaja aquí y cómo
+contactarlo.
+
+Se reorganizó (no se duplicó): la lista abre compacta -- una fila por
+persona con nombre, puesto, teléfono, correo y una etiqueta "sin acceso"
+cuando aplica -- y el resto se despliega al tocar a la persona. Se añadió
+descargar el listado en CSV e imprimirlo, porque el colegio lleva su
+"Lista de Profesores" en papel y ahora puede sacarla del sistema.
+
+**Se descartó a propósito crear un módulo aparte con el listado**: serían
+las mismas personas en dos pantallas, dos sitios que mantener y el riesgo
+clásico de que se desincronicen. El nombre "Personal" se queda: el
+problema no era el nombre, era que la pantalla hacía tres trabajos.
+
+`StaffCard` y `ExportStaffButton` reciben los botones ya renderizados como
+slots desde el servidor -- `EditStaffButton`, `DeleteStaffButton`,
+`ChangeAccessRoleButton`, `GrantAccessButton` y `TeacherGradeAssignments`
+siguen siendo los mismos componentes con los mismos props. El cambio es
+solo de presentación: no se tocó ninguna consulta, permiso ni acción.
+
+### Pendiente de decidir: hay DOS fuentes para "quién da qué"
+
+- `teacher_assignments` (staff_id + grade_level + category), que se
+  administra desde Personal.
+- `class_schedules` (staff_id + grade_level + subject), el horario real --
+  330 filas con 18 profesores al 2026-09-04.
+
+Las dos dicen lo mismo por vías distintas. **Antes de unificarlas, ojo:**
+`teacher_assignments` NO es informativo -- es lo que usan las policies de
+RLS para decidir qué estudiantes ve cada profesor en Asistencia,
+Actualizaciones y Mensajes (`teacher_is_assigned_to_grade`). Es justo lo
+que dejó al colegio un día sin poder pasar lista. Unificar esto es un
+cambio de fondo que hay que planear aparte, nunca de pasada.

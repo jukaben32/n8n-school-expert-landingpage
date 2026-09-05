@@ -10,6 +10,8 @@ import PublicRegistrationLinkButton from './PublicRegistrationLinkButton'
 import TeacherGradeAssignments from './TeacherGradeAssignments'
 import EditStaffButton from './EditStaffButton'
 import DeleteStaffButton from './DeleteStaffButton'
+import StaffCard from './StaffCard'
+import ExportStaffButton from './ExportStaffButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { roleLabels, educationLabels } from '@/lib/staff/roleLabels'
 import type { MessageCategory } from '@/lib/messaging/categoryAccess'
@@ -96,6 +98,23 @@ export default async function PersonalPage() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
 
+  // Filas planas para descargar/imprimir el listado -- se arman con lo que
+  // la página ya cargó, sin ninguna consulta extra.
+  const filasExport = staff.map((s) => {
+    const acceso = staffWithAccess.get(s.id)
+    const grados = (assignmentsByStaff.get(s.id) ?? [])
+      .map((a) => a.gradeLevel)
+      .filter((g): g is string => Boolean(g))
+    return {
+      nombre: `${s.first_name} ${s.last_name}`,
+      puesto: roleLabels[s.role] ?? s.role,
+      telefono: s.phone ?? '',
+      correo: s.email,
+      grados: Array.from(new Set(grados)).join(' / '),
+      acceso: acceso ? (accessRoleLabels[acceso.role] ?? acceso.role) : 'Sin acceso',
+    }
+  })
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'el personal', error: staffError }, { label: 'los accesos', error: linkedProfilesError }]} />
@@ -106,7 +125,8 @@ export default async function PersonalPage() {
             {staff.length} miembro{staff.length !== 1 ? 's' : ''} del equipo
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap print:hidden">
+          <ExportStaffButton filas={filasExport} />
           {schoolRow?.subdomain && (
             <PublicRegistrationLinkButton subdomain={schoolRow.subdomain} />
           )}
@@ -138,79 +158,73 @@ export default async function PersonalPage() {
       )}
 
       {staff.length > 0 ? (
-        <div className="grid gap-3">
-          {staff.map((s) => (
-            <div key={s.id} className="dash-card p-5">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold" style={{ color: 'var(--dash-text)' }}>{s.first_name} {s.last_name}</p>
-                    <span
-                      className="px-2 py-0.5 rounded-full text-[10px] font-bold font-barlow uppercase tracking-wider"
-                      style={{ background: 'rgba(74,222,159,.15)', color: 'var(--dash-accent)' }}
-                    >
-                      {roleLabels[s.role] ?? s.role}
-                    </span>
-                  </div>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-muted)' }}>{s.email} {s.phone ? `· ${s.phone}` : ''}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <p className="text-xs" style={{ color: 'var(--dash-text-faint)' }}>Desde {formatDate(s.hire_date)}</p>
-                  <div className="flex items-center gap-3">
+        <div className="grid gap-2">
+          {staff.map((s) => {
+            const acceso = staffWithAccess.get(s.id)
+            return (
+              <StaffCard
+                key={s.id}
+                nombre={`${s.first_name} ${s.last_name}`}
+                puesto={roleLabels[s.role] ?? s.role}
+                email={s.email}
+                phone={s.phone}
+                desde={formatDate(s.hire_date)}
+                tieneAcceso={!!acceso}
+                accesoLabel={acceso ? (accessRoleLabels[acceso.role] ?? acceso.role) : null}
+                acciones={
+                  <>
                     <EditStaffButton staff={s} />
                     <DeleteStaffButton staffId={s.id} fullName={`${s.first_name} ${s.last_name}`} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
-                {staffWithAccess.has(s.id) ? (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <p className="text-xs font-semibold" style={{ color: 'var(--dash-accent)' }}>
-                      ✓ Acceso: {accessRoleLabels[staffWithAccess.get(s.id)!.role] ?? staffWithAccess.get(s.id)!.role}
-                    </p>
-                    <ChangeAccessRoleButton
-                      profileId={staffWithAccess.get(s.id)!.profileId}
-                      currentRole={staffWithAccess.get(s.id)!.role}
-                    />
-                  </div>
-                ) : (
-                  <GrantAccessButton staffId={s.id} suggestedRole={s.role} />
-                )}
-              </div>
-
-              {s.role === 'teacher' && (
-                <TeacherGradeAssignments
-                  staffId={s.id}
-                  initialAssignments={assignmentsByStaff.get(s.id) ?? []}
-                  gradeLevelOptions={gradeLevelOptions}
-                />
-              )}
-
-              {(s.degree_title || s.alma_mater || s.specialty) && (
-                <div className="mt-3 pt-3 border-t grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
-                  {s.degree_title && (
+                  </>
+                }
+                detalle={
+                  <>
                     <div>
-                      <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Título</p>
-                      <p style={{ color: 'var(--dash-text-muted)' }}>{s.degree_title}{s.education_level ? ` (${educationLabels[s.education_level] ?? s.education_level})` : ''}</p>
+                      {acceso ? (
+                        <ChangeAccessRoleButton
+                          profileId={acceso.profileId}
+                          currentRole={acceso.role}
+                        />
+                      ) : (
+                        <GrantAccessButton staffId={s.id} suggestedRole={s.role} />
+                      )}
                     </div>
-                  )}
-                  {s.alma_mater && (
-                    <div>
-                      <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Egresado de</p>
-                      <p style={{ color: 'var(--dash-text-muted)' }}>{s.alma_mater}</p>
-                    </div>
-                  )}
-                  {s.specialty && (
-                    <div>
-                      <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Especialidad</p>
-                      <p style={{ color: 'var(--dash-text-muted)' }}>{s.specialty}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+
+                    {s.role === 'teacher' && (
+                      <TeacherGradeAssignments
+                        staffId={s.id}
+                        initialAssignments={assignmentsByStaff.get(s.id) ?? []}
+                        gradeLevelOptions={gradeLevelOptions}
+                      />
+                    )}
+
+                    {(s.degree_title || s.alma_mater || s.specialty) && (
+                      <div className="mt-3 pt-3 border-t grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs" style={{ borderColor: 'rgba(150,225,196,.14)' }}>
+                        {s.degree_title && (
+                          <div>
+                            <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Título</p>
+                            <p style={{ color: 'var(--dash-text-muted)' }}>{s.degree_title}{s.education_level ? ` (${educationLabels[s.education_level] ?? s.education_level})` : ''}</p>
+                          </div>
+                        )}
+                        {s.alma_mater && (
+                          <div>
+                            <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Egresado de</p>
+                            <p style={{ color: 'var(--dash-text-muted)' }}>{s.alma_mater}</p>
+                          </div>
+                        )}
+                        {s.specialty && (
+                          <div>
+                            <p className="font-barlow uppercase tracking-wider text-[10px]" style={{ color: 'var(--dash-text-faint)' }}>Especialidad</p>
+                            <p style={{ color: 'var(--dash-text-muted)' }}>{s.specialty}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                }
+              />
+            )
+          })}
         </div>
       ) : (
         <div className="dash-card border-dashed p-12 text-center">
