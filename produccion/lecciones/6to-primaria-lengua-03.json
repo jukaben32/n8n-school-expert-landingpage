@@ -23,7 +23,7 @@
       "visual": "<h1>Léelo con calma</h1><div class='oracion'><span class='sujeto'>El mangú es uno de los platos más queridos de la cocina dominicana.</span> Se prepara con plátano verde hervido y majado. Se acompaña con salami, queso frito y huevo. Muchas familias lo desayunan los domingos.</div>"
     },
     {
-      "narracion": "¿Cuál es la idea principal? La primera oración. El mangú es uno de los platos más queridos. Todo lo demás son detalles: cómo se prepara, con qué se acompaña, cuándo se come. Quita cualquiera de esos detalles y el párrafo sigue en pie. Quita la primera, y el párrafo se queda sin dueño.",
+      "narracion": "La idea principal aquí es la primera oración, la que dice que el mangú es uno de los platos más queridos de la cocina dominicana. Todo lo que viene después son detalles que la acompañan, porque nos cuentan cómo se prepara, con qué se acompaña y cuándo se come. Si quitas cualquiera de esos detalles, el párrafo sigue en pie. Pero si quitas la primera oración, el párrafo se queda sin dueño.",
       "visual": "<h1>La prueba del quitar</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Idea principal</span><span class='detalle'>\"El mangú es uno de los platos más queridos de la cocina dominicana\"</span></div></div><div class='subtitulo'>Si la quitas, el párrafo se queda sin dueño. Si quitas un detalle, el párrafo sigue en pie.</div>"
     },
     {
@@ -47,7 +47,7 @@
       "visual": "<h1>No es la más larga</h1><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Mal criterio</span><span class='detalle'>\"Es la oración más larga\"<br>\"Tiene palabras difíciles\"</span></div><div class='tarjeta verde'><span class='rotulo'>Buen criterio</span><span class='detalle'>Las demás oraciones la sostienen a ella</span></div></div>"
     },
     {
-      "narracion": "Practiquemos una vez más, y aquí te toca a ti. Lee este párrafo: el merengue nació en República Dominicana. Se baila en pareja. Su instrumento principal es la tambora. Fue declarado Patrimonio Cultural de la Humanidad. ¿Cuál oración es la idea principal? Piénsalo antes de que te la diga.",
+      "narracion": "Practiquemos una vez más, y aquí te toca a ti. El párrafo que vas a ver en pantalla dice que el merengue nació en República Dominicana, que se baila en pareja, que su instrumento principal es la tambora, y que fue declarado Patrimonio Cultural de la Humanidad. Son cuatro oraciones. Piensa cuál de las cuatro es la idea principal antes de que te la diga.",
       "visual": "<h1>Te toca a ti</h1><div class='oracion'>El merengue nació en República Dominicana. Se baila en pareja. Su instrumento principal es la tambora. Fue declarado Patrimonio Cultural de la Humanidad.</div><div class='subtitulo'>¿Cuál es la idea principal?</div>"
     },
     {

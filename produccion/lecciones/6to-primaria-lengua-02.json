@@ -35,7 +35,7 @@
       "visual": "<h1>Esdrújulas</h1><div class='subtitulo'>El golpe cae en la ANTEPENÚLTIMA sílaba</div><div class='fila'><div class='palabra'><span class='fuerte'>mé</span>di&middot;co</div><div class='palabra'><span class='fuerte'>sá</span>ba&middot;do</div><div class='palabra'><span class='fuerte'>pá</span>ja&middot;ro</div></div><div class='destacado'>Siempre llevan tilde. Sin excepción.</div>"
     },
     {
-      "narracion": "Resumamos en una tabla. Aguda: golpe en la última, tilde si termina en ene, ese o vocal. Llana: golpe en la penúltima, tilde si no termina en ene, ese o vocal. Esdrújula: golpe en la antepenúltima, tilde siempre.",
+      "narracion": "Vamos a repasarlo todo junto. Una palabra aguda tiene el golpe en la última sílaba, y lleva tilde solamente cuando termina en ene, en ese o en vocal. Una palabra llana tiene el golpe en la penúltima, y ahí la regla se invierte, porque lleva tilde justo cuando no termina en ninguna de esas tres. Y una palabra esdrújula tiene el golpe en la antepenúltima, y esa siempre lleva tilde, sin ninguna excepción.",
       "visual": "<h1>Para recordar</h1><table class='tabla'><tr><th>Tipo</th><th>Golpe en la</th><th>Lleva tilde</th></tr><tr><td>Aguda</td><td>última</td><td>si termina en n, s o vocal</td></tr><tr><td>Llana</td><td>penúltima</td><td>si NO termina en n, s o vocal</td></tr><tr><td>Esdrújula</td><td>antepenúltima</td><td>siempre</td></tr></table><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
     },
     {
