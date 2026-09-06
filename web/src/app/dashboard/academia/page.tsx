@@ -31,9 +31,14 @@ type BadgeRow = {
 }
 
 /**
- * Academia (vista del estudiante) — lecciones publicadas del grado en el
- * que el estudiante está inscrito, con su progreso, puntos, racha e
- * insignias ganadas.
+ * Academia (vista del estudiante) — su portal de clases.
+ *
+ * Las lecciones se buscan por `students.grade_level` (el mismo texto libre
+ * que usan Horarios, Notas, Asistencia y Encuestas). ANTES se resolvía el
+ * curso con la tabla `enrollments`, que NINGUNA pantalla de la app escribe
+ * jamás -- estando vacía, esta página le decía "todavía no hay lecciones"
+ * a todos los estudiantes por igual. Ver la migración
+ * 20260909000000_academia_curso_texto.sql.
  */
 export default async function AcademiaPage() {
   const supabase = await createClient()
@@ -67,20 +72,20 @@ export default async function AcademiaPage() {
     )
   }
 
-  const { data: enrollment, error: enrollmentError } = await supabase
-    .from('enrollments')
-    .select('grade_level_id')
-    .eq('student_id', profile.student_id)
-    .eq('status', 'inscrito')
+  const { data: student, error: studentError } = await supabase
+    .from('students')
+    .select('first_name, grade_level')
+    .eq('id', profile.student_id)
     .maybeSingle()
 
   const [{ data: lessonsRaw, error: lessonsRawError }, { data: attemptsRaw, error: attemptsRawError }, { data: points, error: pointsError }, { data: earnedBadgesRaw, error: earnedBadgesRawError }] = await Promise.all([
-    enrollment?.grade_level_id
+    student?.grade_level
       ? supabase
           .from('lessons')
           .select('id, title, description, subject_id, subjects(name)')
-          .eq('grade_level_id', enrollment.grade_level_id)
+          .eq('grade_level', student.grade_level)
           .eq('is_published', true)
+          .is('deleted_at', null)
           .order('sort_order', { ascending: true })
       : Promise.resolve({ data: [] as LessonRow[], error: null }),
     supabase.from('quiz_attempts').select('lesson_id, score, max_score, completed_at').eq('student_id', profile.student_id),
@@ -93,10 +98,26 @@ export default async function AcademiaPage() {
   const earnedBadges = (earnedBadgesRaw ?? []) as unknown as BadgeRow[]
   const attemptByLesson = new Map(attempts.filter((a) => a.completed_at).map((a) => [a.lesson_id, a]))
 
+  // La que sigue: la primera sin cuestionario contestado, en el orden que
+  // el profesor definió. Es lo único que el estudiante ve arriba del todo,
+  // para que entre y le dé play sin decidir nada.
+  const nextLesson = lessons.find((l) => !attemptByLesson.has(l.id)) ?? null
+
+  // Agrupadas por materia, respetando el orden en que llegaron.
+  const bySubject = new Map<string, { name: string; lessons: LessonRow[] }>()
+  for (const lesson of lessons) {
+    const key = lesson.subject_id
+    if (!bySubject.has(key)) bySubject.set(key, { name: lesson.subjects?.name ?? 'Materia', lessons: [] })
+    bySubject.get(key)!.lessons.push(lesson)
+  }
+  const subjectGroups = Array.from(bySubject.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'))
+
+  const doneCount = lessons.filter((l) => attemptByLesson.has(l.id)).length
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <QueryErrorBanner errors={[
-        { label: 'tu inscripción', error: enrollmentError },
+        { label: 'tus datos de estudiante', error: studentError },
         { label: 'las lecciones', error: lessonsRawError },
         { label: 'tus intentos', error: attemptsRawError },
         { label: 'tus puntos', error: pointsError },
@@ -106,8 +127,13 @@ export default async function AcademiaPage() {
       {/* Encabezado con gamificación */}
       <div className="dash-card p-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-barlow tracking-tight" style={{ color: 'var(--dash-text)' }}>Academia</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--dash-text-muted)' }}>Tus lecciones y cuestionarios</p>
+          <h1 className="text-2xl font-bold font-barlow tracking-tight" style={{ color: 'var(--dash-text)' }}>
+            {student?.first_name ? `Hola, ${student.first_name}` : 'Academia'}
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--dash-text-muted)' }}>
+            {student?.grade_level ? `${student.grade_level} · ` : ''}
+            {lessons.length > 0 ? `${doneCount} de ${lessons.length} lecciones completadas` : 'Tus lecciones y cuestionarios'}
+          </p>
         </div>
         <div className="flex gap-6">
           <div className="text-center">
@@ -136,44 +162,70 @@ export default async function AcademiaPage() {
         </div>
       )}
 
-      {/* Lecciones */}
-      {lessons.length > 0 ? (
-        <div className="grid gap-3">
-          {lessons.map((lesson) => {
-            const attempt = attemptByLesson.get(lesson.id)
-            return (
-              <Link
-                key={lesson.id}
-                href={`/dashboard/academia/${lesson.id}`}
-                className="dash-card p-5 flex items-center justify-between gap-4 transition"
-              >
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--dash-accent-light)' }}>
-                    {lesson.subjects?.name ?? 'Materia'}
-                  </p>
-                  <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{lesson.title}</p>
-                  {lesson.description && (
-                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>{lesson.description}</p>
-                  )}
-                </div>
-                {attempt ? (
-                  <span className="shrink-0 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-3 py-1.5">
-                    ✓ {attempt.score}/{attempt.max_score}
-                  </span>
-                ) : (
-                  <span className="shrink-0 rounded-full bg-primary text-white text-xs font-bold px-3 py-1.5 shadow-glow">
-                    Ver lección
-                  </span>
-                )}
-              </Link>
-            )
-          })}
-        </div>
+      {/* La que sigue -- entrada directa al video, sin elegir nada */}
+      {nextLesson && (
+        <Link
+          href={`/dashboard/academia/${nextLesson.id}`}
+          className="dash-card block p-6 border-2 transition"
+          style={{ borderColor: 'var(--dash-accent)' }}
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--dash-accent-light)' }}>
+            Continuar · {nextLesson.subjects?.name ?? 'Materia'}
+          </p>
+          <p className="text-xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-text)' }}>{nextLesson.title}</p>
+          {nextLesson.description && (
+            <p className="text-sm mt-1" style={{ color: 'var(--dash-text-muted)' }}>{nextLesson.description}</p>
+          )}
+          <span className="inline-flex items-center gap-2 mt-4 rounded-full bg-primary text-white text-sm font-bold px-5 py-2.5 shadow-glow">
+            ▶ Ver el video
+          </span>
+        </Link>
+      )}
+
+      {/* Todas sus lecciones, agrupadas por materia */}
+      {subjectGroups.length > 0 ? (
+        subjectGroups.map((group) => (
+          <section key={group.name} className="space-y-2">
+            <h2 className="text-sm font-bold font-barlow uppercase tracking-wider" style={{ color: 'var(--dash-text-muted)' }}>
+              {group.name}
+            </h2>
+            <div className="grid gap-3">
+              {group.lessons.map((lesson) => {
+                const attempt = attemptByLesson.get(lesson.id)
+                return (
+                  <Link
+                    key={lesson.id}
+                    href={`/dashboard/academia/${lesson.id}`}
+                    className="dash-card p-5 flex items-center justify-between gap-4 transition"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{lesson.title}</p>
+                      {lesson.description && (
+                        <p className="text-xs truncate mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>{lesson.description}</p>
+                      )}
+                    </div>
+                    {attempt ? (
+                      <span className="shrink-0 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-3 py-1.5">
+                        ✓ {attempt.score}/{attempt.max_score}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-primary text-white text-xs font-bold px-3 py-1.5 shadow-glow">
+                        Ver lección
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        ))
       ) : (
         <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">🎬</p>
           <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
-            Todavía no hay lecciones publicadas para tu grado.
+            {student?.grade_level
+              ? `Todavía no hay lecciones publicadas para ${student.grade_level}.`
+              : 'Tu ficha no tiene un curso asignado todavía. Pídele a la administración del colegio que lo complete.'}
           </p>
         </div>
       )}

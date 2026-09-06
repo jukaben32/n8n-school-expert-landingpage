@@ -28,14 +28,32 @@ export default async function NuevaLeccionPage() {
     redirect('/dashboard/academia')
   }
 
-  const [{ data: subjects, error: subjectsError }, { data: gradeLevels, error: gradeLevelsError }] = await Promise.all([
+  // Los cursos salen de `students.grade_level` -- el mismo texto libre que
+  // ya usan Horarios, Notas, Asistencia y Encuestas. NO del catálogo
+  // `grade_levels`: nadie lo mantiene (4 filas para 12 cursos reales) y la
+  // tabla `enrollments` que lo conectaba con el alumno está vacía porque
+  // ninguna pantalla la escribe nunca. Ver la migración
+  // 20260909000000_academia_curso_texto.sql.
+  const [{ data: subjects, error: subjectsError }, { data: studentRows, error: coursesError }] = await Promise.all([
     supabase.from('subjects').select('id, name').eq('school_id', schoolId).order('name'),
-    supabase.from('grade_levels').select('id, name').eq('school_id', schoolId).order('sort_order'),
+    supabase
+      .from('students')
+      .select('grade_level')
+      .eq('school_id', schoolId)
+      .eq('enrollment_status', 'inscrito')
+      .is('deleted_at', null)
+      .not('grade_level', 'is', null),
   ])
+
+  const courses = Array.from(
+    new Set(((studentRows ?? []) as { grade_level: string | null }[])
+      .map((r) => r.grade_level)
+      .filter((g): g is string => !!g && g.trim() !== '')),
+  ).sort((a, b) => a.localeCompare(b, 'es'))
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <QueryErrorBanner errors={[{ label: 'las materias', error: subjectsError }, { label: 'los grados', error: gradeLevelsError }]} />
+      <QueryErrorBanner errors={[{ label: 'las materias', error: subjectsError }, { label: 'los cursos', error: coursesError }]} />
       <div>
         <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
           Nueva Lección
@@ -49,7 +67,7 @@ export default async function NuevaLeccionPage() {
         schoolId={schoolId}
         authorProfileId={profile.id}
         subjects={subjects ?? []}
-        gradeLevels={gradeLevels ?? []}
+        courses={courses}
       />
     </div>
   )
