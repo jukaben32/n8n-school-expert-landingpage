@@ -2701,6 +2701,203 @@ registrada (Ley 136-03). Mientras el colegio no cargue en la plataforma las
 firmas que está recogiendo en papel, la profesora verá esa advertencia en casi
 todos los casos. **Es un pendiente de datos, no de código.**
 
+## PLAN DEFINITIVO — Producción de contenido de Academia (2026-09-06)
+
+Decidido con el usuario tras revisar viabilidad. Hasta hoy **no existía ningún
+plan escrito** para esto: se buscó "video/lección/academia" en los 16 archivos
+`.md` del repo y no hay nada. La única "ruta" que existió está implícita en el
+esquema de la migración 008 (`video_url` + `video_provider check in
+('youtube','vimeo')`), y dice todo: **el sistema se diseñó asumiendo que alguien
+más ya hizo el video y el profesor solo pega el enlace.** Ese supuesto se cayó
+-- el colegio confirmó que sus docentes no están en capacidad de producir.
+
+### La decisión central: estilo Khan Academy, en dos capas
+
+**Nada de presentador ni avatar.** La investigación de 2025 comparando
+talking-head vs. animación no encuentra diferencia significativa en aprendizaje,
+y el presentador muestra un pequeño efecto **negativo** en recordar datos. Lo que
+sí determina el resultado es que la imagen vaya pegada a lo que dice la voz. Así
+que: **voz + gráficas exactas**, la fórmula de Khan Academy. Más barato, más
+seguro, y evita la obligación de declarar contenido fotorrealista generado.
+
+| Capa | Qué produce | Con qué |
+|---|---|---|
+| **Determinista** | TODO lo que lleve texto, números, ecuaciones, diagramas rotulados, mapas | Gráficas generadas **por código** -- exactas siempre |
+| **Generativa** | Apertura, transiciones, escenas de contexto, metáforas visuales | Kling / Higgsfield vía MCP |
+
+**Regla no negociable: la IA generativa NUNCA escribe un dato.** Kling y
+Higgsfield no saben escribir -- una pizarra con `2x + 3 = 7` sale deformada. Un
+video de matemática con la ecuación mal escrita es **peor que no tener video**.
+Además esto acota el costo: ~20-30 segundos generativos por lección de 6 minutos
+(se cobra por segundo), el resto determinista.
+
+### Duración
+
+**4-6 min en primaria, 6-8 en secundaria, un concepto por video.** El estudio de
+referencia (Guo, MIT/edX, ~6.9 millones de sesiones) encontró que la atención se
+agota alrededor de los **6 minutos sin importar cuán largo sea el video**; a los
+12 min la caída es de ~40%. Un tema grande se parte en tres videos, no se estira
+en uno de 20.
+
+### Dónde vive cada cosa (los dos destinos NO son el mismo contenido)
+
+| | **Portal (Cloudflare)** | **Canal de YouTube** |
+|---|---|---|
+| Qué va | Las ~2,000 lecciones del currículo | Una selección: lo mejor, 1-2 por semana |
+| Para quién | Los 286 estudiantes | **Padres y maestros**, no niños |
+| Producción | Pipeline industrial | Cuidado editorial, cada uno distinto |
+| Monetización | No aplica | Sin marca infantil -> CPM normal |
+
+**Por qué NO volcar las 2,000 al canal** (esto es lo que protege la intención de
+monetizar del usuario):
+- **"Made for Kids" está capado por ley.** Contenido educativo para escolares hay
+  que marcarlo así -> se apagan los anuncios personalizados, membresías y
+  comentarios. Los reportes de 2026 ubican esos canales en US$1-3 por millar
+  contra US$5-15 de contenido comparable. Es COPPA, no una configuración.
+- **La política de "contenido inauténtico"** (así se llama desde julio 2025;
+  antes "contenido repetitivo") apunta exactamente a subidas masivas,
+  plantilladas y repetitivas -- describen el caso como *"texto-a-voz literal con
+  presentaciones de diapositivas"*, que es nuestro pipeline sin cuidado. Tres
+  strikes: aviso, 90 días, expulsión del programa de socios. **La IA no está
+  prohibida**; lo exigido es dirección creativa propia y variación real.
+- **Aviso operativo:** la cuota por defecto de la YouTube Data API alcanza para
+  ~6 subidas al día. Si se quiere subir en volumen, el trámite de ampliación hay
+  que arrancarlo con meses de antelación.
+
+### Propiedad del contenido: la línea que no se cruza
+
+El usuario quiere que los videos sean suyos, no depender de canales ajenos.
+Correcto. Pero **"rehacer" un video curado es una obra derivada** -- mismo guion,
+misma secuencia, otra voz encima -- y Content ID lo detecta. En un canal nuevo
+con el nombre del colegio, eso son strikes.
+
+**El método correcto:** los videos curados **nunca se convierten en material,
+solo en investigación**. La curación produce un *informe de texto* (qué conceptos
+toca el tema, en qué orden, dónde se traban los muchachos, cuánto debe durar).
+Con ese informe + el currículo + el libro se produce algo 100% original.
+**Ni un frame, ni un segundo de audio, ni una frase textual de un video ajeno
+entra al nuestro.**
+
+Ventaja que además vuelve el contenido original por construcción: **los ejemplos
+van en dominicano** -- pesos, nombres de aquí, distancias entre Santiago y Santo
+Domingo. Eso lo hace mejor que el genérico español o mexicano de YouTube.
+
+### La cola de producción YA EXISTE en la base
+
+Hallazgo importante: no hay que inventar la lista de qué producir ni transcribir
+un programa a mano. `class_schedules` tiene las **330 clases reales** del
+2026-2027 (curso + materia + profesor + día) y `lesson_plans` guarda por cada
+clase su **tema, objetivo, actividades y tarea**. Se produce siguiendo la
+planificación que los profesores ya llenan.
+
+### Lo que le falta al esquema (pendiente, antes de producir en volumen)
+
+- `video_provider` **solo acepta `youtube`/`vimeo`** -> Cloudflare necesita
+  migración (proveedor `mp4` + `<video>` nativo en `LessonPlayer`).
+- No hay duración, ni transcripción, ni miniatura.
+- No hay unidades ni temas: solo un `sort_order` plano, que con 2,000 lecciones
+  no organiza nada.
+- `is_published` es booleano -- falta el estado "en revisión" para la bandeja de
+  aprobación docente. **Nada se publica sin visto bueno humano**, mismo
+  principio que la bandeja de OCR.
+
+### Orden de trabajo acordado
+
+1. **UNA lección de punta a punta primero**, no producir en volumen: curación ->
+   informe -> guion -> gráficas -> clips -> narración -> montaje -> subida ->
+   publicada -> un estudiante la ve y contesta el cuestionario. Esa primera dice
+   lo que ninguna planificación dice: cuánto cuesta, cuánto tarda, y si se ve
+   como algo que un colegio pone su nombre encima.
+2. Piloto de **24 lecciones** (1 curso, 3 materias, primera unidad).
+3. Recién entonces, escala.
+
+### Bloqueos reales para arrancar
+
+1. **El currículo** -- el Diseño Curricular del MINERD por grado/materia, o las
+   planificaciones del colegio. **Es lo único insustituible**: sin eso se produce
+   bonito pero desalineado.
+2. Los MCP de Kling/Higgsfield instalados (el usuario los provee).
+3. Cuenta de Cloudflare (Stream) y canal de YouTube del colegio.
+4. Voz de TTS y plantilla visual. Insumo ya existente: `docs/GUIA_TONO_Y_VOZ.md`
+   define la voz institucional (*formal, moderno, cercano*, de "usted", máximo un
+   emoji) y **ya bautiza una mascota: "Toki"** -- candidata a personaje del canal,
+   pendiente de confirmar con el usuario.
+5. Quién aprueba antes de publicar.
+
+## Cursos mal escritos: 2 estudiantes invisibles y 1 docente sin ver a nadie (2026-09-06)
+
+**Cómo salió:** al probar el desplegable de cursos de "Nueva lección" (que ahora
+lee `students.grade_level`), el usuario vio 18 opciones donde el colegio tiene 16
+cursos. Las mismas 18 salen en los chips de Personal, que leen la misma fuente
+(`personal/page.tsx:87`) -- **no eran dos errores, era el mismo dato visto desde
+dos pantallas**.
+
+**La causa de fondo, otra vez la misma:** `students.grade_level` y
+`teacher_assignments.grade_level` son texto libre que las policies comparan
+**carácter por carácter**. Una variante de escritura no da error: deja a alguien
+sin ver nada.
+
+**Lo encontrado (datos reales de producción, 286 estudiantes):**
+
+1. **2 estudiantes con el curso mal escrito**, 1 alumno cada variante:
+   `Pre-primario` (Samir Hally, debía ser `Pre Primario`, 22 alumnos) y
+   `4to de secundaria` (Ahleys Sanchez, inscrita el 3-sep, debía ser
+   `4to. Secundaria`, 14). Mientras estuvieron así eran invisibles para su
+   profesora en Asistencia, no recibían los comunicados de su curso, y no
+   habrían visto ninguna lección de Academia.
+2. **3 filas de `teacher_assignments` con el ciclo escrito a mano**
+   (`"Primer Ciclo Primaria (1,2,3) Inglés"`, etc.) que no calzan con ningún
+   estudiante -- el pendiente que dejó anotado la carga de horarios del
+   2026-08-23. Para **Yuleymis Lugo era su ÚNICA fila**, así que veía
+   **0 estudiantes**.
+
+**Medido, no supuesto.** Se simuló la sesión de cada docente igual que hace
+PostgREST (`set local role authenticated` + `request.jwt.claim.sub`) y se
+contaron los estudiantes visibles ANTES de tocar nada:
+
+| Docente | Antes | Después (esperado) |
+|---|---|---|
+| Yuleymis Lugo | **0** | 68 |
+| Yendry Paulino Bastardo | 34 | 34 |
+| Nercy Rodríguez | 55 | 55 |
+| Marianelis Rivera | 60 | 60 |
+
+**Corrección a un diagnóstico previo de esta misma sesión**: se afirmó primero
+que 4 docentes estaban sin ver estudiantes. Falso -- solo Yuleymis. Nercy **sí**
+tenía filas `regular` además de las de `ingles` (la consulta filtraba solo por
+`ingles`), y el "Yendry Paulino" de la fila basura es un **registro duplicado
+borrado el 2026-08-23**; la activa ("Yendry Paulino Bastardo") está bien.
+**Regla que deja esto: contar filas de `teacher_assignments` no dice quién ve
+qué -- hay que simular la sesión.**
+
+**LA TRAMPA, para quien retome esto:** pasar a las docentes de Inglés a
+`category = 'ingles'` parece lo correcto por la estructura de Amco, pero
+**les quitaría Asistencia**. Las cuatro policies que deciden qué estudiantes ve
+un profesor (`students_read`, `attendance_staff_all`, `class_updates_staff_all`,
+`class_schedules_staff_read`) llaman a
+`teacher_is_assigned_to_grade(..., 'regular')` -- verificado leyendo `pg_policies`
+en producción. La categoría `ingles` enruta **Mensajes**, no da visibilidad de
+estudiantes. Si algún día se agrega, que sea **sumando** filas, nunca
+convirtiendo las `regular`.
+
+**El arreglo** vive en `supabase/seeds/20260906_fix_cursos_y_asignaciones.sql`,
+en una sola transacción, **con el bloque de reversión completo comentado al
+final** (los ids y valores exactos de antes). El `insert` de Yuleymis va antes
+del `delete` para que no quede sin ninguna asignación ni un instante. Lo corrió
+el usuario a mano en el SQL Editor: el clasificador de seguridad del harness
+bloquea las escrituras a producción desde la sesión de Claude Code (mismo
+bloqueo ya documentado para la carga de horarios).
+
+**Quedó fuera a propósito:** Génesis Rodríguez (Orientación y psicología) no
+tiene ninguna asignación, así que no ve a ningún estudiante. Puede ser
+intencional. Darle los 286 es **ampliar acceso**, no corregir un error -- no se
+tocó sin respuesta explícita del usuario. **Pendiente de decidir.**
+
+**Detalle menor descubierto de paso, sin corregir:** `students_read` no filtra
+`deleted_at`, así que un profesor todavía ve a los estudiantes con borrado suave
+de sus cursos (por eso Marianelis ve 60 y no 59). No se tocó -- cambiar esa
+policy afecta a todos los roles y no había reporte de que molestara.
+
 ## Academia estaba muerta para el estudiante: dependía de `enrollments`, tabla que nadie escribe (2026-09-06)
 
 **Bug real, encontrado leyendo el código, no reportado por el colegio** (Academia
