@@ -20,13 +20,27 @@ interface LessonPlayerProps {
   existingAttempt: { id: string; score: number; max_score: number; completed_at: string | null } | null
 }
 
-/** Extrae el ID de un video de YouTube o Vimeo desde varias formas de URL. */
+/**
+ * Extrae el ID de un video de YouTube o Vimeo desde varias formas de URL.
+ *
+ * YouTube se embebe SIEMPRE por `youtube-nocookie.com` y con `rel=0`: el
+ * dominio nocookie no deja rastreo publicitario antes de que el niño le dé
+ * play, y `rel=0` limita las sugerencias del final al mismo canal en vez de
+ * a todo YouTube. Sin esto, al terminar la lección el reproductor le ofrece
+ * al estudiante cualquier cosa que YouTube decida -- inaceptable en una
+ * pantalla que usan 286 menores dentro del portal del colegio.
+ */
 function getEmbedUrl(url: string, provider: 'youtube' | 'vimeo'): string | null {
   try {
     if (provider === 'youtube') {
       const u = new URL(url)
-      const id = u.hostname.includes('youtu.be') ? u.pathname.slice(1) : u.searchParams.get('v')
-      return id ? `https://www.youtube.com/embed/${id}` : null
+      // youtu.be/ID · /embed/ID · /shorts/ID · /live/ID · watch?v=ID
+      const path = u.pathname.replace(/^\/(embed|shorts|live)\//, '/')
+      const id = u.hostname.includes('youtu.be')
+        ? path.slice(1)
+        : (u.searchParams.get('v') ?? (path.startsWith('/') && path.length > 1 && !path.includes('/') ? path.slice(1) : null))
+      if (!id) return null
+      return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`
     }
     const match = url.match(/vimeo\.com\/(\d+)/)
     return match ? `https://player.vimeo.com/video/${match[1]}` : null
