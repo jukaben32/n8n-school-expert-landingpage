@@ -2701,6 +2701,65 @@ registrada (Ley 136-03). Mientras el colegio no cargue en la plataforma las
 firmas que está recogiendo en papel, la profesora verá esa advertencia en casi
 todos los casos. **Es un pendiente de datos, no de código.**
 
+## Academia estaba muerta para el estudiante: dependía de `enrollments`, tabla que nadie escribe (2026-09-06)
+
+**Bug real, encontrado leyendo el código, no reportado por el colegio** (Academia
+lleva ~20 días en implementación y todavía no hay lecciones cargadas, así que
+nadie lo había notado): la migración 008 dirigió cada lección con
+`lessons.grade_level_id` -> `grade_levels`, y resolvía el curso del alumno
+consultando `enrollments`. **Ninguna parte de la app inserta jamás una fila en
+`enrollments`** -- verificado en todo `web/src` y en las 60+ migraciones: solo
+hay lecturas y la exportación de datos. Con esa tabla vacía:
+
+- `academia/page.tsx` ni siquiera llegaba a consultar lecciones (cortaba en
+  `enrollment?.grade_level_id`) y mostraba "Todavía no hay lecciones publicadas
+  para tu grado" a todos por igual;
+- la policy `lessons_student_read` hacía el mismo join, así que **tampoco era
+  arreglable solo desde el código** -- la base no devolvía filas.
+
+Es exactamente el mismo bug que ya tuvo el asistente de IA (`gatherFamilyContext()`
+leía `enrollments` y siempre decía "sin matrícula registrada", corregido leyendo
+`students.enrollment_status`). Academia se quedó con la versión vieja. Era el
+único módulo del proyecto casado con el catálogo `grade_levels`/`enrollments`;
+todos los demás (Horarios, Notas, Asistencia, Comunicados, **Encuestas**) usan
+`students.grade_level` (texto libre).
+
+**Corregido** en `20260909000000_academia_curso_texto.sql`, copiando el patrón de
+Encuestas (`current_student_id()` + comparar contra `students.grade_level`):
+columna `lessons.grade_level` (texto), `grade_level_id` pasa a nullable, y dos
+funciones `security definer` (`student_can_see_lesson`, `guardian_can_see_lesson`)
+con sus policies nuevas. `security definer` a propósito, para no volver a pasar
+por las policies de `students` -- el patrón que evitó la recursión de RLS de las
+migraciones 009 y 018. La de tutor usa `guardian_id is not null`, no
+`role = 'guardian'`, para no repetir el bug de doble rol de la 20260821060000.
+
+**Qué NO se tocó** (menor radio de impacto): no se borró `grade_level_id`, ni
+`grade_levels`, ni `enrollments`, ni las policies viejas
+(`lessons_student_read`/`lessons_guardian_read`) -- como las permisivas se
+combinan con OR, esto solo AGREGA una vía de acceso. La ficha del estudiante y
+la exportación de datos siguen leyendo `enrollments` sin cambio. `lessons_staff_all`
+intacta.
+
+**Verificado con Postgres local** (esquema espejo mínimo + copia fiel de
+`current_student_id()`, simulando la sesión igual que PostgREST), 4 escenarios,
+todos con el resultado esperado: la alumna ve **solo** la lección publicada de su
+curso (no el borrador, no el de otro curso); un alumno de **otro colegio** con el
+mismo texto de curso no ve la de este colegio; una **profesora que además es madre**
+(doble rol) sí ve la del curso de su hija; sin sesión, 0 filas. La migración es
+idempotente (aplicada dos veces seguidas, limpia).
+
+De paso, `/dashboard/academia` dejó de ser una lista plana: ahora abre con "la que
+sigue" (entrada directa al video, sin elegir nada) y debajo las lecciones agrupadas
+**por materia**. `/dashboard/academia/[id]`, `nueva` y `progreso` siguen igual, y
+"Nueva lección" ahora elige el curso de la lista real de `students.grade_level` en
+vez del catálogo `grade_levels` que nadie mantiene.
+
+**Pendiente real**: aplicar la migración a producción (esta sesión no tuvo
+credenciales de Supabase) y probar en vivo -- publicar una lección de prueba y
+abrirla con un login de estudiante real. Hasta entonces, Academia sigue vacía para
+el alumno. Tampoco se pudo correr `npm run smoke` por lo mismo; falta agregarle una
+comprobación del rol `student` sobre `lessons`.
+
 ## Personal: lista compacta, y la duplicación pendiente de "quién da qué" (2026-09-04)
 
 La pantalla de Personal mostraba, por cada empleado, una tarjeta con CINCO

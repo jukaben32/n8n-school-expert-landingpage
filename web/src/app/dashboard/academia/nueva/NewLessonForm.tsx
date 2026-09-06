@@ -11,7 +11,8 @@ interface NewLessonFormProps {
   schoolId: string
   authorProfileId: string
   subjects: Catalog[]
-  gradeLevels: Catalog[]
+  /** Cursos reales del colegio (texto libre de students.grade_level). */
+  courses: string[]
 }
 
 interface DraftOption { key: string; label: string; isCorrect: boolean }
@@ -45,12 +46,12 @@ function newQuestion(): DraftQuestion {
   }
 }
 
-export default function NewLessonForm({ schoolId, authorProfileId, subjects, gradeLevels }: NewLessonFormProps) {
+export default function NewLessonForm({ schoolId, authorProfileId, subjects, courses }: NewLessonFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [subjectId, setSubjectId] = useState(subjects[0]?.id ?? '')
-  const [gradeLevelId, setGradeLevelId] = useState(gradeLevels[0]?.id ?? '')
+  const [gradeLevel, setGradeLevel] = useState(courses[0] ?? '')
   const [videoUrl, setVideoUrl] = useState('')
   const [videoProvider, setVideoProvider] = useState<'youtube' | 'vimeo'>('youtube')
   const [isPublished, setIsPublished] = useState(true)
@@ -78,8 +79,8 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
   const [newSubjectName, setNewSubjectName] = useState('')
   const [newGradeName, setNewGradeName] = useState('')
   const [localSubjects, setLocalSubjects] = useState(subjects)
-  const [localGrades, setLocalGrades] = useState(gradeLevels)
-  const [creatingCatalog, setCreatingCatalog] = useState<'subject' | 'grade' | null>(null)
+  const [localCourses, setLocalCourses] = useState(courses)
+  const [creatingCatalog, setCreatingCatalog] = useState<'subject' | null>(null)
 
   async function addSubject() {
     if (!newSubjectName.trim()) return
@@ -94,17 +95,17 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
     setCreatingCatalog(null)
   }
 
-  async function addGrade() {
-    if (!newGradeName.trim()) return
-    setCreatingCatalog('grade')
-    const supabase = createClient()
-    const { data, error: err } = await supabase.from('grade_levels').insert({ school_id: schoolId, name: newGradeName.trim() }).select('id, name').single()
-    if (!err && data) {
-      setLocalGrades((prev) => [...prev, data])
-      setGradeLevelId(data.id)
-      setNewGradeName('')
-    }
-    setCreatingCatalog(null)
+  // Agregar un curso es solo agregarlo a esta lista: el curso vive como
+  // texto en `lessons.grade_level`, no hay catálogo que mantener. Debe
+  // escribirse IGUAL que en la ficha del estudiante (ej. "1ro. Secundaria")
+  // o la lección no le aparecerá a nadie -- por eso lo normal es elegirlo
+  // de la lista, y escribirlo a mano es la excepción.
+  function addCourse() {
+    const name = newGradeName.trim()
+    if (!name) return
+    setLocalCourses((prev) => (prev.includes(name) ? prev : [...prev, name]))
+    setGradeLevel(name)
+    setNewGradeName('')
   }
 
   function updateQuestion(key: string, patch: Partial<DraftQuestion>) {
@@ -211,8 +212,8 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
     e.preventDefault()
     setError(null)
 
-    if (!title.trim() || !videoUrl.trim() || !subjectId || !gradeLevelId) {
-      setError('Completa el título, el video, la materia y el grado.')
+    if (!title.trim() || !videoUrl.trim() || !subjectId || !gradeLevel.trim()) {
+      setError('Completa el título, el video, la materia y el curso.')
       return
     }
     for (const q of questions) {
@@ -231,7 +232,7 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
         .insert({
           school_id: schoolId,
           subject_id: subjectId,
-          grade_level_id: gradeLevelId,
+          grade_level: gradeLevel.trim(),
           title: title.trim(),
           description: description.trim() || null,
           video_url: videoUrl.trim(),
@@ -302,17 +303,17 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, gra
             </div>
           </div>
           <div>
-            <label htmlFor="grade" className={labelClass}>Grado</label>
-            {localGrades.length > 0 ? (
-              <select id="grade" value={gradeLevelId} onChange={(e) => setGradeLevelId(e.target.value)} className={inputClass}>
-                {localGrades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            <label htmlFor="grade" className={labelClass}>Curso</label>
+            {localCourses.length > 0 ? (
+              <select id="grade" value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} className={inputClass}>
+                {localCourses.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             ) : (
-              <p className="text-xs text-slate-500 dark:text-slate-400">Aún no hay grados — agrega uno abajo.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Aún no hay cursos con estudiantes inscritos — escribe uno abajo.</p>
             )}
             <div className="flex gap-2 mt-2">
-              <input value={newGradeName} onChange={(e) => setNewGradeName(e.target.value)} placeholder="Nuevo grado" className={`${inputClass} text-xs py-1.5`} />
-              <button type="button" onClick={addGrade} disabled={creatingCatalog === 'grade'} className="shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 text-xs font-semibold text-slate-600 dark:text-slate-300">+</button>
+              <input value={newGradeName} onChange={(e) => setNewGradeName(e.target.value)} placeholder="Otro curso" className={`${inputClass} text-xs py-1.5`} />
+              <button type="button" onClick={addCourse} className="shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 text-xs font-semibold text-slate-600 dark:text-slate-300">+</button>
             </div>
           </div>
         </div>
