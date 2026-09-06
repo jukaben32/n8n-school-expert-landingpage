@@ -6,3 +6,8 @@ node_modules/
 .DS_Store
 .vercel
 .env*
+
+# Salida de la fábrica de video-lecciones (los MP4 no van al repo; viven en
+# YouTube/Cloudflare). El guion y el motor sí se versionan.
+produccion/salida/
+produccion/node_modules/

@@ -1,0 +1,61 @@
+/* Plantilla visual de las video-lecciones. TODO el texto y los números
+   se dibujan aquí, con HTML real -- nunca los genera un modelo de imagen. */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1920px; height: 1080px; background: #ffffff;
+  font-family: "DejaVu Sans", system-ui, -apple-system, sans-serif;
+  color: #12323f; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 48px; padding: 90px;
+  position: relative;
+}
+body::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 14px; background: #1a5f7a; }
+body::after {
+  content: "Centro Educativo Gran Manantial de Sabiduría";
+  position: absolute; bottom: 38px; right: 60px; font-size: 22px; color: #9bb4bf; letter-spacing: .5px;
+}
+h1 { font-size: 82px; font-weight: 800; letter-spacing: -1.5px; text-align: center; color: #12323f; }
+.titulo-chico { font-size: 30px; font-weight: 700; color: #1a9c7a; text-transform: uppercase; letter-spacing: 3px; }
+.fila { display: flex; align-items: center; justify-content: center; gap: 90px; }
+.fila.grande { gap: 120px; }
+.columna { display: flex; flex-direction: column; gap: 54px; }
+.centro { display: flex; align-items: center; justify-content: center; gap: 90px; }
+.caja { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.vs, .signo { font-size: 62px; font-weight: 800; color: #9bb4bf; }
+.signo { font-size: 110px; color: #1a9c7a; }
+
+/* Barras de fracción */
+.barra { display: flex; width: 520px; height: 130px; border: 6px solid #12323f; border-radius: 14px; overflow: hidden; }
+.barra.ancha { width: 900px; height: 118px; }
+.barra .p { flex: 1; border-right: 5px solid #12323f; background: #f2f7f9; }
+.barra .p:last-child { border-right: none; }
+.barra .p.llena { background: #1a9c7a; }
+
+/* Fracciones */
+.frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 76px; font-weight: 800; line-height: 1; }
+.frac.gigante { font-size: 150px; }
+.frac .raya { display: block; width: 100%; min-width: 76px; height: 8px; background: #12323f; margin: 12px 0; border-radius: 4px; }
+.frac.gigante .raya { min-width: 150px; height: 13px; }
+
+.pie { font-size: 32px; color: #5c7a86; }
+.centro-txt { text-align: center; width: 100%; font-size: 36px; }
+.notas { display: flex; flex-direction: column; gap: 30px; }
+.nota { font-size: 34px; background: #eef6f9; border-left: 10px solid #1a5f7a; padding: 20px 30px; border-radius: 0 12px 12px 0; }
+
+.linea { display: flex; align-items: center; gap: 36px; }
+.etq { font-size: 52px; font-weight: 800; color: #1a5f7a; width: 130px; }
+.resultado { font-size: 92px; font-weight: 800; color: #1a9c7a; }
+
+.cadena { display: flex; align-items: center; justify-content: center; gap: 44px; }
+.op { font-size: 68px; font-weight: 800; color: #9bb4bf; }
+.multis { display: flex; justify-content: center; gap: 175px; }
+.mult { font-size: 38px; font-weight: 700; color: #1a9c7a; background: #e8f7f1; padding: 10px 24px; border-radius: 999px; }
+
+.rejilla { display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; }
+.m { width: 108px; height: 108px; border-radius: 50%; background: #f2f7f9; border: 6px solid #cfe0e7; }
+.m.dada { background: #f2b705; border-color: #c99400; }
+
+.caja-op { display: flex; flex-direction: column; font-size: 52px; font-weight: 700; background: #eef6f9; padding: 34px 56px; border-radius: 18px; gap: 14px; }
+.caja-op .sep { height: 4px; background: #cfe0e7; }
+
+.lista { font-size: 44px; line-height: 1.9; padding-left: 60px; max-width: 1400px; }
+.lista strong { color: #1a5f7a; }

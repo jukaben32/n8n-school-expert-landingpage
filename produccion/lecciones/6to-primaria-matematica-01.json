@@ -1,0 +1,48 @@
+{
+  "id": "6to-primaria-matematica-01",
+  "curso": "6to. Primaria",
+  "materia": "Matemática",
+  "titulo": "Fracciones equivalentes",
+  "descripcion": "Dos fracciones que se ven distintas y valen lo mismo. Con panes, mangos y pesos.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "Dos personas compran el mismo pan en el colmado. La primera lo parte en dos pedazos iguales y se come uno. La segunda lo parte en cuatro pedazos iguales y se come dos. ¿Quién comió más pan?",
+      "visual": "<div class='titulo-chico'>Fracciones equivalentes</div><h1>¿Quién comió más pan?</h1><div class='fila'><div class='caja'><div class='barra'><span class='p llena'></span><span class='p'></span></div><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div><div class='pie'>Se comió 1 de 2 pedazos</div></div><div class='vs'>vs</div><div class='caja'><div class='barra'><span class='p llena'></span><span class='p llena'></span><span class='p'></span><span class='p'></span></div><div class='frac'><span class='num'>2</span><span class='raya'></span><span class='den'>4</span></div><div class='pie'>Se comió 2 de 4 pedazos</div></div></div>"
+    },
+    {
+      "narracion": "Antes de contestar, recordemos qué dice una fracción. El número de abajo, el denominador, dice en cuántos pedazos iguales partimos el pan. El número de arriba, el numerador, dice cuántos de esos pedazos tomamos.",
+      "visual": "<h1>¿Qué dice una fracción?</h1><div class='centro'><div class='frac gigante'><span class='num'>3</span><span class='raya'></span><span class='den'>4</span></div><div class='notas'><div class='nota'>Numerador: cuántos pedazos tomamos</div><div class='nota'>Denominador: en cuántos pedazos partimos</div></div></div><div class='barra ancha'><span class='p llena'></span><span class='p llena'></span><span class='p llena'></span><span class='p'></span></div>"
+    },
+    {
+      "narracion": "Volvamos al pan. Piénsalo un momento. Un medio, contra dos cuartos. ¿Cuál de los dos es más? Te doy tres segundos.",
+      "visual": "<h1>Piénsalo</h1><div class='fila grande'><div class='frac gigante'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div><div class='signo'>?</div><div class='frac gigante'><span class='num'>2</span><span class='raya'></span><span class='den'>4</span></div></div><div class='pie centro-txt'>¿Cuál es más?</div>"
+    },
+    {
+      "narracion": "La respuesta es que las dos comieron exactamente lo mismo. Mira las dos barras alineadas. La parte pintada llega hasta el mismo punto. El pan está partido distinto, pero la cantidad de pan comido es la misma.",
+      "visual": "<h1>Comieron lo mismo</h1><div class='columna'><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p'></span></div><div class='etq'>1/2</div></div><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p llena'></span><span class='p'></span><span class='p'></span></div><div class='etq'>2/4</div></div></div><div class='resultado'>1/2 &nbsp;=&nbsp; 2/4</div>"
+    },
+    {
+      "narracion": "A dos fracciones que valen lo mismo les decimos fracciones equivalentes. Y hay una forma de crearlas: si multiplicas el número de arriba y el de abajo por el mismo número, la fracción cambia de cara pero no cambia de valor.",
+      "visual": "<h1>Fracciones equivalentes</h1><div class='cadena'><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div><div class='op'>=</div><div class='frac'><span class='num'>2</span><span class='raya'></span><span class='den'>4</span></div><div class='op'>=</div><div class='frac'><span class='num'>3</span><span class='raya'></span><span class='den'>6</span></div><div class='op'>=</div><div class='frac'><span class='num'>4</span><span class='raya'></span><span class='den'>8</span></div></div><div class='multis'><span class='mult'>&times;2</span><span class='mult'>&times;3</span><span class='mult'>&times;4</span></div><div class='pie centro-txt'>Multiplicamos arriba y abajo por el mismo número</div>"
+    },
+    {
+      "narracion": "Vamos a un ejemplo de todos los días. Compras una funda con doce mangos y regalas seis. Regalaste seis de doce. Pero seis de doce es exactamente la mitad. Seis doceavos y un medio son la misma cantidad.",
+      "visual": "<h1>Una funda de 12 mangos</h1><div class='rejilla'><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m'></span><span class='m'></span><span class='m'></span><span class='m'></span><span class='m'></span><span class='m'></span></div><div class='cadena'><div class='frac'><span class='num'>6</span><span class='raya'></span><span class='den'>12</span></div><div class='op'>=</div><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div></div><div class='pie centro-txt'>Regalaste la mitad</div>"
+    },
+    {
+      "narracion": "Y funciona también al revés. Si divides arriba y abajo por el mismo número, llegas a la fracción más sencilla que vale lo mismo. Eso se llama simplificar. Seis doceavos, dividido todo entre seis, es un medio.",
+      "visual": "<h1>Simplificar</h1><div class='cadena'><div class='frac'><span class='num'>6</span><span class='raya'></span><span class='den'>12</span></div><div class='op'>&rarr;</div><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div></div><div class='caja-op'><div>6 &divide; 6 = 1</div><div class='sep'></div><div>12 &divide; 6 = 2</div></div><div class='pie centro-txt'>Dividimos arriba y abajo entre el mismo número</div>"
+    },
+    {
+      "narracion": "Recuerda estas tres cosas. Una: dos fracciones son equivalentes cuando valen lo mismo, aunque se vean distintas. Dos: para crearlas, multiplicas arriba y abajo por el mismo número. Tres: para simplificar, divides arriba y abajo por el mismo número. Ahora contesta el cuestionario, que son cuatro preguntas cortas.",
+      "visual": "<h1>Para recordar</h1><ol class='lista'><li>Equivalentes = <strong>valen lo mismo</strong>, aunque se vean distintas</li><li>Para crearlas: <strong>multiplica</strong> arriba y abajo por el mismo número</li><li>Para simplificar: <strong>divide</strong> arriba y abajo por el mismo número</li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    }
+  ],
+  "cuestionario": [
+    { "pregunta": "¿Cuál de estas fracciones es equivalente a 1/2?", "opciones": ["3/6", "1/3", "2/5", "3/4"], "correcta": 0 },
+    { "pregunta": "Partimos un pan en 8 pedazos iguales y nos comimos 4. ¿Qué fracción del pan nos comimos?", "opciones": ["La mitad", "Una cuarta parte", "Tres cuartos", "Una octava parte"], "correcta": 0 },
+    { "pregunta": "Para crear una fracción equivalente, ¿qué hay que hacer?", "opciones": ["Multiplicar arriba y abajo por el mismo número", "Multiplicar solo el número de arriba", "Sumar 1 arriba y 1 abajo", "Multiplicar solo el número de abajo"], "correcta": 0 },
+    { "pregunta": "Si simplificamos 6/12 hasta la fracción más sencilla, ¿qué obtenemos?", "opciones": ["1/2", "2/4", "3/6", "6/12"], "correcta": 0 }
+  ]
+}

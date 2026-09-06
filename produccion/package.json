@@ -1,0 +1,8 @@
+{
+  "name": "mentoriapp-produccion",
+  "private": true,
+  "type": "module",
+  "description": "Fabrica de video-lecciones estilo Khan: guion -> graficas por codigo -> voz -> MP4. Separado de web/ a proposito: no entra en el build de Next.",
+  "scripts": { "producir": "node lib/producir.mjs" },
+  "dependencies": { "playwright-core": "^1.49.0", "ffmpeg-static": "^5.2.0" }
+}
