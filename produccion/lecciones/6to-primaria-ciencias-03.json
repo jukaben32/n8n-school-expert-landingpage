@@ -1,0 +1,104 @@
+{
+  "id": "6to-primaria-ciencias-03",
+  "curso": "6to. Primaria",
+  "materia": "Ciencias Naturales",
+  "titulo": "Cadenas alimenticias",
+  "descripcion": "Quién se come a quién, y por qué el sol está en el principio de todo.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "En la naturaleza nadie vive solo. Cada ser vivo depende de otro para comer. Y si sigues esa cadena hacia atrás, siempre llegas al mismo lugar: el sol.",
+      "visual": "<div class='titulo-chico'>Ciencias Naturales</div><h1>Cadenas alimenticias</h1><div class='subtitulo'>Quién se come a quién, y por qué todo empieza en el sol</div>"
+    },
+    {
+      "narracion": "Empecemos por lo más importante: toda la energía de una cadena viene del sol. No hay otra fuente. Las plantas la capturan, y de ahí va pasando de un ser vivo al siguiente. Cuando te comes un plátano, te estás comiendo energía del sol guardada.",
+      "visual": "<h1>Todo empieza en el sol</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9728;</div><div class='nombre'>Sol</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9827;</div><div class='nombre'>La planta la captura</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9679;</div><div class='nombre'>Pasa al que se la come</div></div></div><div class='destacado'>Un plátano es energía del sol guardada</div>"
+    },
+    {
+      "narracion": "Al principio de toda cadena están las plantas. Se llaman productoras porque fabrican su propio alimento usando la luz del sol. Ningún animal puede hacer eso. Por eso las plantas sostienen todo lo demás.",
+      "visual": "<h1>1. Las productoras</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Plantas</span><span class='detalle'>Fabrican su propio alimento con la luz del sol</span></div></div><div class='destacado'>Ningún animal puede hacer eso</div>"
+    },
+    {
+      "narracion": "Después vienen los consumidores. Los primeros son los que comen plantas: una vaca, una chiva, un conejo. A esos les decimos herbívoros. Ellos toman la energía que la planta guardó.",
+      "visual": "<h1>2. Consumidores primarios</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9728;</div><div class='nombre'>Sol</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9827;</div><div class='nombre'>Planta</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9679;</div><div class='nombre'>Herbívoro</div></div></div><div class='subtitulo'>Comen plantas: la vaca, la chiva, el conejo</div>"
+    },
+    {
+      "narracion": "Luego están los que se comen a los herbívoros. Un gavilán que caza un ratón, por ejemplo. A esos les decimos carnívoros. Y puede haber otro más arriba que se coma a ese.",
+      "visual": "<h1>3. Consumidores secundarios</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9827;</div><div class='nombre'>Planta</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9679;</div><div class='nombre'>Ratón</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9650;</div><div class='nombre'>Gavilán</div></div></div><div class='subtitulo'>Los carnívoros se comen a los herbívoros</div>"
+    },
+    {
+      "narracion": "Y al final están los descomponedores: hongos y bacterias. Se encargan de deshacer lo que muere y devolverlo a la tierra como nutrientes. Sin ellos, el planeta estaría cubierto de restos y las plantas no tendrían de dónde alimentarse.",
+      "visual": "<h1>4. Los descomponedores</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Hongos y bacterias</span><span class='detalle'>Deshacen lo que muere y lo devuelven a la tierra</span></div></div><div class='destacado'>Sin ellos, las plantas no tendrían de qué alimentarse</div>"
+    },
+    {
+      "narracion": "Hay algo curioso con la energía: en cada paso se pierde casi toda. De la que tiene una planta, al herbívoro le llega como la décima parte; el resto se gastó en moverse y en mantenerse vivo. Por eso las cadenas son cortas: casi nunca pasan de cuatro o cinco eslabones.",
+      "visual": "<h1>En cada paso se pierde energía</h1><div class='ciclo'><div class='etapa'><div class='globo'>100</div><div class='nombre'>Planta</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>10</div><div class='nombre'>Herbívoro</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>1</div><div class='nombre'>Carnívoro</div></div></div><div class='destacado'>Por eso las cadenas casi nunca pasan de 4 o 5 eslabones</div>"
+    },
+    {
+      "narracion": "En la vida real las cadenas no van solas: se cruzan. Un mismo ratón puede ser comido por un gavilán, por una lechuza o por una culebra. Y el gavilán come ratones, pero también lagartijas. A esa red de cadenas cruzadas le decimos red alimenticia.",
+      "visual": "<h1>En realidad son redes</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Al ratón lo comen</span><span class='detalle'>gavilán, lechuza, culebra</span></div><div class='tarjeta'><span class='rotulo'>El gavilán come</span><span class='detalle'>ratones y lagartijas</span></div></div><div class='destacado'>Cadenas cruzadas = red alimenticia</div>"
+    },
+    {
+      "narracion": "Pongamos un ejemplo de aquí. En un cafetal dominicano: el cafeto es la planta; los insectos se comen sus hojas; la ciguapa y otros pájaros se comen los insectos; y un gavilán se puede comer un pájaro. Cuando cualquiera de ellos muere, los hongos del suelo lo devuelven a la tierra.",
+      "visual": "<h1>Un cafetal dominicano</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9827;</div><div class='nombre'>Cafeto</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9670;</div><div class='nombre'>Insectos</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9650;</div><div class='nombre'>Pájaros</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9651;</div><div class='nombre'>Gavilán</div></div></div><div class='subtitulo'>Y los hongos del suelo devuelven todo a la tierra</div>"
+    },
+    {
+      "narracion": "Fíjate en algo importante. Si desaparece un eslabón, toda la cadena se afecta. Si se acaban las plantas, no comen los herbívoros; y si no hay herbívoros, no comen los carnívoros. Por eso cuidar un bosque no es cuidar solo los árboles.",
+      "visual": "<h1>Si falta un eslabón...</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9827;</div><div class='nombre'>Sin plantas</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#10007;</div><div class='nombre'>No comen los herbívoros</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#10007;</div><div class='nombre'>Ni los carnívoros</div></div></div><div class='destacado'>Cuidar un bosque no es cuidar solo los árboles</div>"
+    },
+    {
+      "narracion": "Ahora piensa qué pasa si alguien decide matar a todos los gavilanes de un cafetal porque le parecen molestos. Sin gavilanes, los pájaros se multiplican. Con más pájaros, casi no quedan insectos. Y algunos de esos insectos eran los que polinizaban otras plantas. Un solo eslabón movido cambia toda la red.",
+      "visual": "<h1>¿Y si quitamos un eslabón?</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#10007;</div><div class='nombre'>Sin gavilanes</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&uarr;</div><div class='nombre'>Más pájaros</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&darr;</div><div class='nombre'>Casi no quedan insectos</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9888;</div><div class='nombre'>Menos polinización</div></div></div>"
+    },
+    {
+      "narracion": "Y no olvides dónde estás tú en todo esto. El ser humano también es parte de las cadenas. Cuando comes arroz eres consumidor primario; cuando comes pollo eres consumidor secundario. No estamos fuera de la naturaleza mirándola: estamos adentro, comiendo de ella todos los días.",
+      "visual": "<h1>¿Y dónde estás tú?</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Comes arroz</span><span class='valor'>Consumidor primario</span></div><div class='tarjeta ambar'><span class='rotulo'>Comes pollo</span><span class='valor'>Consumidor secundario</span></div></div><div class='destacado'>No estamos fuera de la naturaleza. Estamos adentro.</div>"
+    },
+    {
+      "narracion": "Repasemos. Las plantas producen usando el sol. Los herbívoros se las comen. Los carnívoros se comen a los herbívoros. Y los descomponedores devuelven todo a la tierra. Es una cadena, y cada eslabón sostiene al siguiente.",
+      "visual": "<h1>Para recordar</h1><ol class='lista'><li><strong>Productoras</strong>: las plantas, con la luz del sol</li><li><strong>Herbívoros</strong>: se comen las plantas</li><li><strong>Carnívoros</strong>: se comen a los herbívoros</li><li><strong>Descomponedores</strong>: devuelven todo a la tierra</li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Por qué las plantas son las productoras?",
+      "opciones": [
+        "Porque fabrican su propio alimento con la luz del sol",
+        "Porque son las más grandes",
+        "Porque se comen a los insectos",
+        "Porque viven más años"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Un conejo que come hierba es un...",
+      "opciones": [
+        "Consumidor primario (herbívoro)",
+        "Productor",
+        "Descomponedor",
+        "Consumidor secundario"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué hacen los descomponedores?",
+      "opciones": [
+        "Deshacen lo que muere y devuelven nutrientes a la tierra",
+        "Cazan a los herbívoros",
+        "Fabrican alimento con el sol",
+        "Se comen a los carnívoros"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Si desaparecen las plantas de un ecosistema, ¿qué pasa?",
+      "opciones": [
+        "Se afecta toda la cadena, empezando por los herbívoros",
+        "Solo se afectan las plantas",
+        "Los carnívoros no se enteran",
+        "Aumentan los herbívoros"
+      ],
+      "correcta": 0
+    }
+  ]
+}

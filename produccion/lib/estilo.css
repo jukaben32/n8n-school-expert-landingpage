@@ -59,3 +59,44 @@ h1 { font-size: 82px; font-weight: 800; letter-spacing: -1.5px; text-align: cent
 
 .lista { font-size: 44px; line-height: 1.9; padding-left: 60px; max-width: 1400px; }
 .lista strong { color: #1a5f7a; }
+
+/* ── Bloques genéricos reutilizables por cualquier materia ─────────────── */
+.subtitulo { font-size: 40px; color: #5c7a86; text-align: center; max-width: 1500px; }
+.tarjetas { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+.tarjeta { background: #eef6f9; border-radius: 20px; padding: 40px 48px; min-width: 380px;
+  display: flex; flex-direction: column; gap: 18px; align-items: center; border-bottom: 10px solid #1a5f7a; }
+.tarjeta .rotulo { font-size: 28px; text-transform: uppercase; letter-spacing: 2px; color: #1a5f7a; font-weight: 700; }
+.tarjeta .valor { font-size: 62px; font-weight: 800; }
+.tarjeta .detalle { font-size: 30px; color: #5c7a86; text-align: center; }
+.tarjeta.verde { border-bottom-color: #1a9c7a; background: #e8f7f1; }
+.tarjeta.ambar { border-bottom-color: #c99400; background: #fdf6e3; }
+
+.oracion { font-size: 58px; font-weight: 700; text-align: center; line-height: 1.5; max-width: 1560px; }
+.oracion .sujeto { background: #cfeae0; border-radius: 10px; padding: 6px 14px; }
+.oracion .predicado { background: #ffe9b8; border-radius: 10px; padding: 6px 14px; }
+.leyenda { display: flex; gap: 50px; justify-content: center; font-size: 30px; }
+.leyenda span { display: inline-flex; align-items: center; gap: 14px; }
+.punto { width: 30px; height: 30px; border-radius: 8px; display: inline-block; }
+.punto.verde { background: #cfeae0; } .punto.ambar { background: #ffe9b8; }
+
+.pasos { display: flex; align-items: center; justify-content: center; gap: 26px; flex-wrap: wrap; }
+.paso { background: #ffffff; border: 6px solid #1a5f7a; border-radius: 18px; padding: 26px 34px;
+  font-size: 36px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.paso .n { width: 54px; height: 54px; border-radius: 50%; background: #1a5f7a; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 30px; }
+.paso small { font-size: 26px; font-weight: 500; color: #5c7a86; }
+.flecha { font-size: 54px; color: #9bb4bf; }
+
+.palabra { font-size: 74px; font-weight: 800; letter-spacing: 2px; }
+.palabra .fuerte { color: #1a9c7a; border-bottom: 10px solid #1a9c7a; }
+.tabla { border-collapse: collapse; font-size: 36px; }
+.tabla th { background: #1a5f7a; color: #fff; padding: 20px 34px; font-weight: 700; }
+.tabla td { border: 3px solid #cfe0e7; padding: 20px 34px; text-align: center; }
+.tabla tr:nth-child(even) td { background: #f6fafb; }
+
+.ciclo { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; }
+.etapa { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.globo { width: 170px; height: 170px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 60px; border: 8px solid #1a5f7a; background: #eef6f9; }
+.etapa .nombre { font-size: 32px; font-weight: 700; }
+.destacado { font-size: 64px; font-weight: 800; color: #1a9c7a; text-align: center; }

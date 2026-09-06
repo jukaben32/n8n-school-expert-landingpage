@@ -1,0 +1,108 @@
+{
+  "id": "6to-primaria-lengua-01",
+  "curso": "6to. Primaria",
+  "materia": "Lengua Española",
+  "titulo": "Sujeto y predicado",
+  "descripcion": "De quién habla la oración, y qué dice de él.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "Toda oración tiene dos partes. Una dice de quién estamos hablando. La otra dice qué hace o cómo es. Si aprendes a separarlas, entiendes mejor lo que lees y escribes con más claridad.",
+      "visual": "<div class='titulo-chico'>Lengua Española</div><h1>Sujeto y predicado</h1><div class='oracion'><span class='sujeto'>Los estudiantes de sexto</span> <span class='predicado'>ganaron el concurso de lectura</span></div><div class='leyenda'><span><i class='punto verde'></i> Sujeto</span><span><i class='punto ambar'></i> Predicado</span></div>"
+    },
+    {
+      "narracion": "El sujeto es de quien habla la oración. Para encontrarlo hay una pregunta que casi nunca falla: le preguntas al verbo, quién. Quién ganó el concurso. Los estudiantes de sexto. Ese es el sujeto.",
+      "visual": "<h1>El sujeto</h1><div class='subtitulo'>Pregúntale al verbo: ¿quién?</div><div class='pasos'><div class='paso'><span class='n'>1</span>Busca el verbo<small>ganaron</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Pregunta ¿quién?<small>¿quién ganó?</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>Esa es la respuesta<small>los estudiantes de sexto</small></div></div>"
+    },
+    {
+      "narracion": "El predicado es todo lo demás. Es lo que se dice del sujeto. Siempre lleva el verbo dentro. Ganaron el concurso de lectura. Eso es lo que hicieron los estudiantes, y por eso es el predicado.",
+      "visual": "<h1>El predicado</h1><div class='oracion'><span class='sujeto'>Los estudiantes de sexto</span> <span class='predicado'>ganaron el concurso de lectura</span></div><div class='subtitulo'>Todo lo que se dice del sujeto. Siempre contiene el verbo.</div>"
+    },
+    {
+      "narracion": "Practiquemos con una oración nueva. Mi hermana menor cocina muy bien. Busca el verbo: cocina. Ahora pregunta: ¿quién cocina? Mi hermana menor. Ese es el sujeto completo, con todo y el menor, porque esa palabra nos dice de cuál hermana estamos hablando.",
+      "visual": "<h1>Practiquemos</h1><div class='oracion'><span class='sujeto'>Mi hermana menor</span> <span class='predicado'>cocina muy bien</span></div><div class='pasos'><div class='paso'><span class='n'>1</span>Verbo<small>cocina</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>¿Quién cocina?<small>mi hermana menor</small></div></div>"
+    },
+    {
+      "narracion": "Fíjate en algo importante. El sujeto casi nunca es una sola palabra. Suele venir acompañado: mi hermana menor, los estudiantes de sexto, el perro del vecino. Todo ese grupo es el sujeto, no solo el sustantivo del medio.",
+      "visual": "<h1>El sujeto suele venir acompañado</h1><div class='columna'><div class='oracion'><span class='sujeto'>Mi hermana menor</span></div><div class='oracion'><span class='sujeto'>Los estudiantes de sexto</span></div><div class='oracion'><span class='sujeto'>El perro del vecino</span></div></div><div class='subtitulo'>Todo el grupo es el sujeto, no solo la palabra del medio</div>"
+    },
+    {
+      "narracion": "Y dentro de ese grupo hay una palabra que manda: el núcleo. Es el sustantivo principal. En mi hermana menor, el núcleo es hermana. Una forma de comprobarlo: si el sujeto es plural, el verbo también se pone en plural, y el que decide eso es el núcleo.",
+      "visual": "<h1>El núcleo del sujeto</h1><div class='oracion'>Mi <span class='sujeto'>hermana</span> menor cocina</div><div class='oracion'>Mis <span class='sujeto'>hermanas</span> menores cocinan</div><div class='subtitulo'>El núcleo manda: si él es plural, el verbo también</div>"
+    },
+    {
+      "narracion": "Cuidado con una trampa. El sujeto no siempre va al principio. A veces va en el medio, o al final. Mira esta oración: en el patio jugaban los niños. El sujeto es los niños, aunque esté al final.",
+      "visual": "<h1>Cuidado con esta trampa</h1><div class='oracion'><span class='predicado'>En el patio jugaban</span> <span class='sujeto'>los niños</span></div><div class='subtitulo'>El sujeto no siempre va al principio. Pregúntale al verbo, no mires la posición.</div>"
+    },
+    {
+      "narracion": "Y hay otra trampa más. A veces el sujeto no aparece escrito, pero se entiende. Si digo, llegamos temprano, no escribí quién, pero se entiende que fuimos nosotros. A eso le llamamos sujeto tácito.",
+      "visual": "<h1>El sujeto que no se ve</h1><div class='oracion'><span class='predicado'>Llegamos temprano a la escuela</span></div><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Sujeto tácito</span><span class='valor'>nosotros</span><span class='detalle'>No está escrito, pero se entiende</span></div></div>"
+    },
+    {
+      "narracion": "Ahora una prueba que casi nunca falla para comprobar si acertaste. Cambia el sujeto de singular a plural. Si el verbo tiene que cambiar también, escogiste bien. Los estudiantes ganaron. El estudiante ganó. El verbo cambió, así que el sujeto era ese.",
+      "visual": "<h1>La prueba del plural</h1><div class='columna'><div class='oracion'><span class='sujeto'>El estudiante</span> <span class='predicado'>ganó</span></div><div class='oracion'><span class='sujeto'>Los estudiantes</span> <span class='predicado'>ganaron</span></div></div><div class='destacado'>Si el verbo cambia, ese era el sujeto</div>"
+    },
+    {
+      "narracion": "Y cuidado con confundir el sujeto con lo que va al principio. En la oración: ayer, en el patio, jugaron los niños, lo primero que aparece es ayer, pero ayer no es el sujeto. Ayer dice cuándo, no quién. El sujeto sigue siendo los niños.",
+      "visual": "<h1>Lo primero no siempre es el sujeto</h1><div class='oracion'><span class='predicado'>Ayer, en el patio, jugaron</span> <span class='sujeto'>los niños</span></div><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>\"Ayer\" dice</span><span class='valor'>cuándo</span></div><div class='tarjeta verde'><span class='rotulo'>El sujeto dice</span><span class='valor'>quién</span></div></div>"
+    },
+    {
+      "narracion": "¿Y para qué te sirve esto de verdad? Para escribir sin errores. Si sabes cuál es el núcleo del sujeto, sabes cómo va el verbo. Muchos errores de escritura salen de ahí: la gente pone el verbo en plural porque cerca hay una palabra en plural, cuando el núcleo era singular.",
+      "visual": "<h1>¿Para qué me sirve?</h1><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Mal</span><span class='detalle'>\"La caja de lápices <strong>están</strong> en la mesa\"</span></div><div class='tarjeta verde'><span class='rotulo'>Bien</span><span class='detalle'>\"La caja de lápices <strong>está</strong> en la mesa\"</span></div></div><div class='subtitulo'>El núcleo es \"caja\", singular. \"Lápices\" solo acompaña.</div>"
+    },
+    {
+      "narracion": "Hagamos un último ejercicio, un poco más difícil. En la oración: el equipo de béisbol del colegio ganó el campeonato. ¿Cuál es el sujeto? Todo esto: el equipo de béisbol del colegio. Y el núcleo es equipo, en singular. Por eso el verbo dice ganó, y no ganaron, aunque haya un colegio y un béisbol de por medio.",
+      "visual": "<h1>Uno más difícil</h1><div class='oracion'><span class='sujeto'>El <strong>equipo</strong> de béisbol del colegio</span> <span class='predicado'>ganó el campeonato</span></div><div class='subtitulo'>El núcleo es \"equipo\", singular. Por eso: ganó, no ganaron.</div>"
+    },
+    {
+      "narracion": "Resumiendo lo que hay que llevarse. Busca el verbo. Pregúntale quién. Lo que responda es el sujeto completo, con todo y sus acompañantes. Dentro de él, el núcleo manda sobre el verbo. Y todo lo demás de la oración es predicado.",
+      "visual": "<h1>El método completo</h1><div class='pasos'><div class='paso'><span class='n'>1</span>Busca el verbo</div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Pregunta ¿quién?</div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>Eso es el sujeto<small>con sus acompañantes</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>4</span>Lo demás es predicado</div></div>"
+    },
+    {
+      "narracion": "Recuerda. El sujeto es de quien se habla, y se encuentra preguntándole quién al verbo. El predicado es lo que se dice, y siempre lleva el verbo. Y el sujeto puede ir en cualquier lugar, o no aparecer. Vamos al cuestionario.",
+      "visual": "<h1>Para recordar</h1><ol class='lista'><li><strong>Sujeto</strong>: de quien se habla. Pregúntale <strong>¿quién?</strong> al verbo</li><li><strong>Predicado</strong>: lo que se dice. Siempre lleva el <strong>verbo</strong></li><li>El sujeto puede ir en <strong>cualquier lugar</strong>, o estar tácito</li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "En \"María estudia todas las tardes\", ¿cuál es el sujeto?",
+      "opciones": [
+        "María",
+        "estudia",
+        "todas las tardes",
+        "estudia todas las tardes"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué pregunta ayuda a encontrar el sujeto?",
+      "opciones": [
+        "¿Quién? al verbo",
+        "¿Cuándo? al verbo",
+        "¿Dónde? al verbo",
+        "¿Cuánto? al verbo"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "En \"Por la mañana cantaban los pájaros\", ¿cuál es el sujeto?",
+      "opciones": [
+        "los pájaros",
+        "Por la mañana",
+        "cantaban",
+        "la mañana"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "En \"Salimos corriendo del aula\", el sujeto es...",
+      "opciones": [
+        "Tácito: nosotros",
+        "corriendo",
+        "del aula",
+        "No tiene sujeto"
+      ],
+      "correcta": 0
+    }
+  ]
+}

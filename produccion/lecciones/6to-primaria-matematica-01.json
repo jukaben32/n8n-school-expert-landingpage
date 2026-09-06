@@ -27,6 +27,22 @@
       "visual": "<h1>Fracciones equivalentes</h1><div class='cadena'><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div><div class='op'>=</div><div class='frac'><span class='num'>2</span><span class='raya'></span><span class='den'>4</span></div><div class='op'>=</div><div class='frac'><span class='num'>3</span><span class='raya'></span><span class='den'>6</span></div><div class='op'>=</div><div class='frac'><span class='num'>4</span><span class='raya'></span><span class='den'>8</span></div></div><div class='multis'><span class='mult'>&times;2</span><span class='mult'>&times;3</span><span class='mult'>&times;4</span></div><div class='pie centro-txt'>Multiplicamos arriba y abajo por el mismo número</div>"
     },
     {
+      "narracion": "Vamos a comprobarlo con la barra. Un medio pintado llega hasta la mitad. Dos cuartos pintados llegan hasta la mitad. Tres sextos pintados llegan hasta la mitad. Y cuatro octavos también. Cambia la cantidad de pedazos, pero la parte pintada siempre llega al mismo lugar.",
+      "visual": "<h1>Todas llegan al mismo lugar</h1><div class='columna'><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p'></span></div><div class='etq'>1/2</div></div><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p llena'></span><span class='p'></span><span class='p'></span></div><div class='etq'>2/4</div></div><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p llena'></span><span class='p llena'></span><span class='p'></span><span class='p'></span><span class='p'></span></div><div class='etq'>3/6</div></div></div>"
+    },
+    {
+      "narracion": "Ahora un error muy común, para que no lo cometas. Mucha gente cree que si le suma uno arriba y uno abajo, la fracción no cambia. No es verdad. Un medio más uno arriba y uno abajo da dos tercios, y dos tercios no es la mitad: es más. Sumar no funciona. Solo funciona multiplicar o dividir.",
+      "visual": "<h1>Un error muy común</h1><div class='cadena'><div class='frac gigante'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div><div class='op'>+1 arriba y abajo</div><div class='frac gigante'><span class='num'>2</span><span class='raya'></span><span class='den'>3</span></div></div><div class='columna'><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p'></span></div><div class='etq'>1/2</div></div><div class='linea'><div class='barra ancha'><span class='p llena'></span><span class='p llena'></span><span class='p'></span></div><div class='etq'>2/3</div></div></div><div class='destacado'>No son iguales. Sumar NO funciona.</div>"
+    },
+    {
+      "narracion": "Practiquemos juntos. ¿Son equivalentes tres cuartos y seis octavos? Fíjate en los de abajo. De cuatro a ocho, multiplicamos por dos. Entonces arriba también tiene que ser por dos. Tres por dos es seis. Y sí: arriba dice seis. Son equivalentes.",
+      "visual": "<h1>Practiquemos</h1><div class='subtitulo'>¿Son equivalentes 3/4 y 6/8?</div><div class='pasos'><div class='paso'><span class='n'>1</span>Abajo: 4 &rarr; 8<small>multiplicamos por 2</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Arriba: 3 &times; 2<small>tiene que dar 6</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>Y dice 6<small>sí son equivalentes</small></div></div><div class='destacado'>3/4 = 6/8</div>"
+    },
+    {
+      "narracion": "Otro más, y este no calza. ¿Son equivalentes dos tercios y cuatro nueve avos? Abajo, de tres a nueve, multiplicamos por tres. Entonces arriba dos por tres tendría que dar seis. Pero arriba dice cuatro, no seis. Así que no son equivalentes.",
+      "visual": "<h1>Y este, ¿calza?</h1><div class='subtitulo'>¿Son equivalentes 2/3 y 4/9?</div><div class='pasos'><div class='paso'><span class='n'>1</span>Abajo: 3 &rarr; 9<small>multiplicamos por 3</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Arriba: 2 &times; 3 = 6<small>tendría que decir 6</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>Pero dice 4<small>NO son equivalentes</small></div></div><div class='destacado'>2/3 &ne; 4/9</div>"
+    },
+    {
       "narracion": "Vamos a un ejemplo de todos los días. Compras una funda con doce mangos y regalas seis. Regalaste seis de doce. Pero seis de doce es exactamente la mitad. Seis doceavos y un medio son la misma cantidad.",
       "visual": "<h1>Una funda de 12 mangos</h1><div class='rejilla'><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m dada'></span><span class='m'></span><span class='m'></span><span class='m'></span><span class='m'></span><span class='m'></span><span class='m'></span></div><div class='cadena'><div class='frac'><span class='num'>6</span><span class='raya'></span><span class='den'>12</span></div><div class='op'>=</div><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div></div><div class='pie centro-txt'>Regalaste la mitad</div>"
     },
@@ -35,14 +51,62 @@
       "visual": "<h1>Simplificar</h1><div class='cadena'><div class='frac'><span class='num'>6</span><span class='raya'></span><span class='den'>12</span></div><div class='op'>&rarr;</div><div class='frac'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div></div><div class='caja-op'><div>6 &divide; 6 = 1</div><div class='sep'></div><div>12 &divide; 6 = 2</div></div><div class='pie centro-txt'>Dividimos arriba y abajo entre el mismo número</div>"
     },
     {
+      "narracion": "¿Y para qué sirve todo esto en la vida real? Para comparar precios. Si en un colmado te dan tres de cada seis empanadas de regalo, y en otro te dan una de cada dos, te están dando exactamente lo mismo, aunque los números suenen distintos.",
+      "visual": "<h1>¿Para qué me sirve?</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Colmado 1</span><span class='valor'>3 de 6</span><span class='detalle'>de regalo</span></div><div class='tarjeta'><span class='rotulo'>Colmado 2</span><span class='valor'>1 de 2</span><span class='detalle'>de regalo</span></div><div class='tarjeta verde'><span class='rotulo'>La verdad</span><span class='valor'>Es lo mismo</span><span class='detalle'>3/6 = 1/2</span></div></div>"
+    },
+    {
+      "narracion": "Una última cosa que te va a servir muchísimo. Cuando una fracción está simplificada al máximo, decimos que está en su forma más simple. Un medio ya no se puede simplificar más, porque uno y dos no tienen ningún divisor común además del uno. Esa es la forma en que casi siempre se escriben las respuestas.",
+      "visual": "<h1>La forma más simple</h1><div class='cadena'><div class='frac'><span class='num'>8</span><span class='raya'></span><span class='den'>16</span></div><div class='op'>&rarr;</div><div class='frac'><span class='num'>4</span><span class='raya'></span><span class='den'>8</span></div><div class='op'>&rarr;</div><div class='frac'><span class='num'>2</span><span class='raya'></span><span class='den'>4</span></div><div class='op'>&rarr;</div><div class='frac gigante'><span class='num'>1</span><span class='raya'></span><span class='den'>2</span></div></div><div class='destacado'>1/2 ya no se puede simplificar más</div>"
+    },
+    {
+      "narracion": "¿Y cómo sé cuándo ya no puedo seguir simplificando? Cuando el único número que divide a los dos, arriba y abajo, es el uno. Si todavía hay un número que divide a los dos, como el dos o el tres, todavía te queda trabajo por hacer.",
+      "visual": "<h1>¿Cuándo paro de simplificar?</h1><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Todavía se puede</span><span class='valor'>6/9</span><span class='detalle'>el 3 divide a los dos</span></div><div class='tarjeta verde'><span class='rotulo'>Ya está lista</span><span class='valor'>2/3</span><span class='detalle'>solo el 1 divide a los dos</span></div></div>"
+    },
+    {
       "narracion": "Recuerda estas tres cosas. Una: dos fracciones son equivalentes cuando valen lo mismo, aunque se vean distintas. Dos: para crearlas, multiplicas arriba y abajo por el mismo número. Tres: para simplificar, divides arriba y abajo por el mismo número. Ahora contesta el cuestionario, que son cuatro preguntas cortas.",
       "visual": "<h1>Para recordar</h1><ol class='lista'><li>Equivalentes = <strong>valen lo mismo</strong>, aunque se vean distintas</li><li>Para crearlas: <strong>multiplica</strong> arriba y abajo por el mismo número</li><li>Para simplificar: <strong>divide</strong> arriba y abajo por el mismo número</li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
     }
   ],
   "cuestionario": [
-    { "pregunta": "¿Cuál de estas fracciones es equivalente a 1/2?", "opciones": ["3/6", "1/3", "2/5", "3/4"], "correcta": 0 },
-    { "pregunta": "Partimos un pan en 8 pedazos iguales y nos comimos 4. ¿Qué fracción del pan nos comimos?", "opciones": ["La mitad", "Una cuarta parte", "Tres cuartos", "Una octava parte"], "correcta": 0 },
-    { "pregunta": "Para crear una fracción equivalente, ¿qué hay que hacer?", "opciones": ["Multiplicar arriba y abajo por el mismo número", "Multiplicar solo el número de arriba", "Sumar 1 arriba y 1 abajo", "Multiplicar solo el número de abajo"], "correcta": 0 },
-    { "pregunta": "Si simplificamos 6/12 hasta la fracción más sencilla, ¿qué obtenemos?", "opciones": ["1/2", "2/4", "3/6", "6/12"], "correcta": 0 }
+    {
+      "pregunta": "¿Cuál de estas fracciones es equivalente a 1/2?",
+      "opciones": [
+        "3/6",
+        "1/3",
+        "2/5",
+        "3/4"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Partimos un pan en 8 pedazos iguales y nos comimos 4. ¿Qué fracción del pan nos comimos?",
+      "opciones": [
+        "La mitad",
+        "Una cuarta parte",
+        "Tres cuartos",
+        "Una octava parte"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Para crear una fracción equivalente, ¿qué hay que hacer?",
+      "opciones": [
+        "Multiplicar arriba y abajo por el mismo número",
+        "Multiplicar solo el número de arriba",
+        "Sumar 1 arriba y 1 abajo",
+        "Multiplicar solo el número de abajo"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Si simplificamos 6/12 hasta la fracción más sencilla, ¿qué obtenemos?",
+      "opciones": [
+        "1/2",
+        "2/4",
+        "3/6",
+        "6/12"
+      ],
+      "correcta": 0
+    }
   ]
 }

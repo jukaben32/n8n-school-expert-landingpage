@@ -1,0 +1,104 @@
+{
+  "id": "6to-primaria-ciencias-01",
+  "curso": "6to. Primaria",
+  "materia": "Ciencias Naturales",
+  "titulo": "El ciclo del agua",
+  "descripcion": "El agua que bebes hoy ya estuvo aquí antes. Muchas veces.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "El agua que te tomaste hoy no es nueva. Ya estuvo en un río, en una nube y en el mar, muchísimas veces. El planeta no fabrica agua nueva: la misma da vueltas una y otra vez.",
+      "visual": "<div class='titulo-chico'>Ciencias Naturales</div><h1>El ciclo del agua</h1><div class='subtitulo'>El agua que bebes hoy ya estuvo aquí antes. Muchas veces.</div>"
+    },
+    {
+      "narracion": "Antes de empezar, un dato que sorprende. Toda el agua del planeta es siempre la misma cantidad. No entra agua nueva ni se pierde. La que hay hoy es la misma que había cuando existían los dinosaurios. Solo cambia de lugar y de estado.",
+      "visual": "<h1>El agua no se crea ni se pierde</h1><div class='subtitulo'>La misma agua que hay hoy es la que había cuando existían los dinosaurios</div><div class='destacado'>Solo cambia de lugar y de estado</div>"
+    },
+    {
+      "narracion": "Y hablando de estados. El agua puede estar en tres: sólido, cuando es hielo; líquido, que es como más la vemos; y gaseoso, que es el vapor. El ciclo del agua es justamente el agua cambiando de estado una y otra vez.",
+      "visual": "<h1>Los tres estados del agua</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Sólido</span><span class='valor'>&#10052;</span><span class='detalle'>hielo</span></div><div class='tarjeta verde'><span class='rotulo'>Líquido</span><span class='valor'>&#9832;</span><span class='detalle'>como más lo vemos</span></div><div class='tarjeta ambar'><span class='rotulo'>Gaseoso</span><span class='valor'>&#9729;</span><span class='detalle'>vapor</span></div></div>"
+    },
+    {
+      "narracion": "Todo empieza con el calor del sol. El sol calienta el agua del mar, de los ríos y de las lagunas. Al calentarse, el agua se convierte en vapor y sube. A eso le llamamos evaporación.",
+      "visual": "<h1>1. Evaporación</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9728;</div><div class='nombre'>El sol calienta</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9832;</div><div class='nombre'>El agua se hace vapor</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&uarr;</div><div class='nombre'>Sube al cielo</div></div></div>"
+    },
+    {
+      "narracion": "Allá arriba hace frío. El vapor se enfría y se junta en gotitas muy pequeñas. Millones de esas gotitas juntas forman una nube. A eso le llamamos condensación.",
+      "visual": "<h1>2. Condensación</h1><div class='ciclo'><div class='etapa'><div class='globo'>&uarr;</div><div class='nombre'>Vapor que subió</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#10052;</div><div class='nombre'>Se enfría</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9729;</div><div class='nombre'>Forma nubes</div></div></div><div class='subtitulo'>Una nube son millones de gotitas juntas</div>"
+    },
+    {
+      "narracion": "Cuando las gotitas se juntan tanto que pesan demasiado, se caen. Eso es la lluvia. Si hace mucho frío puede caer como nieve o granizo, aunque aquí en el país eso casi no lo vemos. A esta etapa le llamamos precipitación.",
+      "visual": "<h1>3. Precipitación</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9729;</div><div class='nombre'>Nube cargada</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9730;</div><div class='nombre'>Llueve</div></div></div><div class='subtitulo'>Las gotitas pesan tanto que se caen</div>"
+    },
+    {
+      "narracion": "Fíjate en un detalle que casi nadie nota. Cuando el agua se evapora del mar, deja atrás la sal. El vapor sube limpio. Por eso la lluvia es agua dulce, aunque venga de un mar salado. La naturaleza destila el agua todos los días, gratis.",
+      "visual": "<h1>El mar es salado, la lluvia no</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9832;</div><div class='nombre'>Mar salado</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&uarr;</div><div class='nombre'>Sube el vapor</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9730;</div><div class='nombre'>Lluvia dulce</div></div></div><div class='destacado'>La sal se queda abajo</div>"
+    },
+    {
+      "narracion": "Las plantas también participan. Por sus hojas sueltan vapor de agua todo el día, en un proceso que se llama transpiración. Un árbol grande puede soltar cientos de litros al día. Por eso donde hay bosque llueve más: los árboles alimentan las nubes.",
+      "visual": "<h1>Los árboles también evaporan</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Transpiración</span><span class='detalle'>Las hojas sueltan vapor de agua todo el día</span></div><div class='tarjeta'><span class='rotulo'>Un árbol grande</span><span class='valor'>cientos</span><span class='detalle'>de litros al día</span></div></div><div class='destacado'>Donde hay bosque, llueve más</div>"
+    },
+    {
+      "narracion": "Y aquí está la conexión que importa. Si se tumba el bosque de una montaña, sube menos vapor, se forman menos nubes y llueve menos. Además, sin raíces que sujeten la tierra, el agua de lluvia corre de golpe y se lleva el suelo. Por eso la deforestación y la sequía van de la mano.",
+      "visual": "<h1>Por eso importa el bosque</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#10007;</div><div class='nombre'>Se tumba el bosque</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&darr;</div><div class='nombre'>Menos vapor</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9729;</div><div class='nombre'>Menos nubes</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9728;</div><div class='nombre'>Menos lluvia</div></div></div>"
+    },
+    {
+      "narracion": "El agua que cae corre por el suelo hacia los ríos, y los ríos la llevan de vuelta al mar. Otra parte se filtra bajo la tierra y alimenta los pozos. A eso le llamamos escorrentía e infiltración. Y ahí vuelve a empezar todo.",
+      "visual": "<h1>4. Vuelve al mar</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9730;</div><div class='nombre'>Cae la lluvia</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&asymp;</div><div class='nombre'>Corre a los ríos</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9832;</div><div class='nombre'>Llega al mar</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9728;</div><div class='nombre'>Y empieza otra vez</div></div></div>"
+    },
+    {
+      "narracion": "Vamos a seguir una gota completa, para amarrarlo todo. Sale del mar de Boca Chica un día de sol. Sube como vapor. Se enfría allá arriba y se junta en una nube. El viento empuja la nube hacia la montaña. Cae como lluvia en un cafetal. Corre por un arroyo, entra a un río, y el río la devuelve al mar. Y vuelve a empezar.",
+      "visual": "<h1>El viaje de una gota</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9832;</div><div class='nombre'>Sale del mar</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&uarr;</div><div class='nombre'>Sube</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9729;</div><div class='nombre'>Nube</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9730;</div><div class='nombre'>Llueve</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&asymp;</div><div class='nombre'>Río</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9832;</div><div class='nombre'>Vuelve al mar</div></div></div>"
+    },
+    {
+      "narracion": "Y una última idea, la más importante de todas. Como el agua es siempre la misma y da vueltas, lo que le echamos en un lugar aparece en otro. La basura que va a un arroyo termina en el mar. El agua que se contamina en la montaña llega a la llave de alguien abajo. Cuidar el agua no es cuidar un charco: es cuidar todo el ciclo.",
+      "visual": "<h1>Lo que le echamos, vuelve</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9888;</div><div class='nombre'>Basura en el arroyo</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&asymp;</div><div class='nombre'>Baja por el río</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9832;</div><div class='nombre'>Llega al mar</div></div></div><div class='destacado'>Cuidar el agua es cuidar todo el ciclo</div>"
+    },
+    {
+      "narracion": "Las cuatro etapas, en orden: evaporación, condensación, precipitación, y de vuelta al mar. Es un ciclo, o sea que no tiene principio ni final. Por eso cuidar el agua importa tanto: es siempre la misma.",
+      "visual": "<h1>Para recordar</h1><ol class='lista'><li><strong>Evaporación</strong>: el sol calienta y el agua sube como vapor</li><li><strong>Condensación</strong>: el vapor se enfría y forma nubes</li><li><strong>Precipitación</strong>: las gotas pesan y cae la lluvia</li><li><strong>Vuelve al mar</strong> por ríos y bajo tierra, y empieza otra vez</li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué hace que el agua del mar se evapore?",
+      "opciones": [
+        "El calor del sol",
+        "El viento frío",
+        "La lluvia",
+        "Los peces"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cómo se llama la etapa en que el vapor se enfría y forma nubes?",
+      "opciones": [
+        "Condensación",
+        "Evaporación",
+        "Precipitación",
+        "Infiltración"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Por qué llueve?",
+      "opciones": [
+        "Las gotitas de la nube se juntan y pesan demasiado",
+        "El sol empuja las nubes",
+        "El mar sube al cielo de golpe",
+        "Las nubes se rompen con el viento"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Por qué decimos que es un CICLO?",
+      "opciones": [
+        "Porque se repite sin principio ni final",
+        "Porque dura un año exacto",
+        "Porque solo ocurre en invierno",
+        "Porque solo pasa en el mar"
+      ],
+      "correcta": 0
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "id": "6to-primaria-lengua-03",
+  "curso": "6to. Primaria",
+  "materia": "Lengua Española",
+  "titulo": "La idea principal de un párrafo",
+  "descripcion": "Cómo encontrar de qué trata de verdad lo que estás leyendo.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "Leer no es solo pasar los ojos por las letras. Es entender qué te están diciendo. Y para eso hay una destreza que sirve en todas las materias: encontrar la idea principal.",
+      "visual": "<div class='titulo-chico'>Lengua Española</div><h1>La idea principal</h1><div class='subtitulo'>De qué trata de verdad lo que estás leyendo</div>"
+    },
+    {
+      "narracion": "Un párrafo es como una familia. Hay una oración que manda, y las demás la acompañan. La que manda es la idea principal. Las otras son detalles que la explican, la ejemplifican o la prueban.",
+      "visual": "<h1>Un párrafo es una familia</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Idea principal</span><span class='detalle'>De qué trata el párrafo. Una sola.</span></div><div class='tarjeta'><span class='rotulo'>Detalles</span><span class='detalle'>La explican, la ejemplifican o la prueban.</span></div></div>"
+    },
+    {
+      "narracion": "Antes del ejemplo, una advertencia. La idea principal no es el tema. El tema es de qué habla, en una o dos palabras: el mangú. La idea principal es qué dice el párrafo sobre ese tema, en una oración completa. Confundir las dos cosas es el error más común.",
+      "visual": "<h1>Tema no es lo mismo que idea principal</h1><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>El tema</span><span class='valor'>El mangú</span><span class='detalle'>una o dos palabras</span></div><div class='tarjeta verde'><span class='rotulo'>La idea principal</span><span class='detalle'>\"El mangú es uno de los platos más queridos de la cocina dominicana\"<br>una oración completa</span></div></div>"
+    },
+    {
+      "narracion": "Veamos un ejemplo. El mangú es uno de los platos más queridos de la cocina dominicana. Se prepara con plátano verde hervido y majado. Se acompaña con salami, queso frito y huevo. Muchas familias lo desayunan los domingos.",
+      "visual": "<h1>Léelo con calma</h1><div class='oracion'><span class='sujeto'>El mangú es uno de los platos más queridos de la cocina dominicana.</span> Se prepara con plátano verde hervido y majado. Se acompaña con salami, queso frito y huevo. Muchas familias lo desayunan los domingos.</div>"
+    },
+    {
+      "narracion": "¿Cuál es la idea principal? La primera oración. El mangú es uno de los platos más queridos. Todo lo demás son detalles: cómo se prepara, con qué se acompaña, cuándo se come. Quita cualquiera de esos detalles y el párrafo sigue en pie. Quita la primera, y el párrafo se queda sin dueño.",
+      "visual": "<h1>La prueba del quitar</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Idea principal</span><span class='detalle'>\"El mangú es uno de los platos más queridos de la cocina dominicana\"</span></div></div><div class='subtitulo'>Si la quitas, el párrafo se queda sin dueño. Si quitas un detalle, el párrafo sigue en pie.</div>"
+    },
+    {
+      "narracion": "Ojo con esto: la idea principal no siempre está al principio. A veces el autor pone los detalles primero y cierra con la idea al final. Por eso no basta con leer la primera línea: hay que leer el párrafo completo y preguntarse de qué trata todo esto junto.",
+      "visual": "<h1>No siempre va al principio</h1><div class='pasos'><div class='paso'><span class='n'>1</span>Lee TODO el párrafo<small>no solo la primera línea</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Pregúntate<small>¿de qué trata todo esto junto?</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>Comprueba<small>¿las demás oraciones la apoyan?</small></div></div>"
+    },
+    {
+      "narracion": "Recuerda. La idea principal es de qué trata el párrafo, y hay una sola. Los detalles la apoyan. Puede estar al principio, en el medio o al final. Y la prueba es sencilla: si la quitas, el párrafo pierde el sentido.",
+      "visual": "<h1>Para recordar</h1><ol class='lista'><li>Hay <strong>una sola</strong> idea principal por párrafo</li><li>Los <strong>detalles</strong> la explican, ejemplifican o prueban</li><li>Puede estar al <strong>principio, en el medio o al final</strong></li><li>Si la quitas, el párrafo <strong>pierde el sentido</strong></li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    },
+    {
+      "narracion": "Veamos un párrafo donde la idea va al final. El río se secó. Los peces desaparecieron. Las familias tuvieron que buscar agua lejos. La tala de árboles en la montaña cambió la vida de toda la comunidad. Esa última oración es la idea principal: las anteriores eran los detalles que llevaban hasta ella.",
+      "visual": "<h1>Cuando la idea va al final</h1><div class='oracion'>El río se secó. Los peces desaparecieron. Las familias tuvieron que buscar agua lejos. <span class='sujeto'>La tala de árboles en la montaña cambió la vida de toda la comunidad.</span></div><div class='subtitulo'>Los detalles primero, la idea al cierre</div>"
+    },
+    {
+      "narracion": "Aquí va un método que funciona siempre. Lee el párrafo completo. Después tápalo y pregúntate: si tuviera que contarle esto a alguien en una sola oración, ¿qué le diría? Esa oración que se te ocurre es, casi siempre, la idea principal.",
+      "visual": "<h1>El método de la sola oración</h1><div class='pasos'><div class='paso'><span class='n'>1</span>Lee todo el párrafo</div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Tápalo</div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>¿Cómo se lo cuento a alguien<small>en UNA sola oración?</small></div></div><div class='destacado'>Esa es la idea principal</div>"
+    },
+    {
+      "narracion": "Y otro error frecuente: escoger la oración más larga, o la que tiene las palabras más difíciles. Eso no tiene nada que ver. A veces la idea principal es la oración más corta y más sencilla de todo el párrafo. Lo que la hace principal no es su tamaño: es que las demás la sostienen.",
+      "visual": "<h1>No es la más larga</h1><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Mal criterio</span><span class='detalle'>\"Es la oración más larga\"<br>\"Tiene palabras difíciles\"</span></div><div class='tarjeta verde'><span class='rotulo'>Buen criterio</span><span class='detalle'>Las demás oraciones la sostienen a ella</span></div></div>"
+    },
+    {
+      "narracion": "Practiquemos una vez más, y aquí te toca a ti. Lee este párrafo: el merengue nació en República Dominicana. Se baila en pareja. Su instrumento principal es la tambora. Fue declarado Patrimonio Cultural de la Humanidad. ¿Cuál oración es la idea principal? Piénsalo antes de que te la diga.",
+      "visual": "<h1>Te toca a ti</h1><div class='oracion'>El merengue nació en República Dominicana. Se baila en pareja. Su instrumento principal es la tambora. Fue declarado Patrimonio Cultural de la Humanidad.</div><div class='subtitulo'>¿Cuál es la idea principal?</div>"
+    },
+    {
+      "narracion": "La idea principal es la primera: el merengue nació en República Dominicana. Todo lo demás son detalles que la acompañan: cómo se baila, con qué se toca, qué reconocimiento tiene. Si quitas cualquiera de esos, el párrafo sigue de pie. Si quitas la primera, se queda sin dueño.",
+      "visual": "<h1>La respuesta</h1><div class='oracion'><span class='sujeto'>El merengue nació en República Dominicana.</span> Se baila en pareja. Su instrumento principal es la tambora. Fue declarado Patrimonio Cultural de la Humanidad.</div><div class='destacado'>Los demás son detalles que la acompañan</div>"
+    },
+    {
+      "narracion": "¿Y de qué te sirve esto fuera de Lengua? De muchísimo. Es lo que te permite estudiar Ciencias Sociales sin memorizar todo, resumir un capítulo en cuatro líneas, entender un problema de matemática antes de resolverlo, y sacar lo importante de cualquier cosa que leas en el celular.",
+      "visual": "<h1>Sirve en todas las materias</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Sociales</span><span class='detalle'>estudiar sin memorizar todo</span></div><div class='tarjeta'><span class='rotulo'>Matemática</span><span class='detalle'>entender el problema antes de resolverlo</span></div><div class='tarjeta'><span class='rotulo'>Todos los días</span><span class='detalle'>sacar lo importante de lo que lees</span></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántas ideas principales tiene un párrafo bien escrito?",
+      "opciones": [
+        "Una sola",
+        "Dos o tres",
+        "Una por cada oración",
+        "Ninguna"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Dónde puede estar la idea principal?",
+      "opciones": [
+        "Al principio, en el medio o al final",
+        "Solo al principio",
+        "Solo al final",
+        "Solo en la segunda oración"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Para qué sirven las oraciones de detalle?",
+      "opciones": [
+        "Para explicar, ejemplificar o probar la idea principal",
+        "Para rellenar el párrafo",
+        "Para cambiar el tema",
+        "Para repetir la idea principal"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál es una buena prueba para saber si hallaste la idea principal?",
+      "opciones": [
+        "Si la quitas, el párrafo pierde el sentido",
+        "Es la oración más larga",
+        "Es la oración más corta",
+        "Siempre es la primera"
+      ],
+      "correcta": 0
+    }
+  ]
+}

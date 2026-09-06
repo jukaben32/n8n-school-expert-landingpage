@@ -1,0 +1,104 @@
+{
+  "id": "6to-primaria-ciencias-02",
+  "curso": "6to. Primaria",
+  "materia": "Ciencias Naturales",
+  "titulo": "El sistema digestivo",
+  "descripcion": "El viaje que hace la comida desde que la muerdes.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "Muerdes un pedazo de plátano. ¿Qué le pasa después? Hoy vas a seguir ese viaje completo, desde la boca hasta el final, y vas a entender por qué tu cuerpo necesita hacer todo eso.",
+      "visual": "<div class='titulo-chico'>Ciencias Naturales</div><h1>El sistema digestivo</h1><div class='subtitulo'>El viaje que hace la comida desde que la muerdes</div>"
+    },
+    {
+      "narracion": "Primero, la pregunta de fondo: ¿por qué hay que digerir? Porque los pedazos de comida son demasiado grandes para entrar a tu sangre. La digestión es todo el trabajo de romperlos hasta que sean tan pequeños que puedan pasar.",
+      "visual": "<h1>¿Por qué hay que digerir?</h1><div class='subtitulo'>Los pedazos de comida son demasiado grandes para entrar a la sangre</div><div class='ciclo'><div class='etapa'><div class='globo'>&#9679;</div><div class='nombre'>Pedazo grande</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&middot;&middot;&middot;</div><div class='nombre'>Se rompe</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#10084;</div><div class='nombre'>Ya puede pasar</div></div></div>"
+    },
+    {
+      "narracion": "Todo empieza en la boca. Los dientes cortan y muelen la comida en pedazos pequeños. La saliva la moja y empieza a deshacerla desde el primer momento. Por eso masticar bien no es un capricho: es el primer paso de la digestión.",
+      "visual": "<h1>1. La boca</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Los dientes</span><span class='detalle'>Cortan y muelen en pedazos pequeños</span></div><div class='tarjeta verde'><span class='rotulo'>La saliva</span><span class='detalle'>Moja y empieza a deshacer la comida</span></div></div><div class='destacado'>Masticar bien es el primer paso</div>"
+    },
+    {
+      "narracion": "Al tragar, la comida baja por el esófago, que es un tubo de músculo. No cae por su peso: el esófago la empuja con ondas. Por eso puedes tragar acostado, y hasta de cabeza.",
+      "visual": "<h1>2. El esófago</h1><div class='ciclo'><div class='etapa'><div class='globo'>&darr;</div><div class='nombre'>Tubo de músculo</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&asymp;</div><div class='nombre'>Empuja con ondas</div></div></div><div class='subtitulo'>La comida no cae por su peso: el esófago la empuja</div>"
+    },
+    {
+      "narracion": "Luego llega al estómago, que es como una bolsa fuerte. Ahí se mezcla con jugos muy ácidos que siguen deshaciéndola, hasta que queda una papilla. Puede quedarse ahí varias horas.",
+      "visual": "<h1>3. El estómago</h1><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Jugos ácidos</span><span class='detalle'>Deshacen la comida</span></div><div class='tarjeta'><span class='rotulo'>Resultado</span><span class='detalle'>Una papilla, tras varias horas</span></div></div>"
+    },
+    {
+      "narracion": "Ahora viene lo importante. En el intestino delgado, los nutrientes pasan a la sangre y la sangre los reparte a todo el cuerpo. Ahí es donde tu comida se convierte de verdad en energía para correr, y en material para crecer.",
+      "visual": "<h1>4. El intestino delgado</h1><div class='ciclo'><div class='etapa'><div class='globo'>&#9679;</div><div class='nombre'>Nutrientes</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#10084;</div><div class='nombre'>Pasan a la sangre</div></div><div class='flecha'>&rarr;</div><div class='etapa'><div class='globo'>&#9889;</div><div class='nombre'>Energía y crecimiento</div></div></div><div class='destacado'>Aquí la comida se vuelve parte de ti</div>"
+    },
+    {
+      "narracion": "Lo que el cuerpo no aprovecha pasa al intestino grueso, que le saca el agua que todavía sirve, y el resto se expulsa. Por eso tomar suficiente agua ayuda a que todo el sistema funcione bien.",
+      "visual": "<h1>5. El intestino grueso</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Recupera</span><span class='detalle'>El agua que todavía sirve</span></div><div class='tarjeta ambar'><span class='rotulo'>Expulsa</span><span class='detalle'>Lo que el cuerpo no aprovechó</span></div></div><div class='subtitulo'>Por eso tomar agua ayuda a que todo funcione</div>"
+    },
+    {
+      "narracion": "Hay dos órganos que ayudan aunque la comida no pase por dentro de ellos. El hígado fabrica la bilis, que deshace las grasas. Y el páncreas suelta jugos que terminan de romper todo. Los dos vacían en el intestino delgado, justo cuando más falta hace.",
+      "visual": "<h1>Los dos ayudantes</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>El hígado</span><span class='detalle'>Fabrica la bilis, que deshace las grasas</span></div><div class='tarjeta'><span class='rotulo'>El páncreas</span><span class='detalle'>Suelta jugos que terminan de romper todo</span></div></div><div class='subtitulo'>La comida no pasa por dentro de ellos, pero sin ellos no se digiere</div>"
+    },
+    {
+      "narracion": "Un dato que sorprende: el intestino delgado mide como seis metros, más largo que un salón de clases. Y por dentro está lleno de pliegues diminutos que multiplican la superficie. Todo eso es para que quepan más nutrientes pasando a la sangre al mismo tiempo.",
+      "visual": "<h1>Seis metros de intestino</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Longitud</span><span class='valor'>~6 m</span><span class='detalle'>más largo que un salón</span></div><div class='tarjeta'><span class='rotulo'>Por dentro</span><span class='detalle'>lleno de pliegues diminutos que multiplican la superficie</span></div></div><div class='subtitulo'>Todo para que pasen más nutrientes a la vez</div>"
+    },
+    {
+      "narracion": "Y ahora lo práctico. ¿Por qué te dicen que mastiques bien? Porque si tragas pedazos grandes, el estómago tiene que trabajar el doble y tarda más. ¿Y por qué duele la barriga si comes corriendo? Porque tragas aire junto con la comida.",
+      "visual": "<h1>Lo práctico</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>Masticar bien</span><span class='detalle'>El estómago trabaja menos y tarda menos</span></div><div class='tarjeta ambar'><span class='rotulo'>Comer corriendo</span><span class='detalle'>Tragas aire junto con la comida</span></div></div>"
+    },
+    {
+      "narracion": "Repasemos el viaje completo con tiempos reales. En la boca, unos segundos masticando. En el esófago, unos ocho segundos bajando. En el estómago, entre dos y cuatro horas. En el intestino delgado, unas seis horas. Y en el grueso, puede pasar más de un día. Digerir un almuerzo toma más tiempo del que uno cree.",
+      "visual": "<h1>¿Cuánto tarda cada parte?</h1><table class='tabla'><tr><th>Órgano</th><th>Tiempo</th></tr><tr><td>Boca</td><td>segundos</td></tr><tr><td>Esófago</td><td>unos 8 segundos</td></tr><tr><td>Estómago</td><td>2 a 4 horas</td></tr><tr><td>Intestino delgado</td><td>unas 6 horas</td></tr><tr><td>Intestino grueso</td><td>más de un día</td></tr></table>"
+    },
+    {
+      "narracion": "Y para cerrar, algo que conecta con lo que comes todos los días. Las frutas y los vegetales traen fibra, que el cuerpo no digiere pero que ayuda a que todo se mueva bien por el intestino. Por eso un plato con víveres, vegetales y suficiente agua no es solo un consejo de adulto: es lo que este sistema necesita para trabajar.",
+      "visual": "<h1>Lo que este sistema necesita</h1><div class='tarjetas'><div class='tarjeta verde'><span class='rotulo'>Fibra</span><span class='detalle'>Frutas y vegetales. No se digiere, pero ayuda a que todo se mueva</span></div><div class='tarjeta'><span class='rotulo'>Agua</span><span class='detalle'>El intestino grueso la necesita para trabajar</span></div></div>"
+    },
+    {
+      "narracion": "El recorrido completo: boca, esófago, estómago, intestino delgado e intestino grueso. Y el momento clave es el intestino delgado, porque ahí es donde la comida pasa a tu sangre y se vuelve parte de ti.",
+      "visual": "<h1>Para recordar</h1><ol class='lista'><li><strong>Boca</strong>: dientes y saliva empiezan a deshacer</li><li><strong>Esófago</strong>: empuja la comida hacia abajo</li><li><strong>Estómago</strong>: jugos ácidos la vuelven papilla</li><li><strong>Intestino delgado</strong>: los nutrientes pasan a la sangre</li><li><strong>Intestino grueso</strong>: recupera agua y expulsa el resto</li></ol><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Dónde empieza la digestión?",
+      "opciones": [
+        "En la boca",
+        "En el estómago",
+        "En el intestino delgado",
+        "En el esófago"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿En qué órgano pasan los nutrientes a la sangre?",
+      "opciones": [
+        "En el intestino delgado",
+        "En el estómago",
+        "En la boca",
+        "En el intestino grueso"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cómo baja la comida por el esófago?",
+      "opciones": [
+        "El esófago la empuja con ondas de músculo",
+        "Cae por su propio peso",
+        "La empuja el aire que respiramos",
+        "La arrastra la saliva"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué hace principalmente el intestino grueso?",
+      "opciones": [
+        "Recupera el agua y expulsa lo que no sirve",
+        "Muele la comida",
+        "Produce saliva",
+        "Pasa los nutrientes a la sangre"
+      ],
+      "correcta": 0
+    }
+  ]
+}

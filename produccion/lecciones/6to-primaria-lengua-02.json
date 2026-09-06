@@ -1,0 +1,104 @@
+{
+  "id": "6to-primaria-lengua-02",
+  "curso": "6to. Primaria",
+  "materia": "Lengua Española",
+  "titulo": "Agudas, llanas y esdrújulas",
+  "descripcion": "Dónde va la fuerza de la voz y cuándo se pone tilde.",
+  "voz": "marin",
+  "escenas": [
+    {
+      "narracion": "Papá. Lápiz. Médico. Las tres llevan tilde, pero por razones distintas. Hoy vas a entender la regla, y vas a dejar de poner tildes por adivinanza.",
+      "visual": "<div class='titulo-chico'>Lengua Española</div><h1>Agudas, llanas y esdrújulas</h1><div class='fila grande'><div class='palabra'>pa<span class='fuerte'>pá</span></div><div class='palabra'><span class='fuerte'>lá</span>piz</div><div class='palabra'><span class='fuerte'>mé</span>di&middot;co</div></div>"
+    },
+    {
+      "narracion": "Primero, lo más importante: en toda palabra hay una sílaba que suena más fuerte que las demás. Se llama sílaba tónica. Di la palabra en voz alta y escucha dónde cae el golpe. Ahí está.",
+      "visual": "<h1>La sílaba tónica</h1><div class='subtitulo'>Es la que suena más fuerte. Dilo en voz alta y escucha.</div><div class='palabra'>ven &middot; <span class='fuerte'>ta</span> &middot; na</div><div class='destacado'>El golpe cae en TA</div>"
+    },
+    {
+      "narracion": "Para encontrar la sílaba tónica hay un truco: llama a la palabra como si estuvieras llamando a alguien desde lejos. Ven-ta-naaa. La sílaba que estiras es la tónica. Pruébalo con tu propio nombre y vas a oírlo de una vez.",
+      "visual": "<h1>El truco de llamar de lejos</h1><div class='palabra'>ven &middot; <span class='fuerte'>TA</span> &middot; na</div><div class='subtitulo'>La sílaba que estiras al llamar es la tónica</div>"
+    },
+    {
+      "narracion": "Y ojo con esto: toda palabra tiene sílaba tónica, pero no toda palabra lleva tilde. La tilde es solo la marca escrita, y se pone siguiendo reglas. Casa tiene su golpe en ca, y no lleva tilde. Mamá tiene su golpe en má, y sí la lleva.",
+      "visual": "<h1>Tónica no es lo mismo que tilde</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>casa</span><span class='valor'>CA &middot; sa</span><span class='detalle'>tiene golpe, no lleva tilde</span></div><div class='tarjeta verde'><span class='rotulo'>mamá</span><span class='valor'>ma &middot; MÁ</span><span class='detalle'>tiene golpe y sí lleva tilde</span></div></div>"
+    },
+    {
+      "narracion": "Si el golpe cae en la última sílaba, la palabra es aguda. Como papá, o reloj, o cantar. Las agudas llevan tilde solamente cuando terminan en ene, en ese, o en vocal.",
+      "visual": "<h1>Agudas</h1><div class='subtitulo'>El golpe cae en la ÚLTIMA sílaba</div><div class='fila'><div class='palabra'>pa<span class='fuerte'>pá</span></div><div class='palabra'>re<span class='fuerte'>loj</span></div><div class='palabra'>can<span class='fuerte'>tar</span></div></div><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Llevan tilde si terminan en</span><span class='valor'>n &middot; s &middot; vocal</span></div></div>"
+    },
+    {
+      "narracion": "Si el golpe cae en la penúltima sílaba, es llana. Como lápiz, o casa, o árbol. Las llanas llevan tilde justo al revés: cuando no terminan en ene, ni en ese, ni en vocal.",
+      "visual": "<h1>Llanas</h1><div class='subtitulo'>El golpe cae en la PENÚLTIMA sílaba</div><div class='fila'><div class='palabra'><span class='fuerte'>lá</span>piz</div><div class='palabra'><span class='fuerte'>ca</span>sa</div><div class='palabra'><span class='fuerte'>ár</span>bol</div></div><div class='tarjetas'><div class='tarjeta ambar'><span class='rotulo'>Llevan tilde si NO terminan en</span><span class='valor'>n &middot; s &middot; vocal</span></div></div>"
+    },
+    {
+      "narracion": "Y si el golpe cae en la antepenúltima sílaba, es esdrújula. Como médico, o sábado, o pájaro. Estas son las más fáciles de todas: las esdrújulas llevan tilde siempre, sin excepción.",
+      "visual": "<h1>Esdrújulas</h1><div class='subtitulo'>El golpe cae en la ANTEPENÚLTIMA sílaba</div><div class='fila'><div class='palabra'><span class='fuerte'>mé</span>di&middot;co</div><div class='palabra'><span class='fuerte'>sá</span>ba&middot;do</div><div class='palabra'><span class='fuerte'>pá</span>ja&middot;ro</div></div><div class='destacado'>Siempre llevan tilde. Sin excepción.</div>"
+    },
+    {
+      "narracion": "Resumamos en una tabla. Aguda: golpe en la última, tilde si termina en ene, ese o vocal. Llana: golpe en la penúltima, tilde si no termina en ene, ese o vocal. Esdrújula: golpe en la antepenúltima, tilde siempre.",
+      "visual": "<h1>Para recordar</h1><table class='tabla'><tr><th>Tipo</th><th>Golpe en la</th><th>Lleva tilde</th></tr><tr><td>Aguda</td><td>última</td><td>si termina en n, s o vocal</td></tr><tr><td>Llana</td><td>penúltima</td><td>si NO termina en n, s o vocal</td></tr><tr><td>Esdrújula</td><td>antepenúltima</td><td>siempre</td></tr></table><div class='pie centro-txt'>Ahora el cuestionario &middot; 4 preguntas</div>"
+    },
+    {
+      "narracion": "Practiquemos con cuatro palabras. Reloj: el golpe cae en loj, es aguda, y termina en jota, así que no lleva tilde. Camión: el golpe cae en mión, es aguda, y termina en ene, así que sí lleva. Árbol: el golpe cae en ár, es llana, y termina en ele, así que sí lleva. Y examen: el golpe cae en xa, es llana, y termina en ene, así que no lleva.",
+      "visual": "<h1>Practiquemos</h1><table class='tabla'><tr><th>Palabra</th><th>Tipo</th><th>Termina en</th><th>¿Tilde?</th></tr><tr><td>reloj</td><td>Aguda</td><td>j</td><td>No</td></tr><tr><td>camión</td><td>Aguda</td><td>n</td><td>Sí</td></tr><tr><td>árbol</td><td>Llana</td><td>l</td><td>Sí</td></tr><tr><td>examen</td><td>Llana</td><td>n</td><td>No</td></tr></table>"
+    },
+    {
+      "narracion": "Fíjate en el par examen y exámenes. Examen es llana y no lleva tilde. Pero al ponerla en plural, exámenes, se le agrega una sílaba y el golpe queda en la antepenúltima. Se volvió esdrújula, y las esdrújulas siempre llevan tilde. Por eso exámenes sí la lleva.",
+      "visual": "<h1>Un par que enseña mucho</h1><div class='tarjetas'><div class='tarjeta'><span class='rotulo'>examen</span><span class='valor'>e &middot; XA &middot; men</span><span class='detalle'>llana, termina en n: sin tilde</span></div><div class='tarjeta verde'><span class='rotulo'>exámenes</span><span class='valor'>e &middot; XÁ &middot; me &middot; nes</span><span class='detalle'>esdrújula: SIEMPRE con tilde</span></div></div>"
+    },
+    {
+      "narracion": "¿Y por qué importa tanto una rayita? Porque cambia el significado. No es lo mismo decir: él tomó el examen, que decir: el tomo del examen. Ni es lo mismo público, publico y publicó: tres palabras distintas que se escriben con las mismas letras y solo se diferencian por dónde va el golpe.",
+      "visual": "<h1>Una rayita cambia todo</h1><div class='fila'><div class='palabra'><span class='fuerte'>PÚ</span>bli&middot;co</div><div class='palabra'>pu<span class='fuerte'>BLI</span>co</div><div class='palabra'>pu&middot;bli<span class='fuerte'>CÓ</span></div></div><div class='subtitulo'>Mismas letras. Tres palabras distintas.</div>"
+    },
+    {
+      "narracion": "Un método que puedes seguir siempre. Primero, di la palabra en voz alta y busca dónde cae el golpe. Segundo, cuenta desde el final para saber si es aguda, llana o esdrújula. Tercero, mira en qué letra termina. Y cuarto, aplica la regla. Con la práctica lo vas a hacer sin pensarlo.",
+      "visual": "<h1>El método, paso a paso</h1><div class='pasos'><div class='paso'><span class='n'>1</span>Di la palabra<small>¿dónde cae el golpe?</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>2</span>Cuenta del final<small>aguda, llana o esdrújula</small></div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>3</span>¿En qué letra termina?</div><div class='flecha'>&rarr;</div><div class='paso'><span class='n'>4</span>Aplica la regla</div></div>"
+    },
+    {
+      "narracion": "Hay un caso más que vale la pena conocer. Algunas palabras cortas llevan tilde solo para distinguirse de otra igual. El de posesión lleva tilde cuando es mí, y no la lleva cuando es mi. Igual pasa con tú y tu, con él y el, con sí y si. A eso se le llama tilde diacrítica.",
+      "visual": "<h1>La tilde que distingue</h1><table class='tabla'><tr><th>Con tilde</th><th>Sin tilde</th></tr><tr><td>tú (la persona)</td><td>tu (posesión)</td></tr><tr><td>él (la persona)</td><td>el (artículo)</td></tr><tr><td>mí (la persona)</td><td>mi (posesión)</td></tr><tr><td>sí (afirmación)</td><td>si (condición)</td></tr></table><div class='subtitulo'>Se llama tilde diacrítica</div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "La palabra \"pájaro\" es...",
+      "opciones": [
+        "Esdrújula",
+        "Llana",
+        "Aguda",
+        "Ninguna de las anteriores"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuándo lleva tilde una palabra aguda?",
+      "opciones": [
+        "Cuando termina en n, s o vocal",
+        "Cuando NO termina en n, s o vocal",
+        "Siempre",
+        "Nunca"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Las palabras esdrújulas llevan tilde...",
+      "opciones": [
+        "Siempre",
+        "Solo si terminan en vocal",
+        "Solo si terminan en consonante",
+        "Casi nunca"
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "En \"ventana\", ¿dónde cae la fuerza de la voz?",
+      "opciones": [
+        "En TA (penúltima): es llana",
+        "En VEN: es aguda",
+        "En NA: es aguda",
+        "En VEN: es esdrújula"
+      ],
+      "correcta": 0
+    }
+  ]
+}

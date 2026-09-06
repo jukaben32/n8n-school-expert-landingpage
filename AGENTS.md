@@ -2701,6 +2701,97 @@ registrada (Ley 136-03). Mientras el colegio no cargue en la plataforma las
 firmas que está recogiendo en papel, la profesora verá esa advertencia en casi
 todos los casos. **Es un pendiente de datos, no de código.**
 
+## Cómo entra un estudiante al sistema (2026-09-05, documentado el 2026-09-06)
+
+**Esto no estaba en este archivo** -- vivía solo en el código y en la cabecera
+de la migración `20260905000000_acceso_estudiantes.sql`, y cualquier sesión que
+leyera solo el MD no sabía que existía. Corregido aquí.
+
+Los estudiantes **no tienen correo**, así que su cuenta de Auth se identifica
+con un **código de acceso** convertido en un correo interno que nunca envía
+nada -- mismo patrón que los tutores sin correo (`createPhoneBasedAccess`).
+
+- `students.access_code`: 7 caracteres, ej. `K7MPQ34`. Alfabeto
+  `ABCDEFGHJKMNPQRSTUVWXYZ23456789` -- **sin 0, O, 1, l ni I**, porque se copia
+  a mano de un papel. Índice único sobre `lower(access_code)`.
+- Cuenta de Auth: `{codigo}@estudiantes.mentoriapp.local`
+  (`STUDENT_EMAIL_DOMAIN` en `web/src/lib/auth/studentAccess.ts`).
+- Contraseña temporal de 8 caracteres, mismo alfabeto. **Se entrega impresa**;
+  la inscripción es presencial, no depende de que nadie revise un correo.
+- En `/login` el estudiante **escribe solo el código**: `normalizeLoginIdentifier()`
+  le agrega el dominio si el texto no trae `@`. Por eso el campo dice
+  `tu@correo.com ó K7MPQ34`.
+- Se crea desde **`/dashboard/estudiantes/accesos`** (módulo
+  `estudiantes_accesos`), uno por uno o por curso completo -- salta a los que
+  ya tienen cuenta.
+- `createUser` va con `email_confirm: true` (no hay correo real que confirmar).
+  Si el `insert` en `users_profiles` falla, **se borra la cuenta de Auth**: un
+  usuario sin perfil no sirve para nada y además caería en el portal de padres
+  por defecto (ver `dashboard/layout.tsx`).
+- `current_student_id()` (`security definer`) es la única forma correcta de
+  resolver "¿qué estudiante soy?" dentro de una policy. Nunca hacer el join a
+  `users_profiles` a mano dentro de una policy de `students` -- es el camino a
+  la recursión de RLS que ya rompió el login dos veces.
+
+**Estado al 2026-09-06**: 0 estudiantes con login creado en producción, de 243
+inscritos. La vía existe y está probada en código, pero nadie la ha usado
+todavía.
+
+**Advertencia para demostraciones**: el código de acceso es un credencial de un
+menor. No proyectarlo en pantalla junto al nombre de un estudiante real delante
+de terceros -- crear un estudiante de demostración para eso.
+
+## La fábrica de video-lecciones (`produccion/`, 2026-09-06)
+
+Primera implementación real del plan de contenido de abajo. Vive en
+`produccion/`, **fuera de `web/`** a propósito: no entra en el build de Next ni
+en el despliegue de Vercel.
+
+```
+produccion/
+  lecciones/*.json     el guion: escenas (narración + visual HTML) y cuestionario
+  lib/estilo.css       la plantilla visual del colegio
+  lib/producir.mjs     guion -> gráficas -> voz -> MP4
+  lib/cargar-sql.mjs   genera el SQL que carga las lecciones en Academia
+  salida/              MP4 y PNG generados (en .gitignore -- no van al repo)
+```
+
+**Decisiones que costaron una prueba y conviene no volver a discutir:**
+
+- **La voz es `openai/gpt-audio-mini` vía OpenRouter**, no el TTS de OpenAI
+  directo: US$0.0042 por minuto contra US$0.015. Una lección de 6 minutos
+  cuesta 2 centavos; las ~2,000 del currículo, unos US$50 de narración.
+- **`marin` es la voz.** Se probaron 5. `coral`, `sage` y `shimmer` **se
+  comieron la primera oración completa** del texto de prueba. `marin` y `alloy`
+  empataron en fidelidad (73/73 palabras) y ritmo; se escogió `marin`.
+- **Cada escena se narra por separado y se verifica palabra por palabra**
+  contra el guion. El modelo de voz es un modelo de chat: a veces resume o
+  reordena en vez de leer, sobre todo en textos largos o con listas numeradas.
+  En la primera corrida se comió casi entera la escena 8 de la lección 1. Por
+  eso: hasta 3 reintentos y, si sigue fallando, narrar oración por oración.
+  **Una lección incompleta no sale de la fábrica.**
+- **La voz habla a ~178 palabras/min**, muy rápido para un niño de 11 años (lo
+  recomendado ronda 140-150). Se baja con `atempo=0.84` en el montaje, sin
+  regenerar audio.
+- **Ningún modelo generativo dibuja texto ni números.** Todo lo que lleva
+  cifra, rótulo o fracción se escribe en HTML real (`lib/estilo.css`) y se
+  captura con Chromium a 1920x1080. Un `2x + 3 = 7` mal renderizado le enseña
+  mal al estudiante y nadie se entera.
+- **El caché salta la escena que ya tiene `.mp3`.** Ojo: si una corrida vieja
+  dejó un audio malo, hay que borrarlo a mano o usar `REHACER_VOZ=1`, o se
+  reusa el archivo malo (pasó).
+
+**Primera tanda producida (2026-09-06)**: 9 lecciones de 6to. Primaria --
+3 de Matemática, 3 de Lengua Española, 3 de Ciencias Naturales -- con sus 4
+preguntas cada una. Los ejemplos son dominicanos a propósito (el colmado de la
+esquina, una funda de mangos, descuentos en pesos): además de entenderse mejor
+aquí, hace el contenido original por construcción, no por disimulo.
+
+**Pendiente**: subir los MP4 a YouTube **como no listados** (decisión de
+alcance para no bloquear la demo con la cuenta de Cloudflare y la migración de
+`video_provider`, que solo acepta `youtube`/`vimeo`), y correr el SQL que
+genera `lib/cargar-sql.mjs`.
+
 ## PLAN DEFINITIVO — Producción de contenido de Academia (2026-09-06)
 
 Decidido con el usuario tras revisar viabilidad. Hasta hoy **no existía ningún
