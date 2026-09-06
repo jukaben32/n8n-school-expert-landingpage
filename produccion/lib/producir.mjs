@@ -14,7 +14,7 @@
  *
  * Uso:  OPENROUTER_API_KEY=... node lib/producir.mjs lecciones/<archivo>.json
  */
-import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, rm, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -192,28 +192,70 @@ async function main() {
     costoTotal += r.costo; duracionTotal += r.segundos
     console.log(`voz ${n}      ${r.segundos.toFixed(1)}s  ✓ completa (${r.modo})`)
   }
-  // 3. Montaje: cada escena es imagen fija + su narración; luego se pegan.
-  const partes = []
+  // 3. Montaje: UNA sola pasada, con las duraciones exactas.
+  //
+  // Antes se armaba un MP4 por escena (imagen + su audio, con -shortest) y
+  // luego se pegaban. Eso desincronizaba: en cada clip el video quedaba
+  // 1.2-1.9 s MÁS LARGO que su audio, y al pegar 15 clips el desfase se
+  // acumulaba hasta 21 segundos -- la voz terminaba hablando de una lámina
+  // que ya había pasado. Ahora se decodifica cada narración a WAV (duración
+  // exacta, sin el relleno que mete el codificador MP3), se le da a cada
+  // imagen exactamente esa duración, y se muxea todo de una vez.
+  const duraciones = []
   for (let i = 0; i < guion.escenas.length; i++) {
     const n = String(i + 1).padStart(2, '0')
-    const parte = path.join(dir, `parte-${n}.mp4`)
-    await run(ffmpegPath, ['-y', '-loop', '1', '-i', path.join(dir, `escena-${n}.png`),
-      '-i', path.join(dir, `escena-${n}.mp3`), '-c:v', 'libx264', '-tune', 'stillimage',
-      '-vf', 'scale=1920:1080', '-r', '25', '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac', '-b:a', '128k', '-shortest', parte])
-    partes.push(parte)
+    const wav = path.join(dir, `escena-${n}.wav`)
+    await run(ffmpegPath, ['-y', '-i', path.join(dir, `escena-${n}.mp3`),
+      '-ar', '24000', '-ac', '1', '-c:a', 'pcm_s16le', wav])
+    const { size } = await stat(wav)
+    duraciones.push((size - 44) / (24000 * 2))   // 44 = cabecera WAV
   }
-  const lista = path.join(dir, 'partes.txt')
-  await writeFile(lista, partes.map((p) => `file '${p}'`).join('\n'))
+
+  const listaImg = path.join(dir, 'imagenes.txt')
+  await writeFile(listaImg, ['ffconcat version 1.0',
+    ...guion.escenas.map((_, i) => {
+      const n = String(i + 1).padStart(2, '0')
+      return `file '${path.join(dir, `escena-${n}.png`)}'\nduration ${duraciones[i].toFixed(4)}`
+    }),
+    // El demuxer concat ignora la duración del último archivo: se repite
+    // para que la última lámina dure lo que dura su narración.
+    `file '${path.join(dir, `escena-${String(guion.escenas.length).padStart(2, '0')}.png`)}'`,
+  ].join('\n'))
+
+  const listaAud = path.join(dir, 'audios.txt')
+  await writeFile(listaAud, guion.escenas.map((_, i) =>
+    `file '${path.join(dir, `escena-${String(i + 1).padStart(2, '0')}.wav`)}'`).join('\n'))
+
+  // La última lámina se repite en la lista porque el demuxer concat ignora
+  // la duración del último archivo; el `-t` de abajo recorta ese sobrante.
+  const sumaAudio = duraciones.reduce((a, b) => a + b, 0)
+
   const salida = path.join(dir, `${guion.id}.mp4`)
-  await run(ffmpegPath, ['-y', '-f', 'concat', '-safe', '0', '-i', lista, '-c', 'copy', salida])
+  await run(ffmpegPath, ['-y',
+    '-f', 'concat', '-safe', '0', '-i', listaImg,
+    '-f', 'concat', '-safe', '0', '-i', listaAud,
+    '-map', '0:v', '-map', '1:a',
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '25', '-fps_mode', 'cfr',
+    '-vf', 'scale=1920:1080',
+    '-c:a', 'aac', '-b:a', '128k',
+    '-t', sumaAudio.toFixed(4),
+    '-movflags', '+faststart', salida])
+
+  // Comprobación dura: video y audio deben durar lo mismo.
 
   const { stdout } = await run(ffmpegPath, ['-i', salida]).catch((e) => ({ stdout: e.stderr ?? '' }))
-  const dur = /Duration: (\d+:\d+:\d+\.\d+)/.exec(stdout)?.[1] ?? `${duracionTotal.toFixed(0)}s`
+  const dur = /Duration: (\d+:\d+:\d+\.\d+)/.exec(stdout)?.[1] ?? `${sumaAudio.toFixed(0)}s`
+  const partes = /Duration: (\d+):(\d+):(\d+\.\d+)/.exec(stdout)
+  const totalReal = partes ? (+partes[1]) * 3600 + (+partes[2]) * 60 + (+partes[3]) : 0
+  const desfase = Math.abs(totalReal - sumaAudio)
+  if (desfase > 0.5) {
+    throw new Error(`el video dura ${totalReal.toFixed(2)}s y el audio ${sumaAudio.toFixed(2)}s: ${desfase.toFixed(2)}s de desfase`)
+  }
 
   console.log(`${'─'.repeat(60)}`)
   console.log(`MP4         ${salida}`)
   console.log(`duración    ${dur}`)
+  console.log(`sincronía   video ${totalReal.toFixed(2)}s vs audio ${sumaAudio.toFixed(2)}s · desfase ${desfase.toFixed(2)}s ✓`)
   console.log(`costo voz   US$${costoTotal.toFixed(4)}`)
   console.log(`cuestionario ${guion.cuestionario?.length ?? 0} preguntas\n`)
 }
