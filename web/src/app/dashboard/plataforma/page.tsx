@@ -90,14 +90,18 @@ export default async function PlataformaPage() {
         supabase.from('ai_conversations').select('*', { count: 'exact', head: true }).eq('school_id', school.id).eq('role', 'user').gte('created_at', sevenDaysAgoIso),
       ])
 
-      type NetworkReceivableRow = { expected_to_date: number | null; overdue_amount: number }
+      type NetworkReceivableRow = { expected_to_date: number | null; overdue_amount: number; late_fee_amount: number | null }
       const receivables = (receivableRows ?? []) as NetworkReceivableRow[]
       const expectedSum = receivables.reduce((sum, r) => sum + Number(r.expected_to_date ?? 0), 0)
       const overdueSum = receivables.reduce((sum, r) => sum + Number(r.overdue_amount ?? 0), 0)
+      const lateFeeSum = receivables.reduce((sum, r) => sum + Number(r.late_fee_amount ?? 0), 0)
       // % de lo que ya debió cobrarse este año (según la mensualidad) que
       // sigue sin cobrar -- mismo criterio que "estudiantes al día" del
       // Panel, expresado como el porcentaje que ya usaba esta pantalla.
       const morosidadPercent = expectedSum > 0 ? Math.round((overdueSum / expectedSum) * 100) : 0
+      // Deuda + mora al día de hoy, siempre -- mismo criterio que la
+      // tarjeta "Cartera vencida" del Panel, aquí sumado en toda la red.
+      const overdueWithFee = overdueSum + lateFeeSum
 
       const attendanceTotal = (attendanceMonth ?? []).length
       const attendancePresent = (attendanceMonth ?? []).filter((a) => a.status === 'presente').length
@@ -108,6 +112,7 @@ export default async function PlataformaPage() {
         students: students ?? 0,
         staff: staffCount ?? 0,
         morosidadPercent,
+        overdueWithFee,
         asistenciaPercent,
         aiMessagesWeek: aiMessagesWeek ?? 0,
       }
@@ -216,11 +221,20 @@ export default async function PlataformaPage() {
   const revenueThisMonth = (paidInvoices ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
   const formatDOP = (amount: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount)
 
+  // Deuda + mora al día de hoy, de TODOS los colegios de la red -- misma
+  // definición que la tarjeta "Cartera vencida" del Panel (2026-09-07),
+  // sumada aquí sobre `counts` (ya trae overdueWithFee por colegio, sin
+  // otra consulta). Se agrega como tarjeta a pedido del usuario: no vive
+  // en ningún otro lado de esta pantalla salvo la columna "% Morosidad"
+  // de la tabla comparativa de abajo.
+  const overdueNetworkTotal = counts.reduce((sum, c) => sum + c.overdueWithFee, 0)
+
   const networkStats = [
     { label: 'Colegios afiliados', value: schools.length },
     { label: 'Estudiantes en total', value: totalStudents ?? 0 },
     { label: 'Personal en total', value: totalStaff ?? 0 },
     { label: 'Cobrado este mes', value: formatDOP(revenueThisMonth) },
+    { label: 'Cartera vencida (red)', value: formatDOP(overdueNetworkTotal), danger: true },
     { label: 'Comunicados este mes', value: messagesThisMonth ?? 0 },
   ]
 
@@ -250,10 +264,10 @@ export default async function PlataformaPage() {
       </div>
 
       {/* Resumen de toda la red */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {networkStats.map((s) => (
           <div key={s.label} className="dash-card p-4">
-            <p className="text-xl font-bold font-barlow truncate" style={{ color: 'var(--dash-accent)' }}>{s.value}</p>
+            <p className="text-xl font-bold font-barlow truncate" style={{ color: s.danger ? 'var(--dash-danger)' : 'var(--dash-accent)' }}>{s.value}</p>
             <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--dash-text-faint)' }}>{s.label}</p>
           </div>
         ))}

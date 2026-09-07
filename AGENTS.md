@@ -2840,6 +2840,29 @@ corregido en el Panel ("286 vs 245", ver sección de arriba) sigue sin corregir 
 esta tarea para no ampliar el alcance sin que el usuario lo pidiera -- queda anotado para la próxima
 vez que se toque esta pantalla.
 
+## "Plataforma no muestra pagos pendientes" — la tarjeta nunca existió, pero el dato sí faltaba (2026-09-07)
+
+Continuación de la sección anterior. El usuario insistió, sobre la misma captura, en que la 5ta
+tarjeta (donde hoy dice "Comunicados este mes") "mostraba el dato de cuenta pendiente" y pidió
+buscarla y restaurarla.
+
+**Búsqueda exhaustiva antes de tocar nada**: `git log --all --source -S"..."` sobre todas las ramas
+(no solo `--follow` de este archivo) para "Pagos pendientes", "Cuenta pendiente", `cuentaPendiente`,
+`pagosPendientes` -- cero resultados salvo el propio commit de esta sesión. **Esa tarjeta nunca
+existió** en el historial real de `plataforma/page.tsx` (solo 2 commits desde que se creó, ambos de
+estilo visual, mismos 5 rótulos siempre). La lectura más probable: el usuario está mezclando esta
+pantalla con la tarjeta "Cartera vencida" del Panel, arreglada ese mismo día un rato antes.
+
+**No se quitó "Comunicados este mes"** -- sin evidencia de que sobre algo ahí, borrar una tarjeta que
+sí funciona por una corazonada habría sido el error contrario. Se agregó una tarjeta nueva, **"Cartera
+vencida (red)"**, en rojo (mismo color que la tarjeta homónima del Panel), usando el mismo
+`overdueWithFee` (deuda + mora) que ya se calculaba por colegio para "% Morosidad" -- sin consulta
+nueva, solo se sumó sobre `counts` en memoria. La grilla pasó de `sm:grid-cols-5` a
+`sm:grid-cols-3 lg:grid-cols-6` para las 6 tarjetas.
+
+Verificado: RD$441,305 -- coincide exactamente con la cartera vencida ya confirmada por el Panel y
+Cuentas por Cobrar el mismo día.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
