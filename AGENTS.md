@@ -2551,18 +2551,13 @@ parcial (el .5 de 10.5) es la PRIMERA (agosto), la cuota del mes X vence el dia
 `tuition_due_day` del mes X+1, sigue "corriente" hasta `tuition_grace_days`, y
 los pagos cubren la cuota mas vieja primero (FIFO).
 
-**Eso es un riesgo real de divergencia** (dos sitios con la misma regla), asi que
-lleva su propia red: la pagina compara su reparto contra los totales que dio la
-RPC (`expected_to_date` / `collected_amount`) y, si no cuadran, saca un
-`QueryErrorBanner` diciendo que hay que revisar `calculate_receivable_status` --
-en vez de dibujar barras equivocadas en silencio. **Si cambias la regla de cuotas
-en SQL, cambiala tambien en `secretaria/page.tsx`.**
+Verificado sobre los 244 estudiantes reales: agosto exigible RD$510,390 /
+cobrado RD$90,100 / vencido RD$420,290, y septiembre a junio RD$1,020,780 cada
+uno, todos "por venir".
 
-Verificado corriendo el mismo bloque de reparto sobre los 244 estudiantes reales
-de produccion (`node`, datos exportados por la Management API): agosto exigible
-RD$510,390 / cobrado RD$90,100 / vencido RD$420,290, y septiembre a junio
-RD$1,020,780 cada uno, todos "por venir". Cuadre al centimo contra la RPC en las
-dos comprobaciones (exigible ya vencido y cobrado aplicado).
+**Esa primera version repartia en TypeScript y por tanto duplicaba la regla de
+cuotas** (SQL + pagina). El usuario pidio el mismo dia resolverlo de raiz para
+evitar bugs futuros -- ver la seccion siguiente.
 
 De paso, el Panel **ya no asume que el año escolar arranca el 1 de agosto**
 (estaba escrito a mano en el archivo): lo toma de `school_years.start_date`, que
@@ -2610,6 +2605,95 @@ colegio digitaliza fichas de estudiantes que ya estan en el sistema, entran
 duplicados por esa via. Lo natural seria mover la comprobacion dentro de
 `createStudentWithFamily()` (el camino compartido por las dos altas), no
 copiarla.
+
+## Una sola definicion del calendario de cuotas (2026-09-07)
+
+Migracion `20260907000000_installment_schedule_single_source.sql`.
+
+**Por que**: el grafico del Panel necesitaba el desglose mes a mes y
+`calculate_receivable_status()` solo devuelve acumulados, asi que la primera
+version repartio los montos en TypeScript -- copiando la regla de cobro (cuota
+parcial en agosto, vencimiento el dia `tuition_due_day` del mes siguiente,
+gracia, FIFO) a un segundo sitio. Es exactamente el patron que en este proyecto
+ya causo bugs silenciosos (los dos motores de mora, `enrollments` en Academia,
+las dos fuentes de "quien da que").
+
+**Como quedo:**
+
+```
+  student_tuition_basis(student)      <- nivel/beca -> monto + config del colegio
+           |
+  installment_schedule(config)        <- LA REGLA. Funcion PURA, no consulta nada
+           |
+    +------+----------------+--------------------------+
+    |                       |                          |
+  calculate_receivable_     student_installment_    list_school_monthly_
+  status()                  schedule(student)       cashflow()  [nueva]
+  (reescrita, MISMA salida) (comodidad)             (alimenta el grafico)
+```
+
+**Si la regla de cobro del colegio cambia, se cambia en `installment_schedule` y
+en ningun otro sitio.** La pagina del Panel ya no tiene ni una linea de logica de
+cuotas: solo pinta lo que devuelve `list_school_monthly_cashflow`.
+
+**Como se verifico antes de reemplazar nada** (es la funcion de la que dependen
+Cuentas por Cobrar, la generacion de recargos, el bloqueo de tutores a +60 dias y
+ahora el Panel -- no se toca a ciegas):
+1. Se aplicaron primero las funciones nuevas y una copia
+   `calculate_receivable_status_check` con el cuerpo nuevo, **sin tocar la real**.
+2. Se compararon las **12 columnas** de las dos versiones para **todos los
+   estudiantes en 8 fechas** distintas -- incluidos los bordes que importan: el
+   dia 5 vs el 6 (limite de gracia), el 1 de octubre (siguiente vencimiento), el
+   fin del anio escolar y despues. **2,280 filas, 0 diferencias.**
+3. Solo entonces se reemplazo la real, se borro la copia de prueba y se
+   comprobo que Cuentas por Cobrar seguia dando los mismos numeros.
+
+**Trampa de rendimiento encontrada y corregida en el camino**: la primera
+version del refactor puso el `select` de la configuracion DENTRO del generador
+del calendario. Como `calculate_receivable_status` tambien resolvia la
+configuracion, el descuento por hermanos se calculaba **dos veces por
+estudiante** y la funcion paso de **192 a 387 ms** (medido, no supuesto) sobre
+245 estudiantes -- justo la consulta que ya provoco un `statement timeout` real
+en produccion en agosto. Se separo el generador PURO (`installment_schedule`,
+`immutable`, recibe la config ya resuelta) del resolvedor
+(`student_tuition_basis`), y quedo en **221 ms**: 15% de sobrecarga en vez del
+100%. `list_school_monthly_cashflow` tarda 211 ms.
+
+**Nota**: `list_school_monthly_cashflow` es `security invoker` a proposito, no
+`definer` como `list_school_receivables` -- la RLS de `students`/`invoices`
+decide por si sola que ve cada rol, sin repetir la autorizacion en codigo, y de
+paso **no hereda el caso limite del super_admin usando "Entrar como director" de
+otro colegio**. Es el modelo a seguir si algun dia se arregla aquel.
+
+**Para revertir**: la migracion solo tiene `create or replace`; el cuerpo
+anterior de `calculate_receivable_status` esta intacto en
+`20260903030000_grace_cutoff_next_month.sql`, se vuelve a aplicar tal cual.
+Las tres funciones nuevas se pueden dropear sin afectar nada mas.
+
+**Pendiente**: no se pudo correr `npm run smoke` en esta sesion (el entorno no
+tiene `SUPABASE_SERVICE_ROLE_KEY`, solo el PAT de la Management API). Conviene
+correrlo antes de dar por cerrado esto.
+
+## La alerta de duplicados se movio al camino compartido (2026-09-07)
+
+Vivia solo en `estudiantes/nuevo/actions.ts`, asi que la bandeja de fichas
+escaneadas (`confirmEnrollmentScan` -> `createStudentWithFamily`) creaba
+estudiantes **sin ningun aviso de duplicado**: digitalizar la ficha de alguien ya
+registrado lo duplicaba en silencio. Movida dentro de
+`createStudentWithFamily()`, que es el camino que comparten las dos altas, con un
+tercer parametro `options.allowDuplicate`.
+
+- Va **antes de cualquier insert**: si saltara despues de crear la familia,
+  quedaria una familia huerfana cada vez que alguien decide no continuar.
+- Sigue **sin bloquear** (pueden ser dos ninos distintos con el mismo nombre):
+  devuelve `duplicates` y quien da el alta confirma. La bandeja de OCR tiene
+  ahora la misma alerta ambar con "Crear de todas formas" / "Cancelar", y la
+  ficha **no** se marca como confirmada mientras tanto.
+- La coincidencia ahora incluye la **fecha de nacimiento**, que es lo que
+  distingue de un vistazo dos ninos homonimos de un duplicado real (las dos
+  "Diana" tenian la misma).
+- Detección verificada contra produccion: encuentra a la activa, **ignora la
+  borrada con `deleted_at`**, y aguanta espacios y mayusculas.
 
 ## Convenciones de trabajo
 

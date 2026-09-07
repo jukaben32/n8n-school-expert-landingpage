@@ -8,7 +8,11 @@ import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { extractStructuredDocument, type SourceMediaType } from '@/lib/ocr/extractStructuredDocument'
 import { enrollmentFormSchema, enrollmentFormInstructions, type EnrollmentFormData } from '@/lib/ocr/enrollmentFormSchema'
-import { createStudentWithFamily, type CreateStudentWithFamilyInput } from '@/lib/students/createStudentWithFamily'
+import {
+  createStudentWithFamily,
+  type CreateStudentWithFamilyInput,
+  type DuplicateStudentMatch,
+} from '@/lib/students/createStudentWithFamily'
 import type { SubmitNewStudentInput } from '../nuevo/actions'
 
 const BUCKET = 'fichas-inscripcion'
@@ -31,6 +35,11 @@ interface ActionResult {
 interface ConfirmScanResult extends ActionResult {
   /** Tutores recién creados, para ofrecer "Dar acceso al sistema" justo después de confirmar -- ver EnrollmentScansReview.tsx. */
   guardiansToInvite?: { id: string; name: string; email: string | null }[]
+  /** Estudiantes que ya existen con ese nombre. Hasta 2026-09-07 esta
+   *  bandeja no comprobaba duplicados (la alerta vivía solo en el
+   *  formulario manual), así que digitalizar la ficha de alguien ya
+   *  registrado lo creaba dos veces sin aviso. */
+  duplicates?: DuplicateStudentMatch[]
 }
 
 async function resolveScanStaff() {
@@ -227,8 +236,12 @@ export async function confirmEnrollmentScan(scanId: string, input: SubmitNewStud
       ? { mode: 'new', schoolId: staff.schoolId, student: input.student, familyName: input.familyName, guardians: input.guardians }
       : { mode: 'existing', schoolId: staff.schoolId, student: input.student, familyId: input.familyId }
 
-  const result = await createStudentWithFamily(supabase, fullInput)
-  if (!result.ok) return { ok: false, error: result.error }
+  const result = await createStudentWithFamily(supabase, fullInput, {
+    allowDuplicate: input.confirmDuplicate,
+  })
+  // Si hay coincidencias por nombre, la ficha NO se marca como confirmada:
+  // sigue pendiente para que el staff decida y vuelva a enviar.
+  if (!result.ok) return { ok: false, error: result.error, duplicates: result.duplicates }
 
   await admin
     .from('enrollment_form_scans')

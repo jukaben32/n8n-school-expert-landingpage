@@ -91,8 +91,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     { data: attendanceInRange, error: attendanceRangeError },
     { data: attendancePrevRange, error: attendancePrevError },
     { data: attendance4Weeks, error: attendance4WeeksError },
-    { data: tuitionConfig, error: tuitionConfigError },
-    { data: currentYear, error: currentYearError },
+    { data: cashflowRaw, error: cashflowError },
     { data: last10DaysStudents, error: last10DaysError },
     { count: ausenciasHoy, error: ausenciasHoyError },
     { count: comprobantesPendientes, error: comprobantesError },
@@ -113,8 +112,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(prevStart)).lt('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(twentyEightDaysAgo)),
-    supabase.from('schools').select('tuition_installments_count, tuition_due_day, tuition_grace_days').eq('id', schoolId).maybeSingle(),
-    supabase.from('school_years').select('start_date').eq('school_id', schoolId).eq('is_current', true).limit(1).maybeSingle(),
+    supabase.rpc('list_school_monthly_cashflow', { p_school_id: schoolId }),
     supabase.from('students').select('created_at').eq('school_id', schoolId).is('deleted_at', null).gte('created_at', new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString()),
     supabase.from('attendance').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('date', todayIso).eq('status', 'ausente'),
     supabase.from('payment_receipts').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('status', 'pendiente'),
@@ -232,85 +230,33 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   }))
 
   // ── Flujo de cobranza -- cuota por cuota del año escolar ──────────────
-  // Antes este gráfico leía `invoices`: como este colegio no factura por
-  // adelantado y toda factura se crea ya pagada, "Pendiente" y "Vencido"
-  // salían siempre en cero y agosto era una barra verde sola. Ahora cada
-  // barra es la CUOTA de ese mes -- cuánto se debía y cuánto se ha cobrado
-  // hasta hoy.
+  // Cada barra es la CUOTA de ese mes: cuánto se debía y cuánto se ha
+  // cobrado hasta hoy, sin depender de que se haya emitido factura alguna
+  // (antes esto leía `invoices` y salía siempre en cero, ver AGENTS.md).
   //
-  // Los montos NO se recalculan aquí: `monthly_amount` (ya neto del nivel
-  // del estudiante, de su beca y del descuento por hermanos) y
-  // `collected_amount` los da la misma RPC que alimenta las tarjetas. Lo
-  // único que hace este bloque es repartir esos números mes por mes con la
-  // misma regla que `calculate_receivable_status`:
-  //   · la cuota parcial (el .5 de 10.5) es la PRIMERA, agosto
-  //   · la cuota del mes X vence el día `tuition_due_day` del mes X+1
-  //   · un pago cubre siempre la cuota más vieja primero (FIFO)
-  //   · una cuota vencida sigue "corriente" hasta `tuition_grace_days`
-  // Si esa regla cambia en SQL hay que cambiarla aquí también -- por eso
-  // justo debajo se comprueba que el reparto cuadre con los totales que
-  // dio la propia RPC, y si no cuadra se avisa en vez de mentir.
-  type CuotaMes = {
-    label: string; exigible: number; cobrado: number
-    pendiente: number; vencido: number; yaVencio: boolean
+  // Aquí NO hay nada de lógica de cuotas. El reparto mes a mes lo hace
+  // `list_school_monthly_cashflow` en SQL, que consume el mismo
+  // `student_installment_schedule` que `calculate_receivable_status` -- o
+  // sea, la misma y única definición de la regla de cobro que usa Cuentas
+  // por Cobrar. La primera versión de este gráfico (2026-09-07) sí repartía
+  // en TypeScript y por tanto duplicaba esa regla; se movió a SQL el mismo
+  // día justamente para que no pueda desviarse.
+  type CashflowRow = {
+    period_month: string; is_due: boolean; is_overdue: boolean
+    expected_amount: number; collected_amount: number
+    pending_amount: number; overdue_amount: number
   }
-  const installments = Number(tuitionConfig?.tuition_installments_count ?? 10.5)
-  const dueDay = Number(tuitionConfig?.tuition_due_day ?? 1)
-  const graceDays = Number(tuitionConfig?.tuition_grace_days ?? 5)
-  const yearStartDate = currentYear?.start_date
-    ? new Date((currentYear.start_date as string) + 'T00:00:00')
-    : null
-  const fullPeriods = Math.floor(installments)
-  const partialFraction = Math.round((installments - fullPeriods) * 1000) / 1000
-  const totalPeriods = fullPeriods + (partialFraction > 0 ? 1 : 0)
-
-  const cuotas: CuotaMes[] = []
-  if (yearStartDate) {
-    for (let i = 0; i < totalPeriods; i++) {
-      const mesCuota = new Date(yearStartDate.getFullYear(), yearStartDate.getMonth() + i, 1)
-      // Vence el día `dueDay` del mes SIGUIENTE (día 0 del mes +2 = último
-      // día del mes de cobro, para no pasarse en un febrero).
-      const diasMesCobro = new Date(mesCuota.getFullYear(), mesCuota.getMonth() + 2, 0).getDate()
-      const vence = new Date(mesCuota.getFullYear(), mesCuota.getMonth() + 1, Math.min(dueDay, diasMesCobro))
-      const diasDesdeVencimiento = Math.floor((now.getTime() - vence.getTime()) / (24 * 60 * 60 * 1000))
-      cuotas.push({
-        // es-DO abrevia septiembre como "sept" (4 letras) y descuadra la
-        // fila de etiquetas: se recortan todas a 3.
-        label: mesCuota.toLocaleDateString('es-DO', { month: 'short' }).replace('.', '').slice(0, 3),
-        exigible: 0, cobrado: 0, pendiente: 0, vencido: 0,
-        yaVencio: diasDesdeVencimiento >= graceDays,
-      })
-    }
-    for (const r of receivables) {
-      const monthly = Number(r.monthly_amount ?? 0)
-      if (!(monthly > 0)) continue // 'sin_configurar' -- ya se avisa aparte
-      let porAplicar = Number(r.collected_amount ?? 0)
-      for (let i = 0; i < cuotas.length; i++) {
-        const monto = i === 0 && partialFraction > 0
-          ? Math.round(monthly * partialFraction * 100) / 100
-          : monthly
-        const cubierto = Math.min(porAplicar, monto)
-        porAplicar -= cubierto
-        cuotas[i].exigible += monto
-        cuotas[i].cobrado += cubierto
-      }
-    }
-    for (const c of cuotas) {
-      const sinCubrir = Math.max(0, c.exigible - c.cobrado)
-      // Sin cubrir y pasada la gracia = vencido (rojo). Sin cubrir pero
-      // todavía en gracia, o de un mes que aún no vence = pendiente.
-      if (c.yaVencio) c.vencido = sinCubrir
-      else c.pendiente = sinCubrir
-    }
-  }
-
-  // Comprobación de que el reparto no se desvió del motor de mora: lo
-  // exigible de los meses ya vencidos debe coincidir con la suma de
-  // `expected_to_date`, y lo cobrado con la de `collected_amount`.
-  const exigibleVencidoReparto = cuotas.filter((c) => c.yaVencio).reduce((sum, c) => sum + c.exigible, 0)
-  const exigibleSegunRpc = receivables.reduce((sum, r) => sum + Number(r.expected_to_date ?? 0), 0)
-  const flujoDescuadrado = receivables.length > 0
-    && Math.abs(exigibleVencidoReparto - exigibleSegunRpc) > Math.max(1, exigibleSegunRpc * 0.001)
+  const cuotas = ((cashflowRaw ?? []) as CashflowRow[]).map((c) => ({
+    // es-DO abrevia septiembre como "sept" (4 letras) y descuadra la fila
+    // de etiquetas: se recortan todas a 3.
+    label: new Date(c.period_month + 'T00:00:00')
+      .toLocaleDateString('es-DO', { month: 'short' }).replace('.', '').slice(0, 3),
+    exigible: Number(c.expected_amount ?? 0),
+    cobrado: Number(c.collected_amount ?? 0),
+    pendiente: Number(c.pending_amount ?? 0),
+    vencido: Number(c.overdue_amount ?? 0),
+    yaVencio: Boolean(c.is_overdue),
+  }))
 
   // ── Asistencia diaria -- últimas 4 semanas ───────────────────────────
   type AttendanceRow = { date: string; status: string }
@@ -435,17 +381,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
         { label: 'cobros', error: paymentsRangeError },
         { label: 'cartera vencida', error: receivablesError },
         { label: 'asistencia', error: attendanceRangeError || attendancePrevError || attendance4WeeksError || ausenciasHoyError },
-        { label: 'configuración de mensualidad', error: tuitionConfigError || currentYearError },
-        {
-          label: 'flujo de cobranza',
-          // No es un error de consulta: es la comprobación de que el reparto
-          // mes a mes del gráfico sigue cuadrando con el motor de mora. Si
-          // salta, la regla de cuotas cambió en SQL y este archivo se quedó
-          // atrás -- mejor decirlo que dibujar barras equivocadas.
-          error: flujoDescuadrado
-            ? { message: `El reparto por mes (${formatDOP(exigibleVencidoReparto)}) no cuadra con Cuentas por Cobrar (${formatDOP(exigibleSegunRpc)}). Revisar calculate_receivable_status.` }
-            : null,
-        },
+        { label: 'flujo de cobranza', error: cashflowError },
         { label: 'comprobantes', error: comprobantesError },
         { label: 'registros de personal', error: personalPendienteError },
         { label: 'autorizaciones', error: authRequestsError },

@@ -14,6 +14,13 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  * que llama, vía @/lib/supabase/server) -- respeta las mismas políticas de
  * RLS que ya protegían la creación manual; esta función no resuelve sesión
  * ni permisos por sí misma, eso es responsabilidad de quien la llama.
+ *
+ * La comprobación de duplicados vive AQUÍ desde 2026-09-07, no en el
+ * formulario manual como antes: estaba solo en
+ * `estudiantes/nuevo/actions.ts`, así que la bandeja de fichas escaneadas
+ * podía crear un estudiante que ya existía sin ningún aviso. Al estar en el
+ * camino compartido, las dos altas la heredan y no hay dos reglas que
+ * puedan divergir (mismo principio por el que esta función existe).
  */
 
 export type GuardianRelationship = 'madre' | 'padre' | 'tutor_legal' | 'otro'
@@ -49,9 +56,27 @@ export type CreateStudentWithFamilyInput =
   | { mode: 'new'; schoolId: string; student: StudentFieldsInput; familyName: string; guardians: DraftGuardianInput[] }
   | { mode: 'existing'; schoolId: string; student: StudentFieldsInput; familyId: string }
 
+/** Estudiante ya existente con el mismo nombre y apellido. */
+export interface DuplicateStudentMatch {
+  id: string
+  firstName: string
+  lastName: string
+  gradeLevel: string | null
+  enrollmentStatus: string
+  /** Para distinguir de un golpe dos niños distintos con el mismo nombre
+   *  de un duplicado real (misma fecha = casi seguro la misma persona). */
+  birthDate: string | null
+}
+
+export interface CreateStudentWithFamilyOptions {
+  /** true cuando quien da el alta ya vio la alerta de posible duplicado y
+   *  confirmó crearlo igual -- puede haber dos niños con el mismo nombre. */
+  allowDuplicate?: boolean
+}
+
 export type CreateStudentWithFamilyResult =
   | { ok: true; studentId: string; familyId: string; guardianIds: string[] }
-  | { ok: false; error: string }
+  | { ok: false; error: string; duplicates?: DuplicateStudentMatch[] }
 
 function buildStudentRow(schoolId: string, familyId: string, student: StudentFieldsInput) {
   return {
@@ -72,8 +97,38 @@ function buildStudentRow(schoolId: string, familyId: string, student: StudentFie
 
 export async function createStudentWithFamily(
   supabase: SupabaseClient,
-  input: CreateStudentWithFamilyInput
+  input: CreateStudentWithFamilyInput,
+  options: CreateStudentWithFamilyOptions = {}
 ): Promise<CreateStudentWithFamilyResult> {
+  // Alerta de posible duplicado -- no bloquea (pueden ser dos niños
+  // distintos con el mismo nombre), solo obliga a confirmar una vez que
+  // quien da el alta ve que ya existe alguien así. Va antes de cualquier
+  // insert: si saltara después de crear la familia, quedaría una familia
+  // huérfana cada vez que alguien decide no continuar.
+  if (!options.allowDuplicate) {
+    const { data: matches } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, grade_level, enrollment_status, birth_date')
+      .eq('school_id', input.schoolId)
+      .is('deleted_at', null)
+      .ilike('first_name', input.student.firstName.trim())
+      .ilike('last_name', input.student.lastName.trim())
+    if (matches && matches.length > 0) {
+      return {
+        ok: false,
+        error: 'Ya existe un estudiante con este nombre y apellido.',
+        duplicates: matches.map((m) => ({
+          id: m.id as string,
+          firstName: m.first_name as string,
+          lastName: m.last_name as string,
+          gradeLevel: m.grade_level as string | null,
+          enrollmentStatus: m.enrollment_status as string,
+          birthDate: m.birth_date as string | null,
+        })),
+      }
+    }
+  }
+
   if (input.mode === 'new') {
     if (input.guardians.length === 0) {
       return { ok: false, error: 'Se necesita al menos un tutor.' }

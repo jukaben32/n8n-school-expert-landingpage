@@ -10,7 +10,7 @@ import {
   type PendingEnrollmentScan,
 } from './actions'
 import type { SubmitNewStudentInput } from '../nuevo/actions'
-import type { GuardianRelationship } from '@/lib/students/createStudentWithFamily'
+import type { DuplicateStudentMatch, GuardianRelationship } from '@/lib/students/createStudentWithFamily'
 import { inviteGuardianAccess } from '../../familias/actions'
 import DateInputES from '@/components/DateInputES'
 
@@ -98,6 +98,9 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [confirmError, setConfirmError] = useState<string | null>(null)
+  // Coincidencias por nombre de la ficha que se intentó confirmar. Se guarda
+  // junto al id de la ficha para no mostrar la alerta sobre otra distinta.
+  const [duplicates, setDuplicates] = useState<{ scanId: string; matches: DuplicateStudentMatch[] } | null>(null)
   const [pendingInvites, setPendingInvites] = useState<{ id: string; name: string; email: string | null }[]>([])
   const [inviteStatus, setInviteStatus] = useState<Record<string, 'idle' | 'sending' | 'sent' | 'error'>>({})
   const [inviteCredentials, setInviteCredentials] = useState<Record<string, { username: string; password: string }>>({})
@@ -179,7 +182,7 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
     setPreviewUrl({ id: scanId, url })
   }
 
-  async function handleConfirm(scan: PendingEnrollmentScan) {
+  async function handleConfirm(scan: PendingEnrollmentScan, allowDuplicate = false) {
     const draft = drafts[scan.id]
     if (!draft) return
     setConfirmError(null)
@@ -226,12 +229,18 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
     }
 
     setBusyId(scan.id)
-    const result = await confirmEnrollmentScan(scan.id, input)
+    const result = await confirmEnrollmentScan(scan.id, { ...input, confirmDuplicate: allowDuplicate })
     setBusyId(null)
+    if (result.duplicates && result.duplicates.length > 0) {
+      // La ficha sigue pendiente: se pide confirmar antes de crear.
+      setDuplicates({ scanId: scan.id, matches: result.duplicates })
+      return
+    }
     if (!result.ok) {
       setConfirmError(result.error ?? 'No se pudo confirmar la ficha.')
       return
     }
+    setDuplicates(null)
     setScans((prev) => prev.filter((s) => s.id !== scan.id))
     setOpenScanId(null)
     if (result.guardiansToInvite && result.guardiansToInvite.length > 0) {
@@ -343,6 +352,44 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
       </form>
 
       {/* Bandeja de revisión */}
+      {duplicates && duplicates.matches.length > 0 && (
+        <div role="alert" className="space-y-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          <p className="font-semibold">Ya existe un estudiante con este nombre y apellido:</p>
+          <ul className="space-y-1 text-xs">
+            {duplicates.matches.map((d) => (
+              <li key={d.id}>
+                {d.firstName} {d.lastName} — {d.gradeLevel ?? 'sin curso'} ({d.enrollmentStatus})
+                {d.birthDate ? ` · nacido el ${new Date(d.birthDate + 'T00:00:00').toLocaleDateString('es-DO')}` : ''}
+              </li>
+            ))}
+          </ul>
+          <p>
+            Si la fecha de nacimiento coincide, es casi seguro la misma persona y esta ficha
+            no debería crearse. Si son dos niños distintos con el mismo nombre, puedes crearla igual.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const scan = scans.find((sc) => sc.id === duplicates.scanId)
+                if (scan) handleConfirm(scan, true)
+              }}
+              disabled={busyId === duplicates.scanId}
+              className="rounded-full bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 text-xs transition disabled:opacity-60"
+            >
+              {busyId === duplicates.scanId ? 'Creando...' : 'Crear de todas formas'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDuplicates(null)}
+              className="rounded-full border border-amber-300 dark:border-amber-700 px-4 py-2 text-xs font-semibold transition"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       {confirmError && (
         <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
           {confirmError}

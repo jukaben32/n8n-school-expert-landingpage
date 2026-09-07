@@ -338,6 +338,7 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
             {duplicates.map((d) => (
               <li key={d.id}>
                 {d.firstName} {d.lastName} — {d.gradeLevel ?? 'sin grado'} ({d.enrollmentStatus})
+                {d.birthDate ? ` · nacido el ${new Date(d.birthDate + 'T00:00:00').toLocaleDateString('es-DO')}` : ''}
               </li>
             ))}
           </ul>
