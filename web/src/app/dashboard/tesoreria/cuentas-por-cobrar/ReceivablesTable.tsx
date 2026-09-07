@@ -32,6 +32,7 @@ const LEVEL_LABELS: Record<string, string> = {
 
 const OVERDUE_BUCKETS = ['6-9', '10-14', '15-19', '20-30', '31-60', '61+']
 const BUCKET_ORDER = ['corriente', ...OVERDUE_BUCKETS]
+const BUCKET_LABELS: Record<string, string> = { corriente: 'Corriente' }
 const BUCKET_COLORS: Record<string, string> = {
   corriente: 'var(--dash-accent)',
   '6-9': 'var(--dash-warning)',
@@ -44,34 +45,6 @@ const BUCKET_COLORS: Record<string, string> = {
 
 const formatDOP = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' })
 const thClass = 'px-4 py-3 font-barlow uppercase tracking-wide text-xs'
-
-function moraDaysFromNominalDays(days: number, graceDays: number): number {
-  return Math.max(1, days - graceDays + 1)
-}
-
-function formatBucketLabel(bucket: string | null, graceDays: number): string {
-  if (!bucket) return '—'
-  if (bucket === 'corriente') return 'Corriente'
-
-  const normalizedGraceDays = Number.isFinite(graceDays) ? Math.max(0, Math.floor(graceDays)) : 5
-  const ranges: Record<string, [number, number | null]> = {
-    '6-9': [normalizedGraceDays, 8],
-    '10-14': [9, 13],
-    '15-19': [14, 18],
-    '20-30': [19, 29],
-    '31-60': [30, 59],
-    '61+': [60, null],
-  }
-
-  const range = ranges[bucket]
-  if (!range) return `${bucket} días`
-
-  const start = moraDaysFromNominalDays(range[0], normalizedGraceDays)
-  if (range[1] === null) return `${start}+ días mora`
-
-  const end = moraDaysFromNominalDays(range[1], normalizedGraceDays)
-  return `${start}-${end} días mora`
-}
 
 export default function ReceivablesTable({
   rows,
@@ -262,7 +235,7 @@ export default function ReceivablesTable({
                       className="px-2 py-1 rounded-full text-[10px] font-bold font-barlow uppercase tracking-wider border"
                       style={{ color: BUCKET_COLORS[r.aging_bucket ?? ''], borderColor: 'currentColor' }}
                     >
-                      {formatBucketLabel(r.aging_bucket, graceDays)}
+                      {BUCKET_LABELS[r.aging_bucket ?? ''] ?? `${r.aging_bucket} días`}
                     </span>
                   </td>
                   <td className="px-4 py-3 space-y-1.5 min-w-[220px]">

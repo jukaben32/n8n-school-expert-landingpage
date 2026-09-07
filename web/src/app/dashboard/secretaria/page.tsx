@@ -34,12 +34,6 @@ function isoDate(d: Date): string {
   return d.toISOString().split('T')[0]
 }
 
-function addDaysToIsoDate(dateIso: string, days: number): Date {
-  const date = new Date(dateIso + 'T00:00:00')
-  date.setDate(date.getDate() + days)
-  return date
-}
-
 /**
  * Centro de Control — Vista principal para administradores, dirección y recepción.
  * Rediseño agosto 2026 (Claude Design), corregido contra el código fuente
@@ -92,7 +86,6 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     { data: enrolledStudents, error: enrolledError },
     { data: allGuardians, error: guardiansError },
     { data: accessProfiles, error: accessError },
-    { data: billingSettings, error: billingSettingsError },
     { data: paymentsInRange, error: paymentsRangeError },
     { data: receivablesRaw, error: receivablesError },
     { data: attendanceInRange, error: attendanceRangeError },
@@ -109,7 +102,6 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     supabase.from('students').select('id, enrollment_status').eq('school_id', schoolId).is('deleted_at', null),
     supabase.from('guardians').select('id, family_id').eq('school_id', schoolId),
     supabase.from('users_profiles').select('guardian_id').eq('school_id', schoolId).not('guardian_id', 'is', null),
-    supabase.from('schools').select('tuition_grace_days').eq('id', schoolId).single(),
     supabase.from('payments').select('amount_paid').eq('school_id', schoolId).gte('paid_at', rangeStart.toISOString()),
     // Misma funcion que usa /dashboard/tesoreria/cuentas-por-cobrar --
     // un solo motor de mora para las dos pantallas (ver bloque "Cartera
@@ -132,7 +124,6 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   // Igual pero sin notación compacta: en el tooltip del gráfico una cuota
   // de un millón no puede quedar como "RD$ 1 M".
   const exactDOP = (n: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(n)
-  const graceDays = Number(billingSettings?.tuition_grace_days ?? 5)
 
   // ── Estudiantes inscritos ──────────────────────────────────────────
   // La tarjeta dice "inscritos", asi que cuenta solo `enrollment_status =
@@ -195,14 +186,9 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     monthly_amount: number | null; expected_to_date: number | null
     overdue_amount: number; late_fee_amount: number; collected_amount: number
     oldest_overdue_due_date: string | null; days_overdue: number | null
-    aging_bucket: string | null
   }
   const receivables = (receivablesRaw ?? []) as ReceivableRow[]
-  // La RPC devuelve overdue_amount tambien para cuotas corrientes:
-  // ya vencio la fecha nominal (dia 1), pero la familia aun puede pagar
-  // sin mora hasta el dia 5. Para cartera vencida solo cuentan las filas
-  // que salieron de ese periodo de gracia.
-  const conDeuda = receivables.filter((r) => Number(r.overdue_amount) > 0 && r.aging_bucket !== 'corriente')
+  const conDeuda = receivables.filter((r) => Number(r.overdue_amount) > 0)
   const deudaVencida = conDeuda.reduce((sum, r) => sum + Number(r.overdue_amount), 0)
   const recargoAcumulado = conDeuda.reduce((sum, r) => sum + Number(r.late_fee_amount ?? 0), 0)
   // Lo que el panel debe reflejar: deuda + mora al dia de hoy, siempre.
@@ -216,21 +202,16 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
 
   // Top 5 familias por saldo. La deuda se calcula por estudiante, asi que
   // los hermanos se suman en una sola fila de la familia.
-  type FamiliaMora = { monto: number; nombres: string[]; moraDesde: string | null; dias: number | null; diasMora: number | null }
+  type FamiliaMora = { monto: number; nombres: string[]; vence: string | null; dias: number | null }
   const porFamilia = new Map<string, FamiliaMora>()
   for (const r of conDeuda) {
-    const row = porFamilia.get(r.family_id) ?? { monto: 0, nombres: [], moraDesde: null, dias: null, diasMora: null }
+    const row = porFamilia.get(r.family_id) ?? { monto: 0, nombres: [], vence: null, dias: null }
     row.monto += Number(r.overdue_amount) + Number(r.late_fee_amount ?? 0)
     row.nombres.push(r.first_name)
-    if (r.oldest_overdue_due_date) {
-      const moraDesdeIso = isoDate(addDaysToIsoDate(r.oldest_overdue_due_date, graceDays))
-      if (row.moraDesde === null || moraDesdeIso < row.moraDesde) {
-        row.moraDesde = moraDesdeIso
-      }
+    if (r.oldest_overdue_due_date && (row.vence === null || r.oldest_overdue_due_date < row.vence)) {
+      row.vence = r.oldest_overdue_due_date
     }
     row.dias = Math.max(row.dias ?? 0, Number(r.days_overdue ?? 0))
-    const diasMora = r.days_overdue === null ? null : Math.max(1, Number(r.days_overdue) - graceDays + 1)
-    row.diasMora = diasMora === null ? row.diasMora : Math.max(row.diasMora ?? 0, diasMora)
     porFamilia.set(r.family_id, row)
   }
   const top5Familias = [...porFamilia.entries()].sort((a, b) => b[1].monto - a[1].monto).slice(0, 5)
@@ -241,12 +222,11 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   const overdueRows = top5Familias.map(([familyId, row]) => ({
     family: familyNameById.get(familyId) ?? 'Familia',
     students: row.nombres.join(', ') || '—',
-    // `moraDesde` es un DATE: se le pega la hora para que el navegador no
-    // lo corra un dia hacia atras por zona horaria.
-    due: row.moraDesde ? new Date(row.moraDesde + 'T00:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }) : '—',
+    // `oldest_overdue_due_date` es un DATE: se le pega la hora para que el
+    // navegador no lo corra un dia hacia atras por zona horaria.
+    due: row.vence ? new Date(row.vence + 'T00:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }) : '—',
     amount: formatDOP(row.monto),
     days: row.dias,
-    moraDays: row.diasMora,
   }))
 
   // ── Flujo de cobranza -- cuota por cuota del año escolar ──────────────
@@ -389,8 +369,8 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     students: r.students,
     due: r.due,
     amount: r.amount,
-    status: r.moraDays !== null ? `+${r.moraDays} día${r.moraDays !== 1 ? 's' : ''}` : '—',
-    level: r.moraDays === null ? 'bajo' : r.moraDays > 9 ? 'alto' : 'medio',
+    status: r.days !== null ? `+${r.days} días` : '—',
+    level: r.days === null ? 'bajo' : r.days > 14 ? 'alto' : r.days >= 6 ? 'medio' : 'bajo',
   }))
 
   return (
@@ -398,7 +378,6 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
       <QueryErrorBanner errors={[
         { label: 'estudiantes', error: studentsRangeError || enrolledError || last10DaysError },
         { label: 'familias y acceso', error: guardiansError || accessError },
-        { label: 'configuración de cobro', error: billingSettingsError },
         { label: 'cobros', error: paymentsRangeError },
         { label: 'cartera vencida', error: receivablesError },
         { label: 'asistencia', error: attendanceRangeError || attendancePrevError || attendance4WeeksError || ausenciasHoyError },
