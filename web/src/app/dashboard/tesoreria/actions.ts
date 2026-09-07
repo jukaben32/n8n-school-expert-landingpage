@@ -99,6 +99,7 @@ export async function confirmReceipt(receiptId: string): Promise<ActionResult> {
     .from('invoices')
     .select('id, total_amount, status')
     .eq('id', receipt.invoice_id)
+    .eq('school_id', staff.schoolId)
     .single()
   if (!invoice) return { ok: false, error: 'No se encontró la factura asociada.' }
 
@@ -113,14 +114,20 @@ export async function confirmReceipt(receiptId: string): Promise<ActionResult> {
   if (paymentError) return { ok: false, error: `No se pudo registrar el pago: ${paymentError.message}` }
 
   if (receipt.amount >= invoice.total_amount && invoice.status !== 'pagado') {
-    await admin.from('invoices').update({ status: 'pagado', paid_at: new Date().toISOString() }).eq('id', invoice.id)
+    const { error: invoiceUpdateError } = await admin
+      .from('invoices')
+      .update({ status: 'pagado', paid_at: new Date().toISOString() })
+      .eq('id', invoice.id)
+      .eq('school_id', staff.schoolId)
+    if (invoiceUpdateError) return { ok: false, error: 'El pago se registró, pero no se pudo actualizar la factura: ' + invoiceUpdateError.message }
   }
 
-  await admin.from('payment_receipts').update({
+  const { error: receiptUpdateError } = await admin.from('payment_receipts').update({
     status: 'confirmado',
     reviewed_by: staff.staffProfileId,
     reviewed_at: new Date().toISOString(),
-  }).eq('id', receiptId)
+  }).eq('id', receiptId).eq('school_id', staff.schoolId)
+  if (receiptUpdateError) return { ok: false, error: 'El pago se registró, pero no se pudo cerrar el comprobante: ' + receiptUpdateError.message }
 
   revalidatePath('/dashboard/tesoreria/comprobantes')
   return { ok: true }
@@ -141,12 +148,13 @@ export async function rejectReceipt(receiptId: string, reason: string): Promise<
   if (!receipt) return { ok: false, error: 'No se encontró el comprobante.' }
   if (receipt.status !== 'pendiente') return { ok: false, error: 'Este comprobante ya fue revisado.' }
 
-  await admin.from('payment_receipts').update({
+  const { error: rejectError } = await admin.from('payment_receipts').update({
     status: 'rechazado',
     reviewed_by: staff.staffProfileId,
     reviewed_at: new Date().toISOString(),
     rejection_reason: reason.trim() || null,
-  }).eq('id', receiptId)
+  }).eq('id', receiptId).eq('school_id', staff.schoolId)
+  if (rejectError) return { ok: false, error: 'No se pudo rechazar el comprobante: ' + rejectError.message }
 
   revalidatePath('/dashboard/tesoreria/comprobantes')
   return { ok: true }

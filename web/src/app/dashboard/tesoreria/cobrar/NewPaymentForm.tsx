@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { recordManualPayment } from './actions'
 
 interface PendingInvoice {
   id: string; description: string; total_amount: number; due_date: string; status: string
@@ -10,8 +10,6 @@ interface PendingInvoice {
 }
 
 interface NewPaymentFormProps {
-  schoolId: string
-  receivedBy: string
   invoices: PendingInvoice[]
 }
 
@@ -19,7 +17,7 @@ const inputClass =
   'w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'
 
-export default function NewPaymentForm({ schoolId, receivedBy, invoices }: NewPaymentFormProps) {
+export default function NewPaymentForm({ invoices }: NewPaymentFormProps) {
   const router = useRouter()
   const [invoiceId, setInvoiceId] = useState(invoices[0]?.id ?? '')
   const [amountPaid, setAmountPaid] = useState(invoices[0] ? String(invoices[0].total_amount) : '')
@@ -40,40 +38,28 @@ export default function NewPaymentForm({ schoolId, receivedBy, invoices }: NewPa
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!invoiceId || !amountPaid || Number(amountPaid) <= 0) {
+    const parsedAmount = Number(amountPaid)
+    if (!invoiceId || !parsedAmount || parsedAmount <= 0) {
       setError('Selecciona la factura e indica el monto pagado.')
       return
     }
     setSaving(true)
-    const supabase = createClient()
 
-    try {
-      const { error: paymentError } = await supabase.from('payments').insert({
-        school_id: schoolId,
-        invoice_id: invoiceId,
-        amount_paid: Number(amountPaid),
-        payment_method: paymentMethod,
-        received_by: receivedBy,
-        notes: notes.trim() || null,
-      })
-      if (paymentError) throw paymentError
+    const result = await recordManualPayment({
+      invoiceId,
+      amountPaid: parsedAmount,
+      paymentMethod,
+      notes,
+    })
 
-      // Si el pago cubre el total de la factura, se marca como pagada.
-      if (selectedInvoice && Number(amountPaid) >= selectedInvoice.total_amount) {
-        const { error: invoiceError } = await supabase
-          .from('invoices')
-          .update({ status: 'pagado', paid_at: new Date().toISOString() })
-          .eq('id', invoiceId)
-        if (invoiceError) throw invoiceError
-      }
-
-      router.push('/dashboard/tesoreria')
-      router.refresh()
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo registrar el pago. Intenta de nuevo.'
-      setError(message)
+    if (!result.ok) {
+      setError(result.error ?? 'No se pudo registrar el pago. Intenta de nuevo.')
       setSaving(false)
+      return
     }
+
+    router.push('/dashboard/tesoreria')
+    router.refresh()
   }
 
   if (invoices.length === 0) {

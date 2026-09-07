@@ -220,18 +220,26 @@ export async function approveVendorInvoice(invoiceId: string, input: ApproveVend
   if (!invoice) return { ok: false, error: 'No se encontró la factura.' }
   if (invoice.status !== 'pendiente') return { ok: false, error: 'Esta factura ya fue revisada.' }
 
+  const proveedor = input.proveedor.trim()
+  const subtotal = Math.round(input.subtotal * 100) / 100
+  const itbis = Math.round(input.itbis * 100) / 100
+  const total = Math.round(input.total * 100) / 100
+  if (!proveedor) return { ok: false, error: 'Completa el proveedor.' }
+  if (![subtotal, itbis, total].every(Number.isFinite)) return { ok: false, error: 'Los montos deben ser números válidos.' }
+  if (subtotal < 0 || itbis < 0 || total <= 0) return { ok: false, error: 'Los montos de la factura no son válidos.' }
+
   const syncResult = await syncInvoiceToAlegra({
-    proveedor: input.proveedor,
-    rnc: input.rnc,
-    ncf: input.ncf,
+    proveedor,
+    rnc: input.rnc?.trim() || null,
+    ncf: input.ncf?.trim() || null,
     fecha: input.fecha,
-    subtotal: input.subtotal,
-    itbis: input.itbis,
-    total: input.total,
-    categoria: input.categoria,
+    subtotal,
+    itbis,
+    total,
+    categoria: input.categoria?.trim() || null,
   })
 
-  await admin
+  const { error: updateError } = await admin
     .from('vendor_invoices')
     .update({
       status: 'aprobado',
@@ -242,6 +250,9 @@ export async function approveVendorInvoice(invoiceId: string, input: ApproveVend
       alegra_sync_error: syncResult.ok ? null : syncResult.error,
     })
     .eq('id', invoiceId)
+    .eq('school_id', staff.schoolId)
+
+  if (updateError) return { ok: false, error: 'No se pudo aprobar la factura: ' + updateError.message }
 
   revalidatePath('/dashboard/tesoreria/facturas-proveedores')
   return { ok: true }
@@ -261,7 +272,7 @@ export async function rejectVendorInvoice(invoiceId: string, reason: string): Pr
   if (!invoice) return { ok: false, error: 'No se encontró la factura.' }
   if (invoice.status !== 'pendiente') return { ok: false, error: 'Esta factura ya fue revisada.' }
 
-  await admin
+  const { error: updateError } = await admin
     .from('vendor_invoices')
     .update({
       status: 'rechazado',
@@ -270,6 +281,9 @@ export async function rejectVendorInvoice(invoiceId: string, reason: string): Pr
       rejection_reason: reason.trim() || null,
     })
     .eq('id', invoiceId)
+    .eq('school_id', staff.schoolId)
+
+  if (updateError) return { ok: false, error: 'No se pudo rechazar la factura: ' + updateError.message }
 
   revalidatePath('/dashboard/tesoreria/facturas-proveedores')
   return { ok: true }
