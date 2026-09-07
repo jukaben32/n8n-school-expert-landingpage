@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   title: 'Progreso — Academia — MentorIApp',
 }
 
+type QuestionRow = {
+  id: string
+  lesson_id: string
+  prompt: string
+  sort_order: number
+  points: number
+  quiz_options: { id: string; label: string; is_correct: boolean; sort_order: number }[]
+}
+
 type LessonRow = {
   id: string
   title: string
@@ -72,14 +81,21 @@ export default async function ProgresoAcademiaPage() {
 
   const lessons = (lessonsRaw ?? []) as unknown as LessonRow[]
 
-  const { data: questionCounts } = await supabase
+  // Las preguntas completas, no solo el conteo: dirección tiene que poder
+  // LEER el cuestionario antes de que llegue a un estudiante. Hasta ahora
+  // el cuestionario solo era visible desde dentro de la lección, y esa
+  // pantalla es exclusiva del alumno (redirige si no hay student_id).
+  const { data: preguntasRaw, error: preguntasError } = await supabase
     .from('quiz_questions')
-    .select('lesson_id')
+    .select('id, lesson_id, prompt, sort_order, points, quiz_options(id, label, is_correct, sort_order)')
     .in('lesson_id', lessons.length ? lessons.map((l) => l.id) : ['00000000-0000-0000-0000-000000000000'])
+    .order('sort_order', { ascending: true })
 
-  const preguntasPorLeccion = new Map<string, number>()
-  for (const q of (questionCounts ?? []) as { lesson_id: string }[]) {
-    preguntasPorLeccion.set(q.lesson_id, (preguntasPorLeccion.get(q.lesson_id) ?? 0) + 1)
+  const preguntas = (preguntasRaw ?? []) as unknown as QuestionRow[]
+  const preguntasPorLeccion = new Map<string, QuestionRow[]>()
+  for (const q of preguntas) {
+    if (!preguntasPorLeccion.has(q.lesson_id)) preguntasPorLeccion.set(q.lesson_id, [])
+    preguntasPorLeccion.get(q.lesson_id)!.push(q)
   }
 
   const porMateria = new Map<string, LessonRow[]>()
@@ -95,7 +111,7 @@ export default async function ProgresoAcademiaPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <QueryErrorBanner errors={[{ label: 'los intentos', error: attemptsRawError }, { label: 'las lecciones', error: lessonsError }]} />
+      <QueryErrorBanner errors={[{ label: 'los intentos', error: attemptsRawError }, { label: 'las lecciones', error: lessonsError }, { label: 'los cuestionarios', error: preguntasError }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
@@ -122,36 +138,72 @@ export default async function ProgresoAcademiaPage() {
                 {materia} · {suyas.length}
               </h2>
               <div className="dash-card divide-y" style={{ borderColor: 'rgba(150,225,196,.08)' }}>
-                {suyas.map((l) => (
-                  <div key={l.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{l.title}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
-                        {l.grade_level ?? 'sin curso'} · {preguntasPorLeccion.get(l.id) ?? 0} preguntas
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {l.is_published ? (
-                        <span className="rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[11px] font-bold px-2.5 py-1">
-                          Publicada
-                        </span>
+                {suyas.map((l) => {
+                  const qs = (preguntasPorLeccion.get(l.id) ?? []).sort((a, b) => a.sort_order - b.sort_order)
+                  return (
+                    <details key={l.id} className="group">
+                      <summary className="px-4 py-3 flex items-center justify-between gap-4 cursor-pointer list-none">
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{l.title}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
+                            {l.grade_level ?? 'sin curso'} · {qs.length} preguntas ·
+                            <span className="group-open:hidden"> ver cuestionario</span>
+                            <span className="hidden group-open:inline"> ocultar</span>
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          {l.is_published ? (
+                            <span className="rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[11px] font-bold px-2.5 py-1">
+                              Publicada
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold px-2.5 py-1">
+                              Borrador
+                            </span>
+                          )}
+                          <a
+                            href={l.video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs font-semibold underline"
+                            style={{ color: 'var(--dash-accent)' }}
+                          >
+                            Ver video
+                          </a>
+                        </div>
+                      </summary>
+
+                      {qs.length > 0 ? (
+                        <ol className="px-4 pb-4 pt-1 space-y-4">
+                          {qs.map((q, i) => (
+                            <li key={q.id} className="rounded-xl p-4" style={{ background: 'rgba(150,225,196,.06)' }}>
+                              <p className="text-sm font-semibold" style={{ color: 'var(--dash-text)' }}>
+                                {i + 1}. {q.prompt}
+                              </p>
+                              <ul className="mt-2 space-y-1">
+                                {[...q.quiz_options].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
+                                  <li
+                                    key={o.id}
+                                    className="text-sm flex items-start gap-2"
+                                    style={{ color: o.is_correct ? 'var(--dash-accent)' : 'var(--dash-text-muted)' }}
+                                  >
+                                    <span aria-hidden="true">{o.is_correct ? '✓' : '·'}</span>
+                                    <span className={o.is_correct ? 'font-semibold' : ''}>{o.label}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </li>
+                          ))}
+                        </ol>
                       ) : (
-                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold px-2.5 py-1">
-                          Borrador
-                        </span>
+                        <p className="px-4 pb-4 text-sm" style={{ color: 'var(--dash-text-faint)' }}>
+                          Esta lección todavía no tiene cuestionario.
+                        </p>
                       )}
-                      <a
-                        href={l.video_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold underline"
-                        style={{ color: 'var(--dash-accent)' }}
-                      >
-                        Ver video
-                      </a>
-                    </div>
-                  </div>
-                ))}
+                    </details>
+                  )
+                })}
               </div>
             </section>
           ))}
