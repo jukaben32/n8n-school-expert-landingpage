@@ -4,8 +4,6 @@
 -- Idempotente: si la lección ya existe (mismo título y curso) se actualiza
 -- el video en vez de duplicarla, y su cuestionario se rehace desde cero.
 -- Las preguntas se borran en cascada (quiz_questions -> quiz_options).
-begin;
-
 do $$
 declare
   v_colegio uuid;
@@ -597,8 +595,6 @@ begin
     values (v_pregunta, 'RD$1,200', false, 3);
 
 end $$;
-
-commit;
 
 -- Comprobación
 select l.title, s.name as materia, l.grade_level, l.is_published,
