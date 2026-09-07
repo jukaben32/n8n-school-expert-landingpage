@@ -64,7 +64,9 @@ const tag = (color: string, border: string): CSSProperties => ({
 })
 
 /* ------------------------------- tipos ---------------------------------- */
-export type CashflowMonth = { label: string; paid: number; pending: number; overdue: number }
+/** Porcentajes de la barra (sobre la cuota mas alta del anio) + `hint`
+ *  con los montos reales, que se ve al pasar el raton por encima. */
+export type CashflowMonth = { label: string; paid: number; pending: number; overdue: number; hint?: string }
 export type OverdueRow = { family: string; students: string; due: string; amount: string; status: string; level: 'alto' | 'medio' | 'bajo' }
 export type AlertRow = { title: string; detail: string; count: string; level: 'alto' | 'medio' | 'bajo' }
 export type Insight = { text: string; action: string; href?: string }
@@ -271,7 +273,7 @@ export default function PanelCentroControl(p: PanelProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 200, borderBottom: `1px solid ${C.hairStrong}` }}>
               {cashflow.map((m) => (
-                <div key={m.label} style={{
+                <div key={m.label} title={m.hint} style={{
                   flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
                   height: '100%', borderRadius: 5, overflow: 'hidden', transformOrigin: 'bottom',
                   animation: 'riseBar .7s cubic-bezier(.2,.7,.2,1) both',
@@ -291,7 +293,11 @@ export default function PanelCentroControl(p: PanelProps) {
               ))}
             </div>
             <div style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>
-              * Agosto es medio mes (el período inicia el 17) — julio no se muestra por las vacaciones colectivas de los estudiantes. El año escolar completo son 10.5 meses de cobro.
+              Cada barra es la <strong>cuota de ese mes</strong>: cuánto se debía y cuánto se ha cobrado hasta hoy —
+              no depende de que se haya emitido una factura. La cuota de un mes vence el día 1 del mes siguiente,
+              así que los meses que aún no vencen se muestran completos en «Pendiente». Pasa el ratón por una barra
+              para ver los montos. * Agosto es medio mes (el período inicia el 17) — julio no se muestra por las
+              vacaciones colectivas. El año escolar completo son 10.5 meses de cobro.
             </div>
           </div>
 

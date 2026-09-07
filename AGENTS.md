@@ -2535,13 +2535,41 @@ apuntan a `/dashboard/tesoreria/cuentas-por-cobrar` en vez de `/dashboard/tesore
 (`app/dashboard/secretaria/page.tsx`, `components/dashboard/PanelCentroControl.tsx`),
 sin nada que deshacer en la base.
 
-**Pendiente, decidido dejar fuera de este cambio:**
+### El grafico "Flujo de cobranza", cuota por cuota (mismo dia)
 
-- **El grafico "Flujo de cobranza"** sigue leyendo `invoices`, asi que "Pendiente"
-  y "Vencido" siempre saldran en cero (de ahi la barra unica verde de agosto).
-  Arreglarlo necesita una decision de negocio primero: que significa la barra de
-  cada mes si no se factura por adelantado -- lo exigible segun la mensualidad,
-  presumiblemente. No se toco sin esa respuesta.
+Resuelto el mismo 2026-09-07, a peticion del usuario ("de momento el grafico
+quiero que refleje la realidad, configuralo como debe ser segun la logica").
+
+Cada barra pasa a ser **la CUOTA de ese mes**: cuanto se debia y cuanto se ha
+cobrado hasta hoy -- sin depender de que exista ninguna factura.
+
+**Los montos no se recalculan**: `monthly_amount` (ya neto del nivel, de la beca
+y del descuento por hermanos) y `collected_amount` los da la misma RPC que
+alimenta las tarjetas. Lo unico que hace el TypeScript es **repartir** esos
+numeros mes a mes con la misma regla de `calculate_receivable_status`: la cuota
+parcial (el .5 de 10.5) es la PRIMERA (agosto), la cuota del mes X vence el dia
+`tuition_due_day` del mes X+1, sigue "corriente" hasta `tuition_grace_days`, y
+los pagos cubren la cuota mas vieja primero (FIFO).
+
+**Eso es un riesgo real de divergencia** (dos sitios con la misma regla), asi que
+lleva su propia red: la pagina compara su reparto contra los totales que dio la
+RPC (`expected_to_date` / `collected_amount`) y, si no cuadran, saca un
+`QueryErrorBanner` diciendo que hay que revisar `calculate_receivable_status` --
+en vez de dibujar barras equivocadas en silencio. **Si cambias la regla de cuotas
+en SQL, cambiala tambien en `secretaria/page.tsx`.**
+
+Verificado corriendo el mismo bloque de reparto sobre los 244 estudiantes reales
+de produccion (`node`, datos exportados por la Management API): agosto exigible
+RD$510,390 / cobrado RD$90,100 / vencido RD$420,290, y septiembre a junio
+RD$1,020,780 cada uno, todos "por venir". Cuadre al centimo contra la RPC en las
+dos comprobaciones (exigible ya vencido y cobrado aplicado).
+
+De paso, el Panel **ya no asume que el año escolar arranca el 1 de agosto**
+(estaba escrito a mano en el archivo): lo toma de `school_years.start_date`, que
+es lo que usa el motor de mora. Julio sigue sin aparecer solo, sin regla
+especial: 10.5 cuotas desde agosto dan agosto..junio.
+
+**Pendiente, decidido dejar fuera de este cambio:**
 - **El caso limite de `list_school_receivables` con `super_admin`** sigue abierto
   (ver la seccion de Cuentas por Cobrar): la funcion exige
   `users_profiles.school_id = p_school_id`, lo que excluye a un `super_admin`
@@ -2551,9 +2579,37 @@ sin nada que deshacer en la base.
   Cuentas por Cobrar como esta tarjeta del Panel.** Mitigacion ya puesta: si la
   RPC falla, `data` viene `null`, las tarjetas quedan en cero y `QueryErrorBanner`
   muestra el error -- el Panel no se cae.
-- **Dato raro visto de paso, sin tocar**: la familia "Beltran Gonzalez" tiene dos
-  estudiantes llamados "Diana". Puede ser un registro duplicado; no se modifico
-  ningun dato real.
+### El duplicado de "Diana" -- resuelto, y la alerta de duplicados SI funciona
+
+El usuario extranaba ver dos "Diana Beltran Gonzalez", porque el sistema tiene
+una alerta que no deja crear el mismo estudiante dos veces. Investigado: las dos
+filas eran identicas hasta la fecha de nacimiento (2013-08-13), creadas el
+2026-08-22 y el **2026-09-02 a las 00:04 hora RD**.
+
+**Ese segundo registro es justamente el reporte que origino la alerta.** El
+commit que la agrego (`f5080bb`, "alerta de duplicados") es de ese mismo dia,
+horas despues -- el comentario del codigo lo dice: *"reporte real del colegio,
+2026-09-02"*. Es un resto anterior al arreglo, no un fallo del arreglo.
+
+Confirmado con una consulta a produccion: **Diana era el UNICO duplicado en toda
+la base** de 245 estudiantes. Desde el 2 de septiembre no ha pasado ninguno mas.
+
+Se comprobo que las dos filas no tenian nada colgando (0 asistencia, 0 facturas,
+0 notas, 0 intentos de Academia, 0 autorizaciones, 0 login) antes de tocar nada,
+y se borro la mas nueva con el mismo **borrado suave** que hace el boton
+"Eliminar" de la app (`deleteStudentAction`: `deleted_at = now()`), conservando
+el registro original del 22 de agosto.
+**Para revertir**: `update students set deleted_at = null where id =
+'832de54c-c4dc-416f-a445-81ee331d1820';`
+
+**Hueco real encontrado de paso, SIN corregir**: la alerta de duplicados vive
+solo en `estudiantes/nuevo/actions.ts`. La bandeja de fichas escaneadas
+(`estudiantes/escaneos/actions.ts` -> `confirmEnrollmentScan`) llama directo a
+`createStudentWithFamily()` **sin ninguna comprobacion de duplicado**. Si el
+colegio digitaliza fichas de estudiantes que ya estan en el sistema, entran
+duplicados por esa via. Lo natural seria mover la comprobacion dentro de
+`createStudentWithFamily()` (el camino compartido por las dos altas), no
+copiarla.
 
 ## Convenciones de trabajo
 
