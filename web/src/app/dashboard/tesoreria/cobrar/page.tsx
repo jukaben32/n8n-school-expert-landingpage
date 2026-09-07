@@ -54,7 +54,7 @@ export default async function CobrarPage() {
           Marca una factura como pagada al recibir el cobro.
         </p>
       </div>
-      <NewPaymentForm invoices={invoices} />
+      <NewPaymentForm schoolId={schoolId} receivedBy={profile.id} invoices={invoices} />
     </div>
   )
 }

@@ -56,6 +56,8 @@ export default async function FacturarPage() {
         </p>
       </div>
       <NewInvoiceForm
+        schoolId={schoolId}
+        authorProfileId={profile.id}
         families={families}
         concepts={concepts ?? []}
       />

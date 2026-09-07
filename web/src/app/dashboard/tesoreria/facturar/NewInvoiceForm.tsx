@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import DateInputES from '@/components/DateInputES'
-import { createTreasuryInvoice } from './actions'
 
 interface Student { id: string; first_name: string; last_name: string }
 interface Family { id: string; name: string; students: Student[] }
@@ -18,6 +17,8 @@ interface SiblingDiscount {
 }
 
 interface NewInvoiceFormProps {
+  schoolId: string
+  authorProfileId: string
   families: Family[]
   concepts: Concept[]
 }
@@ -32,7 +33,7 @@ function defaultDueDate() {
   return d.toISOString().split('T')[0]
 }
 
-export default function NewInvoiceForm({ families, concepts }: NewInvoiceFormProps) {
+export default function NewInvoiceForm({ schoolId, authorProfileId, families, concepts }: NewInvoiceFormProps) {
   const router = useRouter()
   const [familyId, setFamilyId] = useState(families[0]?.id ?? '')
   const [studentId, setStudentId] = useState('')
@@ -97,25 +98,41 @@ export default function NewInvoiceForm({ families, concepts }: NewInvoiceFormPro
       return
     }
     setSaving(true)
+    const supabase = createClient()
 
-    const result = await createTreasuryInvoice({
-      familyId,
-      studentId: studentId || null,
-      conceptId: conceptId || null,
-      description: description.trim(),
-      amount: Number(amount),
-      applyTax,
-      dueDate,
-    })
+    try {
+      const { data: ncf, error: ncfError } = await supabase.rpc('generate_ncf', {
+        p_school_id: schoolId,
+        p_ncf_type: '02',
+      })
+      if (ncfError) throw ncfError
 
-    if (!result.ok) {
-      setError(result.error ?? 'No se pudo generar la factura. Intenta de nuevo.')
+      const { error: invoiceError } = await supabase.from('invoices').insert({
+        school_id: schoolId,
+        family_id: familyId,
+        student_id: studentId || null,
+        concept_id: conceptId || null,
+        description: description.trim(),
+        amount: Number(amount),
+        discount_percent: discountPercent,
+        discount_amount: discountAmount,
+        tax_amount: taxAmount,
+        total_amount: totalAmount,
+        due_date: dueDate,
+        status: 'pendiente',
+        ncf,
+        ncf_type: '02',
+        created_by: authorProfileId,
+      })
+      if (invoiceError) throw invoiceError
+
+      router.push('/dashboard/tesoreria')
+      router.refresh()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No se pudo generar la factura. Intenta de nuevo.'
+      setError(message)
       setSaving(false)
-      return
     }
-
-    router.push('/dashboard/tesoreria')
-    router.refresh()
   }
 
   return (
