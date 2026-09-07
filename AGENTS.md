@@ -2792,6 +2792,110 @@ alcance para no bloquear la demo con la cuenta de Cloudflare y la migración de
 `video_provider`, que solo acepta `youtube`/`vimeo`), y correr el SQL que
 genera `lib/cargar-sql.mjs`.
 
+## ⚠️ PENDIENTE PRIORITARIO — Academia no acota al profesor por curso ni materia (2026-09-06)
+
+**El usuario lo pidió explícitamente y con prioridad.** No se hizo el mismo día
+porque faltaban 4 días para la presentación del colegio y tocar RLS con ese
+plazo es exactamente el patrón que este archivo advierte en su protocolo.
+Hacerlo con calma, con el smoke test detrás.
+
+### Lo que pasa hoy
+
+`lessons_staff_all` es una sola policy de tipo **ALL** (select + insert + update
++ delete) para cualquiera con rol `super_admin`, `school_admin`, `director` o
+**`teacher`** del colegio. No filtra por curso ni por materia. En consecuencia,
+cualquier profesor puede:
+
+- crear lecciones de **cualquiera de las 14 materias**, no solo la suya;
+- dirigirlas a **cualquiera de los 16 cursos**, no solo los que da;
+- **editar y borrar las lecciones de otros profesores**;
+- publicarlas directo al estudiante (`is_published` viene marcado por defecto
+  en `NewLessonForm.tsx`), sin que nadie revise.
+
+`quiz_questions_staff_manage` y `quiz_options_staff_manage` son igual de
+amplias, así que restringir solo `lessons` dejaría el arreglo cosmético: el
+profesor seguiría pudiendo reescribir las preguntas de la lección de otro.
+
+**Contrasta con el resto del sistema**: Estudiantes, Asistencia,
+Actualizaciones y Horarios sí acotan al profesor con
+`teacher_is_assigned_to_grade(...)`. Academia se quedó fuera de esa regla desde
+la migración 008, que se escribió asumiendo un colegio chiquito donde el
+profesor solo pega un enlace de YouTube.
+
+### Alcance medido (no supuesto)
+
+Siete archivos tocan estas tablas, y **los siete usan el cliente de sesión** --
+no hay ni un `createAdminClient` en todo Academia:
+
+| Archivo | Qué hace |
+|---|---|
+| `academia/nueva/NewLessonForm.tsx` | **escribe** lessons + quiz_questions + quiz_options (desde el navegador) |
+| `academia/page.tsx` | lee lecciones del curso del estudiante |
+| `academia/[id]/page.tsx` | lee una lección y su cuestionario |
+| `academia/[id]/LessonPlayer.tsx` | **escribe** quiz_attempts + quiz_answers (estudiante) |
+| `academia/progreso/page.tsx` | catálogo + intentos (personal) |
+| `estudiantes/[id]/page.tsx` | intentos de un estudiante |
+| `reportes/page.tsx` | intentos agregados del colegio |
+
+Que todo pase por RLS es bueno (no hay puerta trasera que enmascare un error)
+pero significa que **una policy mal escrita no da error: deja pantallas
+vacías**, que es el modo de fallo que ya costó un día de clases aquí.
+
+### Diseño propuesto
+
+**Partir la policy ALL en dos**, en `lessons`, `quiz_questions` y `quiz_options`:
+
+1. **Lectura amplia** (`_staff_read`, SELECT): todo el personal del colegio
+   sigue viendo el catálogo completo. Un profesor debe poder ver lo que hicieron
+   los demás -- para reutilizarlo y para que el catálogo que se agregó a
+   `progreso` no se le vacíe.
+2. **Escritura acotada** (`_staff_write`, INSERT/UPDATE/DELETE):
+   `super_admin`/`school_admin`/`director` siempre; `teacher` **solo** donde
+   `teacher_is_assigned_to_grade(school_id, grade_level, 'regular')`.
+
+Fase 2 (opcional, más fina): acotar también por materia usando
+`class_schedules`, que ya sabe qué materia da cada profesor en cada curso --
+son 330 filas reales cargadas. Eso es lo que el usuario describió: *"los
+estudiantes que están en su materia"*.
+
+Fase 3: estado **"en revisión"** en vez del booleano `is_published`, para que
+dirección apruebe antes de que la lección llegue al estudiante. Ya está
+comprometido en el plan de contenido de más abajo ("nada se publica sin visto
+bueno humano").
+
+### Trampas concretas de este cambio
+
+- **`teacher_is_assigned_to_grade` hay que llamarla con TRES argumentos.**
+  Existen dos sobrecargas y la de 2 argumentos es ambigua (`42725`). Esa
+  ambigüedad dejó al colegio un día entero sin poder pasar lista el 2026-09-03.
+- **La categoría tiene que ser `'regular'`.** Las asignaciones de las docentes
+  de Inglés están todas en `regular`; usar `'ingles'` las dejaría fuera. Misma
+  trampa ya documentada más arriba.
+- **`quiz_questions` y `quiz_options` van en la MISMA migración.** Si no, el
+  profesor sigue pudiendo reescribir el cuestionario de la lección ajena.
+- **Profesores sin ninguna asignación pierden la creación.** Hoy es el caso de
+  Génesis Rodríguez (Orientación). Es defendible, pero es un cambio de
+  comportamiento que hay que decidir a conciencia, no descubrir después.
+- **Lecciones con `grade_level` nulo** (las viejas, dirigidas por
+  `grade_level_id`) quedarían solo editables por dirección. Hoy las 9 cargadas
+  tienen `grade_level`, así que no afecta -- pero hay que preverlo.
+- **No tocar**: `quiz_attempts` (el estudiante escribe los suyos),
+  `student_points`, `student_badges`, ni las policies de lectura de estudiante
+  y tutor. Nada de eso tiene que ver con quién puede crear una lección.
+
+### Cómo verificarlo antes de darlo por bueno
+
+1. **Postgres local** con esquema espejo: simular la sesión de un profesor
+   (`set local role authenticated` + `request.jwt.claim.sub`) y comprobar los
+   cuatro casos -- crea en su curso ✅, no crea en otro ✅, sigue viendo todo el
+   catálogo ✅, no puede borrar la lección de otro ✅. Y que dirección siga
+   pudiendo todo.
+2. **Producción, en transacción con ROLLBACK**: repetir con profesores reales
+   (Yuleymis Lugo, Marianelis Rivera, Yendry Paulino) y contar antes/después,
+   igual que se hizo con el arreglo de cursos del 2026-09-06.
+3. **Agregar la comprobación a `scripts/smoke-roles.mjs`**, que es el requisito
+   permanente de este proyecto para cualquier cambio de policy.
+
 ## PLAN DEFINITIVO — Producción de contenido de Academia (2026-09-06)
 
 Decidido con el usuario tras revisar viabilidad. Hasta hoy **no existía ningún
