@@ -2695,6 +2695,151 @@ tercer parametro `options.allowDuplicate`.
 - Detección verificada contra produccion: encuentra a la activa, **ignora la
   borrada con `deleted_at`**, y aguanta espacios y mayusculas.
 
+## Sesión paralela en Windows: dos commits directos a `main`, revertidos, y el fondo real que sí valía la pena (2026-09-07)
+
+**Contexto de cómo pasó esto, para que quede claro y no se repita la confusión**: mientras esta
+sesión trabajaba, otra sesión de Claude Code corriendo en la máquina Windows del usuario (PowerShell,
+mismo repo) hizo una auditoría de Tesorería por su cuenta y empujó dos commits directo a `main` sin
+pasar por esta sesión ni por el flujo de PR: `3007be4` ("fix: clarify overdue grace period in
+dashboard") y `8979b4c` ("fix: harmonize treasury permissions and server actions"). Cuando esta sesión
+retomó el trabajo, un resumen de esos cambios llegó pegado en el mensaje del usuario -- con el formato
+correcto pero sin ningún commit correspondiente en el historial local, así que **se trató como
+sospechoso y se verificó contra `git log`/`origin/main` antes de creer una sola palabra** (resultó ser
+real, solo que de otra sesión -- no una alucinación ni una inyección, pero verificar primero fue lo
+correcto de todas formas).
+
+**El usuario pidió revertir los dos commits ("revierte esos comit que puse ahi") y así se hizo** --
+`git revert` (no `reset --hard`, para no reescribir historia compartida), confirmando antes con
+`pg_policies` que la migración de esos commits (RLS de `reception` + endurecer `generate_ncf`)
+**nunca llegó a producción** -- el revert fue puramente de código en el repo.
+
+**Pero el primer commit (`3007be4`) sí era un arreglo correcto**, y coincidía exactamente con la
+anomalía real que el usuario había reportado con una captura de pantalla ese mismo día (ver sección
+de abajo, "Cartera vencida contaba el tramo `corriente`"). Confirmado por el usuario ("si el primero
+esta bien"). Se volvió a aplicar con `git cherry-pick 3007be4` -- no se retipeó a mano, porque su
+lógica ya estaba verificada de forma independiente contra producción antes de saber que ese commit
+existía (ver "Cartera vencida..." abajo).
+
+**El segundo commit (`8979b4c`) traía dos cosas mezcladas**, y solo una se recuperó:
+1. RLS de `reception` en Tesorería + endurecer `generate_ncf` -- **sí era un problema real**, ver
+   sección siguiente. Reimplementado y verificado desde cero por esta sesión (no reusado tal cual,
+   porque esa sesión reportó explícitamente que nunca lo había aplicado ni verificado en producción).
+2. Mover "Registrar pago"/"Generar factura" de inserts en el navegador a Server Actions -- un
+   refactor real de los caminos de escritura de dinero, que ni esta sesión ni la otra llegaron a
+   revisar con el mismo estándar de verificación que exige este proyecto (la otra sesión solo corrió
+   build/lint, no probó el flujo en vivo ni lo comparó contra el comportamiento anterior). **Se dejó
+   revertido a propósito** -- no se reintrodujo. Si se quiere retomar ese refactor, hacerlo como una
+   tarea aparte, con su propia verificación de punta a punta contra producción (crear una factura y
+   un pago de prueba con el flujo nuevo, confirmar que el resultado es idéntico al flujo viejo, borrar
+   los datos de prueba).
+
+## Recepción sin acceso real a Tesorería (RLS nunca incluyó `reception`) -- corregido y verificado (2026-09-07)
+
+Es el hallazgo real que traía el commit `8979b4c` de la sección anterior, verificado independientemente
+por esta sesión antes de decidir qué hacer con él -- no se confió en el reporte de la otra sesión sin
+comprobarlo.
+
+**El conflicto real, y por qué hizo falta preguntarle al usuario en vez de adivinar**: la sección
+"Mapeo de puesto → rol de acceso: Secretaría y Coordinación" de este mismo archivo documenta una
+decisión YA confirmada con el usuario (2026-09-04 aprox.): Secretaria "se encargará de... pagos y
+validación de comprobantes", y por eso se le dio a `reception` los módulos `tesoreria`/`pagos` en
+`permissions.ts`, asumiendo (sin verificar en ese momento) que RLS ya la incluía "desde la migración
+004". **Esa suposición era falsa.** Verificado leyendo `pg_policies` en producción el 2026-09-07: las
+políticas `invoices_staff`/`payments_staff`/`billing_concepts_staff`/`payment_receipts_staff_*` tenían
+la lista `['super_admin','school_admin','director','finance']` -- sin `reception`, sin excepción, en
+ninguna de las 5 policies. Mientras tanto, la otra sesión (Windows) diagnosticó correctamente esta
+brecha, pero la corrigió en la dirección contraria: le pidió al usuario confirmar si RLS debía ganar
+(restringir `reception` en el código) o si el código debía ganar (ampliar RLS) -- el usuario, sin tener
+a mano el contexto de la decisión de negocio ya confirmada antes, dijo "que RLS mande" en esa sesión.
+Cuando esta sesión le mostró las dos decisiones contradictorias lado a lado, el usuario confirmó por
+`AskUserQuestion` que la intención real es **dar acceso real en RLS** -- la decisión de negocio de
+Secretaría sigue siendo la correcta, RLS era lo que estaba desactualizado.
+
+**Corregido** en `supabase/migrations/20260910010000_reception_treasury_rls_and_ncf_hardening.sql`,
+aplicada y verificada en producción:
+- Las 5 policies de `invoices`/`payments`/`billing_concepts`/`payment_receipts` ahora incluyen
+  `reception`.
+- `generate_ncf` -- hallazgo aparte, real, encontrado al revisar la migración descartada antes de
+  decidir si reusarla: **era ejecutable por `anon`** (cualquiera, sin sesión, vía la API pública de
+  Supabase, podía consumir números de comprobante fiscal reales de las secuencias `ncf_sequence_01`/
+  `02` sin haber creado ninguna factura) y **sin `search_path` fijo** siendo `SECURITY DEFINER` (riesgo
+  de secuestro de resolución de funciones). Se revocó `anon`/`public`, se fijó `search_path`, y se
+  agregó una comprobación de rol/colegio (incluye `reception`, porque "Generar factura" ya está
+  gateado por `canAccess(role,'tesoreria')`, que la incluye).
+
+**Verificado con sesión real de `reception` simulada** (`set_config('request.jwt.claim.sub', ...)` +
+`set local role authenticated`, transacción con `ROLLBACK`, mismo patrón que usa `npm run smoke`):
+antes de la migración, 0 facturas/0 pagos/0 conceptos/0 comprobantes visibles; después, 44/44/1/0 --
+los datos reales del colegio. `anon` confirmado sin `EXECUTE` en `generate_ncf`
+(`has_function_privilege` = false).
+
+**Aviso de transparencia, no un problema pero hay que decirlo**: la verificación de `reception`
+generando un NCF real consumió un número de la secuencia fiscal (`B0200000161`) que **no se puede
+revertir con `ROLLBACK`** -- las secuencias de Postgres están exentas de MVCC a propósito, es
+comportamiento estándar, no un bug de esta migración. Ese número queda saltado, nunca se le va a pegar
+a ninguna factura real -- mismo efecto que un comprobante anulado, no debería causar ningún problema
+con la DGII, pero se anota aquí por si alguna vez hace falta explicar un salto en la secuencia.
+
+## Cartera vencida contaba el tramo `corriente` como si ya estuviera vencido (2026-09-07)
+
+Reportado por el usuario con una captura real de "Familias con saldo vencido": una familia con
+vencimiento nominal "1 sept" y etiqueta "+8 días", cuando según el manual de familia (gracia de 5
+días) esa cuota sigue siendo pagable sin recargo hasta el día 5 -- "el 1 de septiembre la factura no
+esta vencida esa aun vigente, la factura esta vencida a partir del dia 6".
+
+**Confirmado antes de tocar nada**, corriendo `calculate_receivable_status` sobre fechas reales:
+`2026-09-01` y `2026-09-05` -> RD$420,290 en el tramo `corriente`, RD$0 realmente vencido;
+`2026-09-06` en adelante -> ya vencido de verdad. El motor SQL distinguía las fechas correctamente
+(`aging_bucket = 'corriente'` existe justo para esto) -- el bug estaba en el frontend, que contaba
+`overdue_amount > 0` como "vencido" sin excluir ese tramo.
+
+**Corregido** (mismo cambio que traía el commit `3007be4` de la sección de arriba, reaplicado con
+`cherry-pick` tras confirmar su lógica de forma independiente):
+- `secretaria/page.tsx`: `conDeuda` ahora excluye `aging_bucket === 'corriente'` de "cartera vencida".
+- La tabla del Panel pasó de "Familias con saldo vencido" a "Familias en mora"; la columna "Vence" pasó
+  a "Mora desde" (`oldest_overdue_due_date + tuition_grace_days`, no la fecha nominal).
+- El "+N días" ahora cuenta días reales en mora (`days_overdue - grace_days + 1`), no días desde la
+  fecha nominal -- una cuota del día 6 ahora muestra "+1 día", no "+6 días" ni "+8".
+- `ReceivablesTable.tsx` (Cuentas por Cobrar): el badge de tramo (`6-9`, `10-14`, etc.) ahora se
+  traduce a "días mora" reales en vez de mostrar el rango crudo, que ya venía desplazado por la gracia.
+
+## Plataforma: "% Morosidad" por colegio también leía el motor de facturas roto (2026-09-07)
+
+Encontrado al investigar el reclamo del usuario de que "una de las mejores estadísticas" había
+desaparecido en la pantalla de Plataforma (no se pudo confirmar cuál -- el historial de
+`plataforma/page.tsx` no tiene ninguna tarjeta de "pagos pendientes" desde que se creó, así que nada
+desapareció por ningún cambio de esta sesión). Pero sí se encontró un bug real, de la misma familia
+que el de la sección anterior: la columna "% Morosidad" de la tabla comparativa entre colegios leía
+`invoices.status = 'pendiente'`/`'vencido'` -- el mismo motor que nunca escribe nadie. Verificado en
+producción: 0 y 0 para el único colegio afiliado, así que esa columna mostraba **0% siempre**,
+ocultando que en realidad hay RD$420,290 vencidos (82% de lo exigible a la fecha).
+
+**No se reutilizó `list_school_receivables`** (la misma función que ya usan el Panel y Cuentas por
+Cobrar) **a propósito**: esa función exige `users_profiles.school_id = p_school_id` -- correcto para
+un director viendo su propio colegio, pero le fallaría a Plataforma en cuanto haya un segundo colegio
+afiliado, porque el `school_id` del super_admin nunca va a coincidir con el de un colegio ajeno.
+Plataforma existe precisamente para comparar TODOS los colegios a la vez, así que heredar esa
+restricción la habría roto por diseño, no por descuido -- es el caso límite que este archivo ya viene
+avisando desde el 2026-09-07 más temprano.
+
+**Función nueva** `list_school_receivables_network(p_school_id, p_as_of)`
+(`supabase/migrations/20260910000000_network_receivables_for_platform.sql`): mismo cálculo
+(`calculate_receivable_status` por estudiante inscrito), pero la autorización exige `role =
+'super_admin'` en vez de la coincidencia de colegio -- sin tocar `list_school_receivables` ni su uso
+existente en Cuentas por Cobrar/Panel. `plataforma/page.tsx` la llama una vez por colegio (mismo
+patrón ya aceptado ahí de "una consulta por colegio, revisar si se vuelve lento con más afiliados").
+`% Morosidad` ahora es `overdue_amount / expected_to_date` -- qué fracción de lo que ya debió cobrarse
+este año sigue sin cobrarse.
+
+Verificado con sesión de super_admin simulada: RD$510,390 exigible, RD$420,290 vencido -> 82%, mismos
+montos ya confirmados por el Panel y Cuentas por Cobrar el mismo día.
+
+**Pendiente, sin resolver a propósito**: `totalStudents`/el conteo de estudiantes por colegio en esta
+misma pantalla cuentan todo estudiante no borrado sin filtrar `enrollment_status` -- el mismo bug ya
+corregido en el Panel ("286 vs 245", ver sección de arriba) sigue sin corregir aquí. No se tocó en
+esta tarea para no ampliar el alcance sin que el usuario lo pidiera -- queda anotado para la próxima
+vez que se toque esta pantalla.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
