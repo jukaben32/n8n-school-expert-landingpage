@@ -60,6 +60,36 @@ export default async function ProgresoAcademiaPage() {
     redirect('/dashboard/academia')
   }
 
+  // La pantalla reventó en producción (2026-09-07) con el "Algo salió mal"
+  // genérico de dashboard/error.tsx -- Next.js oculta el mensaje real en
+  // producción y esta sesión no tiene acceso a los logs de Vercel para
+  // verlo. Se envuelve todo lo que sigue en un try/catch temporal para que,
+  // si algo vuelve a lanzar una excepción, el mensaje real se vea aquí
+  // mismo en vez de perderse -- esta pantalla es solo para staff, así que
+  // mostrar el detalle del error no expone nada a una familia ni a un
+  // estudiante. `redirect()`/`notFound()` de Next lanzan un error especial
+  // con `digest` que empieza en 'NEXT_' -- hay que dejarlo pasar sin
+  // capturarlo, o rompería cualquier redirección futura dentro del bloque.
+  try {
+    return await renderProgreso(supabase, schoolId)
+  } catch (e) {
+    const digest = (e as { digest?: string } | null)?.digest
+    if (digest?.startsWith('NEXT_')) throw e
+    const err = e as Error
+    console.error('[academia/progreso]', err)
+    return (
+      <div className="max-w-4xl mx-auto space-y-4">
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400 space-y-2">
+          <p className="font-semibold">Error real al cargar Progreso — Academia (visible solo para staff):</p>
+          <p className="font-mono text-xs">{err?.message ?? String(e)}</p>
+          {err?.stack && <pre className="font-mono text-[10px] whitespace-pre-wrap opacity-70">{err.stack}</pre>}
+        </div>
+      </div>
+    )
+  }
+}
+
+async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>, schoolId: string) {
   const { data: attemptsRaw, error: attemptsRawError } = await supabase
     .from('quiz_attempts')
     .select('id, score, max_score, completed_at, lessons(title, subjects(name)), students(first_name, last_name)')
