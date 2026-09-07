@@ -60,16 +60,22 @@ export default async function ProgresoAcademiaPage() {
     redirect('/dashboard/academia')
   }
 
-  // La pantalla reventó en producción (2026-09-07) con el "Algo salió mal"
-  // genérico de dashboard/error.tsx -- Next.js oculta el mensaje real en
-  // producción y esta sesión no tiene acceso a los logs de Vercel para
-  // verlo. Se envuelve todo lo que sigue en un try/catch temporal para que,
-  // si algo vuelve a lanzar una excepción, el mensaje real se vea aquí
-  // mismo en vez de perderse -- esta pantalla es solo para staff, así que
-  // mostrar el detalle del error no expone nada a una familia ni a un
-  // estudiante. `redirect()`/`notFound()` de Next lanzan un error especial
-  // con `digest` que empieza en 'NEXT_' -- hay que dejarlo pasar sin
-  // capturarlo, o rompería cualquier redirección futura dentro del bloque.
+  // Red de seguridad: si una consulta o una transformación de datos lanza
+  // una excepción, se muestra el mensaje real aquí en vez del "Algo salió
+  // mal" genérico de dashboard/error.tsx (Next.js oculta el mensaje real en
+  // producción). Esta pantalla es solo para staff, así que el detalle no se
+  // le expone a una familia ni a un estudiante.
+  //
+  // OJO -- lo que este try/catch NO atrapa: los errores que React lanza al
+  // SERIALIZAR el árbol devuelto (ej. pasar un `onClick` desde un Server
+  // Component). Esos ocurren después de que esta función retornó, así que
+  // no pasan por aquí. Fue exactamente lo que tumbó esta pantalla el
+  // 2026-09-07 y por lo que este try/catch, puesto ese mismo día para
+  // diagnosticar, no sirvió de nada hasta encontrar la causa real.
+  //
+  // `redirect()`/`notFound()` de Next lanzan un error especial con `digest`
+  // que empieza en 'NEXT_' -- hay que dejarlo pasar sin capturarlo, o
+  // rompería cualquier redirección futura dentro del bloque.
   try {
     return await renderProgreso(supabase, schoolId)
   } catch (e) {
@@ -191,11 +197,22 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
                               Borrador
                             </span>
                           )}
+                          {/* NO agregar onClick aquí. Esto es un Server
+                              Component: pasar una función como prop a un
+                              elemento hace que React lance "Event handlers
+                              cannot be passed to Client Component props" al
+                              SERIALIZAR el árbol -- después de que la función
+                              de página ya retornó, así que ni un try/catch
+                              alrededor lo atrapa, y `tsc`/`next build` pasan
+                              limpios porque esta ruta es dinámica (ƒ) y solo
+                              revienta en una petición real. Eso fue justo lo
+                              que tumbó esta pantalla el 2026-09-07 (ver
+                              AGENTS.md). El enlace abre en pestaña nueva; que
+                              además despliegue el acordeón es inofensivo. */}
                           <a
                             href={l.video_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
                             className="text-xs font-semibold underline"
                             style={{ color: 'var(--dash-accent)' }}
                           >
