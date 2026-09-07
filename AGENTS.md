@@ -2863,6 +2863,47 @@ nueva, solo se sumó sobre `counts` en memoria. La grilla pasó de `sm:grid-cols
 Verificado: RD$441,305 -- coincide exactamente con la cartera vencida ya confirmada por el Panel y
 Cuentas por Cobrar el mismo día.
 
+## Academia rota en producción: `[...q.quiz_options]` revienta si el embed viene `null` (2026-09-07)
+
+Reportado por el usuario con una captura real: `/dashboard/academia/progreso` mostraba la pantalla
+genérica "Algo salió mal" de `dashboard/error.tsx` -- exactamente lo que este proyecto lleva todo el
+día tratando de evitar ("lo que tanto prevenimos, se desconfiguró Academia").
+
+**Causa encontrada por lectura de código, no por logs** -- Next.js oculta el mensaje real de un error
+de Server Component en producción (solo un `digest`), y esta sesión no tiene acceso a los logs de
+Vercel (mismo bloqueo de siempre, ver el resto de este archivo). `dashboard/error.tsx` solo hace
+`console.error` en el navegador del usuario, así que tampoco quedó rastro consultable desde aquí.
+
+Revisando el commit de esta misma mañana (`b9310c2`, el que dejó leer el cuestionario desde el
+catálogo) se encontró el patrón de riesgo real: `[...q.quiz_options].sort(...)` -- un `spread` de un
+array que Supabase puede devolver como `null` en vez de `[]` para un embed de uno-a-muchos, a
+diferencia de TODAS las demás consultas de ese mismo archivo, que sí usan `?? []`. Spreadear `null`
+lanza `TypeError`, y al ser un Server Component, cualquier excepción durante el render tumba la
+página entera con la pantalla genérica.
+
+**Se probó la hipótesis contra producción antes de conformarse con "probablemente es esto"**:
+simulando la sesión real del director (`set_config('request.jwt.claim.sub', ...)` + `ROLLBACK`,
+mismo patrón ya usado hoy varias veces) y reconstruyendo el mismo `jsonb_agg` que arma PostgREST, el
+embed **no vino null** para los datos actuales -- así que la causa exacta de ESTE incidente puntual
+sigue sin confirmarse al 100%. Aun así, el patrón es objetivamente frágil (depende de una garantía que
+Supabase no promete siempre) y es la única línea nueva de hoy que rompe la convención `?? []` que
+sigue el resto del archivo -- se corrigió de todas formas, sin esperar una reproducción exacta.
+
+**Se encontró un segundo caso, más viejo y más grave**: el mismo patrón sin proteger vive en
+`academia/[id]/page.tsx` (`[...q.quiz_options].sort(...)`, línea 57) desde el 2026-08-22 -- la
+pantalla donde el ESTUDIANTE contesta el cuestionario de verdad. No lo introdujo esta sesión, pero es
+el camino crítico para el viernes: si alguna vez revienta, ningún alumno puede ver ni contestar la
+lección. Corregido con el mismo `?? []`.
+
+**Auditoría de todo el proyecto para el mismo patrón** (`grep` de `[...algo.campo].sort/map/filter` sin
+`?? []`): sin más resultados -- estos dos eran los únicos casos.
+
+**Pendiente real, honesto**: sin acceso a los logs de Vercel no se pudo confirmar con el stack trace
+exacto que esta línea (y no otra) fue la que reventó esta vez en concreto. Si el error vuelve a
+aparecer después de este fix, el paso siguiente es que el usuario abra la consola del navegador
+(F12) al momento del error y comparta el `digest`/mensaje, o revise los logs de Function de Vercel
+directamente -- ninguna sesión de Claude Code ha tenido acceso a ese panel hasta ahora.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

@@ -182,7 +182,11 @@ export default async function ProgresoAcademiaPage() {
                                 {i + 1}. {q.prompt}
                               </p>
                               <ul className="mt-2 space-y-1">
-                                {[...q.quiz_options].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
+                                {/* Supabase puede devolver `null` en vez de `[]` para un embed
+                                    de uno-a-muchos sin filas visibles -- spreadear eso reventaba
+                                    toda la pagina con "Algo salió mal" (2026-09-07). Mismo patrón
+                                    defensivo que ya usa el resto de este archivo (`?? []`). */}
+                                {[...(q.quiz_options ?? [])].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
                                   <li
                                     key={o.id}
                                     className="text-sm flex items-start gap-2"

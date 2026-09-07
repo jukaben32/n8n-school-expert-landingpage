@@ -53,8 +53,13 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
   // cuestionario formativo esto es aceptable; si más adelante se usa para
   // evaluaciones que califican, mover la corrección a una Edge Function
   // que reciba solo `selected_option_id` y devuelva el resultado.
+  // Supabase puede devolver `null` en vez de `[]` para el embed de opciones
+  // si una pregunta no tiene ninguna visible -- spreadear eso revienta la
+  // página completa para el estudiante ("Algo salió mal"), justo el mismo
+  // patrón que rompió /dashboard/academia/progreso (ver AGENTS.md,
+  // 2026-09-07). Se guarda con `?? []` antes de spreadear.
   const sortedQuestions = questions
-    .map((q) => ({ ...q, quiz_options: [...q.quiz_options].sort((a, b) => a.sort_order - b.sort_order) }))
+    .map((q) => ({ ...q, quiz_options: [...(q.quiz_options ?? [])].sort((a, b) => a.sort_order - b.sort_order) }))
     .sort((a, b) => a.sort_order - b.sort_order)
 
   // Imagen de apoyo de cada pregunta -- bucket privado, así que cada una
