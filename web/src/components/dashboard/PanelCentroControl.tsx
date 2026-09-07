@@ -351,7 +351,7 @@ export default function PanelCentroControl(p: PanelProps) {
           {/* tabla de mora */}
           <div style={card}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px 12px' }}>
-              <div style={cardTitle}>FAMILIAS CON SALDO VENCIDO</div>
+              <div style={cardTitle}>FAMILIAS EN MORA</div>
               <div style={{ flex: 1 }} />
               <a href="/dashboard/tesoreria/cuentas-por-cobrar" style={{
                 fontFamily: C.cond, fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase',
@@ -363,7 +363,7 @@ export default function PanelCentroControl(p: PanelProps) {
               borderTop: `1px solid ${C.hair}`, borderBottom: `1px solid ${C.hair}`,
               fontFamily: C.cond, fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: C.muted,
             }}>
-              <div>Familia</div><div>Estudiantes</div><div>Vence</div>
+              <div>Familia</div><div>Estudiantes</div><div>Mora desde</div>
               <div style={{ textAlign: 'right' }}>Monto</div><div style={{ textAlign: 'right' }}>Estado</div>
             </div>
             {overdueRows.map((r, i) => (
