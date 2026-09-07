@@ -2480,6 +2480,81 @@ julio con datos reales de facturación, y revisar en algún momento si el
 monto de la factura de agosto en Tesorería ya refleja el medio mes -- ese
 es un tema de facturación, no de este gráfico.
 
+## El Panel mostraba RD$0 de mora mientras Cuentas por Cobrar mostraba RD$443,667 (2026-09-07)
+
+Reportado por el usuario con captura: la tarjeta "Cartera vencida" del Centro de
+Control decia **RD$0 - 0 facturas - 0 familias**, y en la misma sesion
+`/dashboard/tesoreria/cuentas-por-cobrar` listaba decenas de estudiantes en el
+tramo 6-9 dias con su recargo del 5%.
+
+**Habia dos motores de mora que no se hablaban:**
+
+| | Panel (antes) | Cuentas por Cobrar |
+|---|---|---|
+| Fuente | `invoices` con `status = 'vencido'` | `calculate_receivable_status()` |
+| Necesita factura emitida | si | no |
+| Conoce las 4 etapas de recargo | no | si |
+
+**La causa de fondo: nada en todo el sistema escribe jamas `status = 'vencido'`.**
+Verificado sobre las 70+ migraciones y todo `web/src`: ese valor solo aparece en
+lecturas y en el `check` de la columna. No hay trigger, ni cron, ni job. La unica
+escritura de estado de la app es `-> 'pagado'`. Una factura emitida como
+`pendiente` se queda `pendiente` para siempre, pase su vencimiento.
+
+Y el colegio ni siquiera emite facturas pendientes: produccion tenia **44
+facturas, las 44 `pagado`, RD$90,100, todas de septiembre, sin NCF y con
+`student_id`** -- o sea, las 44 salidas de "Registrar pago externo". La tarjeta
+estaba **estructuralmente condenada a RD$0**, no desactualizada.
+
+**Corregido (solo lectura, sin migracion ni cambio de policy)**: el Panel llama
+ahora a `list_school_receivables`, la misma RPC que Cuentas por Cobrar -- un solo
+motor de mora para las dos pantallas. Medido en produccion el 2026-09-07, que es
+lo que la tarjeta pasa a mostrar: **RD$443,667** (RD$422,540 de deuda +
+RD$21,127 de recargo), **201 estudiantes - 180 familias**, todos a 6 dias.
+La consulta tarda 192 ms para 245 estudiantes y va dentro del `Promise.all`.
+
+**Dos defectos mas de la misma raiz, corregidos en el mismo commit:**
+
+1. **"100% de la meta mensual" era una metrica que no podia dar mala noticia.**
+   La "meta" era lo facturado en el rango, y como cada factura se crea ya pagada,
+   cobrado y facturado son siempre el mismo numero. La tarjeta decia 100% pasara
+   lo que pasara. Ahora la linea dice **"44 de 245 estudiantes al dia"** y la
+   barra es ese porcentaje real (18%).
+2. **"Estudiantes inscritos 286" contaba todo estudiante no borrado**, sin filtrar
+   el estado -- la variable se llama `enrolledStudents` y trae el campo, pero no
+   lo usaba. Reales: **245 inscritos, 39 admitidos, 2 retirados**. Importaba
+   porque Cuentas por Cobrar si filtra por `inscrito`: los dos numeros nunca
+   iban a cuadrar entre pantallas.
+
+Ademas, la tabla "Familias con saldo vencido" y el hallazgo de "Lectura del dia"
+tambien pasaron a la RPC (la deuda se calcula por estudiante, asi que los
+hermanos se suman en una sola fila de la familia), y los enlaces del Panel
+apuntan a `/dashboard/tesoreria/cuentas-por-cobrar` en vez de `/dashboard/tesoreria`.
+
+**Para revertir**: es un solo commit, dos archivos
+(`app/dashboard/secretaria/page.tsx`, `components/dashboard/PanelCentroControl.tsx`),
+sin nada que deshacer en la base.
+
+**Pendiente, decidido dejar fuera de este cambio:**
+
+- **El grafico "Flujo de cobranza"** sigue leyendo `invoices`, asi que "Pendiente"
+  y "Vencido" siempre saldran en cero (de ahi la barra unica verde de agosto).
+  Arreglarlo necesita una decision de negocio primero: que significa la barra de
+  cada mes si no se factura por adelantado -- lo exigible segun la mensualidad,
+  presumiblemente. No se toco sin esa respuesta.
+- **El caso limite de `list_school_receivables` con `super_admin`** sigue abierto
+  (ver la seccion de Cuentas por Cobrar): la funcion exige
+  `users_profiles.school_id = p_school_id`, lo que excluye a un `super_admin`
+  usando "Entrar como director" de otro colegio. Hoy no se manifiesta porque solo
+  hay un colegio afiliado y el perfil del super_admin apunta a ese mismo colegio
+  (verificado). **Al afiliar un segundo colegio esto se lleva por delante tanto
+  Cuentas por Cobrar como esta tarjeta del Panel.** Mitigacion ya puesta: si la
+  RPC falla, `data` viene `null`, las tarjetas quedan en cero y `QueryErrorBanner`
+  muestra el error -- el Panel no se cae.
+- **Dato raro visto de paso, sin tocar**: la familia "Beltran Gonzalez" tiene dos
+  estudiantes llamados "Diana". Puede ser un registro duplicado; no se modifico
+  ningun dato real.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

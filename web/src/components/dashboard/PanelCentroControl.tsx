@@ -73,8 +73,11 @@ export interface PanelProps {
   students?: { total: number; delta: string; spark: number[] }
   families?: { total: number; withAccess: number; pct: number }
   attendance?: { pct: string; delta: string; spark: number[]; series: number[]; note: string; label: string }
-  collected?: { amount: string; pctOfGoal: number }
-  overdue?: { amount: string; invoices: number; families: number }
+  collected?: { amount: string; pctOfGoal: number; note?: string }
+  // `students`/`families` en mora vienen de Cuentas por Cobrar (deuda
+  // implicita por mensualidad), NO de facturas: este colegio no factura
+  // por adelantado, asi que contar facturas vencidas daba siempre cero.
+  overdue?: { amount: string; students: number; families: number; lateFee?: string }
   enrollment?: { enrolled: number; inProcess: number; withdrawn: number }
   cashflow?: CashflowMonth[]
   overdueRows?: OverdueRow[]
@@ -99,8 +102,8 @@ const D = {
     series: [96, 95, 97, 94, 93, 95, 96, 94, 92, 95, 96, 93, 91, 94, 95, 96, 94, 88, 92, 95],
     note: 'Promedio 94.2% · mínimo 88.1% el lunes 12',
   },
-  collected: { amount: 'RD$ 2.41M', pctOfGoal: 78 },
-  overdue: { amount: 'RD$ 386K', invoices: 31, families: 24 },
+  collected: { amount: 'RD$ 2.41M', pctOfGoal: 78, note: '318 de 417 estudiantes al dia' },
+  overdue: { amount: 'RD$ 386K', students: 99, families: 24, lateFee: 'RD$ 18K' },
   enrollment: { enrolled: 417, inProcess: 43, withdrawn: 26 },
   // Año escolar de este colegio: agosto (medio mes, el período inicia el 17)
   // a junio -- julio queda fuera, vacaciones colectivas sin cobro.
@@ -228,15 +231,18 @@ export default function PanelCentroControl(p: PanelProps) {
         <div style={{ ...card, flex: '1 1 180px', minWidth: 0, padding: 16 }}>
           <div style={kicker}>Cobrado este mes</div>
           <div style={{ ...bigNum, fontSize: 36, marginTop: 8, whiteSpace: 'nowrap' }}>{collected.amount}</div>
-          <div style={{ fontSize: 12, color: C.accent, marginTop: 6 }}>{collected.pctOfGoal}% de la meta mensual</div>
+          <div style={{ fontSize: 12, color: C.accent, marginTop: 6 }}>{collected.note ?? `${collected.pctOfGoal}% de la meta mensual`}</div>
           <Meter pct={collected.pctOfGoal} />
         </div>
 
         <div style={{ ...cardDanger, flex: '1 1 180px', minWidth: 0, padding: 16 }}>
           <div style={{ ...kicker, color: C.danger }}>Cartera vencida</div>
           <div style={{ ...bigNum, fontSize: 36, marginTop: 8, whiteSpace: 'nowrap', color: C.danger }}>{overdue.amount}</div>
-          <div style={{ fontSize: 12, color: '#e3a79e', marginTop: 6 }}>{overdue.invoices} facturas · {overdue.families} familias</div>
-          <a href="/dashboard/tesoreria" style={{
+          <div style={{ fontSize: 12, color: '#e3a79e', marginTop: 6 }}>{overdue.students} estudiantes · {overdue.families} familias</div>
+          {overdue.lateFee && (
+            <div style={{ fontSize: 11, color: '#c9908a', marginTop: 2 }}>incluye {overdue.lateFee} de recargo</div>
+          )}
+          <a href="/dashboard/tesoreria/cuentas-por-cobrar" style={{
             display: 'inline-block', marginTop: 10, fontFamily: C.cond, fontSize: 12,
             letterSpacing: '.08em', textTransform: 'uppercase', color: C.danger,
             borderBottom: '1px solid rgba(255,157,144,.45)', textDecoration: 'none',
@@ -341,10 +347,10 @@ export default function PanelCentroControl(p: PanelProps) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px 12px' }}>
               <div style={cardTitle}>FAMILIAS CON SALDO VENCIDO</div>
               <div style={{ flex: 1 }} />
-              <a href="/dashboard/tesoreria" style={{
+              <a href="/dashboard/tesoreria/cuentas-por-cobrar" style={{
                 fontFamily: C.cond, fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase',
                 color: C.accent, textDecoration: 'none', borderBottom: '1px solid rgba(150,225,196,.4)',
-              }}>Abrir tesorería</a>
+              }}>Abrir cuentas por cobrar</a>
             </div>
             <div style={{
               display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 18px',
@@ -354,8 +360,8 @@ export default function PanelCentroControl(p: PanelProps) {
               <div>Familia</div><div>Estudiantes</div><div>Vence</div>
               <div style={{ textAlign: 'right' }}>Monto</div><div style={{ textAlign: 'right' }}>Estado</div>
             </div>
-            {overdueRows.map((r) => (
-              <div key={r.family} style={{
+            {overdueRows.map((r, i) => (
+              <div key={`${r.family}-${i}`} style={{
                 display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '11px 18px',
                 borderBottom: `1px solid ${C.hairSoft}`, fontSize: 13, alignItems: 'center',
               }}>

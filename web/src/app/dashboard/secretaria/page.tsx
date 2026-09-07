@@ -90,8 +90,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     { data: allGuardians, error: guardiansError },
     { data: accessProfiles, error: accessError },
     { data: paymentsInRange, error: paymentsRangeError },
-    { data: invoicedInRange, error: invoicedRangeError },
-    { data: overdueInvoicesRaw, error: overdueError },
+    { data: receivablesRaw, error: receivablesError },
     { data: attendanceInRange, error: attendanceRangeError },
     { data: attendancePrevRange, error: attendancePrevError },
     { data: attendance4Weeks, error: attendance4WeeksError },
@@ -107,8 +106,12 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     supabase.from('guardians').select('id, family_id').eq('school_id', schoolId),
     supabase.from('users_profiles').select('guardian_id').eq('school_id', schoolId).not('guardian_id', 'is', null),
     supabase.from('payments').select('amount_paid').eq('school_id', schoolId).gte('paid_at', rangeStart.toISOString()),
-    supabase.from('invoices').select('total_amount').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', rangeStart.toISOString()),
-    supabase.from('invoices').select('id, total_amount, family_id, due_date, families(name)').eq('school_id', schoolId).eq('status', 'vencido').is('deleted_at', null).order('due_date', { ascending: true }).limit(5),
+    // Misma funcion que usa /dashboard/tesoreria/cuentas-por-cobrar --
+    // un solo motor de mora para las dos pantallas (ver bloque "Cartera
+    // vencida" mas abajo para por que la vieja consulta a `invoices` no
+    // servia). Si la RPC falla, `data` viene null y las tarjetas quedan en
+    // cero con el aviso de QueryErrorBanner, sin tumbar el panel.
+    supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(prevStart)).lt('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(twentyEightDaysAgo)),
@@ -123,7 +126,12 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   const formatDOP = (n: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0, notation: n >= 1_000_000 ? 'compact' : 'standard' }).format(n)
 
   // ── Estudiantes inscritos ──────────────────────────────────────────
-  const totalStudents = (enrolledStudents ?? []).length
+  // La tarjeta dice "inscritos", asi que cuenta solo `enrollment_status =
+  // 'inscrito'` -- antes contaba todo estudiante no borrado (incluidos
+  // admitidos y retirados), y por eso nunca cuadraba con Cuentas por
+  // Cobrar, que si filtra por inscrito.
+  const totalStudentsAll = (enrolledStudents ?? []).length
+  const totalStudents = (enrolledStudents ?? []).filter((s) => s.enrollment_status === 'inscrito').length
   const newStudentsInRange = (studentsInRange ?? []).length
   const studentsSparkline = Array.from({ length: 10 }, (_, i) => {
     const day = isoDate(new Date(now.getTime() - (9 - i) * 24 * 60 * 60 * 1000))
@@ -155,41 +163,70 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     : null
 
   // ── Cobrado en el rango seleccionado ─────────────────────────────────
+  // La "meta mensual" era lo facturado en el rango -- pero cada factura de
+  // este colegio se crea ya pagada (Registrar pago), asi que cobrado y
+  // facturado eran siempre el mismo numero y la tarjeta decia 100% pasara
+  // lo que pasara. Ahora el porcentaje es cuantos estudiantes estan al dia
+  // segun Cuentas por Cobrar (se calcula mas abajo, con los datos del RPC).
   const cobradoRango = (paymentsInRange ?? []).reduce((sum, p) => sum + Number(p.amount_paid), 0)
-  const facturadoRango = (invoicedInRange ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
-  const cobradoPercent = facturadoRango > 0 ? Math.min(100, Math.round((cobradoRango / facturadoRango) * 100)) : 0
-  const brechaCobro = Math.max(0, facturadoRango - cobradoRango)
 
-  // ── Cartera vencida ───────────────────────────────────────────────────
-  type OverdueInvoice = { id: string; total_amount: number; family_id: string; due_date: string | null; families: { name: string } | null }
-  const overdueTop5 = (overdueInvoicesRaw ?? []) as unknown as OverdueInvoice[]
-  const { count: overdueCountTotal } = await supabase
-    .from('invoices').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('status', 'vencido').is('deleted_at', null)
-  const { data: overdueAllForSum } = await supabase
-    .from('invoices').select('total_amount, family_id').eq('school_id', schoolId).eq('status', 'vencido').is('deleted_at', null)
-  const carteraVencida = (overdueAllForSum ?? []).reduce((sum, i) => sum + Number(i.total_amount), 0)
-  const familiasConMora = new Set((overdueAllForSum ?? []).map((i) => i.family_id as string)).size
-
-  const overdueTop5FamilyIds = overdueTop5.map((i) => i.family_id)
-  const { data: studentsForOverdue } = overdueTop5FamilyIds.length
-    ? await supabase.from('students').select('first_name, family_id').in('family_id', overdueTop5FamilyIds).is('deleted_at', null)
-    : { data: [] }
-  const studentNamesByFamily = new Map<string, string[]>()
-  for (const s of studentsForOverdue ?? []) {
-    const list = studentNamesByFamily.get(s.family_id as string) ?? []
-    list.push(s.first_name as string)
-    studentNamesByFamily.set(s.family_id as string, list)
+  // ── Cartera vencida -- mismo motor que Cuentas por Cobrar ─────────────
+  // Hasta 2026-09-07 esta tarjeta contaba facturas con `status = 'vencido'`.
+  // Nada en todo el sistema escribe jamas ese estado: no hay trigger ni
+  // cron, y la unica escritura de estado en la app es -> 'pagado'. Encima
+  // este colegio no factura por adelantado (contabilidad por lo percibido),
+  // asi que produccion tenia 44 facturas y las 44 pagadas. Resultado: la
+  // tarjeta estaba condenada a RD$0 mientras Cuentas por Cobrar mostraba
+  // RD$422,540 de deuda real. Ahora las dos pantallas leen la misma
+  // funcion, `list_school_receivables`, que calcula la deuda implicita por
+  // mensualidad (no necesita que exista ninguna factura) y su recargo por
+  // etapas segun el manual de familia.
+  type ReceivableRow = {
+    student_id: string; first_name: string; last_name: string; family_id: string
+    overdue_amount: number; late_fee_amount: number; collected_amount: number
+    oldest_overdue_due_date: string | null; days_overdue: number | null
   }
-  const overdueRows = overdueTop5.map((inv) => {
-    const days = inv.due_date ? Math.max(0, Math.round((now.getTime() - new Date(inv.due_date).getTime()) / (24 * 60 * 60 * 1000))) : null
-    return {
-      family: inv.families?.name ?? 'Familia',
-      students: (studentNamesByFamily.get(inv.family_id) ?? []).join(', ') || '—',
-      due: inv.due_date ? new Date(inv.due_date).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }) : '—',
-      amount: formatDOP(Number(inv.total_amount)),
-      days,
+  const receivables = (receivablesRaw ?? []) as ReceivableRow[]
+  const conDeuda = receivables.filter((r) => Number(r.overdue_amount) > 0)
+  const deudaVencida = conDeuda.reduce((sum, r) => sum + Number(r.overdue_amount), 0)
+  const recargoAcumulado = conDeuda.reduce((sum, r) => sum + Number(r.late_fee_amount ?? 0), 0)
+  // Lo que el panel debe reflejar: deuda + mora al dia de hoy, siempre.
+  const carteraVencida = deudaVencida + recargoAcumulado
+  const estudiantesConDeuda = conDeuda.length
+  const familiasConMora = new Set(conDeuda.map((r) => r.family_id)).size
+  const estudiantesAlDia = Math.max(0, receivables.length - estudiantesConDeuda)
+  const alDiaPercent = receivables.length > 0
+    ? Math.round((estudiantesAlDia / receivables.length) * 100)
+    : 0
+
+  // Top 5 familias por saldo. La deuda se calcula por estudiante, asi que
+  // los hermanos se suman en una sola fila de la familia.
+  type FamiliaMora = { monto: number; nombres: string[]; vence: string | null; dias: number | null }
+  const porFamilia = new Map<string, FamiliaMora>()
+  for (const r of conDeuda) {
+    const row = porFamilia.get(r.family_id) ?? { monto: 0, nombres: [], vence: null, dias: null }
+    row.monto += Number(r.overdue_amount) + Number(r.late_fee_amount ?? 0)
+    row.nombres.push(r.first_name)
+    if (r.oldest_overdue_due_date && (row.vence === null || r.oldest_overdue_due_date < row.vence)) {
+      row.vence = r.oldest_overdue_due_date
     }
-  })
+    row.dias = Math.max(row.dias ?? 0, Number(r.days_overdue ?? 0))
+    porFamilia.set(r.family_id, row)
+  }
+  const top5Familias = [...porFamilia.entries()].sort((a, b) => b[1].monto - a[1].monto).slice(0, 5)
+  const { data: top5FamilyNames } = top5Familias.length
+    ? await supabase.from('families').select('id, name').in('id', top5Familias.map(([id]) => id))
+    : { data: [] }
+  const familyNameById = new Map((top5FamilyNames ?? []).map((f) => [f.id as string, f.name as string]))
+  const overdueRows = top5Familias.map(([familyId, row]) => ({
+    family: familyNameById.get(familyId) ?? 'Familia',
+    students: row.nombres.join(', ') || '—',
+    // `oldest_overdue_due_date` es un DATE: se le pega la hora para que el
+    // navegador no lo corra un dia hacia atras por zona horaria.
+    due: row.vence ? new Date(row.vence + 'T00:00:00').toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }) : '—',
+    amount: formatDOP(row.monto),
+    days: row.dias,
+  }))
 
   // ── Flujo de cobranza -- año escolar (agosto a junio, sin julio) ──────
   // Agosto es medio mes (el período inicia el 17) -- el año escolar completo
@@ -247,7 +284,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   }, {} as Record<string, number>)
   const inscritosCount = enrollmentCounts['inscrito'] ?? 0
   const retiradosCount = enrollmentCounts['retirado'] ?? 0
-  const enProcesoCount = Math.max(0, totalStudents - inscritosCount - retiradosCount)
+  const enProcesoCount = Math.max(0, totalStudentsAll - inscritosCount - retiradosCount)
 
   // ── Autorizaciones sin respuesta (abiertas) ──────────────────────────
   let autorizacionesSinResponder = 0
@@ -281,16 +318,18 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   // ── Lectura del día -- hallazgos reales calculados aquí mismo, no
   // narrados por IA como en el diseño original (ver nota junto al panel). ──
   const insights: Insight[] = []
-  if (brechaCobro > 0 && overdueAllForSum && overdueAllForSum.length > 0) {
-    const sorted = [...overdueAllForSum].sort((a, b) => Number(b.total_amount) - Number(a.total_amount))
+  // Antes este hallazgo dependia de la brecha entre facturado y cobrado --
+  // siempre cero aqui, porque toda factura se crea ya pagada. Ahora se
+  // calcula sobre la cartera real: que tan concentrada esta la deuda.
+  if (carteraVencida > 0 && porFamilia.size > 0) {
+    const montos = [...porFamilia.values()].map((f) => f.monto).sort((a, b) => b - a)
+    const mitad = carteraVencida / 2
     let acc = 0, n = 0
-    for (const inv of sorted) { acc += Number(inv.total_amount); n++; if (acc >= brechaCobro) break }
-    if (n > 0) {
-      insights.push({
-        text: `Si se cobra la mora de las ${n} familia${n !== 1 ? 's' : ''} con mayor saldo, se cierra la meta ${rangeLabel} sin gestionar el resto.`,
-        href: '/dashboard/pagos', action: 'Ver gestión de moras →',
-      })
-    }
+    for (const monto of montos) { acc += monto; n++; if (acc >= mitad) break }
+    insights.push({
+      text: `${n} familia${n !== 1 ? 's' : ''} de ${porFamilia.size} concentra${n !== 1 ? 'n' : ''} la mitad de la cartera vencida (${formatDOP(acc)} de ${formatDOP(carteraVencida)}).`,
+      href: '/dashboard/tesoreria/cuentas-por-cobrar', action: 'Ver cuentas por cobrar →',
+    })
   }
   if (asistenciaDelta !== null && asistenciaDelta <= -1) {
     insights.push({
@@ -334,8 +373,8 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
       <QueryErrorBanner errors={[
         { label: 'estudiantes', error: studentsRangeError || enrolledError || last10DaysError },
         { label: 'familias y acceso', error: guardiansError || accessError },
-        { label: 'cobros', error: paymentsRangeError || invoicedRangeError },
-        { label: 'cartera vencida', error: overdueError },
+        { label: 'cobros', error: paymentsRangeError },
+        { label: 'cartera vencida', error: receivablesError },
         { label: 'asistencia', error: attendanceRangeError || attendancePrevError || attendance4WeeksError || ausenciasHoyError },
         { label: 'facturación del año', error: invoicesYearError },
         { label: 'comprobantes', error: comprobantesError },
@@ -378,8 +417,19 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
             ? `Promedio ${promedio4Semanas}%${minimo4Semanas ? ` · mínimo ${minimo4Semanas.asistencia}% el ${minimo4Semanas.label}` : ''}`
             : 'Sin datos todavía',
         }}
-        collected={{ amount: formatDOP(cobradoRango), pctOfGoal: cobradoPercent }}
-        overdue={{ amount: formatDOP(carteraVencida), invoices: overdueCountTotal ?? 0, families: familiasConMora }}
+        collected={{
+          amount: formatDOP(cobradoRango),
+          pctOfGoal: alDiaPercent,
+          note: receivables.length > 0
+            ? `${estudiantesAlDia} de ${receivables.length} estudiantes al día`
+            : 'Sin mensualidad configurada',
+        }}
+        overdue={{
+          amount: formatDOP(carteraVencida),
+          students: estudiantesConDeuda,
+          families: familiasConMora,
+          lateFee: recargoAcumulado > 0 ? formatDOP(recargoAcumulado) : undefined,
+        }}
         enrollment={{ enrolled: inscritosCount, inProcess: enProcesoCount, withdrawn: retiradosCount }}
         cashflow={cashflowNormalized}
         overdueRows={overdueRowsMapped}
