@@ -66,22 +66,38 @@ export default async function PlataformaPage() {
       const [
         { count: students },
         { count: staffCount },
-        { data: pendingRows },
-        { data: overdueRows },
+        // `% morosidad` leía invoices.status='pendiente'/'vencido' -- el
+        // mismo motor que ya se reemplazó en el Panel y Cuentas por Cobrar
+        // el 2026-09-07 porque nada en el sistema escribe jamás esos
+        // estados (medido en producción: 0 y 0 para el único colegio
+        // afiliado, así que esta columna mostraba siempre 0% ocultando la
+        // deuda real). `list_school_receivables_network` es la deuda
+        // implícita por mensualidad -- misma fuente que el resto del
+        // sistema, sin depender de que exista ninguna factura. No se usa
+        // `list_school_receivables` (la de Cuentas por Cobrar) porque esa
+        // exige que el colegio consultado sea el propio del super_admin --
+        // rompería en cuanto haya un segundo colegio afiliado, justo el
+        // caso que Plataforma existe para comparar. Ver migración
+        // 20260910000000.
+        { data: receivableRows },
         { data: attendanceMonth },
         { count: aiMessagesWeek },
       ] = await Promise.all([
         supabase.from('students').select('id', { count: 'exact', head: true }).eq('school_id', school.id).is('deleted_at', null),
         supabase.from('staff').select('id', { count: 'exact', head: true }).eq('school_id', school.id).is('deleted_at', null),
-        supabase.from('invoices').select('total_amount').eq('school_id', school.id).eq('status', 'pendiente').is('deleted_at', null),
-        supabase.from('invoices').select('total_amount').eq('school_id', school.id).eq('status', 'vencido').is('deleted_at', null),
+        supabase.rpc('list_school_receivables_network', { p_school_id: school.id }),
         supabase.from('attendance').select('status').eq('school_id', school.id).gte('date', thirtyDaysAgo),
         supabase.from('ai_conversations').select('*', { count: 'exact', head: true }).eq('school_id', school.id).eq('role', 'user').gte('created_at', sevenDaysAgoIso),
       ])
 
-      const pendienteSum = (pendingRows ?? []).reduce((s, i) => s + Number(i.total_amount), 0)
-      const vencidoSum = (overdueRows ?? []).reduce((s, i) => s + Number(i.total_amount), 0)
-      const morosidadPercent = pendienteSum + vencidoSum > 0 ? Math.round((vencidoSum / (pendienteSum + vencidoSum)) * 100) : 0
+      type NetworkReceivableRow = { expected_to_date: number | null; overdue_amount: number }
+      const receivables = (receivableRows ?? []) as NetworkReceivableRow[]
+      const expectedSum = receivables.reduce((sum, r) => sum + Number(r.expected_to_date ?? 0), 0)
+      const overdueSum = receivables.reduce((sum, r) => sum + Number(r.overdue_amount ?? 0), 0)
+      // % de lo que ya debió cobrarse este año (según la mensualidad) que
+      // sigue sin cobrar -- mismo criterio que "estudiantes al día" del
+      // Panel, expresado como el porcentaje que ya usaba esta pantalla.
+      const morosidadPercent = expectedSum > 0 ? Math.round((overdueSum / expectedSum) * 100) : 0
 
       const attendanceTotal = (attendanceMonth ?? []).length
       const attendancePresent = (attendanceMonth ?? []).filter((a) => a.status === 'presente').length
