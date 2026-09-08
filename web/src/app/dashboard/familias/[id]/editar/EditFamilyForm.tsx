@@ -92,8 +92,14 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians, acc
     setAccessNotices([])
 
     for (const g of guardians) {
-      if (!g.firstName || !g.lastName || !g.phone) {
-        setError('Completa nombre, apellido y teléfono de cada tutor.')
+      // El teléfono NO se exige: muchas fichas viejas del colegio no lo
+      // traen, y exigirlo aquí impedía guardar cualquier otro cambio en esa
+      // familia -- incluido cargarle el correo al tutor, que es justo lo que
+      // secretaría estaba intentando hacer (reporte real, 2026-09-08). La
+      // columna guardians.phone acepta nulo desde siempre; era solo esta
+      // validación de interfaz, igual que el `required` del input.
+      if (!g.firstName || !g.lastName) {
+        setError('Completa nombre y apellido de cada tutor.')
         return
       }
     }
@@ -123,7 +129,7 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians, acc
         const { error: updateError } = await supabase
           .from('guardians')
           .update({
-            first_name: g.firstName, last_name: g.lastName, phone: g.phone,
+            first_name: g.firstName, last_name: g.lastName, phone: g.phone.trim() || null,
             email: g.email || null, relationship: g.relationship, is_primary: g.isPrimary,
             national_id: g.nationalId || null,
           })
@@ -156,7 +162,7 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians, acc
             .from('guardians')
             .insert({
               school_id: schoolId, family_id: family.id, first_name: g.firstName, last_name: g.lastName,
-              phone: g.phone, email: g.email || null, relationship: g.relationship, is_primary: g.isPrimary,
+              phone: g.phone.trim() || null, email: g.email || null, relationship: g.relationship, is_primary: g.isPrimary,
               national_id: g.nationalId || null,
             })
             .select('id')
@@ -231,8 +237,8 @@ export default function EditFamilyForm({ schoolId, family, initialGuardians, acc
                 <input id={`ln-${g.key}`} required spellCheck={false} value={g.lastName} onChange={(e) => updateGuardian(g.key, { lastName: e.target.value })} className={inputClass} />
               </div>
               <div>
-                <label htmlFor={`ph-${g.key}`} className={labelClass}>Teléfono</label>
-                <input id={`ph-${g.key}`} required value={g.phone} onChange={(e) => updateGuardian(g.key, { phone: e.target.value })} className={inputClass} />
+                <label htmlFor={`ph-${g.key}`} className={labelClass}>Teléfono (opcional)</label>
+                <input id={`ph-${g.key}`} value={g.phone} onChange={(e) => updateGuardian(g.key, { phone: e.target.value })} className={inputClass} />
               </div>
               <div>
                 <label htmlFor={`em-${g.key}`} className={labelClass}>Correo (opcional)</label>

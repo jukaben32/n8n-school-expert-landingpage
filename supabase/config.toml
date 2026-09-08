@@ -239,11 +239,15 @@ max_frequency = "1m0s"
 otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 # Controla también el enlace de "recuperar contraseña" (resetPasswordForEmail).
-# Subido a 600s (10 min) a pedido del usuario 2026-08-23: muchas familias no
-# usan correo con frecuencia y no llegaban a tiempo con el valor por defecto
-# reportado en producción (~1 minuto -- ver nota abajo, el valor de este
-# archivo no coincidía con lo configurado en el Dashboard remoto).
-otp_expiry = 600
+# Subido a 600s (10 min) a pedido del usuario 2026-08-23, y a 86400s (24h) el
+# 2026-09-08: el colegio mandó una circular pidiendo a las familias entrar a
+# la plataforma y los padres reportaban "tiempo caducado" al día siguiente,
+# con secretaría dando soporte por teléfono. Con 10 minutos, un padre que
+# revisa el correo esa noche ya no llega. 24h es el máximo que acepta
+# Supabase. Aplicado a producción con un PATCH dirigido a la Management API
+# (nunca `supabase config push`, que empuja el archivo entero -- ver el
+# incidente del 2026-08-23 en AGENTS.md).
+otp_expiry = 86400
 
 # Use a production-ready SMTP server
 # Producción: mismo proveedor y dominio verificado que ya usa notify-attendance

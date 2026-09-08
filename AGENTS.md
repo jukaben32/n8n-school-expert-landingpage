@@ -3864,3 +3864,51 @@ directamente de la variable. Eso exige redesplegar la Edge Function (CLI/Docker 
 el endpoint de deploy de la Management API), que esta sesión no hizo a propósito
 -- no se toca un despliegue de producción para un warning cosmético el mismo día
 que se acaba de encender el envío real.
+
+## Dos reportes del colegio mientras recogían los correos de los padres (2026-09-08)
+
+Los dos venían de la misma campaña: el colegio mandó una circular para que las
+familias entraran a la plataforma, y secretaría estaba cargando los correos de
+los tutores uno por uno.
+
+### 1. "Dice tiempo caducado al cambiar la contraseña"
+
+**No era el bug de PKCE de agosto** -- ese arreglo (aceptar también el enlace
+con `#access_token` de los correos disparados por un admin) sí está desplegado
+y se comprobó leyendo `actualizar-contrasena/page.tsx` en producción. También
+se descartó un desajuste de dominio: la app arma los enlaces con
+`https://www.educacionmanantial.com`, el apex responde 308 hacia www, y www
+está en `uri_allow_list`.
+
+Era literal: `mailer_otp_exp` estaba en **600 segundos (10 minutos)**. La
+circular salió el día anterior; un padre que revisa el correo esa noche, o que
+llama primero a secretaría para que le expliquen, nunca llega a tiempo.
+**Subido a 86400 (24h)**, el máximo que acepta Supabase, con un `PATCH`
+dirigido a la Management API -- **nunca `supabase config push`**, que empuja
+las secciones `[auth]`/`[storage]` completas y ya rompió producción una vez
+(ver el incidente del 2026-08-23). `supabase/config.toml` se actualizó a mano
+para que el repo no vuelva a divergir.
+
+**Nota para una campaña masiva**: `rate_limit_email_sent` está en 100
+correos/hora. Si el colegio empuja a todas las familias a pedir su enlace el
+mismo día, ese techo se puede tocar; subirlo es otro `PATCH` puntual.
+
+### 2. "No permite grabar si el teléfono está vacío"
+
+Era **`/dashboard/familias/[id]/editar`** (`EditFamilyForm.tsx`), no el alta de
+estudiante -- ahí el teléfono ya decía "(opcional)" desde antes. Esa pantalla
+lo exigía por partida doble: `required` en el input y una validación en JS
+(`if (!g.firstName || !g.lastName || !g.phone)`), aunque `guardians.phone`
+acepta nulo desde la primera migración. O sea: era solo interfaz.
+
+Importa más de lo que parece por el contexto: **es justo la pantalla donde
+secretaría entra a cargarle el correo a un tutor**, y una ficha vieja sin
+teléfono impedía guardar ese correo -- bloqueando la campaña completa de
+recolección. Corregido: teléfono opcional en los dos sitios, y al guardar
+vacío se escribe `null` en vez de una cadena vacía (mismo criterio que
+`createStudentWithFamily`), para no ensuciar la columna que usa
+`resolveGuardianByPhone`.
+
+**Si el colegio vuelve a reportar un bloqueo por teléfono en otra pantalla**:
+se buscó en todo `src/app` y `src/components` y no queda ningún otro sitio que
+lo exija. Haría falta el texto exacto del error y la pantalla.
