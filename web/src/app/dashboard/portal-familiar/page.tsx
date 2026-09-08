@@ -9,6 +9,7 @@ import VoiceCallWidget from '@/components/portal/VoiceCallWidget'
 import DirectMessagesWidget from '@/components/portal/DirectMessagesWidget'
 import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 import { getFamilyClassUpdates } from './actions'
+import { countAbsencesToJustify } from '@/app/dashboard/asistencia/actions'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — MentorIApp',
@@ -79,6 +80,11 @@ export default async function PortalFamiliarPage() {
   const classUpdatesResult = await getFamilyClassUpdates()
   const classUpdates = classUpdatesResult.ok ? classUpdatesResult.updates ?? [] : []
 
+  // Faltas de los últimos 30 días sin una justificación viva. El colegio ya
+  // avisa de la ausencia el mismo día (notify-attendance); esto es el camino
+  // de vuelta, que antes ocurría por WhatsApp y sin dejar registro.
+  const absencesToJustify = await countAbsencesToJustify()
+
   // Doble rol: personal (profesor, dirección...) que también es tutor de
   // algún hijo aquí. Se les avisa que están en su Vista de Familia y se
   // les da un camino de regreso a su panel de trabajo normal.
@@ -112,6 +118,27 @@ export default async function PortalFamiliarPage() {
           Consulta el estado de tus hijos en el colegio
         </p>
       </div>
+
+      {absencesToJustify > 0 && (
+        <a
+          href="/dashboard/asistencia"
+          className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
+        >
+          <span className="text-amber-800 dark:text-amber-300">
+            <strong className="font-bold">
+              {absencesToJustify === 1
+                ? 'Tienes 1 ausencia sin justificar'
+                : `Tienes ${absencesToJustify} ausencias sin justificar`}
+            </strong>
+            <span className="block text-xs mt-0.5">
+              Explica el motivo y adjunta el certificado médico o la carta, si tienes.
+            </span>
+          </span>
+          <span className="font-semibold underline underline-offset-2 text-amber-800 dark:text-amber-300 shrink-0">
+            Justificar
+          </span>
+        </a>
+      )}
 
       {/* Resumen rápido */}
       <div className="grid grid-cols-3 gap-3">

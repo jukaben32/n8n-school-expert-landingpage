@@ -80,6 +80,8 @@ const CHECKS = {
     ['Comunicados', `select count(*) from messages;`],
     ['Agenda', `select count(*) from calendar_events;`],
     ['Notas', `select count(*) from grades;`],
+    ['Justificaciones: ver las de sus grados', `select count(*) from attendance_justifications;`],
+    ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
   ],
   guardian: [
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
@@ -88,6 +90,7 @@ const CHECKS = {
     ['Portal: sus conversaciones', `select count(*) from direct_conversations;`],
     ['Portal: sus facturas', `select count(*) from invoices;`],
     ['Portal: comunicados', `select count(*) from messages;`],
+    ['Portal: justificaciones de ausencia de sus hijos', `select count(*) from attendance_justifications;`],
   ],
   reception: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -95,6 +98,8 @@ const CHECKS = {
     ['Asistencia', `select count(*) from attendance;`],
     ['Mensajes', `select count(*) from direct_conversations where category = 'regular';`],
     ['Facturas', `select count(*) from invoices;`],
+    ['Justificaciones de ausencia', `select count(*) from attendance_justifications;`],
+    ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
   ],
   director: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -103,6 +108,7 @@ const CHECKS = {
     ['Mensajes (todas las categorías)', `select count(*) from direct_conversations;`],
     ['Facturas', `select count(*) from invoices;`],
     ['Personal', `select count(*) from staff;`],
+    ['Justificaciones de ausencia', `select count(*) from attendance_justifications;`],
   ],
   school_admin: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -145,6 +151,25 @@ function insertAttendanceSql() {
   `
 }
 
+/**
+ * Revisar una justificación de ausencia es una escritura que hace el
+ * personal con SU PROPIA sesión (no con service_role, a diferencia de las
+ * otras bandejas de revisión del proyecto), así que depende directamente de
+ * la policy attendance_justifications_staff_update.
+ *
+ * No hace falta que existan filas para que sirva: si la policy quedara con
+ * una llamada ambigua a teacher_is_assigned_to_grade (el fallo que dejó al
+ * colegio un día sin pasar lista), Postgres revienta al PLANIFICAR la
+ * consulta, aunque no toque ninguna fila.
+ */
+function reviewJustificationSql() {
+  return `
+    update attendance_justifications
+    set review_note = review_note
+    where status = 'pendiente';
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -175,7 +200,10 @@ async function main() {
 
     for (const [nombre, consulta] of checks) {
       total++
-      const body = consulta === 'INSERT_ATTENDANCE' ? insertAttendanceSql() : consulta
+      const body =
+        consulta === 'INSERT_ATTENDANCE' ? insertAttendanceSql()
+        : consulta === 'REVIEW_JUSTIFICATION' ? reviewJustificationSql()
+        : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {
         console.log(`  OK    ${nombre}`)
