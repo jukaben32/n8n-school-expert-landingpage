@@ -3778,3 +3778,89 @@ sumado riesgo):
 - No hay plazo límite para justificar (el colegio no lo pidió) ni justificación
   por adelantado ("mañana falta por una cita médica"), que sería el siguiente
   paso natural.
+
+## El aviso de ausencia NUNCA había llegado a un padre — causa real y arreglo (2026-09-08)
+
+Preguntó el usuario: *"verifica si en los últimos 2 días una ausencia de un padre
+con correo habilitado se ha producido y si es así dime si el sistema efectivamente
+le creó y envió el aviso"*. La respuesta corta: lo creaba y no lo enviaba.
+**0 de 721 registros de asistencia tenían `notified_at`** -- ni uno, nunca, desde
+que existe la plataforma.
+
+Y no era por falta de intentos: el trigger disparaba, `pg_net` llamaba bien y la
+Edge Function respondía `HTTP 200 {"success":true,"channel":"none"}`, redactando
+el mensaje y guardándolo en `ai_message_sent`. Fallaba en el último paso, y el
+error solo existía en los logs de la Edge Function:
+
+```
+No se pudo leer resend_from_address desde private.app_settings: Invalid schema: private
+Resend error: {"statusCode":403,"name":"validation_error","message":"You can only
+send testing emails to your own email address (jcbjm03@gmail.com). To send emails
+to other recipients, please verify a domain at resend.com/domains"}
+```
+
+**La cadena, dos eslabones:**
+1. `notify-attendance` (y `notify-message`, idéntico) leen el remitente con
+   `supabase.schema('private').rpc('get_app_setting', ...)`. El esquema `private`
+   **no está expuesto** a la API de Supabase -- y con razón, ahí viven las
+   credenciales de Azul y la propia key de Resend --, así que esa llamada falla
+   SIEMPRE.
+2. Al fallar cae al respaldo `onboarding@resend.dev`, que es el remitente de
+   **pruebas** de Resend: solo permite enviar al dueño de la cuenta. Cada correo
+   a un padre real moría con 403.
+
+Lo irónico es que la configuración correcta ya existía: el dominio
+`mail.resendcegmas.com` está `verified` en Resend y `private.app_settings` tiene
+`no-reply@mail.resendcegmas.com`. La función no podía llegar a leerlo. **Esto
+explica también por qué "ya se había arreglado" en agosto y seguía sin
+funcionar**: entonces se agregó la `RESEND_API_KEY` que faltaba (correcto, sigue
+puesta), pero el remitente es un fallo distinto que nadie miró.
+
+**Arreglo aplicado (no hizo falta redesplegar nada ni Docker)**: se agregó el
+secreto de Edge Functions **`RESEND_FROM_ADDRESS = no-reply@mail.resendcegmas.com`**.
+El código ya lo usa como respaldo justo antes de `onboarding@resend.dev`, así que
+con el secreto puesto empieza a enviar de verdad. **Alcance: arregla los correos
+de ausencia Y los de `notify-message`** (mensajes directos, comunicados urgentes y
+el resultado de una justificación de ausencia).
+
+### Segundo hallazgo: el trigger era solo `AFTER INSERT`
+
+`AttendanceForm` guarda con `upsert ... on conflict do update`. Si la profesora
+guarda la lista y después corrige a alguien de 'presente' a 'ausente', ese segundo
+guardado es un UPDATE -- y **no disparaba ningún aviso**. De las 33 faltas de los
+dos días revisados, 9 ni siquiera llegaron a la Edge Function por esto.
+
+Corregido en `20260911010000_notify_attendance_on_update.sql`: un trigger APARTE
+`after update` (menor radio de impacto que tocar el de insert; se revierte con un
+solo `drop trigger`). **La cláusula WHEN no es decorativa**: la propia Edge
+Function escribe `notified_at`/`notification_channel` sobre esa misma fila al
+terminar, así que sin `new.status is distinct from old.status` ese UPDATE volvería
+a disparar el trigger en **bucle infinito**, mandándole correos sin parar al tutor.
+`new.notified_at is null` evita el segundo aviso por la misma falta.
+
+**La regla de "solo se avisa por faltas del día en curso" NO se tocó** (el usuario
+la recordó explícitamente: hay muchas listas atrasadas por cargar). Vive dentro de
+`notify_attendance_webhook()` desde la migración 20260907000000, no en el trigger.
+
+### Verificado en vivo, contra producción
+
+Con un estudiante de prueba cuyo "tutor" era el correo del propio colegio
+(`jcbjm03@gmail.com`), así ningún padre real recibió nada. Borrado al terminar
+(comprobado: 0 filas de prueba, 285 estudiantes reales intactos).
+
+1. Falta de HOY creada -> `channel = 'email'`, `notified_at` escrito. **Primer
+   aviso de ausencia realmente entregado en la historia del proyecto.**
+2. La misma fila devuelta a 'presente' y CORREGIDA a 'ausente' -> volvió a enviar.
+   El camino que antes no avisaba.
+3. Falta con fecha de AYER -> **no** avisó. La regla de listas atrasadas sigue en
+   pie.
+4. Sin bucle: 2 llamadas HTTP en 5 minutos, exactamente los 2 envíos legítimos.
+
+**Pendiente real**: `notify-attendance` y `notify-message` siguen intentando leer
+`private.app_settings` en cada invocación y fallando (queda un `console.warn` por
+cada aviso). Hoy es inofensivo porque el respaldo por variable de entorno funciona,
+pero lo correcto sería que lean el remitente por un RPC público envuelto, o
+directamente de la variable. Eso exige redesplegar la Edge Function (CLI/Docker o
+el endpoint de deploy de la Management API), que esta sesión no hizo a propósito
+-- no se toca un despliegue de producción para un warning cosmético el mismo día
+que se acaba de encender el envío real.
