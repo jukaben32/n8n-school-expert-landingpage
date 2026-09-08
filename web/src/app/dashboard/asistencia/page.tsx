@@ -4,6 +4,9 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { todaySchoolDate } from '@/lib/schoolDate'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import AbsenceJustifications from './AbsenceJustifications'
+import { listMyAbsences } from './actions'
+import { countPendingJustifications } from './justificaciones/actions'
 
 export const metadata: Metadata = {
   title: 'Asistencia — MentorIApp',
@@ -91,6 +94,12 @@ export default async function AsistenciaPage() {
     recordsError = error
   }
 
+  // Justificaciones de ausencia (ver AGENTS.md, sección "Justificación de
+  // ausencias"): el staff ve cuántas tiene pendientes de revisar; el tutor
+  // ve sus faltas y puede justificarlas con motivo y documento opcional.
+  const pendingJustifications = isStaff ? await countPendingJustifications() : 0
+  const myAbsences = !isStaff && profile?.guardian_id ? await listMyAbsences() : []
+
   const hasUnnotifiedAbsence = isStaff && !whatsappConnected &&
     records.some((r) => ['ausente', 'tardanza'].includes(r.status) && !r.notified_at)
 
@@ -129,20 +138,36 @@ export default async function AsistenciaPage() {
           </p>
         </div>
 
-        {/* Botón registrar (solo staff) */}
+        {/* Botones de staff */}
         {isStaff && (
-          <a
-            id="btn-registrar-asistencia"
-            href="/dashboard/asistencia/registrar"
-            className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Registrar
-          </a>
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href="/dashboard/asistencia/justificaciones"
+              className="inline-flex items-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            >
+              Justificaciones
+              {pendingJustifications > 0 && (
+                <span className="rounded-full bg-dash-notify text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {pendingJustifications}
+                </span>
+              )}
+            </a>
+            <a
+              id="btn-registrar-asistencia"
+              href="/dashboard/asistencia/registrar"
+              className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Registrar
+            </a>
+          </div>
         )}
       </div>
+
+      {/* Justificación de ausencias (solo tutor) */}
+      {!isStaff && <AbsenceJustifications absences={myAbsences} />}
 
       {/* Tabla de registros */}
       {records.length > 0 ? (

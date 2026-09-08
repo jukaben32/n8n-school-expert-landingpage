@@ -3628,3 +3628,134 @@ RLS para decidir qué estudiantes ve cada profesor en Asistencia,
 Actualizaciones y Mensajes (`teacher_is_assigned_to_grade`). Es justo lo
 que dejó al colegio un día sin poder pasar lista. Unificar esto es un
 cambio de fondo que hay que planear aparte, nunca de pasada.
+
+## Justificación de ausencias por la familia (2026-09-08)
+
+Pedido del usuario sobre el Portal Familiar: *"cuando el niño se ausenta del
+colegio se produce una comunicación del colegio con el padre y este debe
+justificar su ausencia, esa justificación en ocasiones implica el envío de un
+PDF, documento, etc."*
+
+El aviso de ida ya existía desde siempre (trigger `notify_attendance_webhook`
++ Edge Function `notify-attendance`). Lo que **no existía era el camino de
+vuelta**: el tutor justificaba por WhatsApp, en persona, o mandando la foto del
+certificado médico por fuera de la plataforma -- sin quedar asociado a la falta
+y sin que nadie pudiera revisarlo después. Dato revelador encontrado al
+construir esto: `attendance.status` acepta `'justificado'` desde la migración
+`20260702000000` y la interfaz ya lo pintaba, pero **nada en todo el sistema lo
+escribía nunca** salvo que el profesor lo eligiera a mano al pasar lista.
+
+**Cómo quedó** (migración `20260911000000_attendance_justifications.sql`):
+
+- Tabla `attendance_justifications` -- una fila por falta justificada, con
+  `reason` (obligatorio), `document_path` (**opcional** a propósito: muchas
+  justificaciones son de una línea y obligar a adjuntar algo dejaría fuera a
+  esas familias), estado `pendiente|aceptada|rechazada` y quién revisó.
+- Bucket privado `justificantes-ausencia`, **sin políticas de
+  `storage.objects`** -- mismo principio que `comprobantes-pago`: todo el
+  acceso pasa por Server Actions y las lecturas son signed URLs de 5 minutos.
+  Aquí pesa más que en pagos: es un dato médico de un menor.
+- Índice único parcial `where status <> 'rechazada'`: una sola justificación
+  viva por falta. Rechazada sí deja volver a enviar (el colegio puede pedir el
+  certificado que faltaba).
+- **Aceptar es lo único que marca `attendance.status = 'justificado'`.** Es 1 a
+  1 con el registro de asistencia: si el estudiante quedó ausente en tres
+  materias del mismo día, cada una se justifica aparte -- se prefirió eso antes
+  que "arreglar" en silencio filas que el tutor no vio al enviar.
+
+**Alcance de quién revisa: NO se creó un módulo nuevo en `permissions.ts`.** Se
+reutilizó `asistencia` -- quien marca la falta revisa su justificación. Así no
+hay una entrada nueva que se pueda desincronizar con `Sidebar.tsx` (la trampa
+#1 de este archivo); el acceso es un botón "Justificaciones" con contador en
+`/dashboard/asistencia`, mismo patrón que "Escanear fichas" en Estudiantes. El
+profesor solo ve las de SUS grados: eso lo impone la RLS, no TypeScript.
+
+**Decisión distinta al resto de bandejas de revisión del proyecto**: aquí las
+lecturas y los cambios de estado del staff van con el cliente de **sesión**, no
+con `service_role`. El motivo es que "quién puede revisar" depende del grado y
+esa regla ya está escrita una vez, en la RLS -- repetirla en TypeScript sería
+una segunda fuente de verdad. El cliente admin se usa solo donde la RLS no
+alcanza: el bucket privado, los nombres de `guardians` (tabla cerrada para
+`teacher` -- con su propio cliente le llegarían vacíos, el mismo fallo
+silencioso de Mensajes) y el correo al tutor. Como contrapartida, las
+escrituras confirman con `.select()` que de verdad cambiaron una fila: sin eso,
+una policy mal escrita fallaría en silencio.
+
+**Trampas del repo que se respetaron** (todas ya documentadas más arriba, todas
+costaron un día de clases en su momento):
+- `teacher_is_assigned_to_grade(...)` siempre con **3 argumentos** y categoría
+  `'regular'`.
+- Las policies de tutor se autorizan por el vínculo real
+  (`users_profiles.guardian_id`), **nunca por `role = 'guardian'`** -- si no, un
+  profesor que además es padre aquí no podría justificar la falta de su hijo.
+- **Grants explícitos** (`grant select, insert, update ... to authenticated`):
+  Supabase no expone las tablas nuevas solo, y sin eso la Data API responde
+  "permission denied" aunque la RLS esté perfecta.
+- Las constantes compartidas viven en `web/src/lib/attendance/justifications.ts`,
+  un módulo **plano**; ningún archivo `'use server'` exporta nada que no sea una
+  función async.
+
+**Verificado en esta sesión**:
+1. La migración se aplicó **dos veces seguidas** sobre un Postgres local con
+   esquema espejo (incluidas las **dos sobrecargas** de
+   `teacher_is_assigned_to_grade`, para reproducir la ambigüedad real): limpia
+   e idempotente.
+2. **12 escenarios de RLS simulando la sesión igual que PostgREST**
+   (`set local role authenticated` + `request.jwt.claims`), todos con el
+   resultado esperado: la tutora justifica a su hijo ✅ y no al de otra familia
+   ✅; no puede crearla ya 'aceptada' ✅ ni auto-aceptarse la suya ✅; la tutora
+   de otro colegio ve 0 ✅; cada profesor ve solo su grado ✅ y no puede revisar
+   fuera de él ✅; secretaría ve las 2 de su colegio ✅; **doble rol** (profesora
+   de 6to que es madre de un alumno de 4to) ve la de su hijo ✅; aceptar cambia
+   la fila y marca la asistencia ✅; el índice único bloquea la segunda
+   pendiente ✅ y el reenvío tras rechazo sí entra ✅; motivo vacío rechazado ✅.
+3. `npx tsc --noEmit` limpio, `npm run lint` sin ningún problema nuevo (los 11
+   que salen son preexistentes, en archivos que esta tarea no tocó) y
+   `npm run build` completo OK, con `/dashboard/asistencia/justificaciones`
+   construida.
+
+**Formatos que acepta el adjunto (ampliado el 2026-09-08 a pedido del
+usuario: "muchos padres tienen iphone")**: JPG, PNG, WEBP, PDF y **HEIC/HEIF**,
+hasta 10MB. El HEIC importa por un caso concreto: Safari suele convertir a JPG
+al subir desde la galería, pero eligiendo la foto desde la app "Archivos" sube
+el HEIC tal cual -- y encima el iPhone a veces manda el archivo con el `type`
+VACÍO o como 'application/octet-stream'. Por eso validar solo por `file.type`
+rechazaría una foto perfectamente válida: `resolveFileType(nombre, tipo)`
+(en `web/src/lib/attendance/justifications.ts`) deduce el tipo por la extensión
+cuando no viene. El `accept` del input lleva además `.heic,.heif` como
+extensiones, porque hay navegadores que no reconocen `image/heic` ahí y
+dejarían el archivo en gris. Probado con 7 casos reales (HEIC sin tipo, PDF
+como octet-stream, .exe y .txt rechazados). No hizo falta ninguna migración: el
+bucket se creó sin `allowed_mime_types`, la validación es solo de la app.
+**Contrapartida conocida, avisada en la propia bandeja de revisión**: Chrome no
+previsualiza un HEIC -- el colegio lo descarga y lo abre con el visor de fotos.
+Si eso llega a estorbar, el siguiente paso sería convertirlo a JPG en el
+servidor al recibirlo (agrega una dependencia nueva, por eso no se hizo ahora).
+
+**Pendiente real (esta sesión NO tuvo credenciales de Supabase, mismo bloqueo
+de siempre)**:
+1. ~~Aplicar `20260911000000_attendance_justifications.sql` a producción~~ --
+   **el usuario la aplicó el 2026-09-08**. Sin verificar desde esta sesión (no
+   hay credenciales): conviene confirmar con una lectura que la tabla, el
+   índice único y el bucket `justificantes-ausencia` existen.
+2. **Correr `npm run smoke`** -- se le agregaron 6 comprobaciones nuevas
+   (lectura para profesor/tutor/secretaría/dirección + la escritura real de
+   revisar, que en este flujo la hace el staff con su propia sesión). No se
+   pudo ejecutar aquí por falta de `SUPABASE_ACCESS_TOKEN`.
+3. Probar en vivo de punta a punta: marcar una ausencia de prueba, justificarla
+   como tutor con un PDF real, revisarla desde el colegio, confirmar que la
+   asistencia queda en 'justificado' y que llega el correo del resultado --
+   luego borrar los datos de prueba.
+
+**Quedó fuera a propósito** (no lo pidió el usuario, y ampliarlo solo habría
+sumado riesgo):
+- El mensaje automático de ausencia (`notify-attendance`) **no menciona
+  todavía** que se puede justificar desde el portal. Sería una línea en esa
+  Edge Function, pero desplegarla necesita Docker/credenciales que esta sesión
+  no tiene.
+- El colegio no recibe aviso por correo cuando entra una justificación nueva --
+  se entera por el contador de la pantalla de Asistencia. `notify-message` solo
+  sabe escribirle a tutores, no a personal.
+- No hay plazo límite para justificar (el colegio no lo pidió) ni justificación
+  por adelantado ("mañana falta por una cita médica"), que sería el siguiente
+  paso natural.
