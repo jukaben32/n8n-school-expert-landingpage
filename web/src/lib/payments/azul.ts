@@ -65,6 +65,21 @@ async function getSchoolAzulCredentials(admin: AdminClient, schoolId: string): P
   }
 }
 
+/**
+ * ¿Este colegio ya tiene cargadas sus credenciales de Azul?
+ *
+ * Sirve para no mostrarle al padre un botón de "Pagar con tarjeta" que lo
+ * único que puede hacer es responderle "este colegio todavía no tiene
+ * configurado el pago con tarjeta". Nunca devuelve ningún dato de la
+ * credencial -- solo sí/no.
+ */
+export async function schoolHasAzulConfigured(schoolId: string): Promise<boolean> {
+  if (!schoolId) return false
+  const admin = createAdminClient()
+  const credentials = await getSchoolAzulCredentials(admin, schoolId)
+  return credentials !== null
+}
+
 // Azul: "Se envía sin coma ni punto; los dos últimos dígitos representan
 // los decimales." Ej. 1000 equivale a 10.00.
 function toAzulAmount(amount: number): string {
