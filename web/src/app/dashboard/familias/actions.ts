@@ -7,6 +7,7 @@ import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { getPublicSiteUrl } from '@/lib/siteUrl'
 import { linkProfileForDualRole } from '@/lib/auth/linkProfileForDualRole'
+import { findAuthUserByEmail } from '@/lib/auth/findAuthUserByEmail'
 
 interface InviteResult {
   ok: boolean
@@ -128,8 +129,7 @@ async function inviteByEmail(
     if (!isAlreadyRegistered) {
       return { ok: false, message: `No se pudo invitar: ${inviteError?.message ?? 'error desconocido'}` }
     }
-    const { data: usersList } = await admin.auth.admin.listUsers()
-    const existingUser = usersList?.users.find((u) => u.email?.toLowerCase() === guardian.email!.toLowerCase())
+    const existingUser = await findAuthUserByEmail(admin, guardian.email!)
     if (!existingUser) {
       return { ok: false, message: 'Ese correo ya está registrado, pero no se pudo vincular. Contacta soporte.' }
     }
@@ -261,8 +261,7 @@ async function createPhoneBasedAccess(
     // madre ya tiene acceso creado así) -- se reusa la cuenta, pero se le
     // asigna una contraseña nueva para poder mostrarla de nuevo (la
     // original nunca quedó guardada en ningún lado, ni debía).
-    const { data: usersList } = await admin.auth.admin.listUsers()
-    const existingUser = usersList?.users.find((u) => u.email?.toLowerCase() === pseudoEmail)
+    const existingUser = await findAuthUserByEmail(admin, pseudoEmail)
     if (!existingUser) {
       return { ok: false, message: 'Ya existe una cuenta con este teléfono, pero no se pudo vincular. Contacta soporte.' }
     }

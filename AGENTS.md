@@ -3950,3 +3950,77 @@ texto del comprobante pero **nunca transmite nada a la DGII** -- el NCF real
 vive en Alegra. Antes de cobrar con tarjeta desde aquí hay que decidir quién
 emite el comprobante, o se producen NCF duplicados/fantasma. Sigue pendiente
 la integración con Alegra al momento del cobro.
+
+## No se podía dar de alta al dueño del colegio: dos bugs, uno de ellos creciendo en silencio (2026-09-08)
+
+Reporte: *"hay problemas para dar de alta al dueño del colegio"* (Octavio Mesa,
+rol Administrador de colegio), con captura de `/dashboard/personal/registros` y
+el mensaje **"No se pudo completar la invitación. Intenta de nuevo."**. El
+colegio aportó el contexto que faltaba: *"no le llegó al correo y me di cuenta
+que él puso un `.` al final luego de `.com`, y luego me lo envió de nuevo; el
+segundo da error, eliminar el primero"*.
+
+### Estado real encontrado en producción
+
+- **Dos fichas de `staff` activas** con el mismo correo (`omesa102@gmail.com`),
+  de los dos registros públicos: `ca288ca5…` (15:02) y `01de807f…` (15:14).
+- **Un perfil huérfano**: `users_profiles 3392af12…`, `role = school_admin`,
+  `staff_id` = la ficha vieja, y su `auth_id` (`d5b37883…`) **ya no existe en
+  `auth.users`**. Es decir: la primera invitación sí completó (cuenta + perfil)
+  hacia el correo con el punto de más, el correo rebotó, y después alguien
+  borró esa cuenta de Auth dejando el perfil colgando.
+- Con ese perfil ahí, la segunda invitación entraba por la rama de "el correo
+  ya está registrado", reusaba la cuenta vieja y `linkProfileForDualRole`
+  devolvía *"Este correo ya está vinculado a otra ficha de personal"*.
+
+**Se descartó que fuera la base**: el `insert` en `users_profiles` con
+`role='school_admin'` se probó dos veces contra producción -- directo por SQL
+(en transacción revertida) y por **PostgREST con `service_role`**, que es
+exactamente la llamada que hace la app. Funciona en los dos casos; la fila de
+prueba se borró.
+
+### Bug 1: el motivo real nunca llegaba a quien invita
+
+`inviteStaffAccess` registraba `linkResult.message` en `console.error` y en
+pantalla devolvía siempre *"No se pudo completar la invitación. Intenta de
+nuevo."*. Reintentar no arreglaba nada y el motivo solo era visible en los logs
+de Vercel -- que esta sesión ya comprobó (2026-09-07) que **no son accesibles
+con un token de proyecto**. Corregido: el mensaje específico se concatena al
+error. `familias/actions.ts` ya lo hacía bien en sus dos rutas; solo Personal se
+lo tragaba.
+
+### Bug 2 (el importante): `listUsers()` solo veía las primeras 50 cuentas
+
+Los **tres** flujos de invitación (`inviteStaffAccess`, `inviteByEmail`,
+`createPhoneBasedAccess`) llamaban a `admin.auth.admin.listUsers()` **sin
+paginar**. Ese método devuelve 50 por defecto. Medido contra producción el
+2026-09-08: **el proyecto tiene 96 cuentas de Auth, así que 46 quedaban
+invisibles** -- cualquier persona cuya cuenta cayera fuera de esa primera página
+se veía como "no existe" y quien invitaba recibía *"Ese correo ya está
+registrado, pero no se pudo vincular. Contacta soporte"*, sin salida desde la
+interfaz.
+
+Es el tipo de fallo que este archivo ya documenta una y otra vez: **funcionaba
+en las pruebas (pocos usuarios) y se va rompiendo para más gente conforme el
+colegio crece**. Y crece justo ahora: la campaña de correos va a crear cuentas
+para ~180 familias.
+
+Corregido con `web/src/lib/auth/findAuthUserByEmail.ts`, que recorre todas las
+páginas (200 por lote, tope de seguridad de 50 lotes) y compara en minúsculas.
+Usado en los tres sitios.
+
+### Lo que había que hacer con los datos (no requiere código)
+
+Borrar la ficha vieja de Octavio desde **Personal → Eliminar**:
+`deleteStaffAction` ya hace justo lo correcto -- borra el perfil vinculado,
+intenta borrar la cuenta de Auth (si ya no existe, lo ignora sin fallar) y
+marca la ficha con borrado suave. Eso limpia el perfil huérfano y el duplicado
+de una vez. En la lista de Personal se distinguen solas: la vieja aparece **con
+acceso "Administrador de colegio"** (por el perfil huérfano) y la nueva
+**"Sin acceso"**.
+
+**Hueco que queda abierto, sin corregir**: nada impide aprobar dos registros
+públicos con el mismo correo y crear dos fichas de `staff` -- es la misma clase
+de hueco que ya se cerró para estudiantes con la alerta de duplicados en
+`createStudentWithFamily()`. Lo natural sería avisar (sin bloquear) al aprobar
+un registro cuyo correo ya existe en `staff`.

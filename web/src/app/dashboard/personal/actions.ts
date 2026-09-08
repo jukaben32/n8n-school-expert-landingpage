@@ -7,6 +7,7 @@ import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { getPublicSiteUrl } from '@/lib/siteUrl'
 import { linkProfileForDualRole } from '@/lib/auth/linkProfileForDualRole'
+import { findAuthUserByEmail } from '@/lib/auth/findAuthUserByEmail'
 
 const LOGIN_ROLES = ['school_admin', 'director', 'teacher', 'finance', 'reception'] as const
 type LoginRole = (typeof LOGIN_ROLES)[number]
@@ -120,8 +121,7 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
       console.error('[inviteStaffAccess] fallo inviteUserByEmail', { staffId, email: staff.email, error: inviteError })
       return { ok: false, message: 'No se pudo enviar la invitación. Intenta de nuevo en unos minutos.' }
     }
-    const { data: usersList } = await admin.auth.admin.listUsers()
-    const existingUser = usersList?.users.find((u) => u.email?.toLowerCase() === staff.email.toLowerCase())
+    const existingUser = await findAuthUserByEmail(admin, staff.email)
     if (!existingUser) {
       return { ok: false, message: 'Ese correo ya está registrado, pero no se pudo vincular. Contacta soporte.' }
     }
@@ -166,7 +166,18 @@ export async function inviteStaffAccess(staffId: string, loginRole: string): Pro
       }
     }
 
-    return { ok: false, message: 'No se pudo completar la invitación. Intenta de nuevo.' }
+    // El motivo específico (ej. "este correo ya está vinculado a otra ficha
+    // de personal") tiene que llegar a quien invita. Antes solo iba a la
+    // consola del servidor y en pantalla salía un genérico "intenta de
+    // nuevo" -- reintentar no arreglaba nada y nadie podía saber por qué
+    // fallaba sin leer los logs de Vercel (caso real: el alta del dueño del
+    // colegio, 2026-09-08, dos fichas duplicadas del mismo correo).
+    return {
+      ok: false,
+      message: linkResult.message
+        ? `No se pudo completar la invitación: ${linkResult.message}`
+        : 'No se pudo completar la invitación. Intenta de nuevo.',
+    }
   }
 
   revalidatePath('/dashboard/personal')
