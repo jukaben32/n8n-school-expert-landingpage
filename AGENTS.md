@@ -4024,3 +4024,33 @@ públicos con el mismo correo y crear dos fichas de `staff` -- es la misma clase
 de hueco que ya se cerró para estudiantes con la alerta de duplicados en
 `createStudentWithFamily()`. Lo natural sería avisar (sin bloquear) al aprobar
 un registro cuyo correo ya existe en `staff`.
+
+### Ejecutado desde la sesión, a pedido del usuario ("es más seguro, menos oportunidad de errar")
+
+Antes de borrar nada se compararon **las dos fichas campo por campo**: resultaron
+idénticas en los 13 campos (mismo puesto, teléfono, correo, nivel académico,
+título, universidad, año), así que cuál sobrevivía era indiferente -- se archivó
+la primera, que además era la que arrastraba el perfil huérfano.
+
+1. Perfil huérfano `3392af12…` **borrado** y ficha `ca288ca5…` **archivada**
+   (`deleted_at`), en una sola sentencia con CTEs de escritura (atómica). Es
+   exactamente lo que hace `deleteStaffAction`; su cuenta de Auth ya no existía,
+   así que no había nada que borrar ahí. El bloque de reversión quedó comentado
+   en `supabase/seeds/`-style dentro del propio SQL de la sesión.
+2. Estado limpio confirmado: 1 ficha activa, 0 perfiles apuntando a cualquiera de
+   las dos, 0 cuentas de Auth con ese correo.
+3. **Invitación enviada replicando la llamada real de la app** (no un atajo):
+   `POST /auth/v1/invite` con `redirect_to=https://www.educacionmanantial.com/actualizar-contrasena`
+   y `data.full_name`, igual que `inviteUserByEmail`; después el `insert` en
+   `users_profiles` con `role='school_admin'` y el `staff_id` de la ficha
+   superviviente, igual que `linkProfileForDualRole`.
+4. Resultado verificado: cuenta `4cadaccf…` creada, `invited_at` sellado (o sea
+   que el SMTP de Auth **sí** aceptó y envió -- si Resend hubiera fallado, GoTrue
+   habría devuelto error en vez del usuario), perfil `6f0e0876…` con
+   `role=school_admin`, y la ficha vieja mostrando "sin acceso".
+
+**Nota de método**: hacerlo desde la sesión evitó el riesgo real de que alguien
+borrara en la interfaz la ficha equivocada (las dos se llaman igual y solo se
+distinguían por la etiqueta de acceso). La contrapartida es que **no se ejercitó
+el camino corregido de `inviteStaffAccess` en producción** -- el arreglo de
+paginación y el del mensaje siguen sin una prueba en vivo desde la pantalla.
