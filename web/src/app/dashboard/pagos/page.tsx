@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import { schoolHasAzulConfigured } from '@/lib/payments/azul'
 
 export const metadata: Metadata = {
   title: 'Estado de Cuenta — MentorIApp',
@@ -109,6 +110,15 @@ export default async function PagosPage({
 
   const invoices = (invoicesRaw ?? []) as unknown as Invoice[]
 
+  // El botón "Pagar con tarjeta" solo se ofrece si el colegio ya cargó sus
+  // credenciales de Azul (/dashboard/colegio). Sin esto, la familia veía un
+  // botón que lo único que hacía era responder "este colegio todavía no
+  // tiene configurado el pago con tarjeta". La transferencia con
+  // comprobante no depende de Azul y sigue disponible siempre.
+  const cardPaymentEnabled = profile?.school_id
+    ? await schoolHasAzulConfigured(profile.school_id)
+    : false
+
   // Último comprobante subido por factura (para no dejar que la familia
   // suba dos veces mientras uno ya está en revisión, y para mostrar si
   // uno fue rechazado).
@@ -180,7 +190,7 @@ export default async function PagosPage({
           </h2>
           <div className="space-y-3">
             {pendientes.map((invoice) => (
-              <InvoiceCard key={invoice.id} invoice={invoice} receiptStatus={receiptStatusByInvoice.get(invoice.id)} />
+              <InvoiceCard key={invoice.id} invoice={invoice} receiptStatus={receiptStatusByInvoice.get(invoice.id)} cardPaymentEnabled={cardPaymentEnabled} />
             ))}
           </div>
         </section>

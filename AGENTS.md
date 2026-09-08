@@ -3912,3 +3912,41 @@ vacío se escribe `null` en vez de una cadena vacía (mismo criterio que
 **Si el colegio vuelve a reportar un bloqueo por teléfono en otra pantalla**:
 se buscó en todo `src/app` y `src/components` y no queda ningún otro sitio que
 lo exija. Haría falta el texto exacto del error y la pantalla.
+
+## El botón "Pagar con tarjeta" solo aparece si Azul está configurado (2026-09-08)
+
+Antes se le mostraba a toda familia con una factura pendiente, y al tocarlo lo
+único que hacía era responder *"Este colegio todavía no tiene configurado el
+pago con tarjeta"* -- porque `private.school_payment_settings` está vacía (0
+colegios configurados; la migración `20260728010000` sí está aplicada, lo que
+falta son las credenciales que el colegio tiene que pedirle a Azul).
+
+`schoolHasAzulConfigured(schoolId)` (nuevo, en `web/src/lib/payments/azul.ts`)
+reutiliza el mismo `getSchoolAzulCredentials()` que ya usa el flujo de pago
+-- **nunca devuelve ningún dato de la credencial, solo sí/no** -- y
+`/dashboard/pagos` pasa esa bandera a `InvoiceCard` -> `PaymentActions`.
+"Ya transferí" (comprobante bancario) no depende de Azul y sigue disponible
+siempre.
+
+Comprobado contra producción: para Gran Manantial la función no devuelve
+credenciales, así que hoy el botón queda oculto; en cuanto se carguen en
+`/dashboard/colegio` aparece solo, sin tocar código.
+
+### Qué falta para activar el pago con tarjeta (respuesta al colegio, 2026-09-08)
+
+No falta programar nada. Hay que pedirle a Azul, para la **"Página de Pago"**
+(NO Web Services -- por eso **no hacen falta certificados digitales**, que es
+donde suele trabarse la conversación con el banco): Merchant ID, Merchant Name
+(exacto, entra en el AuthHash), Merchant Type (`ECommerce`), Currency Code
+(`$`), el **AuthKey**, y el ambiente. Son credenciales distintas para pruebas y
+para producción.
+
+A Azul hay que darle las URLs de retorno, que son:
+`https://www.educacionmanantial.com/api/pagos/azul/resultado` (aprobada y
+declinada) y la misma con `?cancelado=1` (cancelada).
+
+**Advertencia fiscal, más seria que la técnica**: `generate_ncf()` arma el
+texto del comprobante pero **nunca transmite nada a la DGII** -- el NCF real
+vive en Alegra. Antes de cobrar con tarjeta desde aquí hay que decidir quién
+emite el comprobante, o se producen NCF duplicados/fantasma. Sigue pendiente
+la integración con Alegra al momento del cobro.

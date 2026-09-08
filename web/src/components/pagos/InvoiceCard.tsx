@@ -17,6 +17,8 @@ interface InvoiceCardProps {
     students: { first_name: string; last_name: string } | null
   }
   receiptStatus?: ReceiptStatus | null
+  /** El colegio ya tiene Azul configurado (si no, no se ofrece la tarjeta). */
+  cardPaymentEnabled?: boolean
 }
 
 const statusStyles = {
@@ -29,7 +31,7 @@ const statusStyles = {
 /**
  * InvoiceCard — Tarjeta individual para mostrar el detalle de una factura.
  */
-export default function InvoiceCard({ invoice, receiptStatus }: InvoiceCardProps) {
+export default function InvoiceCard({ invoice, receiptStatus, cardPaymentEnabled = false }: InvoiceCardProps) {
   const { description, total_amount, due_date, status, ncf, paid_at, students } = invoice
 
   const formatDOP = (amount: number) => {
@@ -91,7 +93,7 @@ export default function InvoiceCard({ invoice, receiptStatus }: InvoiceCardProps
         </p>
         
         {status !== 'pagado' && status !== 'anulado' && (
-          <PaymentActions invoiceId={invoice.id} pendingReceiptStatus={receiptStatus} />
+          <PaymentActions invoiceId={invoice.id} pendingReceiptStatus={receiptStatus} cardPaymentEnabled={cardPaymentEnabled} />
         )}
       </div>
 

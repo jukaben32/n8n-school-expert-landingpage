@@ -6,13 +6,20 @@ import { startAzulPayment, uploadPaymentReceipt } from '@/app/dashboard/pagos/ac
 interface PaymentActionsProps {
   invoiceId: string
   pendingReceiptStatus?: 'pendiente' | 'confirmado' | 'rechazado' | null
+  /**
+   * ¿El colegio ya cargó sus credenciales de Azul? Si no, el botón de
+   * tarjeta ni se muestra: antes se le enseñaba a la familia y al tocarlo
+   * solo respondía "este colegio todavía no tiene configurado el pago con
+   * tarjeta". La transferencia con comprobante siempre está disponible.
+   */
+  cardPaymentEnabled?: boolean
 }
 
 /**
  * Botones de pago de una factura pendiente: "Pagar con tarjeta" (Azul,
  * Parte A) y "Ya transferí" (comprobante bancario, Parte B).
  */
-export default function PaymentActions({ invoiceId, pendingReceiptStatus }: PaymentActionsProps) {
+export default function PaymentActions({ invoiceId, pendingReceiptStatus, cardPaymentEnabled = false }: PaymentActionsProps) {
   const [payingWithCard, setPayingWithCard] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -88,14 +95,16 @@ export default function PaymentActions({ invoiceId, pendingReceiptStatus }: Paym
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={handlePayWithCard}
-          disabled={payingWithCard}
-          className="text-xs font-semibold px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-full transition shadow-glow disabled:opacity-60"
-        >
-          {payingWithCard ? 'Redirigiendo…' : 'Pagar con tarjeta'}
-        </button>
+        {cardPaymentEnabled && (
+          <button
+            type="button"
+            onClick={handlePayWithCard}
+            disabled={payingWithCard}
+            className="text-xs font-semibold px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-full transition shadow-glow disabled:opacity-60"
+          >
+            {payingWithCard ? 'Redirigiendo…' : 'Pagar con tarjeta'}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setShowUpload((v) => !v)}
