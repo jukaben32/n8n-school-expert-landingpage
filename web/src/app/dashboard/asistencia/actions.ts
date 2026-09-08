@@ -9,6 +9,7 @@ import {
   JUSTIFICATION_BUCKET,
   MAX_JUSTIFICATION_BYTES,
   extensionForType,
+  resolveFileType,
   type JustifiableAbsence,
   type JustificationStatus,
 } from '@/lib/attendance/justifications'
@@ -153,12 +154,15 @@ export async function submitAbsenceJustification(formData: FormData): Promise<Ac
   // El archivo es OPCIONAL: muchas justificaciones son de una línea. Un
   // <input type="file"> vacío llega como un File de 0 bytes, no como null.
   const hasFile = file instanceof File && file.size > 0
+  // El iPhone a veces manda el archivo sin tipo MIME: se deduce por la
+  // extensión antes de validar, si no se rechazaría una foto válida.
+  const fileType = hasFile ? resolveFileType(file.name, file.type) : ''
   if (hasFile) {
     if (file.size > MAX_JUSTIFICATION_BYTES) {
       return { ok: false, error: 'El archivo es demasiado grande (máximo 10MB).' }
     }
-    if (!ALLOWED_JUSTIFICATION_TYPES.includes(file.type)) {
-      return { ok: false, error: 'Solo se aceptan imágenes (JPG/PNG/WEBP) o PDF.' }
+    if (!ALLOWED_JUSTIFICATION_TYPES.includes(fileType)) {
+      return { ok: false, error: 'Solo se aceptan fotos (JPG/PNG/WEBP/HEIC) o PDF.' }
     }
   }
 
@@ -205,17 +209,17 @@ export async function submitAbsenceJustification(formData: FormData): Promise<Ac
   let documentType: string | null = null
 
   if (hasFile) {
-    const path = `${identity.schoolId}/${identity.familyId}/${justificationId}.${extensionForType(file.type)}`
+    const path = `${identity.schoolId}/${identity.familyId}/${justificationId}.${extensionForType(fileType)}`
     const buffer = Buffer.from(await file.arrayBuffer())
     const { error: uploadError } = await admin.storage
       .from(JUSTIFICATION_BUCKET)
-      .upload(path, buffer, { contentType: file.type, upsert: false })
+      .upload(path, buffer, { contentType: fileType, upsert: false })
 
     if (uploadError) {
       return { ok: false, error: `No se pudo subir el documento: ${uploadError.message}` }
     }
     documentPath = path
-    documentType = file.type
+    documentType = fileType
   }
 
   const { error: insertError } = await admin.from('attendance_justifications').insert({

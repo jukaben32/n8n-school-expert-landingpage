@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
-import { JUSTIFICATION_BUCKET } from '@/lib/attendance/justifications'
+import { JUSTIFICATION_BUCKET, isHeic } from '@/lib/attendance/justifications'
 
 /**
  * Lado colegio de la justificación de ausencias.
@@ -56,6 +56,8 @@ export interface PendingJustification {
   reason: string
   created_at: string
   has_document: boolean
+  /** Foto de iPhone sin convertir: el navegador no la previsualiza, se descarga. */
+  document_is_heic: boolean
   student_name: string
   grade_level: string | null
   absence_date: string
@@ -88,7 +90,7 @@ export async function listPendingJustifications(): Promise<PendingJustification[
   const { data } = await admin
     .from('attendance_justifications')
     .select(`
-      id, reason, created_at, document_path,
+      id, reason, created_at, document_path, document_type,
       students(first_name, last_name, grade_level),
       guardians(first_name, last_name),
       attendance(date, status, subject:subjects(name))
@@ -101,6 +103,7 @@ export async function listPendingJustifications(): Promise<PendingJustification[
     reason: string
     created_at: string
     document_path: string | null
+    document_type: string | null
     students: { first_name: string; last_name: string; grade_level: string | null } | null
     guardians: { first_name: string; last_name: string } | null
     attendance: { date: string; status: string; subject: { name: string } | null } | null
@@ -111,6 +114,7 @@ export async function listPendingJustifications(): Promise<PendingJustification[
     reason: r.reason,
     created_at: r.created_at,
     has_document: !!r.document_path,
+    document_is_heic: isHeic(r.document_type),
     student_name: r.students ? `${r.students.first_name} ${r.students.last_name}` : 'Estudiante',
     grade_level: r.students?.grade_level ?? null,
     absence_date: r.attendance?.date ?? '',

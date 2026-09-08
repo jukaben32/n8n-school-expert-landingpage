@@ -19,10 +19,26 @@ export const ALLOWED_JUSTIFICATION_TYPES = [
   'image/png',
   'image/webp',
   'application/pdf',
+  // Formato nativo de las fotos del iPhone. Buena parte de las familias del
+  // colegio entra desde iPhone: Safari normalmente convierte a JPG al subir
+  // desde la galería, pero si la persona elige la foto desde la app
+  // "Archivos" sube el HEIC tal cual -- sin esto, esa mamá recibiría
+  // "Solo se aceptan imágenes o PDF" con una foto perfectamente válida.
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
 ]
 
-/** Lo que acepta el <input type="file"> del formulario del tutor. */
-export const JUSTIFICATION_FILE_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf'
+/**
+ * Lo que acepta el <input type="file"> del formulario del tutor.
+ *
+ * Van las extensiones .heic/.heif además de los tipos MIME: hay
+ * navegadores/sistemas que no reconocen 'image/heic' en el `accept` y
+ * dejarían el archivo en gris sin poder elegirlo.
+ */
+export const JUSTIFICATION_FILE_ACCEPT =
+  'image/jpeg,image/png,image/webp,application/pdf,image/heic,image/heif,.heic,.heif'
 
 /** Estados de asistencia que un tutor puede justificar. */
 export const JUSTIFIABLE_ATTENDANCE_STATUSES = ['ausente', 'tardanza']
@@ -52,7 +68,47 @@ export interface JustifiableAbsence {
   } | null
 }
 
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+  'image/heic-sequence': 'heic',
+  'image/heif-sequence': 'heif',
+}
+
 export function extensionForType(mimeType: string): string {
-  if (mimeType === 'application/pdf') return 'pdf'
-  return mimeType.split('/')[1] ?? 'bin'
+  return EXTENSION_BY_TYPE[mimeType] ?? 'bin'
+}
+
+/**
+ * El tipo real del archivo que sube el tutor.
+ *
+ * Existe por un caso concreto del iPhone: al elegir una foto desde la app
+ * "Archivos" (o desde ciertos navegadores en Android), el `type` del File
+ * llega VACÍO o como 'application/octet-stream'. Validar solo por `type`
+ * rechazaría una foto perfectamente válida, así que cuando no viene se
+ * deduce por la extensión del nombre.
+ */
+export function resolveFileType(fileName: string, fileType: string): string {
+  if (fileType && fileType !== 'application/octet-stream') return fileType
+
+  const extension = fileName.toLowerCase().split('.').pop() ?? ''
+  const byExtension: Record<string, string> = {
+    heic: 'image/heic',
+    heif: 'image/heif',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    pdf: 'application/pdf',
+  }
+  return byExtension[extension] ?? fileType
+}
+
+/** ¿Es una foto de iPhone sin convertir? El colegio la tendrá que descargar. */
+export function isHeic(mimeType: string | null): boolean {
+  return !!mimeType && mimeType.startsWith('image/hei')
 }

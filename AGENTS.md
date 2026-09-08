@@ -3714,10 +3714,30 @@ costaron un día de clases en su momento):
    `npm run build` completo OK, con `/dashboard/asistencia/justificaciones`
    construida.
 
+**Formatos que acepta el adjunto (ampliado el 2026-09-08 a pedido del
+usuario: "muchos padres tienen iphone")**: JPG, PNG, WEBP, PDF y **HEIC/HEIF**,
+hasta 10MB. El HEIC importa por un caso concreto: Safari suele convertir a JPG
+al subir desde la galería, pero eligiendo la foto desde la app "Archivos" sube
+el HEIC tal cual -- y encima el iPhone a veces manda el archivo con el `type`
+VACÍO o como 'application/octet-stream'. Por eso validar solo por `file.type`
+rechazaría una foto perfectamente válida: `resolveFileType(nombre, tipo)`
+(en `web/src/lib/attendance/justifications.ts`) deduce el tipo por la extensión
+cuando no viene. El `accept` del input lleva además `.heic,.heif` como
+extensiones, porque hay navegadores que no reconocen `image/heic` ahí y
+dejarían el archivo en gris. Probado con 7 casos reales (HEIC sin tipo, PDF
+como octet-stream, .exe y .txt rechazados). No hizo falta ninguna migración: el
+bucket se creó sin `allowed_mime_types`, la validación es solo de la app.
+**Contrapartida conocida, avisada en la propia bandeja de revisión**: Chrome no
+previsualiza un HEIC -- el colegio lo descarga y lo abre con el visor de fotos.
+Si eso llega a estorbar, el siguiente paso sería convertirlo a JPG en el
+servidor al recibirlo (agrega una dependencia nueva, por eso no se hizo ahora).
+
 **Pendiente real (esta sesión NO tuvo credenciales de Supabase, mismo bloqueo
 de siempre)**:
-1. **Aplicar `20260911000000_attendance_justifications.sql` a producción.**
-   Hasta entonces la pantalla existe pero falla al consultar la tabla.
+1. ~~Aplicar `20260911000000_attendance_justifications.sql` a producción~~ --
+   **el usuario la aplicó el 2026-09-08**. Sin verificar desde esta sesión (no
+   hay credenciales): conviene confirmar con una lectura que la tabla, el
+   índice único y el bucket `justificantes-ausencia` existen.
 2. **Correr `npm run smoke`** -- se le agregaron 6 comprobaciones nuevas
    (lectura para profesor/tutor/secretaría/dirección + la escritura real de
    revisar, que en este flujo la hace el staff con su propia sesión). No se

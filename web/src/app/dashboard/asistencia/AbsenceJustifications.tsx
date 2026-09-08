@@ -166,7 +166,8 @@ export default function AbsenceJustifications({ absences }: { absences: Justifia
                       className="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:rounded-full file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 dark:file:text-slate-200"
                     />
                     <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                      Foto o PDF, máximo 10MB. Solo lo ve el personal del colegio.
+                      Puedes tomarle una foto con el celular (JPG, PNG, HEIC de iPhone) o subir un PDF.
+                      Máximo 10MB. Solo lo ve el personal del colegio.
                     </p>
                   </div>
 

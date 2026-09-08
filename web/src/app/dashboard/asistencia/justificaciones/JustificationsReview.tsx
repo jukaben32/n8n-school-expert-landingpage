@@ -132,9 +132,16 @@ export default function JustificationsReview({ initial }: { initial: PendingJust
           </div>
 
           {previewUrl?.id === item.id && (
-            <a href={previewUrl.url} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary dark:text-accent-light underline">
-              Abrir el documento en una pestaña nueva (enlace válido por 5 minutos)
-            </a>
+            <div className="space-y-1">
+              <a href={previewUrl.url} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary dark:text-accent-light underline">
+                Abrir el documento en una pestaña nueva (enlace válido por 5 minutos)
+              </a>
+              {item.document_is_heic && (
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Es una foto de iPhone (HEIC): el navegador no la muestra, se descarga y se abre con el visor de fotos.
+                </p>
+              )}
+            </div>
           )}
 
           {noteId === item.id && (
