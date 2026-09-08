@@ -3732,20 +3732,39 @@ previsualiza un HEIC -- el colegio lo descarga y lo abre con el visor de fotos.
 Si eso llega a estorbar, el siguiente paso sería convertirlo a JPG en el
 servidor al recibirlo (agrega una dependencia nueva, por eso no se hizo ahora).
 
-**Pendiente real (esta sesión NO tuvo credenciales de Supabase, mismo bloqueo
-de siempre)**:
-1. ~~Aplicar `20260911000000_attendance_justifications.sql` a producción~~ --
-   **el usuario la aplicó el 2026-09-08**. Sin verificar desde esta sesión (no
-   hay credenciales): conviene confirmar con una lectura que la tabla, el
-   índice único y el bucket `justificantes-ausencia` existen.
-2. **Correr `npm run smoke`** -- se le agregaron 6 comprobaciones nuevas
-   (lectura para profesor/tutor/secretaría/dirección + la escritura real de
-   revisar, que en este flujo la hace el staff con su propia sesión). No se
-   pudo ejecutar aquí por falta de `SUPABASE_ACCESS_TOKEN`.
-3. Probar en vivo de punta a punta: marcar una ausencia de prueba, justificarla
-   como tutor con un PDF real, revisarla desde el colegio, confirmar que la
-   asistencia queda en 'justificado' y que llega el correo del resultado --
-   luego borrar los datos de prueba.
+### Verificación contra PRODUCCIÓN (2026-09-08, con un PAT de un solo uso)
+
+El usuario aplicó la migración y pasó un Personal Access Token (`sbp_...`, no
+guardado en el repo, se le indicó revocarlo). Lo verificado, en este orden:
+
+1. **La migración quedó completa**: 14 columnas, las 4 policies
+   (guardian_read/guardian_insert/staff_read/staff_update), los 5 índices
+   -- incluido el parcial `idx_att_just_una_viva_por_falta` --, RLS activa y
+   el bucket `justificantes-ausencia` con `public=false`.
+2. **`npm run smoke`: 37 comprobaciones, todas OK**, con las 6 nuevas
+   incluidas. Roles reales probados: teacher, guardian, reception, director,
+   school_admin, finance (student sigue sin ningún usuario creado).
+3. **Flujo completo con datos reales, en una transacción revertida**: se creó
+   una falta de prueba con fecha **vieja a propósito** (2026-06-15) -- el
+   trigger de aviso solo dispara si la falta es de hoy, así que ningún padre
+   real recibió nada. Con la sesión simulada de una tutora real y de la
+   profesora de ese curso: la tutora justifica ✅, no puede auto-aceptarse la
+   suya (0 filas) ✅, la profesora acepta (1 fila) ✅, la asistencia queda en
+   `justificado` ✅, la tutora ve el resultado en su portal ✅ y no puede
+   borrar la justificación (0 filas, no hay policy de delete) ✅. Confirmado
+   después: 0 justificaciones y 0 faltas en esa fecha -- no quedó nada.
+
+**Nota sobre los grants**: la tabla muestra `DELETE/TRUNCATE/TRIGGER/REFERENCES`
+para `authenticated` además de lo que otorga la migración. No lo abrió esta
+tarea: es el comportamiento por defecto de Supabase para toda tabla nueva del
+schema public, idéntico en `attendance`, `students` y `payment_receipts`. Como
+no existe ninguna policy de `delete`, la RLS lo bloquea igual -- comprobado en
+el paso 3.
+
+**Lo único que sigue sin probar**: la subida de un archivo real (el `upload` al
+bucket con `service_role`) y la interfaz en un navegador de verdad. Vale
+especialmente la pena probarlo **desde un iPhone**, que es el caso para el que
+se agregó HEIC. Lo demás del flujo ya está verificado contra producción.
 
 **Quedó fuera a propósito** (no lo pidió el usuario, y ampliarlo solo habría
 sumado riesgo):
