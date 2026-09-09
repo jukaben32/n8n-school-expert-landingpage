@@ -74,6 +74,7 @@ export default async function ReportesPage() {
     { data: directConvRaw, error: directConvError },
     { data: quizAttemptsRaw, error: quizError },
     { count: updatesCount },
+    { data: receivablesRaw, error: receivablesError },
   ] = await Promise.all([
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', thirtyDaysAgoStr),
     supabase.from('invoices').select('status, total_amount').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', startOfMonth.toISOString()),
@@ -84,6 +85,7 @@ export default async function ReportesPage() {
     supabase.from('direct_conversations').select('id, staff_last_read_at, direct_messages(sender_type, created_at)').eq('school_id', schoolId),
     supabase.from('quiz_attempts').select('score, max_score, lesson_id, lessons(title)').eq('school_id', schoolId).not('completed_at', 'is', null),
     supabase.from('class_updates').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).is('deleted_at', null).gte('created_at', thirtyDaysAgoIso),
+    supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
   ])
 
   // ── Estudiantes ─────────────────────────────────────────────────────
@@ -129,7 +131,28 @@ export default async function ReportesPage() {
   const invoicesMonth = (invoicesMonthRaw ?? []) as { status: string; total_amount: number }[]
   const totalInvoiced = invoicesMonth.reduce((sum, i) => sum + Number(i.total_amount), 0)
   const totalPaid = invoicesMonth.filter((i) => i.status === 'pagado').reduce((sum, i) => sum + Number(i.total_amount), 0)
-  const totalPending = invoicesMonth.filter((i) => i.status === 'pendiente' || i.status === 'vencido').reduce((sum, i) => sum + Number(i.total_amount), 0)
+  // La mora NO puede salir de `invoices.status`: nada en todo el sistema
+  // escribe jamas 'vencido' (ni trigger, ni cron -- ver AGENTS.md), y el
+  // colegio crea cada factura ya 'pagado' desde "Registrar pago externo".
+  // Con eso, este numero estaba condenado a RD$0 pase lo que pase, mientras
+  // el Panel y Cuentas por Cobrar mostraban cientos de miles de pesos de
+  // deuda real. Se lee la MISMA RPC que esas dos pantallas -- un solo motor
+  // de mora para las tres, no una tercera version que pueda divergir.
+  type ReceivableRow = {
+    family_id: string
+    overdue_amount: number
+    late_fee_amount: number | null
+    aging_bucket: string | null
+  }
+  const receivables = (receivablesRaw ?? []) as ReceivableRow[]
+  // Igual que el Panel: la RPC devuelve `overdue_amount` tambien para la
+  // cuota corriente (ya paso el dia 1, pero la familia puede pagar sin
+  // recargo hasta el dia 5). Esa todavia no es cartera vencida.
+  const enMora = receivables.filter((r) => Number(r.overdue_amount) > 0 && r.aging_bucket !== 'corriente')
+  const carteraVencida = enMora.reduce(
+    (sum, r) => sum + Number(r.overdue_amount) + Number(r.late_fee_amount ?? 0), 0)
+  const estudiantesEnMora = enMora.length
+  const familiasEnMora = new Set(enMora.map((r) => r.family_id)).size
   const formatDOP = (amount: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount)
 
   const invoicesTrendRows = (invoicesTrendRaw ?? []) as { status: string; total_amount: number; issued_at: string }[]
@@ -206,6 +229,7 @@ export default async function ReportesPage() {
       <QueryErrorBanner errors={[
         { label: 'la asistencia', error: attendanceError },
         { label: 'los cobros', error: invoicesMonthError || invoicesTrendError },
+        { label: 'la cartera vencida', error: receivablesError },
         { label: 'los estudiantes', error: studentsError },
         { label: 'los comunicados', error: messagesError },
         { label: 'el asistente de IA', error: aiError },
@@ -266,8 +290,11 @@ export default async function ReportesPage() {
               <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>Cobrado</p>
             </div>
             <div>
-              <p className="text-2xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-warning)' }}>{formatDOP(totalPending)}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>Pendiente / vencido</p>
+              <p className="text-2xl font-bold font-barlow tabular-nums" style={{ color: 'var(--dash-danger-strong)' }}>{formatDOP(carteraVencida)}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>Cartera vencida</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
+                {estudiantesEnMora} estudiantes · {familiasEnMora} familias
+              </p>
             </div>
           </div>
         </ChartCard>
