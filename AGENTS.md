@@ -4198,8 +4198,11 @@ script, revisar ese caso explicitamente.**
 `Olivarez`/`Olivares`, `Morale`/`Morales`, `Andrian`/`Adrian`, `Sara`/`Sarha`. Se cargaron
 contra el nombre de la base. **No se cambio ningun nombre**: en dos casos la base se ve mas
 correcta que Alegra, y sobrescribir el nombre de un menor con un posible error de digitacion
-del POS seria meter el error al reves. **Pendiente**: que el colegio confirme cual es la
-escritura legal de cada uno y se corrija del lado que corresponda.
+del POS seria meter el error al reves.
+**Pendiente, con fuente ya definida**: el usuario revisa el 2026-09-10 las **actas de
+nacimiento** que el colegio tiene en su poder y confirma con Secretaria la escritura legal de
+los cuatro. Esa es la fuente correcta -- no Alegra ni la base. Segun lo que digan las actas,
+se corrige del lado que este mal (puede ser Alegra en dos de los casos).
 
 **Dos siguen sin cargar, a proposito:**
 - **Blayder Emmanuel Solis Castillo** (RD$2,050, adelanto de octubre). La base tiene
@@ -4207,7 +4210,8 @@ escritura legal de cada uno y se corrija del lado que corresponda.
   (829-467-7220) es el de **Yarimir Solis Sosa**, cuyo apellido explica el "Solis Sosa", y
   sus otros dos hijos (matriculas 24-0039 y 24-0040, consecutivas con el 24-0041 de Blayder)
   si emparejaron. En contra: cambian el nombre de pila Y el segundo apellido. **El usuario
-  pidio confirmarlo con Secretaria antes de cargarlo.**
+  pidio confirmarlo con Secretaria antes de cargarlo** -- lo revisa el 2026-09-10 junto con las
+  actas de nacimiento.
 - **Victor Emmanuel Sanchez Pilier** (RD$2,250, matricula 16-0059): **no existe en la
   plataforma**, ni activo ni con `deleted_at`. Hay un *Eythan Gadiel Angomas Pilier* (mismo
   apellido, posible hermano) pero ningun Victor. Hay que darlo de alta antes de registrarle
