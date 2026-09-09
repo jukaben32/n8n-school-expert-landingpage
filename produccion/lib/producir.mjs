@@ -8,11 +8,13 @@
  * una ecuación mal renderizada le enseña mal al estudiante y nadie se entera.
  *
  * Cada escena se narra por separado. Eso permite comparar el transcript
- * devuelto contra el guion palabra por palabra: si la voz se comió una
- * oración -- cosa que sí pasa, y en pruebas le pasó a 3 de 5 voces -- la
- * producción falla ahí en vez de publicar una lección incompleta.
+ * devuelto contra el guion palabra por palabra, EN LAS DOS DIRECCIONES: si la
+ * voz se comió una oración -- cosa que sí pasa, y en pruebas le pasó a 3 de 5
+ * voces -- o si agregó texto que no estaba, se reintenta en vez de publicar
+ * una lección cuyo audio no corresponde a la lámina.
  *
  * Uso:  OPENROUTER_API_KEY=... node lib/producir.mjs lecciones/<archivo>.json
+ *       (si no hay clave de OpenRouter usa OPENAI_API_KEY: mismo modelo y voz)
  */
 import { readFile, writeFile, mkdir, rm, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -25,7 +27,25 @@ import ffmpegPath from 'ffmpeg-static'
 const run = promisify(execFile)
 const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
-const MODELO_VOZ = 'openai/gpt-audio-mini'
+/**
+ * La voz es el MISMO modelo en los dos casos; OpenRouter es solo una pasarela
+ * más barata (US$0.0042/min contra ~US$0.015 del directo). Si no hay clave de
+ * OpenRouter se usa la de OpenAI del propio proyecto: idéntico modelo, idéntica
+ * voz, así que las lecciones suenan igual que las 9 de 6to ya publicadas.
+ */
+const VOZ_OPENROUTER = {
+  url: 'https://openrouter.ai/api/v1/chat/completions',
+  modelo: 'openai/gpt-audio-mini',
+  clave: () => process.env.OPENROUTER_API_KEY,
+  nombre: 'OpenRouter',
+}
+const VOZ_OPENAI = {
+  url: 'https://api.openai.com/v1/chat/completions',
+  modelo: 'gpt-audio-mini',
+  clave: () => process.env.OPENAI_API_KEY,
+  nombre: 'OpenAI directo',
+}
+const PROVEEDOR = process.env.OPENROUTER_API_KEY ? VOZ_OPENROUTER : VOZ_OPENAI
 /**
  * La voz sale a ~178 palabras/min. 0.84 la deja en ~150, que sirve para 6to.
  * En 1ro hace falta más lento todavía (~130): el guion lo pide con
@@ -58,11 +78,11 @@ const normalizar = (s) =>
 
 /** Una sola llamada a la voz. Devuelve el PCM crudo y lo que dijo de verdad. */
 async function pedirVoz(texto, voz, sistema) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const res = await fetch(PROVEEDOR.url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${PROVEEDOR.clave()}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: MODELO_VOZ, stream: true, modalities: ['text', 'audio'],
+      model: PROVEEDOR.modelo, stream: true, modalities: ['text', 'audio'],
       audio: { voice: voz, format: 'pcm16' },
       messages: [{ role: 'system', content: sistema }, { role: 'user', content: texto }],
     }),
@@ -90,8 +110,21 @@ async function pedirVoz(texto, voz, sistema) {
   }
   const pcm = Buffer.concat(trozos)
   if (!pcm.length) throw new Error('la voz no devolvió audio')
-  const dichas = new Set(normalizar(transcript))
-  return { pcm, costo, faltantes: normalizar(texto).filter((p) => !dichas.has(p)) }
+  // Fidelidad en las DOS direcciones. Que la voz se coma frases ya se vigilaba;
+  // que AGREGUE texto no, y pasa de verdad: en una prueba con un prompt débil
+  // el modelo convirtió "nacen, crecen y se alimentan" en "...se reproducen y
+  // reaccionan a los estímulos del entorno". Si eso llegara a un MP4, la voz
+  // estaría diciendo algo que no está en la lámina y nadie se enteraría.
+  // Hay margen para no marcar falsos positivos por cómo se pronuncian números
+  // y abreviaturas ("1ro" -> "primero").
+  const guion = normalizar(texto)
+  const dichas = normalizar(transcript)
+  const enGuion = new Set(guion)
+  const enDichas = new Set(dichas)
+  const faltantes = guion.filter((p) => !enDichas.has(p))
+  const agregadas = dichas.filter((p) => !enGuion.has(p))
+  const margen = Math.max(4, Math.ceil(guion.length * 0.12))
+  return { pcm, costo, faltantes, agregadas: agregadas.length > margen ? agregadas : [] }
 }
 
 /**
@@ -134,7 +167,10 @@ async function narrar(texto, voz, destino, ritmo, sistema) {
   for (let intento = 1; intento <= 3; intento++) {
     const r = await pedirVoz(texto, voz, sistema)
     costo += r.costo
-    if (!r.faltantes.length) return { ...(await escribir(r.pcm, destino, ritmo)), costo, modo: intento === 1 ? 'directa' : `reintento ${intento}` }
+    if (!r.faltantes.length && !r.agregadas.length) {
+      return { ...(await escribir(r.pcm, destino, ritmo)), costo, modo: intento === 1 ? 'directa' : `reintento ${intento}` }
+    }
+    if (r.agregadas.length) console.log('             (la voz agregó texto que no está en el guion, reintentando)')
   }
 
   // Último recurso: por pedazos. Más cortos que la escena entera, así que la
@@ -146,7 +182,7 @@ async function narrar(texto, voz, destino, ritmo, sistema) {
     for (let intento = 1; intento <= 4 && !ok; intento++) {
       const r = await pedirVoz(pedazo, voz, sistema)
       costo += r.costo
-      if (!r.faltantes.length) ok = r.pcm
+      if (!r.faltantes.length && !r.agregadas.length) ok = r.pcm
     }
     if (!ok) throw new Error(`la voz no logró leer completo el pedazo: "${pedazo.slice(0, 70)}..."`)
     partes.push(ok)
@@ -167,7 +203,7 @@ async function escribir(pcm, destino, ritmo) {
 async function main() {
   const guionPath = process.argv[2]
   if (!guionPath) throw new Error('falta el archivo del guion')
-  if (!process.env.OPENROUTER_API_KEY) throw new Error('falta OPENROUTER_API_KEY')
+  if (!PROVEEDOR.clave()) throw new Error('falta OPENROUTER_API_KEY o OPENAI_API_KEY para la voz')
 
   const guion = JSON.parse(await readFile(guionPath, 'utf8'))
   // Cada grado trae su plantilla visual, su ritmo de voz y la edad del
@@ -179,7 +215,7 @@ async function main() {
   const dir = path.join(RAIZ, 'salida', guion.id)
   await mkdir(dir, { recursive: true })
 
-  console.log(`\n${guion.materia} · ${guion.curso}\n${guion.titulo}\n${'─'.repeat(60)}`)
+  console.log(`\n${guion.materia} · ${guion.curso}\n${guion.titulo}\nvoz vía ${PROVEEDOR.nombre}\n${'─'.repeat(60)}`)
 
   // 1. Gráficas: HTML real -> PNG. Cada número que se ve, se escribió aquí.
   const navegador = await chromium.launch({ executablePath: CHROME })
