@@ -4138,18 +4138,46 @@ documentado muchas veces aquí. Antes de escribir hay que hacer, en este orden:
    ante la DGII.
 5. `npm run smoke` al terminar.
 
+La matrícula estudiantil (`students.student_code`) **está vacía en producción** -- el
+usuario lo confirmó el 2026-09-09: *"no tenemos en nuestro proyecto la matricula
+estudiantil, no lo haremos ahora"*. Sólo vive en los **contactos de Alegra**, como
+`identification` de tipo `IE`. **Su patrón**: últimos 2 dígitos del año de inscripción +
+guion + número de inscrito en orden de llegada -- `24-0033` = inscrito en 2024, el nº 33.
+
+Esto era un bloqueo silencioso que se detectó a tiempo: la primera versión del script
+emparejaba por `student_code` y **habría marcado las 28 filas como `SIN EMPAREJAR`**, sin
+cargar nada y sin decir por qué. Reescrito para emparejar por **nombre normalizado**
+(minúsculas, sin acentos, sin puntuación, espacios colapsados y `trim`). Las rarezas
+reales de los nombres de Alegra que esto resuelve, todas verificadas: `HEATHER LIZ RONDON
+CASTILLO` en mayúsculas, `Dhanel Elian  Leonardo Mercedes` con doble espacio, `Teylor
+Andrian Diaz Mota ` con espacio final (**el `trim` faltaba en la primera versión y ese
+solo caso no habría emparejado**), el guion de `Saint-Hilaire` y la ñ de `Nuñez`.
+
 El script está listo en **`supabase/seeds/20260909_alegra_cobros_septiembre.sql`**, en dos
 partes: PARTE 1 diagnóstico (solo lectura) y PARTE 2 carga (transacción, con el bloque de
-reversión comentado al final). Empareja por `students.student_code` y, para los e-CF a
-nombre del tutor, por `guardians.national_id` -> familia -> hijo, desambiguando hermanos por
-nombre de pila o por `school_level_for_grade(grade_level)`.
+reversión comentado al final). Empareja en este orden de preferencia: matrícula (por si
+algún día se puebla), **nombre exacto normalizado**, nombre aproximado (todas las palabras
+de Alegra presentes -- **se reporta pero NUNCA se carga solo**), y para los e-CF a nombre
+del tutor por `guardians.national_id` o, si está vacía, por nombre del tutor, desambiguando
+hermanos por nombre de pila o por `school_level_for_grade(grade_level)`. El normalizador
+vive en `pg_temp`, así que **no deja nada en producción**.
 
-**Verificado contra un Postgres local con esquema espejo** (no solo revisado): las 34 filas
-emparejan, los hermanos de un mismo e-CF se separan bien (por nombre y por nivel), un código
-inexistente sale `SIN EMPAREJAR` en vez de adivinar, un pago igual ya existente dispara la
-guarda de duplicado, una fila con `deleted_at` no confunde el emparejamiento, la carga deja
-0 facturas con NCF y 0 pagos huérfanos, **re-ejecutarlo inserta 0** (idempotente por el e-CF
-en la descripción) y la reversión borra solo lo suyo. **Lo que NO se pudo probar**: el
-emparejamiento contra los datos REALES -- si `student_code` en producción no usa el formato
-`24-0033` de Alegra, o si `guardians.national_id` está vacío, la PARTE 1 lo dirá y habrá que
-emparejar por nombre.
+**Verificado contra un Postgres local con esquema espejo y `student_code` puesto en NULL**
+(reproduciendo producción, no el caso cómodo): 33 de 34 filas emparejan por nombre; el
+estudiante omitido a propósito sale `SIN EMPAREJAR` en vez de adivinar; los hermanos de un
+mismo e-CF se separan bien (por nombre de pila y por nivel); un pago igual ya existente
+dispara la guarda de duplicado; una fila con `deleted_at` no confunde; la carga deja **0
+facturas con NCF y 0 pagos huérfanos**; el e-CF conjunto queda repartido entre 2
+estudiantes distintos; **re-ejecutarlo inserta 0** (idempotente por el e-CF en la
+descripción) y la reversión borra sólo lo suyo.
+
+**Pendiente aparte, recomendado pero NO hecho** (no hace falta para esta carga): traer la
+matrícula de Alegra a `students.student_code`. La columna ya existe desde `init.sql`, así
+que no requiere migración -- sólo un backfill emparejando por nombre una sola vez. Vale la
+pena porque el nombre es frágil (una tilde, un apellido de casada, un error de digitación
+rompen el cruce) mientras que la matrícula es estable y con significado.
+**⚠️ Trampa real que hay que resolver antes de hacerlo**: `student_code` es
+`text unique` **global, no por colegio** (`init.sql` línea 45). Con un solo colegio no se
+nota, pero al afiliar un segundo cuyas matrículas sigan el mismo patrón `AA-NNNN`, la
+primera colisión revienta el alta del estudiante. Lo correcto sería cambiarlo a
+`unique (school_id, student_code)` en la misma migración que haga el backfill.
