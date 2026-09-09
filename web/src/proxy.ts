@@ -53,7 +53,7 @@ export async function proxy(request: NextRequest) {
   // Azul, no de la sesión -- si el middleware la tratara como protegida, un pago
   // real aprobado podría perderse silenciosamente al redirigir a /login en vez
   // de confirmar la factura (mismo tipo de bug que el de sw.js, ver más abajo).
-  const publicPrefixRoutes = ['/login', '/registro', '/recuperar-contrasena', '/actualizar-contrasena', '/colegio', '/terminos', '/api/pagos/azul']
+  const publicPrefixRoutes = ['/login', '/registro', '/recuperar-contrasena', '/actualizar-contrasena', '/colegio', '/terminos', '/api/pagos/azul', '/api/cron']
   const isPublicRoute = pathname === '/' || publicPrefixRoutes.some(route => pathname.startsWith(route))
 
   // Si el usuario no está autenticado y quiere acceder a una ruta protegida

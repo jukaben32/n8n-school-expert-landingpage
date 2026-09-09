@@ -5,6 +5,7 @@ import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import ReceivablesTable, { type ReceivableRow } from './ReceivablesTable'
+import AlegraSyncBanner, { type AlegraSyncRun } from '@/components/tesoreria/AlegraSyncBanner'
 
 export const metadata: Metadata = {
   title: 'Cuentas por Cobrar — MentorIApp',
@@ -30,11 +31,29 @@ export default async function CuentasPorCobrarPage() {
 
   const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
 
-  const [{ data: school, error: schoolError }, { data: familiesRaw, error: familiesError }, { data: receivablesRaw, error: receivablesError }] =
-    await Promise.all([
+  const [
+    { data: school, error: schoolError },
+    { data: familiesRaw, error: familiesError },
+    { data: receivablesRaw, error: receivablesError },
+    { data: lastRunRaw, error: lastRunError },
+    { count: pendingReview },
+  ] = await Promise.all([
       supabase.from('schools').select('tuition_grace_days').eq('id', schoolId).single(),
       supabase.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null),
       supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
+      // Última conciliación con Alegra -- alimenta la alerta de "última
+      // actualización": sin fecha de corte, este reporte invita a cobrarle
+      // a una familia que ya pagó en el POS.
+      supabase.from('alegra_sync_runs')
+        .select('started_at, finished_at, status, invoices_seen, loaded_count, loaded_amount, review_count, error_message')
+        .eq('school_id', schoolId)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from('alegra_payment_matches')
+        .select('id', { count: 'exact', head: true })
+        .eq('school_id', schoolId)
+        .eq('status', 'pendiente'),
     ])
 
   const familyNames = new Map((familiesRaw ?? []).map((f) => [f.id as string, f.name as string]))
@@ -48,6 +67,7 @@ export default async function CuentasPorCobrarPage() {
         { label: 'la configuración de mensualidades', error: schoolError },
         { label: 'las familias', error: familiesError },
         { label: 'las cuentas por cobrar', error: receivablesError },
+        { label: 'la última conciliación con Alegra', error: lastRunError },
       ]} />
       <div>
         <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
@@ -59,6 +79,8 @@ export default async function CuentasPorCobrarPage() {
           cobro.
         </p>
       </div>
+
+      <AlegraSyncBanner run={(lastRunRaw as AlegraSyncRun | null) ?? null} pendingReview={pendingReview ?? 0} />
 
       <ReceivablesTable
         rows={rows}

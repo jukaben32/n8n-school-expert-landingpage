@@ -2918,6 +2918,140 @@ sin `?? []`) vivía también en `academia/[id]/page.tsx` desde el 2026-08-22 -- 
 ESTUDIANTE contesta el cuestionario. Sigue siendo frágil por depender de una garantía que Supabase no
 promete siempre, así que se guardó igual.
 
+## Conciliación automática con Alegra, todos los días a las 7pm (2026-09-09)
+
+Pedido del usuario, el mismo día de la conciliación manual: *"Necesito que cada
+día hagas tú misma el macheo de los pagos de Alegra con la plataforma, puede ser
+7:00 pm, de lunes a viernes, y debemos poner una alerta en la plataforma con la
+fecha y hora última actualización."*
+
+**Se construyó dentro de la app, NO como una sesión de Claude programada.** El
+motivo es concreto: cada sesión de este proyecto ha dependido de que el usuario
+pegue un PAT de Supabase nuevo, que después se borra. Una corrida desatendida a
+las 7pm no tendría ninguna credencial, y dejar un token de administración
+guardado para que un agente escriba dinero en producción todos los días es
+justo lo que no conviene. Dentro de la app, el trabajo corre aunque nadie esté,
+la credencial vive donde ya viven las demás, y queda registro de cada corrida.
+
+### La regla que decide qué se carga solo
+
+**Solo se registra automáticamente lo inequívoco. Todo lo demás va a una bandeja
+de revisión.** No es prudencia decorativa -- es la medida real del 2026-09-09:
+de 34 cobros, **26 emparejaron exactos y 8 necesitaron criterio humano** (4
+descuadres de una letra entre Alegra y la plataforma, 2 hermanos bajo un mismo
+e-CF, 1 nombre distinto, 1 estudiante que no existía aquí). Adivinar esos 8 es
+meterle plata al estudiante equivocado.
+
+Orden de emparejamiento, de más confiable a menos:
+
+| # | Cómo | ¿Se carga solo? |
+|---|---|---|
+| 1 | Matrícula (`client.identification` tipo `IE`) contra `students.student_code` | Sí |
+| 2 | Nombre exacto normalizado | Sí |
+| 3 | Cédula del tutor (tipo `CED`) y la familia tiene **un** inscrito | Sí |
+| 3b | Cédula del tutor y la familia tiene **varios** inscritos = e-CF conjunto | No → bandeja |
+| 4 | Nombre a una letra de distancia (Levenshtein) | No → bandeja, **con el candidato sugerido** |
+| — | Nada coincide | No → bandeja |
+
+**Nunca genera NCF** (`ncf`/`ncf_type` en null, igual que `recordExternalPayment`):
+el e-CF real ya lo emitió Alegra y uno local sería un documento fantasma ante la
+DGII. **Nunca aplica mora**: cierra cada cuota por lo que de verdad se cobró
+(decisión explícita del usuario). Solo cuenta como cuota lo facturado como
+Mensualidad/Abono/Colegiatura -- **Libros, Uniformes y Recargo por Mora quedan
+fuera del monto**, porque no son cuota.
+
+### El punto ciego del script manual, ya cerrado
+
+El script del 2026-09-09 comparaba por **monto** para no duplicar, y por eso
+cuando un estudiante tenía dos facturas del mismo monto y solo una cargada,
+**saltaba las dos**. Le pasó a Heather Liz (dos de RD$1,950 el mismo día) y se
+detectó revisando a mano. Ahora `invoices.external_reference` guarda el e-CF con
+índice único `(school_id, external_reference, student_id)`: el mismo comprobante
+no entra dos veces para el mismo estudiante, y dos comprobantes distintos del
+mismo monto entran los dos. El `student_id` en el índice es a propósito -- un
+e-CF conjunto cubre a varios hermanos, una fila por hijo.
+
+Para los 72 cobros cargados antes de que existiera esa columna (sin referencia),
+queda una guarda blanda: si el estudiante ya tiene una factura pagada del mismo
+monto y la misma fecha sin referencia, **no se salta en silencio** -- va a la
+bandeja como `posible_duplicado` para que una persona decida.
+
+### Piezas
+
+| Dónde | Qué |
+|---|---|
+| `web/src/lib/accounting/alegraMatching.ts` | Núcleo puro: normalizar nombres, separar la parte de mensualidad, emparejar. Sin Supabase ni Next.js -- por eso se puede probar de verdad. |
+| `web/src/lib/accounting/alegraClient.ts` | Cliente REST de Alegra (solo lectura de facturas). `fetch` crudo, no SDK, igual que el resto del proyecto. |
+| `web/src/lib/accounting/reconcileAlegraPayments.ts` | El motor: trae, empareja, carga lo inequívoco, manda el resto a la bandeja, registra la corrida. |
+| `web/src/app/api/cron/alegra/route.ts` | Route Handler que dispara pg_cron. Autorización por `Authorization: Bearer <CRON_SECRET>`, comparado en tiempo constante. |
+| `web/src/app/dashboard/tesoreria/alegra/` | Bandeja de revisión + historial de corridas + botón "Conciliar ahora". |
+| `web/src/components/tesoreria/AlegraSyncBanner.tsx` | La alerta de "última actualización" en Cuentas por Cobrar. |
+| `supabase/migrations/20260912000000_alegra_sync.sql` | `students.student_code` único por colegio, `invoices.external_reference`, `alegra_sync_runs`, `alegra_payment_matches`. |
+| `supabase/migrations/20260912010000_alegra_sync_cron.sql` | pg_cron `0 23 * * 1-5` (= 7:00 pm hora RD) → pg_net → la ruta. |
+| `scripts/test-alegra-matching.mjs` | 22 comprobaciones del núcleo, con los casos reales del 2026-09-09. |
+
+**Sin módulo nuevo en `permissions.ts` a propósito**: la bandeja usa el mismo
+permiso `tesoreria` y se llega por un enlace desde Cuentas por Cobrar. Un módulo
+nuevo obligaría a tocar `Sidebar.tsx` también, y esos dos archivos
+desincronizados ya dejaron funciones inalcanzables aquí más de una vez.
+
+**`students.student_code` pasó de `unique` GLOBAL a `unique (school_id,
+student_code)`** -- cierra de paso la trampa que este archivo venía avisando (con
+un segundo colegio de matrículas `AA-NNNN`, la primera colisión revienta el alta
+del estudiante) y habilita poblar la matrícula, que es lo que vuelve confiable el
+emparejamiento automático.
+
+### Trampas del repo respetadas (cada una costó un día en su momento)
+
+- **`net.http_post()` con `body` jsonb, NUNCA `::text`** (bugs #7 y #12).
+- **`/api/cron` agregado a `publicPrefixRoutes` de `web/src/proxy.ts`** -- si no,
+  el middleware de auth redirige la llamada a `/login` y la corrida nunca ocurre,
+  exactamente el fallo silencioso de `/sw.js` y del callback de Azul.
+- **El archivo `'use server'` no exporta ninguna constante**, solo funciones async
+  (el bug que tumbó Cuentas por Cobrar entera el 2026-09-03).
+- **Ningún `page.tsx` pasa una función como prop** -- toda la interactividad vive
+  en el componente cliente (el `onClick` que rompió Academia el 2026-09-07).
+
+### Verificado en esta sesión
+
+1. **Migración contra Postgres local con esquema espejo**, aplicada **dos veces**
+   (idempotente) y 6 escenarios: un segundo colegio ya puede usar la misma
+   matrícula ✅ y el mismo colegio no ✅; el e-CF se backfilleó bien desde la
+   descripción de los 28 cobros del 2026-09-09 ✅; el mismo e-CF para el mismo
+   estudiante se rechaza ✅ y para un hermano se acepta ✅; las dos facturas del
+   mismo monto de Heather Liz conviven con e-CF distinto ✅.
+2. **Sintaxis del cron verificada localmente**: sin pg_cron degrada con aviso en
+   vez de reventar, y sin el secreto cargado no llama a nadie ✅.
+3. **`scripts/test-alegra-matching.mjs`: 22 de 22 OK**, con los casos reales --
+   incluido que los cuatro descuadres de una letra (Olivarez/Olivares,
+   Morale/Morales, Andrian/Adrian, Sara/Sarha) ya **sugieren el estudiante
+   correcto** en la bandeja en vez de llegar en blanco.
+4. **La forma de la respuesta de Alegra se verificó contra la cuenta real** con el
+   conector MCP (facturas E31/E32 de septiembre), no de memoria.
+5. `npx tsc --noEmit`, `npm run lint` y `npm run build` completos, limpios.
+
+### Falta para encenderlo (nada de esto lo pudo hacer esta sesión)
+
+Esta sesión no tuvo credenciales de Supabase ni de Vercel -- el bloqueo de
+siempre. En orden:
+
+1. **Aplicar las dos migraciones** (`20260912000000` y `20260912010000`).
+2. **`ALEGRA_EMAIL` / `ALEGRA_TOKEN` en Vercel (Production)** -- se sacan de
+   Alegra → Configuración → API. Sin ellas el motor no falla feo: registra la
+   corrida como `sin_credenciales` y la alerta lo dice.
+3. **`CRON_SECRET` en Vercel** (una cadena larga al azar) y el MISMO valor en la
+   base:
+   `insert into private.app_settings (key, value) values ('alegra_cron_secret', '...') on conflict (key) do update set value = excluded.value;`
+4. **Habilitar `pg_cron`** en Supabase → Database → Extensions, y volver a aplicar
+   `20260912010000` para que quede programado.
+5. **Probarlo a mano primero**, con el botón "Conciliar ahora" de
+   `/dashboard/tesoreria/alegra`, antes de confiar en la corrida automática.
+
+**Pendiente recomendado, no hecho**: poblar `students.student_code` con la
+matrícula que ya tiene cada contacto en Alegra. La columna ya acepta el valor por
+colegio tras esta migración. Mientras esté vacía, el emparejamiento depende del
+nombre, que es lo frágil.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
