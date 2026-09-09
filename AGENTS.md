@@ -3052,7 +3052,45 @@ de base de datos, verificada consulta por consulta:
   antes y 11 después. Es el comportamiento buscado -- avisa y se detiene, en vez
   de mandar llamadas que la app va a rechazar con 401 todos los días.
 
-### Lo que sigue faltando (necesita acceso a Vercel, que esta sesión no tiene)
+### Desplegado y probado de punta a punta el 2026-09-09 (token de Vercel del colega)
+
+El colega pasó un token de Vercel y con eso se completó todo menos las
+credenciales de Alegra:
+
+- **`npm run smoke`: 37 de 37 contra producción** ANTES de desplegar, ya con las
+  migraciones aplicadas -- ningún rol quedó roto. (Dato útil: el script usa
+  `SUPABASE_ACCESS_TOKEN`, el PAT de la Management API, **no** la service_role
+  key; no hace falta sacar ninguna clave de Vercel para correrlo.)
+- **`main` traía 2 commits que la rama no tenía** (Analíticas con el motor de
+  mora). Se fusionaron a la rama ANTES de desplegar, con conflicto en AGENTS.md
+  resuelto conservando ambas secciones, y se volvió a correr `tsc`/`lint`/`build`
+  sobre la combinación. Desplegar sin eso habría sido desplegar algo que nadie
+  probó junto.
+- PR #22 fusionado a `main`, despliegue `READY` (commit `3184d1b`).
+- `CRON_SECRET` generado (`openssl rand -hex 32`), cargado en Vercel como
+  `encrypted`/production **antes** del merge, para que el despliegue del merge ya
+  lo tuviera; y el mismo valor en `private.app_settings`. Se comprobó que
+  coinciden con un `select value = '<secreto>'` -- sin imprimir el valor.
+- **Probado de punta a punta contra producción**: `POST /api/cron/alegra` sin
+  cabecera → `401`; con un secreto equivocado → `401`; con el correcto → `200` y
+  la corrida registrada en `alegra_sync_runs`. Eso confirma de una vez tres cosas
+  que en este repo han fallado por separado: que el middleware **no** redirige
+  `/api/cron` a `/login` (el arreglo de `proxy.ts`), que no hay Deployment
+  Protection de Vercel tapando la ruta, y que la comparación del secreto funciona.
+- **También el camino real**, que es distinto: `private.disparar_alegra_sync()`
+  ejecutada desde la base → `net._http_response` con `status_code 200`. O sea que
+  pg_cron → pg_net → app está probado, no supuesto.
+
+Las dos corridas quedaron como `sin_credenciales`, que es exactamente lo que debe
+decir mientras falte lo de abajo.
+
+### Lo ÚNICO que falta: ALEGRA_EMAIL y ALEGRA_TOKEN
+
+No vienen en ningún token de Supabase ni de Vercel -- hay que sacarlas de
+**Alegra → Configuración → API**. El conector MCP de Alegra tampoco sirve para
+esto: llama con las credenciales del usuario y nunca las expone.
+
+Cargarlas en Vercel (production) y **redesplegar**. Nada más.
 
 **Los pasos exactos viven en `docs/ACTIVAR_CONCILIACION_ALEGRA.md`** y en una
 página para compartir por WhatsApp:

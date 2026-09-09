@@ -1,102 +1,51 @@
 # Activar la conciliación automática con Alegra
 
-**Para quien tiene acceso a Vercel.** Quedan 4 pasos en este orden.
-No se salte el orden: los pasos 2 y 3 no sirven de nada si el 1 no está hecho.
+**Estado al 2026-09-09: falta UNA sola cosa** — las credenciales de API de Alegra.
+Todo lo demás está aplicado, desplegado y probado de punta a punta.
 
-Al terminar, la plataforma revisa Alegra **sola, de lunes a viernes a las 7:00 pm**,
-registra los cobros que emparejan sin ninguna duda, y deja los dudosos en una
-bandeja para que alguien del colegio los resuelva. En Cuentas por Cobrar aparece
-una línea que dice cuándo fue la última revisión.
+---
+
+## ⬜ Lo único que falta
+
+En **Alegra → Configuración → API** están el correo de la cuenta y el token.
+Cargarlos en Vercel (proyecto `n8n-school-expert-landingpage` → Settings →
+Environment Variables → **Production**):
+
+- `ALEGRA_EMAIL`
+- `ALEGRA_TOKEN`
+
+Y después **Redeploy** — Vercel no aplica variables nuevas al despliegue que ya
+existe.
+
+Con eso queda encendido. Para confirmarlo: Cuentas por Cobrar → «Ver
+conciliación» → **«Conciliar ahora»**.
 
 ---
 
 ## ✅ Ya hecho y verificado en producción (2026-09-09)
 
-**Los pasos de base de datos ya están aplicados.** No hay que repetirlos:
-
-- Las dos migraciones, aplicadas y comprobadas: tablas `alegra_sync_runs` y
-  `alegra_payment_matches`, columna `invoices.external_reference`, los dos
-  índices y RLS activa con sus dos políticas de lectura.
-- `pg_cron` 1.6.4 habilitada y el horario registrado: `0 23 * * 1-5`, `active`,
-  base `postgres` — 7:00 pm hora RD, de lunes a viernes.
-- Los **28 cobros de Alegra** ya cargados quedaron con su e-CF en la columna
-  nueva, así que el guardaduplicados ya tiene contra qué comparar.
+- **Código desplegado**: PR #22 fusionado a `main`, despliegue `READY`.
+- **`npm run smoke`: 37 de 37 contra producción** — las migraciones no rompieron
+  ningún rol (teacher, guardian, reception, director, school_admin, finance).
+- Las dos migraciones aplicadas: `alegra_sync_runs`, `alegra_payment_matches`,
+  `invoices.external_reference`, los dos índices, RLS y sus dos políticas.
+- **El `unique` GLOBAL de `students.student_code` eliminado** y reemplazado por
+  `unique (school_id, student_code)` — confirmado con `pg_constraint`.
+- `pg_cron` 1.6.4 habilitada, horario `0 23 * * 1-5` activo (7:00 pm hora RD).
+- **Backfill**: los 28 cobros de Alegra ya cargados quedaron con su e-CF en
+  `external_reference`, así que el guardaduplicados cubre también lo que ya había.
+- `CRON_SECRET` cargado en Vercel y el mismo valor en `private.app_settings` —
+  comprobado que coinciden (64 caracteres, sin imprimir el valor).
 - `app_site_url` confirmada en `https://www.educacionmanantial.com`.
-- Comprobado en vivo que **sin `alegra_cron_secret` la tarea no llama a nadie**
-  (11 respuestas HTTP antes de dispararla, 11 después) — en vez de mandar
-  llamadas sin autorización todos los días.
+- **Probado de punta a punta**, tres llamadas reales contra producción:
+  sin secreto → `401`; con secreto equivocado → `401`; con el correcto → `200`
+  y la corrida registrada. Y disparando `private.disparar_alegra_sync()` desde
+  la propia base (el camino real de las 7 pm) la app contestó `200`.
+  Las dos corridas quedaron como `sin_credenciales`, que es exactamente lo que
+  debe decir mientras falten las variables de Alegra.
 
-**Lo que falta son los 4 pasos de abajo**, y necesitan acceso a Vercel.
-
-Página con estos mismos pasos, para compartir por WhatsApp:
+Página con este mismo estado, para compartir:
 <https://claude.ai/code/artifact/cc2a01b5-3764-4776-9a17-8be54086482c>
-
----
-
-Datos que va a necesitar a mano:
-- Proyecto de Supabase: `fssjgpqisfnmnkavsyld`
-- Proyecto de Vercel: `n8n-school-expert-landingpage` (Root Directory `web`)
-- Correo y token de API de Alegra (Alegra → Configuración → API)
-
----
-
-## Paso 1 — Desplegar el código
-
-El trabajo está en la rama **`claude/alegra-payments-receivables-7ar06s`**.
-Fusiónela a `main` (Vercel despliega solo al hacerlo).
-
-Sin esto, la dirección `/api/cron/alegra` no existe todavía y todo lo demás
-llamaría al vacío.
-
-**Cómo saber que quedó**: en Vercel, el despliegue de producción en `READY`, y al
-abrir `/dashboard/tesoreria/cuentas-por-cobrar` aparece una línea gris que dice
-*"Conciliación con Alegra: todavía no ha corrido ninguna vez"*. Esa línea gris es
-la señal correcta en este punto.
-
----
-
-## ~~Aplicar las dos migraciones~~ — HECHO (se deja como referencia)
-
-Supabase → **SQL Editor**. Pegue y ejecute los dos archivos, **en este orden**:
-
-1. `supabase/migrations/20260912000000_alegra_sync.sql`
-2. `supabase/migrations/20260912010000_alegra_sync_cron.sql`
-
-Las dos son idempotentes: si algo sale a medias, se pueden volver a pegar sin
-hacer daño.
-
-La segunda puede mostrar un aviso amarillo diciendo que **pg_cron no está
-habilitado**. Eso es normal y no es un error: se resuelve en el paso 2.
-
-**Comprobación** (pegue esto y debe devolver 4 filas):
-
-```sql
-select table_name from information_schema.tables
- where table_name in ('alegra_sync_runs','alegra_payment_matches')
-union all
-select 'invoices.external_reference' from information_schema.columns
- where table_name='invoices' and column_name='external_reference'
-union all
-select 'idx_students_code_por_colegio' from pg_indexes
- where indexname='idx_students_code_por_colegio';
-```
-
----
-
-## ~~Habilitar pg_cron~~ — HECHO (se deja como referencia)
-
-1. Supabase → **Database → Extensions** → busque **`pg_cron`** → actívela.
-2. Vuelva al SQL Editor y **pegue otra vez** el archivo
-   `20260912010000_alegra_sync_cron.sql` completo. Ahora sí registra el horario.
-
-**Comprobación** (debe devolver una fila con `0 23 * * 1-5`):
-
-```sql
-select jobname, schedule, active from cron.job where jobname = 'alegra-sync-diario';
-```
-
-`0 23 * * 1-5` es **7:00 pm hora de República Dominicana**, de lunes a viernes.
-(La base trabaja en UTC y el país está en UTC-4 todo el año.)
 
 ---
 
