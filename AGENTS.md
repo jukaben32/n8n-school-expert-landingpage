@@ -3030,11 +3030,38 @@ emparejamiento automático.
    conector MCP (facturas E31/E32 de septiembre), no de memoria.
 5. `npx tsc --noEmit`, `npm run lint` y `npm run build` completos, limpios.
 
-### Falta para encenderlo (nada de esto lo pudo hacer esta sesión)
+### Aplicado a producción el 2026-09-09 (PAT de un solo uso, ya no se usa)
 
-**Los pasos exactos, listos para pasarle a quien tenga los accesos, viven en
-`docs/ACTIVAR_CONCILIACION_ALEGRA.md`** (6 pasos, con la consulta de
-comprobación de cada uno y una sección de "si algo no funciona"). El resumen:
+El usuario pasó un Personal Access Token de Supabase y con él se aplicó la parte
+de base de datos, verificada consulta por consulta:
+
+- Las dos migraciones (`20260912000000` y `20260912010000`) aplicadas: las dos
+  tablas, `invoices.external_reference`, los dos índices, RLS activa y sus dos
+  políticas de lectura.
+- **El `unique` GLOBAL de `students.student_code` quedó eliminado** y
+  reemplazado por el índice único por colegio -- se confirmó con `pg_constraint`
+  que ya no queda ninguna restricción única global sobre esa tabla.
+- `pg_cron` 1.6.4 habilitada (`create extension`, aceptado por la Management
+  API) y el horario registrado: `0 23 * * 1-5`, `active`, base `postgres`.
+- **Backfill correcto**: los 28 cobros de Alegra cargados el 2026-09-09 quedaron
+  con su e-CF extraído de la descripción a `external_reference`. O sea que el
+  guardaduplicados por comprobante ya cubre lo que había, no solo lo que venga.
+- `app_site_url` confirmada en `https://www.educacionmanantial.com`.
+- **Probado en vivo que sin el secreto la tarea NO llama a nadie**: se ejecutó
+  `private.disparar_alegra_sync()` y `net._http_response` quedó en 11 filas
+  antes y 11 después. Es el comportamiento buscado -- avisa y se detiene, en vez
+  de mandar llamadas que la app va a rechazar con 401 todos los días.
+
+### Lo que sigue faltando (necesita acceso a Vercel, que esta sesión no tiene)
+
+**Los pasos exactos viven en `docs/ACTIVAR_CONCILIACION_ALEGRA.md`** y en una
+página para compartir por WhatsApp:
+<https://claude.ai/code/artifact/cc2a01b5-3764-4776-9a17-8be54086482c>
+
+Quedan 4: desplegar la rama, las tres variables en Vercel (+ redesplegar, que no
+es opcional), cargar `alegra_cron_secret` con el MISMO valor que `CRON_SECRET`, y
+probar con "Conciliar ahora" antes de confiar en la corrida automática. El
+resumen de todo lo demás:
 
 Esta sesión no tuvo credenciales de Supabase ni de Vercel -- el bloqueo de
 siempre. En orden:

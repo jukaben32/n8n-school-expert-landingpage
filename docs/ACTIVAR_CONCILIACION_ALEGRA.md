@@ -1,12 +1,37 @@
 # Activar la conciliación automática con Alegra
 
-**Para quien tiene acceso a Supabase y a Vercel.** Son 6 pasos en este orden.
-No se salte el orden: el paso 1 no sirve de nada si el paso 0 no está hecho.
+**Para quien tiene acceso a Vercel.** Quedan 4 pasos en este orden.
+No se salte el orden: los pasos 2 y 3 no sirven de nada si el 1 no está hecho.
 
 Al terminar, la plataforma revisa Alegra **sola, de lunes a viernes a las 7:00 pm**,
 registra los cobros que emparejan sin ninguna duda, y deja los dudosos en una
 bandeja para que alguien del colegio los resuelva. En Cuentas por Cobrar aparece
 una línea que dice cuándo fue la última revisión.
+
+---
+
+## ✅ Ya hecho y verificado en producción (2026-09-09)
+
+**Los pasos de base de datos ya están aplicados.** No hay que repetirlos:
+
+- Las dos migraciones, aplicadas y comprobadas: tablas `alegra_sync_runs` y
+  `alegra_payment_matches`, columna `invoices.external_reference`, los dos
+  índices y RLS activa con sus dos políticas de lectura.
+- `pg_cron` 1.6.4 habilitada y el horario registrado: `0 23 * * 1-5`, `active`,
+  base `postgres` — 7:00 pm hora RD, de lunes a viernes.
+- Los **28 cobros de Alegra** ya cargados quedaron con su e-CF en la columna
+  nueva, así que el guardaduplicados ya tiene contra qué comparar.
+- `app_site_url` confirmada en `https://www.educacionmanantial.com`.
+- Comprobado en vivo que **sin `alegra_cron_secret` la tarea no llama a nadie**
+  (11 respuestas HTTP antes de dispararla, 11 después) — en vez de mandar
+  llamadas sin autorización todos los días.
+
+**Lo que falta son los 4 pasos de abajo**, y necesitan acceso a Vercel.
+
+Página con estos mismos pasos, para compartir por WhatsApp:
+<https://claude.ai/code/artifact/cc2a01b5-3764-4776-9a17-8be54086482c>
+
+---
 
 Datos que va a necesitar a mano:
 - Proyecto de Supabase: `fssjgpqisfnmnkavsyld`
@@ -15,7 +40,7 @@ Datos que va a necesitar a mano:
 
 ---
 
-## Paso 0 — Desplegar el código
+## Paso 1 — Desplegar el código
 
 El trabajo está en la rama **`claude/alegra-payments-receivables-7ar06s`**.
 Fusiónela a `main` (Vercel despliega solo al hacerlo).
@@ -30,7 +55,7 @@ la señal correcta en este punto.
 
 ---
 
-## Paso 1 — Aplicar las dos migraciones
+## ~~Aplicar las dos migraciones~~ — HECHO (se deja como referencia)
 
 Supabase → **SQL Editor**. Pegue y ejecute los dos archivos, **en este orden**:
 
@@ -58,7 +83,7 @@ select 'idx_students_code_por_colegio' from pg_indexes
 
 ---
 
-## Paso 2 — Habilitar pg_cron y volver a aplicar la segunda migración
+## ~~Habilitar pg_cron~~ — HECHO (se deja como referencia)
 
 1. Supabase → **Database → Extensions** → busque **`pg_cron`** → actívela.
 2. Vuelva al SQL Editor y **pegue otra vez** el archivo
@@ -75,7 +100,7 @@ select jobname, schedule, active from cron.job where jobname = 'alegra-sync-diar
 
 ---
 
-## Paso 3 — Las tres variables en Vercel
+## Paso 2 — Las tres variables en Vercel
 
 Vercel → proyecto `n8n-school-expert-landingpage` → **Settings → Environment
 Variables** → entorno **Production**:
@@ -92,7 +117,7 @@ Para generar el `CRON_SECRET`, en una terminal:
 openssl rand -hex 32
 ```
 
-**Guarde ese valor**: hace falta idéntico en el paso 4. No lo escriba en ningún
+**Guarde ese valor**: hace falta idéntico en el paso 3. No lo escriba en ningún
 archivo del repositorio.
 
 ⚠️ **Después de agregarlas hay que volver a desplegar.** Vercel no las aplica al
@@ -101,7 +126,7 @@ menú `···` → **Redeploy**.
 
 ---
 
-## Paso 4 — El mismo secreto, dentro de la base
+## Paso 3 — El mismo secreto, dentro de la base
 
 Supabase → SQL Editor. Reemplace `PEGUE-AQUI-EL-MISMO-VALOR` por el mismo
 `CRON_SECRET` del paso 3:
@@ -130,7 +155,7 @@ update private.app_settings set value = 'https://www.educacionmanantial.com'
 
 ---
 
-## Paso 5 — Probarlo a mano ANTES de confiar en el automático
+## Paso 4 — Probarlo a mano ANTES de confiar en el automático
 
 Entre a la plataforma como Directora, Administrador o Secretaría y vaya a:
 
@@ -152,7 +177,7 @@ y tocando **Registrar**. Nada de eso entra solo, a propósito.
 
 ---
 
-## Paso 6 — Confirmar al día siguiente
+## Al día siguiente — confirmar
 
 El sábado o el martes siguiente, entre a `/dashboard/tesoreria/alegra` y mire la
 tabla "Últimas corridas": debe haber una fila con origen **Automática** fechada
@@ -166,7 +191,7 @@ Si no aparece ninguna automática, vea "Si algo no funciona" abajo.
 
 **"Alegra sin configurar"** en la tabla de corridas → faltan `ALEGRA_EMAIL` /
 `ALEGRA_TOKEN` en Vercel, o se agregaron pero **no se volvió a desplegar**
-(paso 3).
+(paso 2).
 
 **"Conciliar ahora" da un error de permiso** → el usuario no tiene acceso al
 módulo de Tesorería. Debe entrar como Directora, Administrador de colegio,
@@ -190,7 +215,7 @@ select id, status_code, left(coalesce(content,''), 300), created
 ```
 
 - Si el paso 3 devuelve **401** → el `CRON_SECRET` de Vercel y el
-  `alegra_cron_secret` de la base **no son iguales**. Repita los pasos 3 y 4.
+  `alegra_cron_secret` de la base **no son iguales**. Repita los pasos 2 y 3.
 - Si devuelve **HTML de Vercel en vez de JSON** → el proyecto tiene *Deployment
   Protection* activa en producción; hay que desactivarla para producción, o la
   llamada nunca llega a la aplicación.
@@ -217,4 +242,4 @@ Pasar la **matrícula** de cada estudiante de Alegra (`24-0033`, etc.) a la
 plataforma. Mientras la columna esté vacía, el emparejamiento depende del nombre,
 que es lo frágil: una tilde o una letra de diferencia manda el cobro a la bandeja
 en vez de registrarlo solo. Con la matrícula cargada, casi todo entra automático.
-La base ya está lista para recibirla (paso 1).
+La base ya está lista para recibirla.
