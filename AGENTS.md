@@ -3285,6 +3285,56 @@ Verificado, en este orden:
   que volver a correr `lib/cargar-sql.mjs` no lo deshaga.
 - `lib/revisar-guiones.mjs 6to`: 9 lecciones, 0 problemas.
 
+## Auditoría: TODO el SQL del repo está aplicado en producción (2026-09-13)
+
+Pregunta del usuario: *"¿hay alguna otra sql sin aplicar?"*. Se revisó
+sistemáticamente, no por lo que dice este archivo (varias de sus notas de
+"pendiente aplicar la migración X" ya estaban obsoletas).
+
+**Resultado: las 84 migraciones y los 6 seeds están aplicados. Nada pendiente.**
+
+**El registro de Supabase NO sirve como respuesta en este proyecto**:
+`supabase_migrations.schema_migrations` tiene 68 de 84, porque muchas se
+aplicaron a mano por el SQL Editor o la Management API y eso no las registra.
+Las 14 "sin registrar" se comprobaron **objeto por objeto** (columna, tabla,
+función, índice, bucket, extensión, tarea de cron): todas existen.
+
+**Comprobación de deriva, que es la que de verdad importa** -- en una
+migración `create or replace` el objeto siempre existe, lo que puede estar
+viejo es el CUERPO, y este proyecto ya tuvo un caso de alguien cambiando una
+función directo en la base. Se comparó el cuerpo vivo contra la última
+migración del repo que define cada una, normalizando espacios y comentarios:
+`calculate_receivable_status`, `list_school_receivables`,
+`installment_schedule`, `student_tuition_basis`, `list_school_monthly_cashflow`,
+`generate_ncf`, `student_can_see_lesson`, `guardian_can_see_lesson`,
+`current_student_id`, `calculate_sibling_discount` -- **10 de 10 idénticas**.
+`notify_attendance_webhook` se comparó a ojo (usa otra etiqueta de dollar
+quoting): también idéntica.
+
+**Colisión de números detectada, sin consecuencia**: hay DOS archivos con el
+número `20260907000000` (`avisar_solo_faltas_del_dia` e
+`installment_schedule_single_source`). Es justo la trampa que documenta la
+sección "Colisión de números de migración": `supabase db push` compara por
+número y habría saltado una de las dos en silencio. **Se comprobó que las dos
+están aplicadas** (el filtro por día en `notify_attendance_webhook` y las 3
+funciones nuevas del calendario de cuotas). Aun así conviene renumerar una si
+alguna vez se vuelve a usar `db push`.
+
+**Falso negativo que casi se reporta como hallazgo**: la primera comprobación
+buscaba el literal `current_date` en `notify_attendance_webhook` y dio
+"sin aplicar". La función usa
+`(now() at time zone 'America/Santo_Domingo')::date`. Se leyó el cuerpo real
+antes de afirmar nada. **Comprobar la existencia de un objeto con un `like`
+sobre `prosrc` es frágil: leer el cuerpo.**
+
+Corte de gracia vigente confirmado: **mismo mes** (la cuota de agosto vence el
+día 5 de agosto), que es la especificación original del usuario.
+
+De paso se subieron los **84 dibujos de opciones de las 12 lecciones de 1ro**
+al bucket `academia-imagenes`, verificado con una descarga real por signed URL
+(`HTTP 200 image/png`). Así, cuando las lecciones se carguen a Academia, las
+imágenes ya están.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
