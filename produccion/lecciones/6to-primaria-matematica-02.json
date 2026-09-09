@@ -67,12 +67,12 @@
     {
       "pregunta": "¿Cuál es mayor: 5/8 o 3/8?",
       "opciones": [
-        "5/8",
         "3/8",
         "Son iguales",
-        "No se puede saber"
+        "No se puede saber",
+        "5/8"
       ],
-      "correcta": 0
+      "correcta": 3
     },
     {
       "pregunta": "¿Cuál es mayor: 1/4 o 1/9?",
@@ -87,22 +87,22 @@
     {
       "pregunta": "Para comparar 2/5 con 1/2, ¿qué conviene hacer primero?",
       "opciones": [
-        "Llevarlas al mismo denominador",
         "Sumar los cuatro números",
+        "Llevarlas al mismo denominador",
         "Comparar solo los de arriba",
         "Comparar solo los de abajo"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "Si dos fracciones tienen el mismo numerador, ¿cuál es mayor?",
       "opciones": [
-        "La que tiene el denominador más pequeño",
         "La que tiene el denominador más grande",
         "Siempre la primera",
+        "La que tiene el denominador más pequeño",
         "Siempre son iguales"
       ],
-      "correcta": 0
+      "correcta": 2
     }
   ]
 }

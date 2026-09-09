@@ -67,12 +67,12 @@
     {
       "pregunta": "En \"María estudia todas las tardes\", ¿cuál es el sujeto?",
       "opciones": [
-        "María",
         "estudia",
         "todas las tardes",
-        "estudia todas las tardes"
+        "estudia todas las tardes",
+        "María"
       ],
-      "correcta": 0
+      "correcta": 3
     },
     {
       "pregunta": "¿Qué pregunta ayuda a encontrar el sujeto?",
@@ -87,22 +87,22 @@
     {
       "pregunta": "En \"Por la mañana cantaban los pájaros\", ¿cuál es el sujeto?",
       "opciones": [
-        "los pájaros",
         "Por la mañana",
+        "los pájaros",
         "cantaban",
         "la mañana"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "En \"Salimos corriendo del aula\", el sujeto es...",
       "opciones": [
-        "Tácito: nosotros",
         "corriendo",
         "del aula",
+        "Tácito: nosotros",
         "No tiene sujeto"
       ],
-      "correcta": 0
+      "correcta": 2
     }
   ]
 }

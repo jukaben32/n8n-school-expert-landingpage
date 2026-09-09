@@ -71,22 +71,22 @@
     {
       "pregunta": "¿Cuál de estas fracciones es equivalente a 1/2?",
       "opciones": [
-        "3/6",
         "1/3",
         "2/5",
+        "3/6",
         "3/4"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "Partimos un pan en 8 pedazos iguales y nos comimos 4. ¿Qué fracción del pan nos comimos?",
       "opciones": [
-        "La mitad",
         "Una cuarta parte",
         "Tres cuartos",
-        "Una octava parte"
+        "Una octava parte",
+        "La mitad"
       ],
-      "correcta": 0
+      "correcta": 3
     },
     {
       "pregunta": "Para crear una fracción equivalente, ¿qué hay que hacer?",
@@ -101,12 +101,12 @@
     {
       "pregunta": "Si simplificamos 6/12 hasta la fracción más sencilla, ¿qué obtenemos?",
       "opciones": [
-        "1/2",
         "2/4",
+        "1/2",
         "3/6",
         "6/12"
       ],
-      "correcta": 0
+      "correcta": 1
     }
   ]
 }

@@ -73,32 +73,32 @@
     {
       "pregunta": "¿Cómo se llama la etapa en que el vapor se enfría y forma nubes?",
       "opciones": [
-        "Condensación",
         "Evaporación",
+        "Condensación",
         "Precipitación",
         "Infiltración"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "¿Por qué llueve?",
       "opciones": [
-        "Las gotitas de la nube se juntan y pesan demasiado",
         "El sol empuja las nubes",
         "El mar sube al cielo de golpe",
+        "Las gotitas de la nube se juntan y pesan demasiado",
         "Las nubes se rompen con el viento"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "¿Por qué decimos que es un CICLO?",
       "opciones": [
-        "Porque se repite sin principio ni final",
         "Porque dura un año exacto",
         "Porque solo ocurre en invierno",
-        "Porque solo pasa en el mar"
+        "Porque solo pasa en el mar",
+        "Porque se repite sin principio ni final"
       ],
-      "correcta": 0
+      "correcta": 3
     }
   ]
 }

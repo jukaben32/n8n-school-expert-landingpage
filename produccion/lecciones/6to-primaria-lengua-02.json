@@ -73,32 +73,32 @@
     {
       "pregunta": "¿Cuándo lleva tilde una palabra aguda?",
       "opciones": [
-        "Cuando termina en n, s o vocal",
         "Cuando NO termina en n, s o vocal",
+        "Cuando termina en n, s o vocal",
         "Siempre",
         "Nunca"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "Las palabras esdrújulas llevan tilde...",
       "opciones": [
-        "Siempre",
         "Solo si terminan en vocal",
         "Solo si terminan en consonante",
+        "Siempre",
         "Casi nunca"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "En \"ventana\", ¿dónde cae la fuerza de la voz?",
       "opciones": [
-        "En TA (penúltima): es llana",
         "En VEN: es aguda",
         "En NA: es aguda",
-        "En VEN: es esdrújula"
+        "En VEN: es esdrújula",
+        "En TA (penúltima): es llana"
       ],
-      "correcta": 0
+      "correcta": 3
     }
   ]
 }

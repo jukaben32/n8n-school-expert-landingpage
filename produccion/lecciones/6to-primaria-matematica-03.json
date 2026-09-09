@@ -77,32 +77,32 @@
     {
       "pregunta": "¿Cuánto es el 10% de RD$800?",
       "opciones": [
-        "RD$80",
         "RD$8",
+        "RD$80",
         "RD$800",
         "RD$180"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "El 50% de una cantidad es lo mismo que...",
       "opciones": [
-        "La mitad",
         "La cuarta parte",
         "El doble",
+        "La mitad",
         "La quinta parte"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "Un pantalón cuesta RD$1,000 y tiene 20% de descuento. ¿Cuánto pagas?",
       "opciones": [
-        "RD$800",
         "RD$200",
         "RD$980",
-        "RD$1,200"
+        "RD$1,200",
+        "RD$800"
       ],
-      "correcta": 0
+      "correcta": 3
     }
   ]
 }

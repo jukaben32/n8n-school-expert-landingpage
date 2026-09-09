@@ -63,32 +63,32 @@
     {
       "pregunta": "¿Cuántas ideas principales tiene un párrafo bien escrito?",
       "opciones": [
-        "Una sola",
         "Dos o tres",
+        "Una sola",
         "Una por cada oración",
         "Ninguna"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "¿Dónde puede estar la idea principal?",
       "opciones": [
-        "Al principio, en el medio o al final",
         "Solo al principio",
         "Solo al final",
+        "Al principio, en el medio o al final",
         "Solo en la segunda oración"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "¿Para qué sirven las oraciones de detalle?",
       "opciones": [
-        "Para explicar, ejemplificar o probar la idea principal",
         "Para rellenar el párrafo",
         "Para cambiar el tema",
-        "Para repetir la idea principal"
+        "Para repetir la idea principal",
+        "Para explicar, ejemplificar o probar la idea principal"
       ],
-      "correcta": 0
+      "correcta": 3
     },
     {
       "pregunta": "¿Cuál es una buena prueba para saber si hallaste la idea principal?",

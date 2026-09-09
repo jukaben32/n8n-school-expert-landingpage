@@ -63,32 +63,32 @@
     {
       "pregunta": "¿Dónde empieza la digestión?",
       "opciones": [
-        "En la boca",
         "En el estómago",
+        "En la boca",
         "En el intestino delgado",
         "En el esófago"
       ],
-      "correcta": 0
+      "correcta": 1
     },
     {
       "pregunta": "¿En qué órgano pasan los nutrientes a la sangre?",
       "opciones": [
-        "En el intestino delgado",
         "En el estómago",
         "En la boca",
+        "En el intestino delgado",
         "En el intestino grueso"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "¿Cómo baja la comida por el esófago?",
       "opciones": [
-        "El esófago la empuja con ondas de músculo",
         "Cae por su propio peso",
         "La empuja el aire que respiramos",
-        "La arrastra la saliva"
+        "La arrastra la saliva",
+        "El esófago la empuja con ondas de músculo"
       ],
-      "correcta": 0
+      "correcta": 3
     },
     {
       "pregunta": "¿Qué hace principalmente el intestino grueso?",

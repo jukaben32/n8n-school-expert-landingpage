@@ -63,22 +63,22 @@
     {
       "pregunta": "¿Por qué las plantas son las productoras?",
       "opciones": [
-        "Porque fabrican su propio alimento con la luz del sol",
         "Porque son las más grandes",
         "Porque se comen a los insectos",
+        "Porque fabrican su propio alimento con la luz del sol",
         "Porque viven más años"
       ],
-      "correcta": 0
+      "correcta": 2
     },
     {
       "pregunta": "Un conejo que come hierba es un...",
       "opciones": [
-        "Consumidor primario (herbívoro)",
         "Productor",
         "Descomponedor",
-        "Consumidor secundario"
+        "Consumidor secundario",
+        "Consumidor primario (herbívoro)"
       ],
-      "correcta": 0
+      "correcta": 3
     },
     {
       "pregunta": "¿Qué hacen los descomponedores?",
@@ -93,12 +93,12 @@
     {
       "pregunta": "Si desaparecen las plantas de un ecosistema, ¿qué pasa?",
       "opciones": [
-        "Se afecta toda la cadena, empezando por los herbívoros",
         "Solo se afectan las plantas",
+        "Se afecta toda la cadena, empezando por los herbívoros",
         "Los carnívoros no se enteran",
         "Aumentan los herbívoros"
       ],
-      "correcta": 0
+      "correcta": 1
     }
   ]
 }

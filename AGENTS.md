@@ -3168,11 +3168,14 @@ contestar.
 estudiante saca 100% tocando siempre la primera opción, sin ver el video.
 Nadie lo había notado porque el reproductor no baraja las opciones.
 
-No se tocó el contenido de 6to (está en producción y era la víspera de una
-demostración), pero **queda anotado como pendiente**. Para 1ro se corrigió de
-raíz: `lib/revisar-guiones.mjs` falla si una lección tiene todas sus
-respuestas en la misma posición, y avisa si más de la mitad del conjunto cae
-en el mismo botón. Cazó una lección propia mientras se escribía.
+Para 1ro se corrigió de raíz desde el principio: `lib/revisar-guiones.mjs`
+falla si una lección tiene todas sus respuestas en la misma posición, y avisa
+si más de la mitad del conjunto cae en el mismo botón. Cazó una lección propia
+mientras se escribía.
+
+**6to quedó corregido el 2026-09-13** (ver la sección siguiente) -- ese mismo
+día se dejó anotado como pendiente porque era la víspera de una demostración
+con el contenido ya en producción.
 
 ### Lo que se construyó
 
@@ -3242,8 +3245,45 @@ falta el camino en la interfaz, no el permiso.
 4. **Crear los logins de los 20 estudiantes de 1ro.**
 5. Confirmar con la maestra de 1ro el orden de las unidades de **Matemática**
    -- es lo único del plan que no está anclado a una fuente.
-6. Repartir las respuestas correctas de las 9 lecciones de 6to, que hoy están
-   todas en la primera posición.
+6. ~~Repartir las respuestas correctas de las 9 lecciones de 6to~~ -- hecho y
+   verificado el 2026-09-13 (sección siguiente).
+
+## 6to: la respuesta correcta ya no está siempre en el primer botón (2026-09-13)
+
+Cerrado el pendiente que dejó la sesión anterior. Las 36 preguntas tenían
+`correcta: 0`: un estudiante sacaba 100% tocando el primer botón cuatro veces,
+sin ver el video, porque el reproductor no baraja las opciones -- las pinta en
+el orden de `sort_order`.
+
+**Lo primero fue descartar el riesgo real, no reordenar de una**: si algún MP4
+ya subido a YouTube leyera las opciones en voz alta, cambiar el orden en la app
+las desincronizaría con un video que ya no se puede editar. Se revisó guion por
+guion: **ningún video de 6to menciona el cuestionario** -- terminan con "ahora
+contesta el cuestionario" y nada más. (Un detector automático marcó falsos
+positivos por vocabulario compartido: el video de ciencias nombra
+"evaporación, condensación, precipitación" como CONTENIDO del ciclo del agua,
+no como opciones. Se comprobó leyendo las escenas, no confiando en el
+detector.) **Las lecciones de 1ro sí leen las opciones en voz alta**, así que
+allí el orden del video y el de la app se editan siempre juntos.
+
+**El reparto es un cuadrado latino**: 9 preguntas en cada una de las 4
+posiciones, y dentro de CADA lección las 4 preguntas caen en posiciones
+distintas -- no es adivinable ni el conjunto ni una lección suelta.
+
+**Aplicado a producción moviendo solo `sort_order`** -- sin borrar ni recrear
+preguntas, sin tocar `is_correct` ni `lessons`. El script quedó en
+`supabase/seeds/20260913_reordenar_respuestas_6to.sql`.
+
+Verificado, en este orden:
+- **0 `quiz_attempts` y 0 `quiz_answers`** antes de tocar: no había ni una
+  respuesta de estudiante que pudiera descolocarse.
+- Reparto final **9/9/9/9**, y ninguna lección con sus 4 correctas en el mismo
+  botón.
+- **Integridad**: 0 preguntas con opciones perdidas, duplicadas, sin correcta o
+  con `sort_order` repetido.
+- **Repo y producción comparados opción por opción: 36/36, 0 diferencias**, para
+  que volver a correr `lib/cargar-sql.mjs` no lo deshaga.
+- `lib/revisar-guiones.mjs 6to`: 9 lecciones, 0 problemas.
 
 ## Convenciones de trabajo
 
