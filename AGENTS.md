@@ -4138,6 +4138,18 @@ documentado muchas veces aquí. Antes de escribir hay que hacer, en este orden:
    ante la DGII.
 5. `npm run smoke` al terminar.
 
-El detalle fila por fila quedó en el scratchpad de la sesión (`plan_carga.tsv`), no en el
-repo: son nombres de menores con montos. Si se ejecuta la carga, va como seed en
-`supabase/seeds/` igual que las anteriores.
+El script está listo en **`supabase/seeds/20260909_alegra_cobros_septiembre.sql`**, en dos
+partes: PARTE 1 diagnóstico (solo lectura) y PARTE 2 carga (transacción, con el bloque de
+reversión comentado al final). Empareja por `students.student_code` y, para los e-CF a
+nombre del tutor, por `guardians.national_id` -> familia -> hijo, desambiguando hermanos por
+nombre de pila o por `school_level_for_grade(grade_level)`.
+
+**Verificado contra un Postgres local con esquema espejo** (no solo revisado): las 34 filas
+emparejan, los hermanos de un mismo e-CF se separan bien (por nombre y por nivel), un código
+inexistente sale `SIN EMPAREJAR` en vez de adivinar, un pago igual ya existente dispara la
+guarda de duplicado, una fila con `deleted_at` no confunde el emparejamiento, la carga deja
+0 facturas con NCF y 0 pagos huérfanos, **re-ejecutarlo inserta 0** (idempotente por el e-CF
+en la descripción) y la reversión borra solo lo suyo. **Lo que NO se pudo probar**: el
+emparejamiento contra los datos REALES -- si `student_code` en producción no usa el formato
+`24-0033` de Alegra, o si `guardians.national_id` está vacío, la PARTE 1 lo dirá y habrá que
+emparejar por nombre.
