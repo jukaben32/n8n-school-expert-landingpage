@@ -4054,3 +4054,90 @@ borrara en la interfaz la ficha equivocada (las dos se llaman igual y solo se
 distinguían por la etiqueta de acceso). La contrapartida es que **no se ejercitó
 el camino corregido de `inviteStaffAccess` en producción** -- el arreglo de
 paginación y el del mensaje siguen sin una prueba en vivo desde la pantalla.
+
+## Facturar por familia NO es un error: es un requisito fiscal (2026-09-09)
+
+**Corrige una recomendación equivocada de este mismo archivo.** La sección de Cuentas
+por Cobrar viene recomendando desde el 2026-08-27 "facturar mensualidad siempre por
+estudiante individual" para que el reporte pueda atribuir lo cobrado a cada hijo. El
+usuario aclaró el 2026-09-09 por qué el colegio no lo hace, y la razón es buena: la
+factura con valor fiscal que la familia usa para **reportar gastos educativos** ante la
+DGII pide la **cédula del padre, madre o tutor** que declara el gasto -- no la del
+estudiante, que es un menor. Y **la DGII la acepta en conjunto**, cubriendo a varios
+hermanos en un mismo comprobante.
+
+O sea que el comprobante conjunto a nombre del tutor **debe seguir existiendo**. Lo que
+estaba mal no era la factura del colegio, era pretender que el documento fiscal y la
+atribución interna fueran la misma cosa.
+
+**La regla que queda, y que hay que respetar en cualquier trabajo futuro de Tesorería:**
+
+- **Plano fiscal (Alegra):** un e-CF a nombre del tutor, con su cédula, que puede cubrir
+  a varios hermanos. Alegra sigue siendo la única fuente de verdad del NCF/e-CF.
+- **Plano interno (MentorIApp):** una fila de pago **por estudiante**, aunque varias
+  citen el **mismo número de documento**. Así `calculate_receivable_status` puede
+  descontar la cuota de cada hijo por separado sin inventar ninguna heurística de
+  reparto, y la trazabilidad al comprobante real se conserva en la nota.
+
+Caso real que originó la aclaración: el e-CF **E310000000060** (2026-09-04, RD$4,500,
+cédula 02300785520 de Osvaldo Nuñez Castro, nota "Mes de Agosto de Onaimi Y Osvaldo")
+cubre la media cuota de agosto de **dos** estudiantes de Secundaria, RD$2,250 cada uno.
+Se registra como **dos** pagos, ambos con el mismo e-CF en la nota.
+
+**Cambio operativo que anunció el colegio**: a partir del 2026-09-10 se instruirá que
+los cobros se hagan separados por estudiante. Eso reduce el caso conjunto de aquí en
+adelante, pero **no lo elimina retroactivamente** ni quita la previsión fiscal -- una
+familia puede seguir necesitando el comprobante a nombre del tutor.
+
+### Conciliación con Alegra: lo verificado el 2026-09-09 (carga TODAVÍA no hecha)
+
+Primera sesión con el conector `mcp.alegra` habilitado. Funciona bien en lectura.
+
+Universo desde el 1 de septiembre: **37 facturas / RD$83,017.50**, todas ya `closed` y
+`balance: 0` en Alegra. De esas, **33 son Mensualidad/Abono por RD$77,052.50** (las
+otras 4 son Libros y Uniformes, RD$5,965 -- no tocan Cuentas por Cobrar). Se convierten
+en **34 filas de pago** por estudiante (el e-CF conjunto de arriba se parte en dos).
+
+**Hallazgo que confirma el diagnóstico del colegio sobre la mora**: de las 33 facturas
+de mensualidad, **32 no cobraron ningún recargo**. La única que sí es la
+**E320000000410** (2026-09-08, Jayden Josias De los Santos Reynoso, 22-0025): línea
+"Recargo por Mora" de **RD$102.50**, exactamente el 5% de RD$2,050 -- y es además la
+única facturada por **Octavio Mesa**; las otras 36 las hizo Omairy García. Decisión del
+usuario: cerrar cada cuota **por lo que realmente se cobró**, sin aplicar mora
+retroactiva. Como el recargo de esa pantalla es **calculado, no una factura real**, basta
+con no llamar nunca a `generateLateFeeCharge`: al quedar la cuota saldada el recargo
+implícito desaparece solo.
+
+**Coincidencia útil de modelos, verificada**: casi todo se facturó como **50% de la
+mensualidad** con nota "MES DE AGOSTO" (1,950 de 3,900 Inicial / 2,050 de 4,100 Primaria
+/ 2,250 de 4,500 Secundaria) -- exactamente la media cuota de agosto que ya genera
+`installment_schedule` con `tuition_installments_count = 10.5`. Los montos de Alegra y
+los de la plataforma cuadran sin conversión.
+
+**Adelantos**: hay cobros que van más allá de agosto -- "ABONO A SEP", "MES DE AGO Y SEP"
+(RD$5,850) y uno de **"mes de octubre"** (RD$2,050). El usuario confirmó que entren
+ahora; el FIFO de `calculate_receivable_status` los absorbe sin nada especial.
+
+**Pendiente real, y por qué**: la carga **no se ejecutó**. Esta sesión no tuvo ninguna
+credencial de Supabase (sin link, sin CLI, sin variables) -- el mismo bloqueo ya
+documentado muchas veces aquí. Antes de escribir hay que hacer, en este orden:
+
+1. **Lectura primero, obligatoria**: cruzar contra los pagos ya registrados. Al
+   2026-09-07 producción ya tenía **44 pagos por RD$90,100** cargados con "Registrar pago
+   externo", todos de septiembre -- **es muy probable que se solapen con estos 33**.
+   Cargar sin cruzar duplicaría cobros reales.
+2. Confirmar que `students.student_code` guarda de verdad el formato `24-0033` que usa
+   Alegra como `identification` de tipo `IE`. Si no, el emparejamiento es por nombre.
+3. Resolver por nombre las **6 atribuciones** cuyo comprobante va a nombre del tutor
+   (cédula, tipo `CED`): Carlos Reyes (1, Inicial), Sabrina Silvestre (1, Primaria),
+   Yomar Matos (2 hijos: Secundaria y Primaria) y Osvaldo Nuñez Castro (2 hermanos,
+   Secundaria).
+4. Registrar con el mismo camino que ya usa la app (`recordExternalPayment`): factura
+   `status='pagado'` con **`ncf`/`ncf_type` en `null`** -- nunca generar comprobante,
+   porque el e-CF real ya existe en Alegra y un NCF local sería un documento fantasma
+   ante la DGII.
+5. `npm run smoke` al terminar.
+
+El detalle fila por fila quedó en el scratchpad de la sesión (`plan_carga.tsv`), no en el
+repo: son nombres de menores con montos. Si se ejecuta la carga, va como seed en
+`supabase/seeds/` igual que las anteriores.
