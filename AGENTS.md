@@ -4171,6 +4171,53 @@ facturas con NCF y 0 pagos huérfanos**; el e-CF conjunto queda repartido entre 
 estudiantes distintos; **re-ejecutarlo inserta 0** (idempotente por el e-CF en la
 descripción) y la reversión borra sólo lo suyo.
 
+### EJECUTADA contra produccion el 2026-09-09 (PAT de un solo uso, ya borrado)
+
+**Cargadas 28 de las 34 filas: RD$64,952.50**, en dos pasadas (PARTE 2 = 22 filas /
+RD$52,652.50; PARTE 3 = 6 casos resueltos con el usuario / RD$12,300). Verificado tras
+cargar: 28 facturas y 28 pagos, **0 con NCF**, **0 pagos huerfanos**, metodo `alegra` en
+todos. Produccion paso de **44 pagos externos / RD$90,100** a **72 / RD$155,052.50**; el
+motor de mora paso de RD$420,290 vencidos y 44 estudiantes al dia (medicion del 2026-09-07)
+a **RD$369,690 vencidos y 68 al dia**.
+
+**El emparejamiento por nombre funciono en datos reales**: 26 de 34 exactas a la primera.
+El cruce por cedula del tutor fue el que mas valor dio -- encontro a *Onaimi Nayeli* y
+*Osvaldo Andres Nuñez Rivera* (el e-CF conjunto, separado en dos filas como manda la regla
+fiscal) y a las dos hijas de Yomar Matos (*Karolyn* y *Yosmailyn Matos Montero*): ninguna
+habria aparecido cruzando por nombre, porque el comprobante va a nombre del padre.
+
+**El guardaduplicados evito duplicar 4 cobros reales**: Sanem, Eliette, Gianeder y una de
+las dos de Heather Liz ya estaban cargadas el 2026-09-07 con "Registrar pago externo".
+**Pero tenia un punto ciego**: compara por monto, asi que cuando un estudiante tiene DOS
+facturas del mismo monto y solo una cargada, salta las dos. Le paso a **Heather Liz** (dos
+de RD$1,950 el mismo dia: agosto + abono a septiembre) -- se detecto revisando los pagos
+previos uno por uno y se cargo la segunda a mano en la PARTE 3. **Si se vuelve a usar este
+script, revisar ese caso explicitamente.**
+
+**Cuatro no emparejaron por diferencias de escritura** entre Alegra y la base:
+`Olivarez`/`Olivares`, `Morale`/`Morales`, `Andrian`/`Adrian`, `Sara`/`Sarha`. Se cargaron
+contra el nombre de la base. **No se cambio ningun nombre**: en dos casos la base se ve mas
+correcta que Alegra, y sobrescribir el nombre de un menor con un posible error de digitacion
+del POS seria meter el error al reves. **Pendiente**: que el colegio confirme cual es la
+escritura legal de cada uno y se corrija del lado que corresponda.
+
+**Dos siguen sin cargar, a proposito:**
+- **Blayder Emmanuel Solis Castillo** (RD$2,050, adelanto de octubre). La base tiene
+  *Bladimir Emmanuel Solis Sosa*, 1ro. Primaria. A favor: el telefono de la factura
+  (829-467-7220) es el de **Yarimir Solis Sosa**, cuyo apellido explica el "Solis Sosa", y
+  sus otros dos hijos (matriculas 24-0039 y 24-0040, consecutivas con el 24-0041 de Blayder)
+  si emparejaron. En contra: cambian el nombre de pila Y el segundo apellido. **El usuario
+  pidio confirmarlo con Secretaria antes de cargarlo.**
+- **Victor Emmanuel Sanchez Pilier** (RD$2,250, matricula 16-0059): **no existe en la
+  plataforma**, ni activo ni con `deleted_at`. Hay un *Eythan Gadiel Angomas Pilier* (mismo
+  apellido, posible hermano) pero ningun Victor. Hay que darlo de alta antes de registrarle
+  el pago.
+
+**Nota de metodo**: `list_school_receivables` es `security definer` y **rechaza al rol
+`postgres` de la Management API** (`No autorizado para ver las cuentas por cobrar de este
+colegio`) porque no tiene fila en `users_profiles`. Para medir desde ahi hay que llamar a
+`calculate_receivable_status` con un `cross join lateral`, que es `security invoker`.
+
 **Pendiente aparte, recomendado pero NO hecho** (no hace falta para esta carga): traer la
 matrícula de Alegra a `students.student_code`. La columna ya existe desde `init.sql`, así
 que no requiere migración -- sólo un backfill emparejando por nombre una sola vez. Vale la

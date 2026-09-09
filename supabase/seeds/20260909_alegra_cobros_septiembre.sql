@@ -308,3 +308,77 @@ commit;
 --   delete from invoices where school_id=(select id from schools where name ilike '%Gran Manantial%' limit 1)
 --     and description like '%e-CF E3%';
 -- commit;
+-- =====================================================================
+-- PARTE 3 — Casos resueltos con el colegio (2026-09-09) — YA APLICADA
+-- =====================================================================
+-- La PARTE 2 dejo 6 filas sin cargar. Resueltas asi con el usuario:
+--  * 4 no emparejaron por como esta escrito el nombre en Alegra vs la base:
+--      Olivarez/Olivares, Morale/Morales, Andrian/Adrian, Sara/Sarha.
+--      Se cargan contra el nombre de la BASE (no se toco ningun nombre:
+--      en 2 casos la base se ve mas correcta que Alegra -- pendiente de
+--      que el colegio confirme cual es la escritura legal).
+--  * E310000000059 (e-CF a nombre del tutor Carlos Reyes, cedula que no
+--      existe en la plataforma) -> Emil Reyes Hernandez, Kinder: unico hijo
+--      de nivel Inicial de ese tutor y el monto calza con media cuota.
+--  * E320000000388 -> Heather Liz tiene DOS facturas de RD$1,950 el mismo
+--      dia y en la base solo habia UNA registrada. El guardaduplicados de
+--      la PARTE 2 iba a saltar las dos y perder RD$1,950 reales.
+-- SIGUEN PENDIENTES a proposito:
+--  * E320000000391 Blayder Emmanuel Solis Castillo RD$2,050 (adelanto oct):
+--      la base tiene "Bladimir Emmanuel Solis Sosa"; mismo telefono de la
+--      madre (Yarimir Solis Sosa) y matriculas consecutivas con sus dos
+--      hermanos, pero no es seguro. Secretaria debe confirmarlo.
+--  * E320000000401 Victor Emmanuel Sanchez Pilier RD$2,250 (matricula
+--      16-0059): NO existe en la plataforma. Hay que darlo de alta primero.
+-- =====================================================================
+create or replace function pg_temp.nn(t text) returns text language sql immutable as $fn$
+  select trim(regexp_replace(regexp_replace(
+    lower(translate(coalesce(t,''),'áéíóúüñÁÉÍÓÚÜÑ','aeiouunAEIOUUN')),'[^a-z0-9 ]',' ','g'),'\s+',' ','g'))
+$fn$;
+begin;
+with origen (ref, fecha, nombre_bd, monto, metodo, cubre) as (values
+  ('E320000000385','2026-09-02','Nashly Gonzalez Olivares'      ,2050.00,'tarjeta'      ,'media cuota agosto'),
+  ('E320000000386','2026-09-02','Camille Saint Hilaire Morales' ,2050.00,'efectivo'     ,'media cuota agosto'),
+  ('E320000000400','2026-09-04','Teylor Adrian Diaz Mota'       ,2250.00,'tarjeta'      ,'media cuota agosto'),
+  ('E320000000406','2026-09-08','Sarha Abigail Calis Gonzalez'  ,2050.00,'efectivo'     ,'media cuota agosto'),
+  ('E310000000059','2026-09-03','Emil Reyes Hernandez'          ,1950.00,'transferencia','media cuota agosto (e-CF a nombre del tutor Carlos Reyes)'),
+  ('E320000000388','2026-09-02','Heather Liz Rondon Castillo'   ,1950.00,'transferencia','ADELANTO septiembre (2da factura del mismo dia)')
+),
+colegio as (select id from schools where name ilike '%Gran Manantial%' limit 1),
+res as (
+  select o.*, count(s.id) cand, min(s.id::text)::uuid sid
+  from origen o left join students s
+    on s.school_id=(select id from colegio) and s.deleted_at is null
+   and pg_temp.nn(s.first_name||' '||s.last_name)=pg_temp.nn(o.nombre_bd)
+  group by o.ref,o.fecha,o.nombre_bd,o.monto,o.metodo,o.cubre
+),
+eleg as (
+  select r.*, 'Mensualidad — cobro ya registrado (Alegra (POS)): e-CF '||r.ref||' · '||r.metodo||' · '||r.cubre d_,
+              'e-CF '||r.ref||' · '||r.metodo||' · '||r.cubre n_
+  from res r
+  where r.cand=1
+    and not exists (select 1 from invoices i where i.school_id=(select id from colegio)
+          and i.deleted_at is null and i.description like '%'||r.ref||'%')
+),
+actor as (select id from users_profiles where school_id=(select id from colegio)
+          and role in ('director','school_admin') order by role limit 1),
+concepto as (select id from billing_concepts where school_id=(select id from colegio)
+             and recurrence='monthly' and name ilike '%mensualidad%' and deleted_at is null limit 1),
+nuevas as (
+  insert into invoices (school_id,family_id,student_id,concept_id,description,amount,tax_amount,
+                        total_amount,due_date,status,paid_at,ncf,ncf_type,created_by)
+  select (select id from colegio), s.family_id, e.sid, (select id from concepto), e.d_,
+         e.monto,0,e.monto,e.fecha::date,'pagado',(e.fecha||' 00:00:00')::timestamptz,
+         null,null,(select id from actor)
+  from eleg e join students s on s.id=e.sid
+  returning id, description, total_amount, paid_at)
+insert into payments (school_id,invoice_id,amount_paid,payment_method,received_by,paid_at,notes)
+select (select id from colegio), n.id, n.total_amount,'alegra',(select id from actor), n.paid_at, e.n_
+from nuevas n join eleg e on n.description like '%'||e.ref||'%';
+
+select 'total cargado por el script' c, count(*) filas, sum(total_amount) monto
+from invoices where description like '%e-CF E3%' and deleted_at is null
+union all
+select 'control: con NCF (debe ser 0)', count(*), 0 from invoices
+where description like '%e-CF E3%' and (ncf is not null or ncf_type is not null);
+commit;
