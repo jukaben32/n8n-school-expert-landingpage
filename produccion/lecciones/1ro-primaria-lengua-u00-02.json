@@ -1,0 +1,85 @@
+{
+  "id": "1ro-primaria-lengua-u00-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U0. Un día muy especial",
+  "titulo": "¿Cuántas sílabas tiene tu nombre?",
+  "descripcion": "Contar sílabas dando palmadas: los pedacitos con que se dicen las palabras.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las palabras se dicen por pedacitos. Escucha bien: ma. no. Mano. Dos pedacitos. Esos pedacitos se llaman sílabas, y hoy vas a aprender a contarlas.",
+      "visual": "<div class='rotulo'>Las sílabas</div><h1>Los pedacitos</h1><div class='silabas'><span class='silaba'>MA</span><span class='silaba alterna'>NO</span></div><div class='dib medio'>✋</div>"
+    },
+    {
+      "narracion": "Hay un truco buenísimo para contarlas: dar palmadas. Una palmada por cada pedacito. Vamos a probar con la palabra casa. Ca. Sa. Dos palmadas.",
+      "visual": "<h1>Una palmada por pedacito</h1><div class='silabas'><span class='silaba'>CA</span><span class='silaba alterna'>SA</span></div><div class='palmadas'><span class='palmada'>👏</span><span class='palmada'>👏</span></div><div class='pie'>2 sílabas</div>"
+    },
+    {
+      "narracion": "Probemos con una palabra de una sola palmada. Pan. Nada más. Pan tiene una sola sílaba. Y una de tres: pe. lo. ta. Pelota. Tres palmadas.",
+      "visual": "<h1>Una, dos o tres</h1><div class='columna'><div class='fila'><div class='silabas'><span class='silaba'>PAN</span></div><div class='palmadas'><span class='palmada'>👏</span></div></div><div class='fila'><div class='silabas'><span class='silaba'>PE</span><span class='silaba alterna'>LO</span><span class='silaba'>TA</span></div><div class='palmadas'><span class='palmada'>👏</span><span class='palmada'>👏</span><span class='palmada'>👏</span></div></div></div>"
+    },
+    {
+      "narracion": "Ahora hazlo con tu propio nombre. Dilo despacito y da una palmada por cada pedacito. Por ejemplo, Ana: a. na. Dos palmadas. Y Maribel: ma. ri. bel. Tres palmadas.",
+      "visual": "<h1 class='chico'>Tu nombre en pedacitos</h1><div class='columna'><div class='fila'><div class='silabas'><span class='silaba'>A</span><span class='silaba alterna'>NA</span></div><div class='num claro'>2</div></div><div class='fila'><div class='silabas'><span class='silaba'>MA</span><span class='silaba alterna'>RI</span><span class='silaba'>BEL</span></div><div class='num claro'>3</div></div></div>"
+    },
+    {
+      "narracion": "Fíjate en algo. Mientras más pedacitos tiene una palabra, más larga es. Por eso Maribel se demora más en decirse que Ana. Las palabras largas tienen más sílabas.",
+      "visual": "<h1>Más pedacitos, más larga</h1><div class='columna'><div class='tarjeta'><div class='palabra'>SOL</div><div class='detalle'>1 palmada · corta</div></div><div class='tarjeta destaca'><div class='palabra'>MA-RI-PO-SA</div><div class='detalle'>4 palmadas · larga</div></div></div>"
+    },
+    {
+      "narracion": "Cuidado con un error. Contar sílabas no es contar letras. La palabra sol tiene tres letras, pero se dice de un solo golpe: sol. Una sílaba. Se cuenta con la boca, no con los ojos.",
+      "visual": "<h1 class='chico'>No son las letras</h1><div class='fila'><div class='tarjeta no'><div class='palabra'>S-O-L</div><div class='detalle'>3 letras</div><div class='marca'>❌</div></div><div class='tarjeta si'><div class='palabra'>SOL</div><div class='detalle'>1 palmada</div><div class='marca'>✅</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos con cosas del colmado. Pan: una palmada. Que. so. Queso: dos palmadas. Plá. ta. no. Plátano: tres palmadas.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='columna'><div class='dib mini'>🍞</div><div class='num claro'>1</div></div><div class='columna'><div class='dib mini'>🧀</div><div class='num claro'>2</div></div><div class='columna'><div class='dib mini'>🍌</div><div class='num claro'>3</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Da las palmadas en voz alta antes de tocar tu respuesta.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuántas palmadas tiene la palabra casa? Ca. Sa. Cuéntalas tú.",
+      "visual": "<div class='pregunta'>¿Cuántas sílabas tiene CASA?</div><div class='dib'>🏠</div><div class='opciones'><div class='opcion'><div class='num'>1</div></div><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>3</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántas palmadas tiene la palabra mariposa? Ma. Ri. Po. Sa.",
+      "visual": "<div class='pregunta'>¿Cuántas sílabas tiene MARIPOSA?</div><div class='dib'>🦋</div><div class='opciones'><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>4</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estas dos palabras es la más larga de decir? ¿Sol, o mariposa? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál palabra es más larga de decir?</div><div class='opciones'><div class='opcion'><div class='dib'>☀️</div><div class='palabra'>SOL</div></div><div class='opcion'><div class='dib'>🦋</div><div class='palabra'>MARIPOSA</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántas sílabas tiene la palabra CASA?",
+      "opciones": [
+        { "texto": "1", "visual": "<div class='num'>1</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" },
+        { "texto": "3", "visual": "<div class='num'>3</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuántas sílabas tiene la palabra MARIPOSA?",
+      "opciones": [
+        { "texto": "2", "visual": "<div class='num'>2</div>" },
+        { "texto": "4", "visual": "<div class='num'>4</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál palabra es más larga de decir?",
+      "opciones": [
+        { "texto": "MARIPOSA", "visual": "<div class='dib'>🦋</div>" },
+        { "texto": "SOL", "visual": "<div class='dib'>☀️</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "id": "1ro-primaria-naturales-u02-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U2. Los animales",
+  "titulo": "Los animales por fuera",
+  "descripcion": "Patas, alas, cola, plumas, pelo y escamas: cómo son los animales por fuera.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "En República Dominicana vemos animales por todos lados: el gallo del vecino, el gato del colmado, las lagartijas en la pared. Todos son distintos por fuera, y hoy vamos a aprender a mirarlos bien.",
+      "visual": "<div class='rotulo'>Los animales</div><h1>Míralos por fuera</h1><div class='conteo'><span class='obj'>🐔</span><span class='obj'>🐱</span><span class='obj'>🐢</span><span class='obj'>🐦</span></div>"
+    },
+    {
+      "narracion": "Lo primero que se mira son las patas. Cuenta cuántas tiene. El gato tiene cuatro patas. El gallo tiene dos. Y el pescado no tiene ninguna.",
+      "visual": "<h1>¿Cuántas patas?</h1><div class='fila'><div class='columna'><div class='dib mini'>🐱</div><div class='num claro'>4</div></div><div class='columna'><div class='dib mini'>🐔</div><div class='num claro'>2</div></div><div class='columna'><div class='dib mini'>🐟</div><div class='num ambar'>0</div></div></div>"
+    },
+    {
+      "narracion": "Después mira si tiene alas. Las alas sirven para volar. El pajarito tiene alas y vuela. La mariposa también. Pero cuidado: la gallina tiene alas y casi no vuela.",
+      "visual": "<h1>¿Tiene alas?</h1><div class='fila'><div class='tarjeta si'><div class='dib mini'>🐦</div><div class='detalle'>vuela</div></div><div class='tarjeta si'><div class='dib mini'>🦋</div><div class='detalle'>vuela</div></div><div class='tarjeta destaca'><div class='dib mini'>🐔</div><div class='detalle'>tiene alas, casi no vuela</div></div></div>"
+    },
+    {
+      "narracion": "Ahora mira con qué está cubierto su cuerpo. Unos tienen pelo, como el gato y la vaca. Otros tienen plumas, como el gallo. Y otros tienen escamas, como el pescado.",
+      "visual": "<h1>¿De qué está cubierto?</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🐱</div><div class='palabra'>Pelo</div></div><div class='tarjeta'><div class='dib mini'>🐔</div><div class='palabra'>Plumas</div></div><div class='tarjeta'><div class='dib mini'>🐟</div><div class='palabra'>Escamas</div></div></div>"
+    },
+    {
+      "narracion": "Muchos animales tienen cola. La cola les sirve para muchas cosas: al gato para no caerse cuando camina por la pared, y al pescado para nadar más rápido.",
+      "visual": "<h1>La cola</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🐱</div><div class='detalle'>para no caerse</div></div><div class='tarjeta'><div class='dib mini'>🐟</div><div class='detalle'>para nadar</div></div><div class='tarjeta'><div class='dib mini'>🐄</div><div class='detalle'>para espantar moscas</div></div></div>"
+    },
+    {
+      "narracion": "Y hay animales sin patas que igual se mueven muy bien. La lombriz se arrastra. La culebra también. No tener patas no quiere decir que no se pueda caminar.",
+      "visual": "<h1 class='chico'>Sin patas y se mueven</h1><div class='fila'><div class='tarjeta si'><div class='dib mini'>🐛</div><div class='detalle'>se arrastra</div></div><div class='tarjeta si'><div class='dib mini'>🐍</div><div class='detalle'>se arrastra</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos con la tortuga. Cuenta: tiene cuatro patas. No tiene alas. Tiene un caparazón durito. Y tiene una colita chiquita. Ya la describiste completa.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib'>🐢</div><div class='columna'><div class='tarjeta'><div class='detalle'>4 patas</div></div><div class='tarjeta'><div class='detalle'>Sin alas</div></div><div class='tarjeta'><div class='detalle'>Caparazón duro</div></div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Mira bien cada animal antes de tocar.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos animales tiene plumas?",
+      "visual": "<div class='pregunta'>¿Cuál tiene plumas?</div><div class='opciones'><div class='opcion'><div class='dib'>🐱</div><div class='palabra'>El gato</div></div><div class='opcion'><div class='dib'>🐟</div><div class='palabra'>El pescado</div></div><div class='opcion'><div class='dib'>🐔</div><div class='palabra'>El gallo</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántas patas tiene una vaca?",
+      "visual": "<div class='pregunta'>¿Cuántas patas tiene la vaca?</div><div class='dib'>🐄</div><div class='opciones'><div class='opcion'><div class='num'>4</div></div><div class='opcion'><div class='num'>2</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estos animales no tiene ninguna pata? Muy bien. Terminaste. ¡Nos vemos en la próxima!",
+      "visual": "<div class='pregunta'>¿Cuál NO tiene patas?</div><div class='opciones'><div class='opcion'><div class='dib'>🐢</div><div class='palabra'>La tortuga</div></div><div class='opcion'><div class='dib'>🐍</div><div class='palabra'>La culebra</div></div><div class='opcion'><div class='dib'>🐔</div><div class='palabra'>El gallo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos animales tiene plumas?",
+      "opciones": [
+        {
+          "texto": "El gato",
+          "visual": "<div class='dib'>🐱</div>"
+        },
+        {
+          "texto": "El pescado",
+          "visual": "<div class='dib'>🐟</div>"
+        },
+        {
+          "texto": "El gallo",
+          "visual": "<div class='dib'>🐔</div>"
+        }
+      ],
+      "correcta": 2
+    },
+    {
+      "pregunta": "¿Cuántas patas tiene una vaca?",
+      "opciones": [
+        {
+          "texto": "4",
+          "visual": "<div class='num'>4</div>"
+        },
+        {
+          "texto": "2",
+          "visual": "<div class='num'>2</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál de estos animales NO tiene patas?",
+      "opciones": [
+        {
+          "texto": "La tortuga",
+          "visual": "<div class='dib'>🐢</div>"
+        },
+        {
+          "texto": "La culebra",
+          "visual": "<div class='dib'>🐍</div>"
+        },
+        {
+          "texto": "El gallo",
+          "visual": "<div class='dib'>🐔</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

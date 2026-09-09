@@ -1,0 +1,102 @@
+{
+  "id": "1ro-primaria-sociales-u02-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U2. Mi familia",
+  "titulo": "Quiénes forman mi familia",
+  "descripcion": "Los integrantes de la familia, lo que hace cada uno y cómo se ayudan.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "La familia son las personas que viven contigo y te cuidan. Tu mamá, tu papá, tus hermanos. Y muchas veces también tu abuela, tus tíos o tus primos.",
+      "visual": "<div class='rotulo'>Mi familia</div><h1>¿Quiénes son?</h1><div class='conteo'><span class='obj'>👩</span><span class='obj'>👨</span><span class='obj'>👧</span><span class='obj'>👦</span><span class='obj'>👵</span></div>"
+    },
+    {
+      "narracion": "Aquí hay algo muy importante. No todas las familias son iguales, y todas están bien. Hay niños que viven con su mamá y su papá. Otros viven con su abuela. Otros con su mamá nada más, o con su tía. Todas son familias de verdad.",
+      "visual": "<h1 class='chico'>Todas las familias están bien</h1><div class='fila'><div class='tarjeta si'><div class='dib mini'>👩‍👧</div></div><div class='tarjeta si'><div class='dib mini'>👵</div></div><div class='tarjeta si'><div class='dib mini'>👨‍👩‍👦</div></div><div class='tarjeta si'><div class='dib mini'>👨‍👦</div></div></div>"
+    },
+    {
+      "narracion": "En una familia cada quien hace algo. Alguien cocina. Alguien sale a trabajar. Alguien lava la ropa. Alguien te lleva a la escuela. Todos ayudan en algo.",
+      "visual": "<h1>Cada quien hace algo</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🍳</div><div class='detalle'>cocina</div></div><div class='tarjeta'><div class='dib mini'>💼</div><div class='detalle'>trabaja</div></div><div class='tarjeta'><div class='dib mini'>🧺</div><div class='detalle'>lava</div></div><div class='tarjeta'><div class='dib mini'>🏫</div><div class='detalle'>te lleva</div></div></div>"
+    },
+    {
+      "narracion": "Y tú también tienes tu parte. Recoger tus juguetes. Guardar tu mochila. Poner tu plato en el fregadero. Aunque estés chiquito, tú también ayudas en tu casa.",
+      "visual": "<h1>Tú también ayudas</h1><ol class='lista'><li><span class='bolita'>🧸</span> Recojo mis juguetes</li><li><span class='bolita'>🎒</span> Guardo mi mochila</li><li><span class='bolita'>🍽️</span> Llevo mi plato</li></ol>"
+    },
+    {
+      "narracion": "La familia sirve sobre todo para dos cosas: para cuidarte, y para quererte. Cuando te enfermas te llevan al médico. Cuando estás triste te abrazan. Eso es lo que hace una familia.",
+      "visual": "<h1>Cuidar y querer</h1><div class='fila'><div class='tarjeta si'><div class='dib mini'>🩺</div><div class='detalle'>Te cuidan</div></div><div class='tarjeta si'><div class='dib mini'>🤗</div><div class='detalle'>Te quieren</div></div></div>"
+    },
+    {
+      "narracion": "Los abuelos son parte importante de la familia. Ellos vivieron hace mucho tiempo y saben cuentos, dichos y recetas que nadie más sabe. Pregúntale a tu abuela cómo era la vida cuando ella era chiquita.",
+      "visual": "<h1 class='chico'>Los abuelos saben mucho</h1><div class='fila'><div class='dib'>👵</div><div class='columna'><div class='tarjeta'><div class='detalle'>Cuentos 📖</div></div><div class='tarjeta'><div class='detalle'>Recetas 🍲</div></div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si en tu casa viven tu mamá, tu hermano y tú, entonces tu familia tiene tres personas. Cuenta tú cuántas personas viven en tu casa.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='columna'><div class='dib mini'>👩</div></div><div class='columna'><div class='dib mini'>👦</div></div><div class='columna'><div class='dib mini'>👧</div></div><div class='signo'>=</div><div class='num verde'>3</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas juntos.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un niño que vive con su abuela, ¿tiene familia?",
+      "visual": "<div class='pregunta'>Vive con su abuela. ¿Tiene familia?</div><div class='dib'>👵</div><div class='opciones'><div class='opcion'><div class='dib'>✅</div><div class='palabra'>Sí</div></div><div class='opcion'><div class='dib'>❌</div><div class='palabra'>No</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál de estas cosas puede hacer un niño de primero para ayudar en su casa?",
+      "visual": "<div class='pregunta'>¿Con qué puedes ayudar tú?</div><div class='opciones'><div class='opcion'><div class='dib'>🚗</div><div class='palabra'>Manejar</div></div><div class='opcion'><div class='dib'>🧸</div><div class='palabra'>Recoger mis juguetes</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿A quién le puedes preguntar cómo era la vida hace muchos años? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién sabe cómo era la vida antes?</div><div class='opciones'><div class='opcion'><div class='dib'>👵</div><div class='palabra'>Mi abuela</div></div><div class='opcion'><div class='dib'>👶</div><div class='palabra'>Un bebé</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un niño que vive con su abuela, ¿tiene familia?",
+      "opciones": [
+        {
+          "texto": "Sí, tiene familia",
+          "visual": "<div class='dib'>✅</div>"
+        },
+        {
+          "texto": "No tiene familia",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué puedes ayudar tú en tu casa?",
+      "opciones": [
+        {
+          "texto": "Manejar el carro",
+          "visual": "<div class='dib'>🚗</div>"
+        },
+        {
+          "texto": "Recoger mis juguetes",
+          "visual": "<div class='dib'>🧸</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Quién te puede contar cómo era la vida hace muchos años?",
+      "opciones": [
+        {
+          "texto": "Mi abuela",
+          "visual": "<div class='dib'>👵</div>"
+        },
+        {
+          "texto": "Un bebé",
+          "visual": "<div class='dib'>👶</div>"
+        }
+      ],
+      "correcta": 0
+    }
+  ]
+}

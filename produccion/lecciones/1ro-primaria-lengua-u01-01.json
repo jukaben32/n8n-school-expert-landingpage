@@ -1,0 +1,102 @@
+{
+  "id": "1ro-primaria-lengua-u01-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U1. ¿Quién soy?",
+  "titulo": "Mi tarjeta con mi nombre",
+  "descripcion": "Para qué sirve una tarjeta de identidad y por qué el nombre lleva mayúscula.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Una tarjeta de identidad es un papelito que dice quién eres tú. Lleva tu nombre y tus apellidos escritos. Sirve para que los demás sepan cómo te llamas sin tener que preguntarte.",
+      "visual": "<div class='rotulo'>La tarjeta de identidad</div><h1 class='chico'>Dice quién soy</h1><div class='tarjeta destaca'><div class='detalle'>Me llamo</div><div class='palabra'>ANA PÉREZ</div><div class='detalle'>1ro. Primaria</div></div>"
+    },
+    {
+      "narracion": "En la escuela las usamos mucho. La maestra pone una tarjeta en tu mesa, otra en tu percha, otra en tu cuaderno. Así cada quien encuentra lo suyo.",
+      "visual": "<h1>En la escuela</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🪑</div><div class='detalle'>ANA</div></div><div class='tarjeta'><div class='dib mini'>🎒</div><div class='detalle'>ANA</div></div><div class='tarjeta'><div class='dib mini'>📓</div><div class='detalle'>ANA</div></div></div>"
+    },
+    {
+      "narracion": "Fíjate bien en cómo se escribe un nombre. La primera letra siempre va grandota. Esa letra grandota se llama mayúscula. Los nombres de personas siempre empiezan con mayúscula.",
+      "visual": "<div class='rotulo'>La mayúscula</div><h1>La primera va grande</h1><div class='palabra-grande'><span class='foco'>A</span>na</div><div class='pie'>Los nombres empiezan con mayúscula</div>"
+    },
+    {
+      "narracion": "Mira estos dos. El primero está bien escrito: Pedro, con la pe grandota. El segundo está mal: pedro, con la pe chiquita. El nombre de una persona nunca empieza chiquito.",
+      "visual": "<h1 class='chico'>¿Cuál está bien?</h1><div class='fila'><div class='tarjeta si'><div class='palabra'>Pedro</div><div class='marca'>✅</div></div><div class='tarjeta no'><div class='palabra'>pedro</div><div class='marca'>❌</div></div></div>"
+    },
+    {
+      "narracion": "Tu tarjeta puede llevar dos cosas: tu nombre, que es el que te dicen en la casa, y tus apellidos, que son los de tu familia. Nombre primero, apellidos después.",
+      "visual": "<h1>Nombre y apellidos</h1><div class='fila'><div class='tarjeta'><div class='detalle'>Nombre</div><div class='palabra'>Ana</div></div><div class='signo'>+</div><div class='tarjeta destaca'><div class='detalle'>Apellidos</div><div class='palabra'>Pérez Santos</div></div></div>"
+    },
+    {
+      "narracion": "Y si dos compañeros se llaman igual, los apellidos resuelven el lío. Hay dos Anas en el salón, pero una es Ana Pérez y la otra es Ana Reyes. Ya no se confunden.",
+      "visual": "<h1 class='chico'>Dos Anas en el salón</h1><div class='fila'><div class='tarjeta'><div class='palabra'>Ana <span class='foco'>Pérez</span></div></div><div class='tarjeta'><div class='palabra'>Ana <span class='foco'>Reyes</span></div></div></div><div class='pie'>El apellido las diferencia</div>"
+    },
+    {
+      "narracion": "Practiquemos. Para hacer tu tarjeta necesitas tres cosas: escribir tu nombre con mayúscula al principio, escribir tus apellidos, y hacerlo con letra grande y clara para que se lea de lejos.",
+      "visual": "<h1>Mi tarjeta</h1><ol class='lista'><li><span class='bolita'>🔠</span> Mayúscula al principio</li><li><span class='bolita'>✍️</span> Nombre y apellidos</li><li><span class='bolita'>👀</span> Letra grande y clara</li></ol>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas juntos. Mira bien las letras.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos dos nombres está bien escrito?",
+      "visual": "<div class='pregunta'>¿Cuál está bien escrito?</div><div class='opciones'><div class='opcion'><div class='palabra'>luis</div></div><div class='opcion'><div class='palabra'>Luis</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Para qué sirve una tarjeta de identidad?",
+      "visual": "<div class='pregunta'>¿Para qué sirve la tarjeta?</div><div class='opciones'><div class='opcion'><div class='dib'>📛</div><div class='palabra'>Decir quién soy</div></div><div class='opcion'><div class='dib'>⚽</div><div class='palabra'>Para jugar</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si hay dos niñas que se llaman Ana, ¿qué nos ayuda a saber cuál es cuál? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Hay dos Anas. ¿Qué las diferencia?</div><div class='opciones'><div class='opcion'><div class='dib'>📛</div><div class='palabra'>Su apellido</div></div><div class='opcion'><div class='dib'>👕</div><div class='palabra'>Su ropa</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos dos nombres está bien escrito?",
+      "opciones": [
+        {
+          "texto": "luis",
+          "visual": "<div class='palabra-grande'>luis</div>"
+        },
+        {
+          "texto": "Luis",
+          "visual": "<div class='palabra-grande'>Luis</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Para qué sirve una tarjeta de identidad?",
+      "opciones": [
+        {
+          "texto": "Para decir quién soy",
+          "visual": "<div class='dib'>📛</div>"
+        },
+        {
+          "texto": "Para jugar",
+          "visual": "<div class='dib'>⚽</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Hay dos niñas que se llaman Ana. ¿Qué nos dice cuál es cuál?",
+      "opciones": [
+        {
+          "texto": "Su apellido",
+          "visual": "<div class='dib'>📛</div>"
+        },
+        {
+          "texto": "Su ropa",
+          "visual": "<div class='dib'>👕</div>"
+        }
+      ],
+      "correcta": 0
+    }
+  ]
+}

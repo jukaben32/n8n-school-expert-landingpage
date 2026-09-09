@@ -1,0 +1,85 @@
+{
+  "id": "1ro-primaria-matematica-u01-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U1. ¡Me gusta jugar!",
+  "titulo": "Primero, segundo, tercero",
+  "descripcion": "Los números ordinales: el lugar que ocupa cada uno en una fila.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hay dos maneras de usar los números. Una es para decir cuántos hay: tres pelotas. La otra es para decir en qué lugar va cada uno: el tercero de la fila. Hoy vamos con la segunda.",
+      "visual": "<div class='rotulo'>Los ordinales</div><h1 class='chico'>¿Cuántos o cuál lugar?</h1><div class='fila'><div class='tarjeta'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='detalle'>cuántos: 3</div></div><div class='tarjeta destaca'><div class='num'>3º</div><div class='detalle'>qué lugar: tercero</div></div></div>"
+    },
+    {
+      "narracion": "Imagínate la fila para entrar al salón. El que va delante de todos es el primero. El que viene detrás es el segundo. Después el tercero. Y así va siguiendo la fila.",
+      "visual": "<h1>La fila del salón</h1><div class='fila apretada'><div class='columna'><div class='dib mini'>👧</div><div class='num verde'>1º</div></div><div class='columna'><div class='dib mini'>👦</div><div class='num claro'>2º</div></div><div class='columna'><div class='dib mini'>🧒</div><div class='num claro'>3º</div></div><div class='columna'><div class='dib mini'>👦</div><div class='num claro'>4º</div></div></div>"
+    },
+    {
+      "narracion": "Se dicen así: primero, segundo, tercero, cuarto, quinto. Escúchalos otra vez despacio. Primero. Segundo. Tercero. Cuarto. Quinto.",
+      "visual": "<h1>Cómo se dicen</h1><div class='fila apretada'><div class='tarjeta'><div class='num'>1º</div><div class='detalle'>primero</div></div><div class='tarjeta'><div class='num'>2º</div><div class='detalle'>segundo</div></div><div class='tarjeta'><div class='num'>3º</div><div class='detalle'>tercero</div></div></div>"
+    },
+    {
+      "narracion": "Y siguen: sexto, séptimo, octavo, noveno, y décimo. El décimo es el que hace diez. Ese es el último que vamos a aprender este año.",
+      "visual": "<h1>Hasta el décimo</h1><div class='fila apretada'><div class='tarjeta'><div class='num claro'>6º</div></div><div class='tarjeta'><div class='num claro'>7º</div></div><div class='tarjeta'><div class='num claro'>8º</div></div><div class='tarjeta'><div class='num claro'>9º</div></div><div class='tarjeta destaca'><div class='num'>10º</div><div class='detalle'>décimo</div></div></div>"
+    },
+    {
+      "narracion": "Aquí hay algo importantísimo: el lugar depende de por dónde empieces a contar. Si cuentas desde el otro lado de la fila, el que era primero ahora es el último. Por eso siempre hay que decir desde dónde se cuenta.",
+      "visual": "<h1 class='chico'>¿Desde dónde cuentas?</h1><div class='columna'><div class='fila apretada'><div class='dib mini'>➡️</div><div class='num verde'>1º</div><div class='num claro'>2º</div><div class='num claro'>3º</div></div><div class='fila apretada'><div class='dib mini'>⬅️</div><div class='num claro'>3º</div><div class='num claro'>2º</div><div class='num verde'>1º</div></div></div>"
+    },
+    {
+      "narracion": "Los ordinales se usan mucho en la vida. En una carrera, el que llega de primero gana. En el edificio, tú vives en el segundo piso. Y tú estás en primero de primaria.",
+      "visual": "<h1>Se usan mucho</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🏃</div><div class='detalle'>Llegó primero</div></div><div class='tarjeta'><div class='dib mini'>🏢</div><div class='detalle'>Segundo piso</div></div><div class='tarjeta destaca'><div class='dib mini'>🏫</div><div class='detalle'>Primero de primaria</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos con esta fila de frutas. La primera es la manzana. La segunda es el mango. La tercera es el guineo. ¿Cuál es la cuarta? La piña.",
+      "visual": "<h1>Practiquemos</h1><div class='fila apretada'><div class='columna'><div class='dib mini'>🍎</div><div class='num claro'>1º</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num claro'>2º</div></div><div class='columna'><div class='dib mini'>🍌</div><div class='num claro'>3º</div></div><div class='columna'><div class='dib mini'>🍍</div><div class='num verde'>4º</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Cuenta siempre desde la izquierda.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Mira la fila de frutas contando desde la izquierda. ¿Cuál fruta va de segunda?",
+      "visual": "<div class='pregunta'>Contando desde la izquierda, ¿cuál va de 2ª?</div><div class='conteo'><span class='obj'>🍎</span><span class='obj'>🥭</span><span class='obj'>🍌</span></div><div class='opciones'><div class='opcion'><div class='dib'>🍎</div></div><div class='opcion'><div class='dib'>🥭</div></div><div class='opcion'><div class='dib'>🍌</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. En una carrera, ¿quién gana? ¿El que llega de primero, o el que llega de último?",
+      "visual": "<div class='pregunta'>En una carrera, ¿quién gana?</div><div class='dib'>🏃</div><div class='opciones'><div class='opcion'><div class='num'>1º</div><div class='palabra'>El primero</div></div><div class='opcion'><div class='num'>5º</div><div class='palabra'>El último</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cómo se llama el que hace diez en la fila? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>El que hace 10 en la fila se llama...</div><div class='opciones'><div class='opcion'><div class='num'>2º</div><div class='palabra'>Segundo</div></div><div class='opcion'><div class='num'>10º</div><div class='palabra'>Décimo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Contando desde la izquierda 🍎🥭🍌, ¿cuál fruta va de segunda?",
+      "opciones": [
+        { "texto": "La manzana", "visual": "<div class='dib'>🍎</div>" },
+        { "texto": "El mango", "visual": "<div class='dib'>🥭</div>" },
+        { "texto": "El guineo", "visual": "<div class='dib'>🍌</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "En una carrera, ¿quién gana?",
+      "opciones": [
+        { "texto": "El primero", "visual": "<div class='num'>1º</div>" },
+        { "texto": "El último", "visual": "<div class='num'>5º</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "El que hace 10 en la fila se llama...",
+      "opciones": [
+        { "texto": "Segundo", "visual": "<div class='num'>2º</div>" },
+        { "texto": "Décimo", "visual": "<div class='num'>10º</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

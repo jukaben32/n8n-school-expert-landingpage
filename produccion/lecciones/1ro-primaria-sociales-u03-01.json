@@ -1,0 +1,85 @@
+{
+  "id": "1ro-primaria-sociales-u03-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U3. Mi comunidad",
+  "titulo": "Mi casa, mi calle, mi barrio",
+  "descripcion": "Saber dónde vivo: mi casa, el nombre de mi calle y el de mi barrio.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Tú vives en una casa. Esa casa está en una calle. Y esa calle está en un barrio. Es como una cajita dentro de otra cajita más grande.",
+      "visual": "<div class='rotulo'>Mi comunidad</div><h1 class='chico'>¿Dónde vivo yo?</h1><div class='fila apretada'><div class='columna'><div class='dib mini'>🏠</div><div class='detalle'>mi casa</div></div><div class='signo'>➜</div><div class='columna'><div class='dib mini'>🛣️</div><div class='detalle'>mi calle</div></div><div class='signo'>➜</div><div class='columna'><div class='dib mini'>🏘️</div><div class='detalle'>mi barrio</div></div></div>"
+    },
+    {
+      "narracion": "Tu casa es donde tú duermes, comes y vives con tu familia. Hay casas de un piso y edificios de muchos pisos. Todas sirven para lo mismo: para vivir.",
+      "visual": "<h1>Mi casa</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🏠</div><div class='detalle'>Casa</div></div><div class='tarjeta'><div class='dib mini'>🏢</div><div class='detalle'>Edificio</div></div></div><div class='pie'>Las dos son para vivir</div>"
+    },
+    {
+      "narracion": "Tu calle tiene un nombre y tu casa tiene un número. Los dos juntos son tu dirección. La dirección sirve para que la gente sepa llegar a tu casa.",
+      "visual": "<h1>Mi dirección</h1><div class='tarjeta destaca'><div class='detalle'>Calle</div><div class='palabra'>Duarte #12</div></div><div class='pie'>El nombre de la calle y el número</div>"
+    },
+    {
+      "narracion": "Y esto sí es importante que te lo aprendas: tu dirección y el nombre de tu barrio. Si algún día te pierdes, decir dónde vives ayuda a que te lleven de vuelta con tu familia.",
+      "visual": "<h1 class='chico'>Apréndete tu dirección</h1><div class='fila'><div class='dib'>🗣️</div><div class='columna'><div class='tarjeta si'><div class='detalle'>El nombre de mi calle</div></div><div class='tarjeta si'><div class='detalle'>El nombre de mi barrio</div></div></div></div>"
+    },
+    {
+      "narracion": "En tu barrio hay lugares que todos usan. El colmado, donde se compra. La escuela, donde aprendes. El parque, donde juegas. La iglesia. El centro de salud. Esos son lugares de la comunidad.",
+      "visual": "<h1>Lugares de mi barrio</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🏪</div><div class='detalle'>colmado</div></div><div class='tarjeta'><div class='dib mini'>🏫</div><div class='detalle'>escuela</div></div><div class='tarjeta'><div class='dib mini'>🌳</div><div class='detalle'>parque</div></div><div class='tarjeta'><div class='dib mini'>⛪</div><div class='detalle'>iglesia</div></div></div>"
+    },
+    {
+      "narracion": "En el barrio también hay personas que trabajan para todos. El colmadero te vende. El basurero recoge la basura. El policía cuida. El médico atiende en el centro de salud. Todos hacen falta.",
+      "visual": "<h1>Personas que trabajan</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🧑‍🌾</div><div class='detalle'>colmadero</div></div><div class='tarjeta'><div class='dib mini'>🚛</div><div class='detalle'>basurero</div></div><div class='tarjeta'><div class='dib mini'>👮</div><div class='detalle'>policía</div></div><div class='tarjeta'><div class='dib mini'>🩺</div><div class='detalle'>médico</div></div></div>"
+    },
+    {
+      "narracion": "Y el barrio hay que cuidarlo, porque es de todos. Botar la basura en su lugar. No romper las matas del parque. Saludar a los vecinos. Un barrio limpio se ve bonito y da gusto vivir ahí.",
+      "visual": "<h1>Cuido mi barrio</h1><ol class='lista'><li><span class='bolita'>🗑️</span> Boto la basura en su lugar</li><li><span class='bolita'>🌳</span> Cuido las matas</li><li><span class='bolita'>👋</span> Saludo a los vecinos</li></ol>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas juntos.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué es más grande: tu casa, o tu barrio?",
+      "visual": "<div class='pregunta'>¿Qué es más grande?</div><div class='opciones'><div class='opcion'><div class='dib'>🏠</div><div class='palabra'>Mi casa</div></div><div class='opcion'><div class='dib'>🏘️</div><div class='palabra'>Mi barrio</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿A cuál de estos lugares del barrio vas a comprar comida?",
+      "visual": "<div class='pregunta'>¿Dónde se compra la comida?</div><div class='opciones'><div class='opcion'><div class='dib'>🏫</div><div class='palabra'>La escuela</div></div><div class='opcion'><div class='dib'>🏪</div><div class='palabra'>El colmado</div></div><div class='opcion'><div class='dib'>🌳</div><div class='palabra'>El parque</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estas cosas ayuda a cuidar el barrio? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué ayuda a cuidar el barrio?</div><div class='opciones'><div class='opcion'><div class='dib'>🗑️</div><div class='palabra'>Botar la basura en su lugar</div></div><div class='opcion'><div class='dib'>🌪️</div><div class='palabra'>Tirarla en la calle</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué es más grande, mi casa o mi barrio?",
+      "opciones": [
+        { "texto": "Mi casa", "visual": "<div class='dib'>🏠</div>" },
+        { "texto": "Mi barrio", "visual": "<div class='dib'>🏘️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Dónde se compra la comida en el barrio?",
+      "opciones": [
+        { "texto": "La escuela", "visual": "<div class='dib'>🏫</div>" },
+        { "texto": "El colmado", "visual": "<div class='dib'>🏪</div>" },
+        { "texto": "El parque", "visual": "<div class='dib'>🌳</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué ayuda a cuidar el barrio?",
+      "opciones": [
+        { "texto": "Botar la basura en su lugar", "visual": "<div class='dib'>🗑️</div>" },
+        { "texto": "Tirarla en la calle", "visual": "<div class='dib'>🌪️</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

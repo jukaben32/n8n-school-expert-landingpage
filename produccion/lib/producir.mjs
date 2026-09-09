@@ -26,12 +26,16 @@ const run = promisify(execFile)
 const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const MODELO_VOZ = 'openai/gpt-audio-mini'
-/** La voz sale a ~178 palabras/min: muy rápido para un niño. 0.84 la deja en ~150. */
-const RITMO = 0.84
+/**
+ * La voz sale a ~178 palabras/min. 0.84 la deja en ~150, que sirve para 6to.
+ * En 1ro hace falta más lento todavía (~130): el guion lo pide con
+ * `"ritmo": 0.76`. Se puede fijar por lección.
+ */
+const RITMO_POR_DEFECTO = 0.84
 /** Silencio al final de cada escena, para que no se sienta atropellada. */
 const PAUSA_FINAL = 0.5
 
-const SISTEMA_VOZ = [
+const sistemaVoz = (edad) => [
   'Eres un LOCUTOR grabando la pista de audio de una video-lección.',
   'El mensaje del usuario es el GUION que debes leer en voz alta, tal cual, palabra por palabra,',
   'completo, desde la primera palabra hasta la última.',
@@ -46,21 +50,21 @@ const SISTEMA_VOZ = [
   'y termina con la última. No resumas, no reordenes, no cambies palabras.',
   '',
   'Habla en español neutro de República Dominicana, con calma, como una maestra de primaria',
-  'explicándole a un niño de once años.',
+  `explicándole a un niño de ${edad} años.`,
 ].join(' ')
 
 const normalizar = (s) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean)
 
 /** Una sola llamada a la voz. Devuelve el PCM crudo y lo que dijo de verdad. */
-async function pedirVoz(texto, voz) {
+async function pedirVoz(texto, voz, sistema) {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: MODELO_VOZ, stream: true, modalities: ['text', 'audio'],
       audio: { voice: voz, format: 'pcm16' },
-      messages: [{ role: 'system', content: SISTEMA_VOZ }, { role: 'user', content: texto }],
+      messages: [{ role: 'system', content: sistema }, { role: 'user', content: texto }],
     }),
   })
   if (!res.ok) throw new Error(`voz: HTTP ${res.status} ${await res.text()}`)
@@ -124,13 +128,13 @@ function enPedazos(t) {
  * fallando, se narra oración por oración y se pegan. Una lección incompleta
  * nunca sale de aquí.
  */
-async function narrar(texto, voz, destino) {
+async function narrar(texto, voz, destino, ritmo, sistema) {
   let costo = 0
 
   for (let intento = 1; intento <= 3; intento++) {
-    const r = await pedirVoz(texto, voz)
+    const r = await pedirVoz(texto, voz, sistema)
     costo += r.costo
-    if (!r.faltantes.length) return { ...(await escribir(r.pcm, destino)), costo, modo: intento === 1 ? 'directa' : `reintento ${intento}` }
+    if (!r.faltantes.length) return { ...(await escribir(r.pcm, destino, ritmo)), costo, modo: intento === 1 ? 'directa' : `reintento ${intento}` }
   }
 
   // Último recurso: por pedazos. Más cortos que la escena entera, así que la
@@ -140,24 +144,24 @@ async function narrar(texto, voz, destino) {
   for (const pedazo of enPedazos(texto)) {
     let ok = null
     for (let intento = 1; intento <= 4 && !ok; intento++) {
-      const r = await pedirVoz(pedazo, voz)
+      const r = await pedirVoz(pedazo, voz, sistema)
       costo += r.costo
       if (!r.faltantes.length) ok = r.pcm
     }
     if (!ok) throw new Error(`la voz no logró leer completo el pedazo: "${pedazo.slice(0, 70)}..."`)
     partes.push(ok)
   }
-  return { ...(await escribir(Buffer.concat(partes), destino)), costo, modo: `por pedazos (${partes.length})` }
+  return { ...(await escribir(Buffer.concat(partes), destino, ritmo)), costo, modo: `por pedazos (${partes.length})` }
 }
 
-/** Baja el ritmo a ~150 palabras/min y deja una pausa al final. */
-async function escribir(pcm, destino) {
+/** Baja el ritmo al que pida la lección y deja una pausa al final. */
+async function escribir(pcm, destino, ritmo) {
   const crudo = `${destino}.pcm`
   await writeFile(crudo, pcm)
   await run(ffmpegPath, ['-y', '-f', 's16le', '-ar', '24000', '-ac', '1', '-i', crudo,
-    '-filter:a', `atempo=${RITMO},apad=pad_dur=${PAUSA_FINAL}`, '-b:a', '128k', destino])
+    '-filter:a', `atempo=${ritmo},apad=pad_dur=${PAUSA_FINAL}`, '-b:a', '128k', destino])
   await rm(crudo)
-  return { segundos: pcm.length / (24000 * 2) / RITMO + PAUSA_FINAL }
+  return { segundos: pcm.length / (24000 * 2) / ritmo + PAUSA_FINAL }
 }
 
 async function main() {
@@ -166,7 +170,12 @@ async function main() {
   if (!process.env.OPENROUTER_API_KEY) throw new Error('falta OPENROUTER_API_KEY')
 
   const guion = JSON.parse(await readFile(guionPath, 'utf8'))
-  const css = await readFile(path.join(RAIZ, 'lib/estilo.css'), 'utf8')
+  // Cada grado trae su plantilla visual, su ritmo de voz y la edad del
+  // oyente. 1ro usa `estilo-inicial.css`, que manda el dibujo y no el texto,
+  // porque a esa edad el niño todavía no lee.
+  const css = await readFile(path.join(RAIZ, 'lib', guion.estilo ?? 'estilo.css'), 'utf8')
+  const ritmo = guion.ritmo ?? RITMO_POR_DEFECTO
+  const sistema = sistemaVoz(guion.edad ?? 11)
   const dir = path.join(RAIZ, 'salida', guion.id)
   await mkdir(dir, { recursive: true })
 
@@ -179,8 +188,27 @@ async function main() {
     await pagina.setContent(`<style>${css}</style>${esc.visual}`, { waitUntil: 'load' })
     await pagina.screenshot({ path: path.join(dir, `escena-${String(i + 1).padStart(2, '0')}.png`) })
   }
-  await navegador.close()
   console.log(`gráficas    ${guion.escenas.length} escenas dibujadas`)
+
+  // 1b. Imágenes de las OPCIONES del cuestionario (`quiz_options.image_path`).
+  //
+  // En 1ro el niño no lee, así que contesta tocando dibujos. Se dibujan aquí,
+  // con el mismo HTML y el mismo navegador que las láminas -- misma regla: el
+  // dibujo puede ser un emoji, pero cualquier número o palabra lo escribe el
+  // guion, nunca un modelo. Cuadradas, porque la app las pinta en una rejilla
+  // con `aspect-square`. Las sube `lib/subir-imagenes.mjs`.
+  const cuadrada = await navegador.newPage({ viewport: { width: 600, height: 600 } })
+  let opcionesDibujadas = 0
+  for (const [i, preg] of (guion.cuestionario ?? []).entries()) {
+    for (const [j, op] of (preg.opciones ?? []).entries()) {
+      if (typeof op !== 'object' || !op.visual) continue
+      await cuadrada.setContent(`<style>${css}</style><body class="opcion-sola">${op.visual}</body>`, { waitUntil: 'load' })
+      await cuadrada.screenshot({ path: path.join(dir, `opcion-${i + 1}-${j + 1}.png`) })
+      opcionesDibujadas++
+    }
+  }
+  await navegador.close()
+  if (opcionesDibujadas) console.log(`opciones    ${opcionesDibujadas} dibujos de respuesta`)
 
   // 2. Voz, escena por escena, con verificación de fidelidad.
   let costoTotal = 0, duracionTotal = 0
@@ -188,7 +216,7 @@ async function main() {
     const n = String(i + 1).padStart(2, '0')
     const mp3 = path.join(dir, `escena-${n}.mp3`)
     if (existsSync(mp3) && !process.env.REHACER_VOZ) { console.log(`voz ${n}      (ya estaba)`); continue }
-    const r = await narrar(esc.narracion, guion.voz ?? 'marin', mp3)
+    const r = await narrar(esc.narracion, guion.voz ?? 'marin', mp3, ritmo, sistema)
     costoTotal += r.costo; duracionTotal += r.segundos
     console.log(`voz ${n}      ${r.segundos.toFixed(1)}s  ✓ completa (${r.modo})`)
   }

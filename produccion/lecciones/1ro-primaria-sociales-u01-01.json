@@ -1,0 +1,89 @@
+{
+  "id": "1ro-primaria-sociales-u01-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U1. Mi identidad personal",
+  "titulo": "Yo soy único",
+  "descripcion": "Mi nombre completo, cómo soy y lo que me gusta: eso me hace único.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Mira a tu alrededor en el salón. Hay muchos niños y niñas. Ninguno es igual a otro. Y eso está bueno, porque tú eres único. No hay nadie más en el mundo exactamente igual que tú.",
+      "visual": "<div class='rotulo'>Mi identidad</div><h1>Yo soy único</h1><div class='conteo'><span class='obj'>👧</span><span class='obj'>👦</span><span class='obj'>🧒</span><span class='obj'>👦</span><span class='obj'>👧</span></div>"
+    },
+    {
+      "narracion": "Lo primero que te hace único es tu nombre. Y tu nombre completo tiene dos partes: el nombre que te pusieron tus papás, y los apellidos, que vienen de tu familia.",
+      "visual": "<h1 class='chico'>Mi nombre completo</h1><div class='columna'><div class='tarjeta'><div class='detalle'>Mi nombre</div><div class='palabra'>ANA</div></div><div class='tarjeta destaca'><div class='detalle'>Mis apellidos</div><div class='palabra'>PÉREZ SANTOS</div></div></div>"
+    },
+    {
+      "narracion": "Los apellidos son importantes porque dicen de qué familia vienes. Por eso los hermanos comparten apellidos. Tú y tu hermano se apellidan igual, aunque tengan nombres distintos.",
+      "visual": "<h1>Los apellidos</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>👧</div><div class='detalle'>ANA <br>Pérez Santos</div></div><div class='tarjeta'><div class='dib mini'>👦</div><div class='detalle'>LUIS <br>Pérez Santos</div></div></div><div class='pie'>Hermanos: mismos apellidos</div>"
+    },
+    {
+      "narracion": "También eres único por fuera. Tu pelo puede ser rizo o lacio. Tus ojos pueden ser negros, marrones o claros. Puedes ser altico o bajito. Todo eso junto es tu manera de ser por fuera.",
+      "visual": "<h1 class='chico'>Cómo soy por fuera</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>💇</div><div class='detalle'>Mi pelo</div></div><div class='tarjeta'><div class='dib mini'>👀</div><div class='detalle'>Mis ojos</div></div><div class='tarjeta'><div class='dib mini'>📏</div><div class='detalle'>Mi estatura</div></div></div>"
+    },
+    {
+      "narracion": "Y eres único por lo que te gusta. A ti a lo mejor te gusta jugar pelota. A tu compañera le gusta dibujar. A otro le gusta cantar. Lo que te gusta también dice quién eres tú.",
+      "visual": "<h1>Lo que me gusta</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>⚾</div></div><div class='tarjeta'><div class='dib mini'>🎨</div></div><div class='tarjeta'><div class='dib mini'>🎵</div></div><div class='tarjeta'><div class='dib mini'>📖</div></div></div>"
+    },
+    {
+      "narracion": "Aquí va algo que sorprende. Hasta los hermanos gemelos, que se parecen muchísimo, son distintos. Les gustan cosas diferentes, se ríen diferente. Ni siquiera ellos son iguales.",
+      "visual": "<h1 class='chico'>Ni los gemelos son iguales</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>👦</div><div class='detalle'>Le gusta la pelota ⚾</div></div><div class='tarjeta'><div class='dib mini'>👦</div><div class='detalle'>Le gusta dibujar 🎨</div></div></div>"
+    },
+    {
+      "narracion": "Todos somos distintos, y todos valemos igual. Nadie es mejor que otro por ser más alto, por tener el pelo de una forma, o por vivir en un sitio u otro. Todos merecemos el mismo respeto.",
+      "visual": "<h1 class='chico'>Distintos y todos importantes</h1><div class='conteo'><span class='obj'>👧</span><span class='obj'>👦</span><span class='obj'>🧒</span><span class='obj'>👦</span><span class='obj'>👧</span></div><div class='fila'><div class='dib mini'>🤝</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si alguien te pregunta quién eres, tú puedes decir tres cosas: cómo te llamas, cómo eres, y qué te gusta hacer. Con eso ya dijiste quién eres.",
+      "visual": "<h1>¿Quién soy yo?</h1><ol class='lista'><li><span class='bolita'>📛</span> Cómo me llamo</li><li><span class='bolita'>🙋</span> Cómo soy</li><li><span class='bolita'>❤️</span> Qué me gusta</li></ol>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas juntos. Piensa bien antes de tocar.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Los apellidos, ¿de dónde vienen? ¿De tu familia, o de tu escuela?",
+      "visual": "<div class='pregunta'>Los apellidos vienen de...</div><div class='opciones'><div class='opcion'><div class='dib'>👨‍👩‍👧</div><div class='palabra'>Mi familia</div></div><div class='opcion'><div class='dib'>🏫</div><div class='palabra'>Mi escuela</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Dos hermanos gemelos, ¿son exactamente iguales en todo? Acuérdate de lo que aprendimos.",
+      "visual": "<div class='pregunta'>Los gemelos, ¿son iguales en todo?</div><div class='opciones'><div class='opcion'><div class='dib'>✅</div><div class='palabra'>Sí, en todo</div></div><div class='opcion'><div class='dib'>❌</div><div class='palabra'>No, cada uno es único</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Quién es más importante: el niño alto, la niña bajita, o los dos por igual? Muy bien. Terminaste. ¡Nos vemos en la próxima!",
+      "visual": "<div class='pregunta'>¿Quién es más importante?</div><div class='opciones'><div class='opcion'><div class='dib'>🧍</div><div class='palabra'>El alto</div></div><div class='opcion'><div class='dib'>🧒</div><div class='palabra'>La bajita</div></div><div class='opcion'><div class='dib'>🤝</div><div class='palabra'>Los dos igual</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Los apellidos, ¿de dónde vienen?",
+      "opciones": [
+        { "texto": "De mi familia", "visual": "<div class='dib'>👨‍👩‍👧</div>" },
+        { "texto": "De mi escuela", "visual": "<div class='dib'>🏫</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Dos hermanos gemelos, ¿son iguales en todo?",
+      "opciones": [
+        { "texto": "Sí, en todo", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "No, cada uno es único", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Quién es más importante?",
+      "opciones": [
+        { "texto": "El niño alto", "visual": "<div class='dib'>🧍</div>" },
+        { "texto": "La niña bajita", "visual": "<div class='dib'>🧒</div>" },
+        { "texto": "Los dos por igual", "visual": "<div class='dib'>🤝</div>" }
+      ],
+      "correcta": 2
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "id": "1ro-primaria-matematica-u00-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U0. ¡De vuelta a clases!",
+  "titulo": "Contamos del 1 al 10",
+  "descripcion": "Contar tocando uno por uno, y saber que el último número dice cuántos hay.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Mira esta funda de mangos que trajeron del colmado. ¿Tú sabes cuántos mangos hay ahí? Para saberlo hay que contar. Y contar bien tiene su truco.",
+      "visual": "<div class='rotulo'>Contamos</div><h1 class='chico'>¿Cuántos mangos hay?</h1><div class='conteo'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div>"
+    },
+    {
+      "narracion": "El truco es este: tocas cada cosa una sola vez, y dices un número. Un mango, un número. Otro mango, otro número. Nunca dos números para el mismo mango.",
+      "visual": "<h1>Un mango, un número</h1><div class='fila apretada'><div class='columna'><div class='dib mini'>🥭</div><div class='num'>1</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num'>2</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num'>3</div></div></div>"
+    },
+    {
+      "narracion": "Vamos a contar juntos, despacito. Uno. Dos. Tres. Cuatro. Cinco.",
+      "visual": "<h1>Contemos juntos</h1><div class='fila apretada'><div class='columna'><div class='dib mini'>🥭</div><div class='num claro'>1</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num claro'>2</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num claro'>3</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num claro'>4</div></div><div class='columna'><div class='dib mini'>🥭</div><div class='num verde'>5</div></div></div>"
+    },
+    {
+      "narracion": "Y ahora lo más importante de toda la lección. El último número que dijiste, cinco, es la respuesta. Hay cinco mangos. El último número dice cuántos hay.",
+      "visual": "<h1 class='chico'>El último número manda</h1><div class='fila'><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='signo'>=</div><div class='num verde'>5</div></div><div class='pie'>Hay cinco mangos</div>"
+    },
+    {
+      "narracion": "Ahora contemos más. Seis. Siete. Ocho. Nueve. Diez. Hasta el diez, que es un número muy importante porque son los dedos de tus dos manos.",
+      "visual": "<h1>Hasta el 10</h1><div class='fila apretada'><div class='num claro'>6</div><div class='num claro'>7</div><div class='num claro'>8</div><div class='num claro'>9</div><div class='num verde'>10</div></div><div class='fila'><div class='dib'>🙌</div></div>"
+    },
+    {
+      "narracion": "Cuidado con dos errores. El primero: contar dos veces el mismo. El segundo: saltarse uno sin contarlo. Por eso conviene ir tocando cada cosa con el dedito, de izquierda a derecha, sin brincar ninguna.",
+      "visual": "<h1 class='chico'>Cuidado con esto</h1><div class='fila'><div class='tarjeta no'><div class='dib mini'>🔁</div><div class='detalle'>Contar dos veces el mismo</div><div class='marca'>❌</div></div><div class='tarjeta no'><div class='dib mini'>⏭️</div><div class='detalle'>Saltarse uno</div><div class='marca'>❌</div></div></div>"
+    },
+    {
+      "narracion": "Se puede contar cualquier cosa: mangos, sillas, niños, o pollitos. Y no importa por dónde empieces. Si cuentas bien, siempre te va a dar el mismo número.",
+      "visual": "<h1>Contamos lo que sea</h1><div class='fila'><div class='columna'><div class='conteo chica'><span class='obj'>🐔</span><span class='obj'>🐔</span><span class='obj'>🐔</span><span class='obj'>🐔</span></div><div class='num'>4</div></div><div class='columna'><div class='conteo chica'><span class='obj'>🪑</span><span class='obj'>🪑</span><span class='obj'>🪑</span></div><div class='num'>3</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Aquí hay unas pelotas. Cuenta conmigo. Una, dos, tres, cuatro, cinco, seis. Son seis pelotas.",
+      "visual": "<h1>Practiquemos</h1><div class='conteo'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='fila'><div class='signo'>=</div><div class='num verde'>6</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Cuenta despacito antes de tocar tu respuesta.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Cuenta los pollitos y dime cuántos hay. ¿Tres, cuatro, o cinco?",
+      "visual": "<div class='pregunta'>¿Cuántos pollitos hay?</div><div class='conteo'><span class='obj'>🐔</span><span class='obj'>🐔</span><span class='obj'>🐔</span><span class='obj'>🐔</span></div><div class='opciones'><div class='opcion'><div class='num'>3</div></div><div class='opcion'><div class='num'>4</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Contaste unas flores y dijiste: uno, dos, tres, cuatro, cinco, seis, siete. ¿Cuántas flores hay?",
+      "visual": "<div class='pregunta'>Contaste hasta 7. ¿Cuántas flores hay?</div><div class='opciones'><div class='opcion'><div class='num'>1</div></div><div class='opcion'><div class='num'>7</div></div></div><div class='pie'>El último número dice cuántas hay</div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuántos dedos tienes en tus dos manos? ¿Cinco, o diez? Muy bien. Terminaste. ¡Nos vemos en la próxima!",
+      "visual": "<div class='pregunta'>¿Cuántos dedos hay en dos manos?</div><div class='dib'>🙌</div><div class='opciones'><div class='opcion'><div class='num'>5</div></div><div class='opcion'><div class='num'>10</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántos pollitos hay? 🐔🐔🐔🐔",
+      "opciones": [
+        { "texto": "3", "visual": "<div class='num'>3</div>" },
+        { "texto": "4", "visual": "<div class='num'>4</div>" },
+        { "texto": "5", "visual": "<div class='num'>5</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Contaste las flores: uno, dos, tres, cuatro, cinco, seis, siete. ¿Cuántas flores hay?",
+      "opciones": [
+        { "texto": "1", "visual": "<div class='num'>1</div>" },
+        { "texto": "7", "visual": "<div class='num'>7</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuántos dedos hay en dos manos?",
+      "opciones": [
+        { "texto": "10", "visual": "<div class='num'>10</div>" },
+        { "texto": "5", "visual": "<div class='num'>5</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

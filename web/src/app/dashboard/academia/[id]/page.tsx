@@ -13,7 +13,7 @@ type QuestionWithOptions = {
   points: number
   sort_order: number
   image_path: string | null
-  quiz_options: { id: string; label: string; is_correct: boolean; sort_order: number }[]
+  quiz_options: { id: string; label: string; is_correct: boolean; sort_order: number; image_path: string | null }[]
 }
 
 export default async function LeccionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +42,7 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
 
   const { data: questionsRaw, error: questionsRawError } = await supabase
     .from('quiz_questions')
-    .select('id, prompt, points, sort_order, image_path, quiz_options(id, label, is_correct, sort_order)')
+    .select('id, prompt, points, sort_order, image_path, quiz_options(id, label, is_correct, sort_order, image_path)')
     .eq('lesson_id', id)
     .order('sort_order', { ascending: true })
 
@@ -62,19 +62,33 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
     .map((q) => ({ ...q, quiz_options: [...(q.quiz_options ?? [])].sort((a, b) => a.sort_order - b.sort_order) }))
     .sort((a, b) => a.sort_order - b.sort_order)
 
-  // Imagen de apoyo de cada pregunta -- bucket privado, así que cada una
-  // necesita su propia signed URL (mismo patrón que Comunicados/Actualizaciones).
+  // Imágenes del cuestionario -- bucket privado, así que cada una necesita
+  // su propia signed URL (mismo patrón que Comunicados/Actualizaciones).
+  // Son dos: la imagen de apoyo de la pregunta (migración 20260826010000) y
+  // la de cada OPCIÓN de respuesta (migración 20260913000000, necesaria en
+  // 1ro, que todavía no lee). Se firman todas en una sola tanda.
   const admin = createAdminClient()
-  const imageUrlByQuestion = new Map<string, string>()
+  const signedByPath = new Map<string, string>()
+  const paths = Array.from(new Set([
+    ...sortedQuestions.map((q) => q.image_path),
+    ...sortedQuestions.flatMap((q) => q.quiz_options.map((o) => o.image_path)),
+  ].filter((p): p is string => Boolean(p))))
   await Promise.all(
-    sortedQuestions
-      .filter((q) => q.image_path)
-      .map(async (q) => {
-        const { data: signed } = await admin.storage.from(IMAGE_BUCKET).createSignedUrl(q.image_path as string, SIGNED_URL_TTL)
-        if (signed?.signedUrl) imageUrlByQuestion.set(q.id, signed.signedUrl)
-      })
+    paths.map(async (path) => {
+      const { data: signed } = await admin.storage.from(IMAGE_BUCKET).createSignedUrl(path, SIGNED_URL_TTL)
+      if (signed?.signedUrl) signedByPath.set(path, signed.signedUrl)
+    })
   )
-  const questionsWithImages = sortedQuestions.map((q) => ({ ...q, imageUrl: imageUrlByQuestion.get(q.id) ?? null }))
+  // Si una imagen no se pudo firmar, `imageUrl` queda en null y la opción se
+  // pinta como texto: el cuestionario sigue siendo contestable.
+  const questionsWithImages = sortedQuestions.map((q) => ({
+    ...q,
+    imageUrl: (q.image_path && signedByPath.get(q.image_path)) || null,
+    quiz_options: q.quiz_options.map((o) => ({
+      ...o,
+      imageUrl: (o.image_path && signedByPath.get(o.image_path)) || null,
+    })),
+  }))
 
   const { data: existingAttempt, error: existingAttemptError } = await supabase
     .from('quiz_attempts')

@@ -1,0 +1,94 @@
+{
+  "id": "1ro-primaria-naturales-u01-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U1. Los seres vivos",
+  "titulo": "Las plantas también están vivas",
+  "descripcion": "Las partes de una mata y lo que necesita para vivir: agua, sol y aire.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "En el patio de muchas casas dominicanas hay una mata de mango. Se ve quieta, callada, y parece que no hace nada. Pero la mata está viva, igual que tú. Hoy vamos a mirarla por dentro y por fuera.",
+      "visual": "<div class='rotulo'>Los seres vivos</div><h1>La mata está viva</h1><div class='dib max'>🌳</div>"
+    },
+    {
+      "narracion": "Toda mata tiene cuatro partes importantes. Vamos a conocerlas una por una, de abajo hacia arriba. Empezamos por la que no se ve.",
+      "visual": "<h1>Las partes de una mata</h1><div class='conteo'><span class='obj'>🌱</span><span class='obj'>🌿</span><span class='obj'>🍃</span><span class='obj'>🌻</span></div><div class='pie'>Vamos a verlas una por una</div>"
+    },
+    {
+      "narracion": "Debajo de la tierra está la raíz. La raíz agarra la mata para que el viento no la tumbe, y chupa el agua del suelo. Por eso cuando tú riegas una mata, echas el agua en la tierra y no en las hojas.",
+      "visual": "<div class='rotulo'>Parte 1</div><h1>La raíz</h1><svg width=\"760\" height=\"420\" viewBox=\"0 0 600 340\"><rect x=\"0\" y=\"120\" width=\"600\" height=\"220\" fill=\"#e5cfa8\"/><rect x=\"288\" y=\"20\" width=\"26\" height=\"110\" rx=\"12\" fill=\"#4a9d3f\"/><path d=\"M301 130 L301 210 M301 155 L245 235 M301 155 L357 235 M301 205 L262 290 M301 205 L340 290\" stroke=\"#8b5a2b\" stroke-width=\"13\" fill=\"none\" stroke-linecap=\"round\"/><text x=\"420\" y=\"215\" font-family=\"DejaVu Sans\" font-size=\"40\" font-weight=\"bold\" fill=\"#12323f\">la raíz</text><text x=\"40\" y=\"105\" font-family=\"DejaVu Sans\" font-size=\"30\" fill=\"#5c7a86\">tierra</text></svg><div class='pie'>Agarra la mata y chupa el agua</div>"
+    },
+    {
+      "narracion": "Subiendo está el tallo. El tallo es como el bracito de la mata: sostiene todo lo de arriba y por dentro lleva el agua desde la raíz hasta las hojas. En los árboles grandes, al tallo lo llamamos tronco.",
+      "visual": "<div class='rotulo'>Parte 2</div><h1>El tallo</h1><svg width=\"760\" height=\"420\" viewBox=\"0 0 600 340\"><rect x=\"0\" y=\"270\" width=\"600\" height=\"70\" fill=\"#e5cfa8\"/><rect x=\"285\" y=\"60\" width=\"32\" height=\"215\" rx=\"14\" fill=\"#4a9d3f\"/><path d=\"M301 250 L301 150\" stroke=\"#bfe6c0\" stroke-width=\"10\" stroke-linecap=\"round\"/><polygon points=\"301,120 289,150 313,150\" fill=\"#bfe6c0\"/><text x=\"360\" y=\"175\" font-family=\"DejaVu Sans\" font-size=\"40\" font-weight=\"bold\" fill=\"#12323f\">el tallo</text><text x=\"360\" y=\"225\" font-family=\"DejaVu Sans\" font-size=\"30\" fill=\"#5c7a86\">sube el agua</text></svg>"
+    },
+    {
+      "narracion": "Después vienen las hojas. Las hojas son verdes y son la cocina de la mata: agarran la luz del sol y con esa luz la mata se prepara su propia comida. Por eso una mata en un cuarto oscuro se pone amarilla y se muere.",
+      "visual": "<div class='rotulo'>Parte 3</div><h1>Las hojas</h1><div class='fila'><div class='dib'>🍃</div><div class='signo'>+</div><div class='dib'>☀️</div><div class='signo'>=</div><div class='tarjeta destaca'><div class='dib mini'>🍽️</div><div class='palabra'>Su comida</div></div></div>"
+    },
+    {
+      "narracion": "Y arriba de todo salen la flor y el fruto. De la flor nace el fruto, y dentro del fruto vienen las semillas. Cuando tú te comes un mango y botas la semilla, esa semillita puede convertirse en otra mata.",
+      "visual": "<div class='rotulo'>Parte 4</div><h1>Flor y fruto</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🌻</div><div class='palabra'>Flor</div></div><div class='signo'>➜</div><div class='tarjeta'><div class='dib mini'>🥭</div><div class='palabra'>Fruto</div></div><div class='signo'>➜</div><div class='tarjeta destaca'><div class='dib mini'>🌱</div><div class='palabra'>Semilla</div></div></div>"
+    },
+    {
+      "narracion": "Ya conoces las cuatro partes. Raíz, abajo. Tallo, en el medio. Hojas, verdes. Y arriba la flor con su fruto.",
+      "visual": "<h1>Las cuatro partes</h1><ol class='lista'><li><span class='bolita'>🟤</span> La raíz</li><li><span class='bolita'>🌿</span> El tallo</li><li><span class='bolita'>🍃</span> Las hojas</li><li><span class='bolita'>🌻</span> La flor y el fruto</li></ol>"
+    },
+    {
+      "narracion": "¿Y qué necesita una mata para vivir? Tres cositas: agua, luz del sol, y aire. Nada más. Si le falta alguna de las tres, la mata se pone triste y se seca.",
+      "visual": "<h1>Necesita tres cosas</h1><div class='fila'><div class='tarjeta si'><div class='dib mini'>💧</div><div class='palabra'>Agua</div></div><div class='tarjeta si'><div class='dib mini'>☀️</div><div class='palabra'>Sol</div></div><div class='tarjeta si'><div class='dib mini'>💨</div><div class='palabra'>Aire</div></div></div>"
+    },
+    {
+      "narracion": "Y aquí está la prueba de que la mata está viva. Siembras una semillita en la tierra. Le echas agua. Le da el sol. Y a los pocos días sale una matica chiquita, que después se hace grande. Nació y creció. Igualito que tú.",
+      "visual": "<h1 class='chico'>Nace y crece</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🌰</div><div class='detalle'>semilla</div></div><div class='signo'>➜</div><div class='tarjeta'><div class='dib mini'>🌱</div><div class='detalle'>nace</div></div><div class='signo'>➜</div><div class='tarjeta destaca'><div class='dib mini'>🌳</div><div class='detalle'>crece</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas juntos. Escucha bien y toca el dibujo correcto.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál parte de la mata chupa el agua de la tierra? ¿La flor, la raíz, o las hojas?",
+      "visual": "<div class='pregunta'>¿Qué parte chupa el agua de la tierra?</div><div class='opciones'><div class='opcion'><div class='dib'>🌻</div><div class='palabra'>La flor</div></div><div class='opcion'><div class='dib'>🟤</div><div class='palabra'>La raíz</div></div><div class='opcion'><div class='dib'>🍃</div><div class='palabra'>Las hojas</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué necesita una mata para poder vivir? ¿Agua y sol, o juguetes?",
+      "visual": "<div class='pregunta'>¿Qué necesita una mata para vivir?</div><div class='opciones'><div class='opcion'><div class='dib'>💧</div><div class='palabra'>Agua y sol</div></div><div class='opcion'><div class='dib'>🧸</div><div class='palabra'>Juguetes</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿De dónde nace una mata nueva? ¿De una piedra, de un clavo, o de una semilla? Muy bien. Terminaste. ¡Nos vemos en la próxima lección!",
+      "visual": "<div class='pregunta'>¿De dónde nace una mata nueva?</div><div class='opciones'><div class='opcion'><div class='dib'>🪨</div><div class='palabra'>Una piedra</div></div><div class='opcion'><div class='dib'>🔩</div><div class='palabra'>Un clavo</div></div><div class='opcion'><div class='dib'>🌰</div><div class='palabra'>Una semilla</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué parte de la mata chupa el agua de la tierra?",
+      "opciones": [
+        { "texto": "La flor", "visual": "<div class='dib'>🌻</div>" },
+        { "texto": "La raíz", "visual": "<div class='dib'>🟤</div>" },
+        { "texto": "Las hojas", "visual": "<div class='dib'>🍃</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué necesita una mata para vivir?",
+      "opciones": [
+        { "texto": "Agua y sol", "visual": "<div class='dib'>💧</div>" },
+        { "texto": "Juguetes", "visual": "<div class='dib'>🧸</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿De dónde nace una mata nueva?",
+      "opciones": [
+        { "texto": "Una piedra", "visual": "<div class='dib'>🪨</div>" },
+        { "texto": "Un clavo", "visual": "<div class='dib'>🔩</div>" },
+        { "texto": "Una semilla", "visual": "<div class='dib'>🌰</div>" }
+      ],
+      "correcta": 2
+    }
+  ]
+}

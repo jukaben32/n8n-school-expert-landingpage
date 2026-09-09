@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u01-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U1. ¡Me gusta jugar!",
+  "titulo": "Los números del 0 al 9",
+  "descripcion": "Cada número tiene su nombre, su símbolo y su cantidad. Y el cero también cuenta.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cada número tiene tres cosas: un nombre que se dice con la boca, un símbolo que se escribe con la mano, y una cantidad que se ve con los ojos. Mira el tres.",
+      "visual": "<div class='rotulo'>Los números</div><h1 class='chico'>Un número, tres cosas</h1><div class='fila'><div class='tarjeta'><div class='palabra'>tres</div><div class='detalle'>se dice</div></div><div class='tarjeta'><div class='num'>3</div><div class='detalle'>se escribe</div></div><div class='tarjeta'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='detalle'>se cuenta</div></div></div>"
+    },
+    {
+      "narracion": "Vamos del uno al cinco. Uno. Dos. Tres. Cuatro. Cinco. Fíjate cómo cada vez hay una pelota más que antes.",
+      "visual": "<h1>Del 1 al 5</h1><div class='fila apretada'><div class='columna'><div class='num claro'>1</div><div class='dib mini'>⚽</div></div><div class='columna'><div class='num claro'>2</div><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span></div></div><div class='columna'><div class='num claro'>3</div><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div></div></div>"
+    },
+    {
+      "narracion": "Seguimos. Seis. Siete. Ocho. Nueve. El nueve es el último número de una sola cifra. Después del nueve pasa algo especial, pero eso lo vemos más adelante.",
+      "visual": "<h1>Del 6 al 9</h1><div class='fila apretada'><div class='num claro'>6</div><div class='num claro'>7</div><div class='num claro'>8</div><div class='num verde'>9</div></div><div class='pie'>El 9 es el último de una cifra</div>"
+    },
+    {
+      "narracion": "Y ahora el número más raro de todos: el cero. El cero quiere decir que no hay nada. Si te comiste todos los mangos, quedan cero mangos. El cero también es un número.",
+      "visual": "<div class='rotulo'>El más raro</div><h1>El cero</h1><div class='fila'><div class='num ambar'>0</div><div class='signo'>=</div><div class='tarjeta'><div class='detalle'>No hay nada</div></div></div><div class='dib medio'>🍽️</div>"
+    },
+    {
+      "narracion": "Los números también sirven para comparar. Mira: aquí hay tres pelotas y allá hay cinco. Cinco es más que tres. Y tres es menos que cinco.",
+      "visual": "<h1>Más y menos</h1><div class='fila'><div class='columna'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='num claro'>3</div></div><div class='signo'>&lt;</div><div class='columna'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='num verde'>5</div></div></div><div class='pie'>3 es menos que 5</div>"
+    },
+    {
+      "narracion": "Un error muy común es confundir el seis con el nueve. Míralos bien: el seis tiene la barriguita abajo, y el nueve la tiene arriba. Es el mismo dibujo, pero volteado.",
+      "visual": "<h1 class='chico'>No confundas estos dos</h1><div class='fila'><div class='tarjeta'><div class='num'>6</div><div class='detalle'>barriga abajo</div></div><div class='tarjeta destaca'><div class='num'>9</div><div class='detalle'>barriga arriba</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Cuenta estas chichiguas. Una, dos, tres, cuatro. Son cuatro chichiguas. Y si se va volando una, quedan tres.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='columna'><div class='conteo chica'><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span></div><div class='num claro'>4</div></div><div class='signo'>➜</div><div class='columna'><div class='conteo chica'><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span></div><div class='num verde'>3</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Cuenta despacito.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué número va después del ocho?",
+      "visual": "<div class='pregunta'>¿Qué número va después del 8?</div><div class='fila'><div class='num claro'>7</div><div class='num claro'>8</div><div class='num ambar'>?</div></div><div class='opciones'><div class='opcion'><div class='num'>6</div></div><div class='opcion'><div class='num'>9</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Te comiste todos los mangos de la funda. ¿Cuántos mangos quedan?",
+      "visual": "<div class='pregunta'>Te comiste todos. ¿Cuántos quedan?</div><div class='dib'>🍽️</div><div class='opciones'><div class='opcion'><div class='num'>0</div></div><div class='opcion'><div class='num'>1</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estos dos grupos tiene más pelotas? Cuenta los dos antes de decidir. Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál grupo tiene MÁS?</div><div class='opciones'><div class='opcion'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='palabra'>2</div></div><div class='opcion'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='palabra'>5</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué número va después del 8?",
+      "opciones": [
+        { "texto": "6", "visual": "<div class='num'>6</div>" },
+        { "texto": "9", "visual": "<div class='num'>9</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Te comiste todos los mangos. ¿Cuántos quedan?",
+      "opciones": [
+        { "texto": "0", "visual": "<div class='num'>0</div>" },
+        { "texto": "1", "visual": "<div class='num'>1</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál grupo tiene MÁS pelotas?",
+      "opciones": [
+        { "texto": "El de 5", "visual": "<div class='conteo'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div>" },
+        { "texto": "El de 2", "visual": "<div class='conteo'><span class='obj'>⚽</span><span class='obj'>⚽</span></div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

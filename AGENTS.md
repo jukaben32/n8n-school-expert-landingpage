@@ -3121,6 +3121,130 @@ matrícula que ya tiene cada contacto en Alegra. La columna ya acepta el valor p
 colegio tras esta migración. Mientras esté vacía, el emparejamiento depende del
 nombre, que es lo frágil.
 
+## Academia 1ro de Primaria: plan del año, cuestionario con dibujos y 12 lecciones (2026-09-09)
+
+El usuario pasó los índices de las 4 guías de **ActivaMente** de 1ro (Lengua,
+Matemática, Naturales, Sociales) y pidió el plan de videos y cuestionarios
+**para todo el año escolar**, no para la demostración del viernes.
+
+### El hallazgo que hizo posible planificar sin tener el libro
+
+Los títulos de las unidades son temáticos ("En el jardín de mi casa") y no
+dicen el contenido. Parecía que hacía falta la malla curricular del libro.
+**No hacía falta**: se descargó el *Diseño Curricular Nivel Primario, Primer
+Ciclo* del MINERD (422 páginas, oficial) y los **8 tipos de texto** que
+prescribe para Lengua de 1ro son, uno por uno, las unidades de ActivaMente
+(tarjeta de identidad → U1, letrero → U2, lista → U3, mensaje → U4, noticia →
+U5, cuento → U6). El libro sigue al MINERD literalmente. Sociales y Naturales
+mapean igual de directo. Todo destilado en **`produccion/curriculo-1ro.md`**,
+para que nadie tenga que volver a desmenuzar ese PDF.
+
+Segundo hallazgo, igual de importante: **el currículo NO prescribe orden de
+letras**. Trabaja la conciencia fonológica desde las palabras de cada texto.
+Por eso las lecciones de Lengua se organizan por tipo de texto y no por "la
+letra de la semana" -- que era el riesgo real de desalinearse con el salón.
+
+### 1ro no es 6to en pequeño: el cuestionario era un problema DE CÓDIGO
+
+`LessonPlayer.tsx` pintaba cada opción como `opt.label`, texto y nada más. Un
+niño de 6 años **no lee todavía** -- aprender a leer es lo que hace este año
+--, así que no podía contestar ningún cuestionario sin un adulto al lado. La
+pregunta sí aceptaba imagen desde la migración 20260826010000; las opciones
+nunca la tuvieron.
+
+**Migración `20260913000000_quiz_opciones_con_imagen.sql`** -- una sola
+columna nullable, `quiz_options.image_path`. **Aplicada a producción y
+comprobada corriéndola dos veces (idempotente).** Sin tocar ninguna policy y
+sin bucket nuevo (reusa `academia-imagenes`). En el reproductor, una pregunta
+con al menos una opción ilustrada se pinta como **rejilla de dibujos**; sin
+imágenes se pinta exactamente como antes, así que **6to no cambia en nada**
+(verificado: sus 144 opciones tienen `image_path` nulo). Si una imagen no se
+puede firmar, la opción muestra su texto: el cuestionario nunca queda sin
+contestar.
+
+### Bug de contenido encontrado: la respuesta correcta siempre en el mismo botón
+
+**Las 36 preguntas de las 9 lecciones de 6to tienen `correcta: 0`.** Un
+estudiante saca 100% tocando siempre la primera opción, sin ver el video.
+Nadie lo había notado porque el reproductor no baraja las opciones.
+
+No se tocó el contenido de 6to (está en producción y era la víspera de una
+demostración), pero **queda anotado como pendiente**. Para 1ro se corrigió de
+raíz: `lib/revisar-guiones.mjs` falla si una lección tiene todas sus
+respuestas en la misma posición, y avisa si más de la mitad del conjunto cae
+en el mismo botón. Cazó una lección propia mientras se escribía.
+
+### Lo que se construyó
+
+| | |
+|---|---|
+| `produccion/PLAN_1RO_PRIMARIA.md` | **93 lecciones** repartidas en las 36 unidades del año, con objetivo y cuestionario de cada una. |
+| `produccion/curriculo-1ro.md` | El currículo oficial destilado, con las páginas exactas del PDF. |
+| `produccion/lecciones/1ro-*.json` | **12 guiones completos**, 3 por materia: el arranque real del año. |
+| `lib/estilo-inicial.css` | Plantilla visual de 1ro: manda el dibujo, el texto es apoyo de 6 palabras. |
+| `lib/revisar-guiones.mjs` | Revisa los guiones antes de producirlos (curso exacto, láminas, cuestionario, sesgo de posición). |
+| `lib/render-laminas.mjs` | Dibuja las láminas sin gastar una llamada de voz. |
+| `lib/subir-imagenes.mjs` | Sube los dibujos de las opciones al bucket privado. |
+
+`producir.mjs` ganó tres campos por lección: `estilo`, `ritmo` (0.76 ≈ 130
+palabras/min para 1ro, contra 0.84 de 6to) y `edad` (cambia el tono de la
+locución). Y dibuja también las imágenes de las opciones, cuadradas, con el
+mismo Chromium.
+
+**Los emoji a color los pone la fuente que trae Chromium, no el sistema** --
+`fc-list` no la lista, y por eso al principio se descartaron por error. Se
+comprobó renderizando 80 emoji: todos salen, incluidos 🪨 🪥 🪣 🪙 y 🇩🇴. La
+producción tiene que correr con ese Chromium; con otro navegador sin fuente
+de emoji los dibujos saldrían en blanco.
+
+### Verificado contra producción (no supuesto)
+
+- **`students.grade_level` de 1ro es `1ro. Primaria`, con punto** -- 20
+  inscritos. Es el texto que va en `lessons.grade_level`, carácter por
+  carácter; una variante deja al niño sin ver nada y sin ningún error.
+- `20260909000000_academia_curso_texto` **ya estaba aplicada** (AGENTS.md la
+  daba por pendiente; ya no lo está) y las **9 lecciones de 6to están
+  cargadas y publicadas**.
+- **Sesión real de un alumno de 1ro simulada** (`set local role authenticated`
+  + `request.jwt.claims`, transacción con ROLLBACK): resuelve
+  `current_student_id()` ✅, ve la lección de su curso ✅, ve sus 3 opciones
+  **con dibujo** ✅, **no** ve las lecciones de 6to ✅, y solo se ve a sí mismo
+  entre los estudiantes ✅. Comprobado después: 0 filas de prueba, 9 lecciones
+  reales intactas.
+- **Subida de imágenes probada de punta a punta**: render → subida al bucket
+  → signed URL → descarga `HTTP 200 image/png` con el tamaño exacto.
+- `npm run smoke`: **37 de 37**. `tsc`, `eslint` y `next build` limpios.
+
+### ⚠️ El bloqueo real: no hay ni un solo login de estudiante
+
+`select count(*) from users_profiles where role='student'` → **0**. El
+contenido está cargado y publicado, pero **nadie puede abrirlo**, ni en 1ro
+ni en 6to. Por eso el smoke test omite el rol `student`. Se crean en
+`/dashboard/estudiantes/accesos` y se entregan impresos.
+
+Y hay algo más de fondo para 1ro: un niño de 6 años no teclea un código de 7
+caracteres. Quien va a abrir la lección es la madre desde su teléfono, y hoy
+**el tutor no tiene ninguna vía**: `academia/page.tsx` exige
+`profile.student_id` y el tutor tiene `guardian_id`. La policy de base de
+datos para tutores **ya existe** (`lessons_guardian_read_curso`), o sea que
+falta el camino en la interfaz, no el permiso.
+
+### Pendientes, en orden
+
+1. **`OPENROUTER_API_KEY`** para la voz. Sin ella los 12 guiones se quedan en
+   texto: no hay MP4.
+2. Subir los MP4 a YouTube como *no listados* y anotarlos en `enlaces.json`.
+   Son 93 subidas a mano en el año; si eso pesa, la alternativa es Cloudflare
+   Stream, que necesita migración (`video_provider` solo acepta
+   `youtube`/`vimeo`).
+3. Correr `lib/subir-imagenes.mjs` (necesita `SUPABASE_SERVICE_ROLE_KEY`) y
+   el SQL de `lib/cargar-sql.mjs`.
+4. **Crear los logins de los 20 estudiantes de 1ro.**
+5. Confirmar con la maestra de 1ro el orden de las unidades de **Matemática**
+   -- es lo único del plan que no está anclado a una fuente.
+6. Repartir las respuestas correctas de las 9 lecciones de 6to, que hoy están
+   todas en la primera posición.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

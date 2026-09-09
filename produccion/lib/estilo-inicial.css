@@ -1,0 +1,149 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Plantilla visual de las video-lecciones de 1ro de Primaria.
+
+   NO es `estilo.css` con la letra más grande. En 1ro el niño TODAVÍA NO LEE
+   -- aprender a leer es lo que hace durante este año --, así que la lámina
+   se diseña al revés que la de 6to: manda el dibujo y el texto es un apoyo
+   de seis palabras como máximo.
+
+   REGLA NO NEGOCIABLE, la misma de siempre: todo lo que lleve número, letra
+   o rótulo se escribe aquí, con HTML real. Ningún modelo generativo escribe
+   un dato. Los dibujos son emoji (una fuente: determinista, idéntica en
+   cada corrida) y SVG hecho a mano.
+
+   NOTA DE ENTORNO: los emoji a color los pone la fuente que trae Chromium,
+   no el sistema (`fc-list` no la lista). Por eso la producción tiene que
+   correr con el Chromium de Playwright que fija `producir.mjs`; con otro
+   navegador sin fuente de emoji, los dibujos saldrían en blanco.
+   ══════════════════════════════════════════════════════════════════════ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 1920px; height: 1080px; background: #fffdf7;
+  font-family: "DejaVu Sans", system-ui, -apple-system, sans-serif;
+  color: #12323f; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 40px; padding: 80px;
+  position: relative;
+}
+/* Franja superior más alegre que la de 6to, sin llegar a distraer. */
+body::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 18px;
+  background: linear-gradient(90deg, #1a5f7a 0%, #1a9c7a 50%, #f2b705 100%);
+}
+body::after {
+  content: "Centro Educativo Gran Manantial de Sabiduría";
+  position: absolute; bottom: 34px; right: 56px; font-size: 20px;
+  color: #b8c9d1; letter-spacing: .5px;
+}
+
+/* ── Texto ─────────────────────────────────────────────────────────────
+   Mucho más grande que en 6to y SIEMPRE corto. Si un h1 de 1ro no cabe en
+   una línea, el problema es el texto, no el tamaño. */
+h1 { font-size: 96px; font-weight: 800; letter-spacing: -1px; text-align: center; line-height: 1.1; }
+h1.chico { font-size: 76px; }
+.rotulo { font-size: 34px; font-weight: 700; color: #1a9c7a; text-transform: uppercase; letter-spacing: 4px; }
+.pie { font-size: 40px; color: #5c7a86; text-align: center; }
+.grande { font-size: 150px; font-weight: 800; }
+.enorme { font-size: 260px; font-weight: 800; line-height: 1; }
+
+/* ── Dibujos ───────────────────────────────────────────────────────────
+   `.dib` es el tamaño estándar de un emoji ilustrando un concepto. */
+.dib { font-size: 200px; line-height: 1.15; }
+.dib.mini { font-size: 96px; }
+.dib.medio { font-size: 150px; }
+.dib.max { font-size: 320px; }
+
+.fila { display: flex; align-items: center; justify-content: center; gap: 70px; flex-wrap: wrap; }
+.fila.apretada { gap: 34px; }
+.columna { display: flex; flex-direction: column; align-items: stretch; gap: 28px; }
+
+/* ── Tarjetas: la unidad visual básica de 1ro ──────────────────────────
+   Un dibujo grande con una palabra debajo. Casi toda lámina es esto. */
+.tarjeta {
+  background: #fff; border: 8px solid #cfe0e7; border-radius: 32px;
+  padding: 36px 44px; display: flex; flex-direction: column;
+  align-items: center; gap: 18px; min-width: 300px;
+}
+.tarjeta .palabra { font-size: 52px; font-weight: 800; }
+.tarjeta .detalle { font-size: 38px; color: #5c7a86; line-height: 1.3; }
+.tarjeta.si { border-color: #1a9c7a; background: #e8f7f1; }
+.tarjeta.no { border-color: #d95c5c; background: #fdeeee; }
+.tarjeta.destaca { border-color: #f2b705; background: #fdf6e3; }
+
+/* Marca de correcto / incorrecto sobre una tarjeta. */
+.marca { font-size: 76px; line-height: 1; }
+
+/* ── Conteo: la rejilla que se usa en media Matemática ────────────────
+   Objetos idénticos que el niño cuenta uno por uno. */
+.conteo { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; max-width: 1500px; }
+.conteo .obj { font-size: 110px; line-height: 1; }
+.conteo.chica .obj { font-size: 78px; }
+
+/* ── Números ──────────────────────────────────────────────────────────*/
+.num {
+  width: 150px; height: 150px; border-radius: 28px; background: #1a5f7a; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 86px; font-weight: 800;
+}
+.num.claro { background: #e8f2f6; color: #12323f; }
+.num.verde { background: #1a9c7a; }
+.num.ambar { background: #f2b705; color: #12323f; }
+.signo { font-size: 96px; font-weight: 800; color: #5c7a86; }
+.signo.verde { color: #1a9c7a; }
+
+/* Decena y unidades: 10 objetos agrupados vs. sueltos. */
+.decena { display: flex; gap: 10px; padding: 20px; border: 7px solid #1a9c7a; border-radius: 20px; background: #e8f7f1; }
+.decena .u { width: 34px; height: 74px; background: #1a9c7a; border-radius: 7px; }
+.suelta { width: 34px; height: 74px; background: #f2b705; border-radius: 7px; }
+
+/* ── Palabras y sílabas (Lengua) ──────────────────────────────────────*/
+.palabra-grande { font-size: 130px; font-weight: 800; letter-spacing: 6px; }
+.silabas { display: flex; gap: 26px; align-items: center; }
+.silaba {
+  font-size: 84px; font-weight: 800; background: #e8f2f6; border-radius: 22px;
+  padding: 20px 38px; border-bottom: 10px solid #1a5f7a;
+}
+.silaba.alterna { background: #fdf6e3; border-bottom-color: #f2b705; }
+/* La letra o sílaba que se está señalando dentro de una palabra. */
+.foco { color: #1a9c7a; }
+
+/* ── Barra de progreso de sílabas / palmadas ──────────────────────────*/
+.palmadas { display: flex; gap: 30px; }
+.palmada { font-size: 90px; }
+
+/* ── Tabla simple (días de la semana, comparaciones) ──────────────────*/
+.tabla { border-collapse: collapse; font-size: 42px; }
+.tabla th { background: #1a5f7a; color: #fff; padding: 22px 36px; font-weight: 700; }
+.tabla td { border: 4px solid #cfe0e7; padding: 22px 36px; text-align: center; background: #fff; }
+
+/* ── Lista corta de cierre ────────────────────────────────────────────*/
+.lista { font-size: 52px; line-height: 1.8; list-style: none; }
+.lista li { display: flex; align-items: center; gap: 24px; }
+.lista .bolita { font-size: 56px; }
+
+/* ── Pregunta del cuestionario leída en voz alta al final del video ───
+   Se muestra igual que la va a ver el niño en la app, para que reconozca
+   la pantalla cuando llegue a contestar. */
+.pregunta { font-size: 62px; font-weight: 800; text-align: center; max-width: 1600px; line-height: 1.25; }
+.opciones { display: flex; gap: 40px; justify-content: center; }
+.opcion {
+  background: #fff; border: 8px solid #cfe0e7; border-radius: 28px; padding: 30px 40px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 280px;
+}
+.opcion .dib { font-size: 150px; }
+.opcion .palabra { font-size: 44px; font-weight: 800; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Imagen de una OPCIÓN del cuestionario (`quiz_options.image_path`).
+   Se renderiza aparte, en cuadrado, porque en la app se pinta dentro de
+   una rejilla con `aspect-square`.
+   ══════════════════════════════════════════════════════════════════════ */
+body.opcion-sola {
+  width: 600px; height: 600px; padding: 40px; gap: 20px; background: #fff;
+}
+body.opcion-sola::before, body.opcion-sola::after { content: none; }
+body.opcion-sola .dib { font-size: 340px; }
+body.opcion-sola .num { width: 320px; height: 320px; font-size: 200px; border-radius: 48px; }
+body.opcion-sola .palabra-grande { font-size: 150px; }
+body.opcion-sola .conteo .obj { font-size: 96px; }

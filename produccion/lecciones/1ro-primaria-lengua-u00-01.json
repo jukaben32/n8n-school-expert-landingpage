@@ -1,0 +1,89 @@
+{
+  "id": "1ro-primaria-lengua-u00-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U0. Un día muy especial",
+  "titulo": "Mi nombre en la lista",
+  "descripcion": "Reconocer el propio nombre escrito y la letra con que empieza.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todas las mañanas la maestra pasa la lista. Va diciendo los nombres uno por uno, y cada quien contesta presente. Esa hoja se llama la lista de asistencia, y ahí está escrito tu nombre.",
+      "visual": "<div class='rotulo'>La lista de asistencia</div><h1 class='chico'>La maestra pasa lista</h1><div class='fila'><div class='dib'>👩‍🏫</div><div class='columna'><div class='tarjeta'><div class='detalle'>ANA</div></div><div class='tarjeta'><div class='detalle'>LUIS</div></div><div class='tarjeta'><div class='detalle'>ROSA</div></div></div></div>"
+    },
+    {
+      "narracion": "Tu nombre es tuyo. Nadie te lo puede quitar. Y hay algo lindo: tu nombre siempre se escribe igualito. Las mismas letras, en el mismo orden, todos los días.",
+      "visual": "<h1>Tu nombre es tuyo</h1><div class='palabra-grande'>ANA</div><div class='pie'>Siempre se escribe igual</div>"
+    },
+    {
+      "narracion": "Cuando leemos, los ojos van para un solo lado: empiezan a la izquierda y caminan hacia la derecha. Como cuando vas caminando por la acera. Nunca al revés.",
+      "visual": "<h1 class='chico'>Se lee así ➡️</h1><div class='fila'><div class='dib mini'>👀</div><div class='palabra-grande'>ANA</div></div><div class='pie'>De la izquierda a la derecha</div>"
+    },
+    {
+      "narracion": "Ahora fíjate en la primera letra de tu nombre, la que va delante de todas. Esa se llama la letra inicial. Es la puerta de entrada de tu nombre.",
+      "visual": "<div class='rotulo'>La letra inicial</div><h1>La primera letra</h1><div class='palabra-grande'><span class='foco'>A</span>NA</div><div class='pie'>La inicial de ANA es la A</div>"
+    },
+    {
+      "narracion": "Mira estos nombres. María empieza con eme. Pedro empieza con pe. Rosa empieza con erre. Cada nombre tiene su letra inicial.",
+      "visual": "<h1>Cada uno con su letra</h1><div class='fila'><div class='tarjeta'><div class='palabra'><span class='foco'>M</span>ARÍA</div></div><div class='tarjeta'><div class='palabra'><span class='foco'>P</span>EDRO</div></div><div class='tarjeta'><div class='palabra'><span class='foco'>R</span>OSA</div></div></div>"
+    },
+    {
+      "narracion": "Y pasa algo curioso en el salón: hay compañeros que empiezan con la misma letra que tú. Mira: Ana, Andrés y Alba, los tres empiezan con la letra a.",
+      "visual": "<h1 class='chico'>Empiezan igual</h1><div class='fila'><div class='tarjeta si'><div class='palabra'><span class='foco'>A</span>NA</div></div><div class='tarjeta si'><div class='palabra'><span class='foco'>A</span>NDRÉS</div></div><div class='tarjeta si'><div class='palabra'><span class='foco'>A</span>LBA</div></div></div><div class='pie'>Los tres con la letra A</div>"
+    },
+    {
+      "narracion": "También hay nombres cortitos y nombres largos. Ana es un nombre corto, tiene poquitas letras. Maríadelcarmen es un nombre largo, tiene muchas. Ninguno es mejor que el otro: son distintos, y ya.",
+      "visual": "<h1>Cortos y largos</h1><div class='columna'><div class='tarjeta'><div class='palabra'>ANA</div><div class='detalle'>corto</div></div><div class='tarjeta destaca'><div class='palabra'>MARIANELA</div><div class='detalle'>largo</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si la maestra dice: que se paren los que empiezan con la letra pe. ¿Se para Pedro? Sí, porque Pedro empieza con pe. ¿Se para Rosa? No, porque Rosa empieza con erre.",
+      "visual": "<h1>Practiquemos</h1><div class='rotulo'>Los que empiezan con P</div><div class='fila'><div class='tarjeta si'><div class='palabra'><span class='foco'>P</span>EDRO</div><div class='marca'>✅</div></div><div class='tarjeta no'><div class='palabra'>ROSA</div><div class='marca'>❌</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas juntos. Mira bien las letras antes de tocar tu respuesta.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos nombres empieza con la letra eme? Mira la primera letra de cada uno.",
+      "visual": "<div class='pregunta'>¿Cuál empieza con la letra M?</div><div class='opciones'><div class='opcion'><div class='palabra'>ROSA</div></div><div class='opcion'><div class='palabra'>MARÍA</div></div><div class='opcion'><div class='palabra'>LUIS</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál de estos dos nombres es el más corto? El que tiene menos letras.",
+      "visual": "<div class='pregunta'>¿Cuál nombre es más corto?</div><div class='opciones'><div class='opcion'><div class='palabra'>ANA</div></div><div class='opcion'><div class='palabra'>MARIANELA</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Cuando leemos, ¿para dónde van los ojos? ¿De la izquierda a la derecha, o de la derecha a la izquierda? Muy bien. Terminaste. ¡Nos vemos en la próxima!",
+      "visual": "<div class='pregunta'>Al leer, ¿para dónde van los ojos?</div><div class='opciones'><div class='opcion'><div class='dib'>➡️</div><div class='palabra'>Izquierda a derecha</div></div><div class='opcion'><div class='dib'>⬅️</div><div class='palabra'>Derecha a izquierda</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos nombres empieza con la letra M?",
+      "opciones": [
+        { "texto": "ROSA", "visual": "<div class='palabra-grande'>ROSA</div>" },
+        { "texto": "MARÍA", "visual": "<div class='palabra-grande'>MARÍA</div>" },
+        { "texto": "LUIS", "visual": "<div class='palabra-grande'>LUIS</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál de estos dos nombres es más corto?",
+      "opciones": [
+        { "texto": "ANA", "visual": "<div class='palabra-grande'>ANA</div>" },
+        { "texto": "MARIANELA", "visual": "<div class='palabra-grande'>MARIANELA</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Cuando leemos, ¿para dónde van los ojos?",
+      "opciones": [
+        { "texto": "De la derecha a la izquierda", "visual": "<div class='dib'>⬅️</div>" },
+        { "texto": "De la izquierda a la derecha", "visual": "<div class='dib'>➡️</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

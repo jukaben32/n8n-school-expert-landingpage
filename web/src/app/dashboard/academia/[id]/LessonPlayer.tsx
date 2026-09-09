@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-interface Option { id: string; label: string; is_correct: boolean; sort_order: number }
+interface Option { id: string; label: string; is_correct: boolean; sort_order: number; imageUrl: string | null }
 interface Question { id: string; prompt: string; points: number; sort_order: number; imageUrl: string | null; quiz_options: Option[] }
 
 interface LessonPlayerProps {
@@ -65,6 +65,10 @@ export default function LessonPlayer(props: LessonPlayerProps) {
   const embedUrl = getEmbedUrl(videoUrl, videoProvider)
   const maxScore = questions.reduce((sum, q) => sum + q.points, 0)
   const question = questions[current]
+  // Una pregunta ilustrada se contesta tocando dibujos, no leyendo. Se
+  // decide por pregunta, no por lección: una misma lección puede tener una
+  // pregunta con dibujos y otra sin ellos.
+  const conImagenes = Boolean(question?.quiz_options?.some((o) => o.imageUrl))
 
   function selectOption(opt: Option) {
     if (revealed) return
@@ -199,12 +203,41 @@ export default function LessonPlayer(props: LessonPlayerProps) {
                 className="w-full max-h-72 object-contain rounded-xl border border-slate-200 dark:border-slate-800"
               />
             )}
-            <div className="space-y-2">
+            {/* Dos formas de contestar, según lo que traiga la pregunta:
+                en rejilla de dibujos si al menos una opción tiene imagen --
+                el caso de 1ro, que todavía no lee -- y en lista de texto en
+                cualquier otro caso, que es exactamente como se veía antes
+                (6to no cambia en nada). Una opción sin imagen dentro de una
+                pregunta ilustrada sigue mostrando su texto, así que un fallo
+                al firmar la imagen no deja el cuestionario sin contestar. */}
+            <div className={conImagenes ? 'grid grid-cols-2 gap-3' : 'space-y-2'}>
               {question.quiz_options.map((opt) => {
                 const isSelected = selectedId === opt.id
                 let tone = 'border-slate-200 dark:border-slate-700 hover:border-primary/40'
                 if (revealed && opt.is_correct) tone = 'border-green-400 bg-green-50 dark:bg-green-900/20'
                 else if (revealed && isSelected && !opt.is_correct) tone = 'border-red-400 bg-red-50 dark:bg-red-900/20'
+
+                const marca = revealed && opt.is_correct ? ' ✅' : revealed && isSelected && !opt.is_correct ? ' ❌' : ''
+
+                if (conImagenes) {
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => selectOption(opt)}
+                      disabled={revealed}
+                      aria-label={opt.label}
+                      className={`rounded-2xl border-4 p-3 flex flex-col items-center gap-2 transition ${tone} disabled:cursor-default`}
+                    >
+                      {opt.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={opt.imageUrl} alt="" className="w-full aspect-square object-contain" />
+                      )}
+                      <span className="text-base font-bold text-slate-800 dark:text-slate-100 text-center leading-tight">
+                        {opt.label}{marca}
+                      </span>
+                    </button>
+                  )
+                }
 
                 return (
                   <button
@@ -213,9 +246,7 @@ export default function LessonPlayer(props: LessonPlayerProps) {
                     disabled={revealed}
                     className={`w-full text-left rounded-xl border-2 px-4 py-3 text-sm font-medium text-slate-800 dark:text-slate-100 transition ${tone} disabled:cursor-default`}
                   >
-                    {opt.label}
-                    {revealed && opt.is_correct && ' ✅'}
-                    {revealed && isSelected && !opt.is_correct && ' ❌'}
+                    {opt.label}{marca}
                   </button>
                 )
               })}

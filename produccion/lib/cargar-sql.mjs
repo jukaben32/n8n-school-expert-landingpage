@@ -24,11 +24,30 @@ for (const archivo of archivos) {
   const g = JSON.parse(await readFile(path.join(RAIZ, 'lecciones', archivo), 'utf8'))
   const url = enlaces[g.id]
   if (!url) { console.error(`-- ⚠ sin enlace: ${g.id}`); continue }
+  // Una opción puede ser texto suelto (6to) o un objeto con dibujo (1ro):
+  //   "3/6"                                        -> solo texto
+  //   { texto: "El pajarito", visual: "<...>" }    -> texto + dibujo
+  // El dibujo lo renderiza `producir.mjs` como `opcion-<preg>-<op>.png` y lo
+  // sube `subir-imagenes.mjs`; aquí solo se anota la ruta que tendrá.
   datos.push({
     materia: g.materia, curso: g.curso, titulo: g.titulo, descripcion: g.descripcion,
     video: url, orden: (orden += 10),
-    preguntas: g.cuestionario.map((p) => ({ p: p.pregunta, o: p.opciones, c: p.correcta })),
+    preguntas: g.cuestionario.map((p, i) => ({
+      p: p.pregunta,
+      o: p.opciones.map((op, j) => (typeof op === 'object'
+        ? { t: op.texto, img: op.visual ? `${g.id}/opcion-${i + 1}-${j + 1}.png` : null }
+        : { t: op, img: null })),
+      c: p.correcta,
+    })),
   })
+
+  // La respuesta correcta no puede quedar siempre en la misma posición: un
+  // niño saca 100% tocando siempre la primera. Pasó de verdad -- las 36
+  // preguntas de 6to tienen `correcta: 0`.
+  const posiciones = new Set(g.cuestionario.map((p) => p.correcta))
+  if (g.cuestionario.length > 2 && posiciones.size === 1) {
+    console.error(`-- ⚠ ${g.id}: TODAS las respuestas correctas están en la posición ${[...posiciones][0] + 1}`)
+  }
 }
 
 console.log(`-- Carga de video-lecciones en Academia (${datos.length} lecciones)
@@ -83,8 +102,8 @@ begin
       values (v_leccion, q->>'p', i, 10) returning id into v_pregunta;
       j := 0;
       for o in select * from jsonb_array_elements(q->'o') loop
-        insert into quiz_options (question_id, label, is_correct, sort_order)
-        values (v_pregunta, o #>> '{}', j = (q->>'c')::int, j);
+        insert into quiz_options (question_id, label, is_correct, sort_order, image_path)
+        values (v_pregunta, o->>'t', j = (q->>'c')::int, j, o->>'img');
         j := j + 1;
       end loop;
       i := i + 1;
@@ -99,6 +118,9 @@ select l.title, s.name as materia, l.grade_level, l.is_published,
        (select count(*) from quiz_questions q where q.lesson_id = l.id) as preguntas,
        (select count(*) from quiz_options o
           join quiz_questions q on q.id = o.question_id
-         where q.lesson_id = l.id and o.is_correct) as correctas
+         where q.lesson_id = l.id and o.is_correct) as correctas,
+       (select count(o.image_path) from quiz_options o
+          join quiz_questions q on q.id = o.question_id
+         where q.lesson_id = l.id) as opciones_con_dibujo
 from lessons l join subjects s on s.id = l.subject_id
 order by l.sort_order;`)

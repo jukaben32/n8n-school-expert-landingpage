@@ -1,0 +1,118 @@
+{
+  "id": "1ro-primaria-naturales-u01-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U1. Los seres vivos",
+  "titulo": "¿Está vivo o no está vivo?",
+  "descripcion": "Aprendemos las tres señales de un ser vivo: nace, crece y se alimenta.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Mira bien estas dos cosas. Un perrito, y una piedra. Los dos están aquí, en el mismo lugar. Pero hay algo muy importante que los hace diferentes. ¿Tú sabes qué es?",
+      "visual": "<div class='rotulo'>Los seres vivos</div><div class='fila'><div class='tarjeta'><div class='dib'>🐶</div><div class='palabra'>Un perro</div></div><div class='signo'>¿?</div><div class='tarjeta'><div class='dib'>🪨</div><div class='palabra'>Una piedra</div></div></div>"
+    },
+    {
+      "narracion": "El perro está vivo. La piedra no. Y hoy vas a aprender a saber cuál es cuál, siempre, mirando solo tres cositas. Vamos con la primera.",
+      "visual": "<h1>Tres señales</h1><div class='fila'><div class='tarjeta si'><div class='dib'>🐶</div><div class='palabra'>Vivo</div></div><div class='tarjeta no'><div class='dib'>🪨</div><div class='palabra'>No vivo</div></div></div>"
+    },
+    {
+      "narracion": "Señal número uno: los seres vivos nacen. El perrito nació. Tú naciste. El pollito nació de un huevo. Y la mata de mango nació de una semilla. Todo lo que está vivo, un día nació.",
+      "visual": "<div class='rotulo'>Señal 1</div><h1>Nacen</h1><div class='fila apretada'><div class='tarjeta'><div class='dib medio'>👶</div></div><div class='tarjeta'><div class='dib medio'>🐔</div></div><div class='tarjeta'><div class='dib medio'>🌱</div></div></div>"
+    },
+    {
+      "narracion": "Señal número dos: los seres vivos crecen. Cuando tú naciste eras chiquitico, y mírate ahora. La semillita se hizo una mata grande de mango. Todo lo que está vivo, crece.",
+      "visual": "<div class='rotulo'>Señal 2</div><h1>Crecen</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🌱</div><div class='detalle'>antes</div></div><div class='signo'>➜</div><div class='tarjeta destaca'><div class='dib'>🌳</div><div class='detalle'>después</div></div></div>"
+    },
+    {
+      "narracion": "Señal número tres: los seres vivos se alimentan. Comen. El perro come su comida. La vaca come yerba. Tú comes tu desayuno antes de venir a la escuela. Todo lo que está vivo necesita alimentarse.",
+      "visual": "<div class='rotulo'>Señal 3</div><h1>Se alimentan</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🐶</div></div><div class='tarjeta'><div class='dib mini'>🐄</div></div><div class='tarjeta'><div class='dib mini'>👧</div></div><div class='signo'>➜</div><div class='tarjeta destaca'><div class='dib mini'>🍎</div></div></div>"
+    },
+    {
+      "narracion": "Repite conmigo las tres señales de un ser vivo. Nace. Crece. Se alimenta. Si algo hace esas tres cosas, entonces está vivo.",
+      "visual": "<h1>Un ser vivo</h1><ol class='lista'><li><span class='bolita'>👶</span> Nace</li><li><span class='bolita'>🌳</span> Crece</li><li><span class='bolita'>🍎</span> Se alimenta</li></ol>"
+    },
+    {
+      "narracion": "Ahora mira estas cosas. La silla. La pelota. El carro. Ninguna de ellas nació. Ninguna crece. Y ninguna come. Entonces no están vivas. Son cosas, y las hicieron las personas.",
+      "visual": "<h1 class='chico'>Estas no están vivas</h1><div class='fila apretada'><div class='tarjeta no'><div class='dib mini'>🪑</div><div class='marca'>❌</div></div><div class='tarjeta no'><div class='dib mini'>⚽</div><div class='marca'>❌</div></div><div class='tarjeta no'><div class='dib mini'>🚗</div><div class='marca'>❌</div></div></div>"
+    },
+    {
+      "narracion": "Y aquí viene la parte que engaña a mucha gente. La mata. Como la mata no camina ni habla, muchos creen que no está viva. Pero piénsalo: la mata nació de una semilla, la mata crece, y la mata se alimenta con el agua y el sol. Las tres señales. La mata sí está viva.",
+      "visual": "<h1 class='chico'>¡Cuidado con esta!</h1><div class='fila'><div class='tarjeta si'><div class='dib'>🌳</div><div class='palabra'>SÍ está viva</div></div><div class='columna'><div class='tarjeta'><div class='detalle'>Nació de una semilla 🌱</div></div><div class='tarjeta'><div class='detalle'>Crece 📏</div></div><div class='tarjeta'><div class='detalle'>Toma agua y sol 💧☀️</div></div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos juntos. ¿La mata de mango está viva? Sí, porque nace, crece y se alimenta. ¿La guagua está viva? No, la guagua no nace ni come. ¿El gato está vivo? Sí, claro que sí.",
+      "visual": "<h1>Practiquemos</h1><div class='fila apretada'><div class='tarjeta si'><div class='dib mini'>🥭</div><div class='marca'>✅</div></div><div class='tarjeta no'><div class='dib mini'>🚌</div><div class='marca'>❌</div></div><div class='tarjeta si'><div class='dib mini'>🐱</div><div class='marca'>✅</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Ahora vamos a contestar tres preguntitas juntos. Escucha bien cada una y toca el dibujo que tú creas que es el correcto. Aquí va la primera.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos está vivo? La piedra, el pajarito, o la silla. Piénsalo: ¿cuál de los tres nace, crece y come?",
+      "visual": "<div class='pregunta'>¿Cuál de estos está vivo?</div><div class='opciones'><div class='opcion'><div class='dib'>🪨</div><div class='palabra'>La piedra</div></div><div class='opcion'><div class='dib'>🐦</div><div class='palabra'>El pajarito</div></div><div class='opcion'><div class='dib'>🪑</div><div class='palabra'>La silla</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. La mata de flores, ¿está viva? Acuérdate de lo que aprendimos hace un ratito: ella nace, ella crece, y ella toma agua.",
+      "visual": "<div class='pregunta'>La mata de flores, ¿está viva?</div><div class='opciones'><div class='opcion'><div class='dib'>🚫</div><div class='palabra'>No está viva</div></div><div class='opcion'><div class='dib'>🌻</div><div class='palabra'>Sí está viva</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué necesita un ser vivo para poder crecer? ¿Una pelota, un carro, o alimento? Muy bien. Terminaste tu lección. ¡Nos vemos en la próxima!",
+      "visual": "<div class='pregunta'>¿Qué necesita un ser vivo para crecer?</div><div class='opciones'><div class='opcion'><div class='dib'>⚽</div><div class='palabra'>Una pelota</div></div><div class='opcion'><div class='dib'>🚗</div><div class='palabra'>Un carro</div></div><div class='opcion'><div class='dib'>🍎</div><div class='palabra'>Alimento</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos está vivo?",
+      "opciones": [
+        {
+          "texto": "La piedra",
+          "visual": "<div class='dib'>🪨</div>"
+        },
+        {
+          "texto": "El pajarito",
+          "visual": "<div class='dib'>🐦</div>"
+        },
+        {
+          "texto": "La silla",
+          "visual": "<div class='dib'>🪑</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "La mata de flores, ¿está viva?",
+      "opciones": [
+        {
+          "texto": "No está viva",
+          "visual": "<div class='dib'>🚫</div>"
+        },
+        {
+          "texto": "Sí, está viva",
+          "visual": "<div class='dib'>🌻</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué necesita un ser vivo para crecer?",
+      "opciones": [
+        {
+          "texto": "Una pelota",
+          "visual": "<div class='dib'>⚽</div>"
+        },
+        {
+          "texto": "Un carro",
+          "visual": "<div class='dib'>🚗</div>"
+        },
+        {
+          "texto": "Alimento",
+          "visual": "<div class='dib'>🍎</div>"
+        }
+      ],
+      "correcta": 2
+    }
+  ]
+}
