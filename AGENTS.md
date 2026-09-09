@@ -3234,19 +3234,71 @@ falta el camino en la interfaz, no el permiso.
 
 ### Pendientes, en orden
 
-1. **`OPENROUTER_API_KEY`** para la voz. Sin ella los 12 guiones se quedan en
-   texto: no hay MP4.
-2. Subir los MP4 a YouTube como *no listados* y anotarlos en `enlaces.json`.
-   Son 93 subidas a mano en el año; si eso pesa, la alternativa es Cloudflare
-   Stream, que necesita migración (`video_provider` solo acepta
-   `youtube`/`vimeo`).
-3. Correr `lib/subir-imagenes.mjs` (necesita `SUPABASE_SERVICE_ROLE_KEY`) y
-   el SQL de `lib/cargar-sql.mjs`.
-4. **Crear los logins de los 20 estudiantes de 1ro.**
+1. ~~`OPENROUTER_API_KEY` para la voz~~ -- resuelto por otra vía: la fábrica
+   ahora usa **OpenAI directo** (`OPENAI_API_KEY`, que sí está en Vercel) si no
+   encuentra la de OpenRouter. Mismo modelo (`gpt-audio-mini`) y misma voz
+   (`marin`), así que suena igual que los 9 videos de 6to; lo único que cambia
+   es el precio (~US$0.015/min en vez de US$0.0042).
+2. **Producir las 10 lecciones restantes de la tanda de 12** -- detenido a
+   pedido del usuario: *"para en el primero no hagas un segundo hasta que
+   hablemos"*. **No reanudar sin que lo diga.**
+3. Escribir los 81 guiones que faltan de los 93 del plan.
+4. **Crear los logins de los estudiantes de 1ro** (27 inscritos al 2026-09-09).
+   Se hace desde `/dashboard/estudiantes/accesos`, que los imprime para
+   entregarlos en mano. **A propósito no se crean desde una sesión de Claude**:
+   la contraseña temporal terminaría escrita en el chat, y el código de acceso
+   es el credencial de un menor.
 5. Confirmar con la maestra de 1ro el orden de las unidades de **Matemática**
    -- es lo único del plan que no está anclado a una fuente.
 6. ~~Repartir las respuestas correctas de las 9 lecciones de 6to~~ -- hecho y
    verificado el 2026-09-13 (sección siguiente).
+
+### La primera lección de 1ro ya está en Academia (2026-09-09)
+
+Ciclo completo cerrado de punta a punta para **`1ro-primaria-naturales-u01-01`**
+-- *"¿Está vivo o no está vivo?"* (Ciencias Naturales, U1), 3:20, 1080p:
+guion -> láminas -> voz -> MP4 -> el usuario lo subió a YouTube como no listado
+(<https://youtu.be/MDkmv4CVQdw>) -> anotado -> cargado.
+
+**El enlace se anotó con `lib/anotar-enlace.mjs`, no a mano.** Ese script pide
+el título real a `youtube.com/oembed` (funciona con videos no listados) y lo
+compara contra el del guion. Es la única defensa contra el fallo que no da
+ningún error: un enlace cruzado le muestra al estudiante el video equivocado y
+nadie se entera. Coincidió.
+
+**Se aplicó SOLO esa lección, no las 10 del `enlaces.json`.** El SQL que genera
+`lib/cargar-sql.mjs` es idempotente, pero para una lección que ya existe hace
+`delete from quiz_questions` y la recrea. Aunque el repo y producción están
+sincronizados opción por opción (36/36, verificado el 2026-09-13) y hay 0
+intentos que perder, no había ninguna razón para tocar 6to hoy -- se generó el
+SQL con un `enlaces.json` filtrado a la lección nueva.
+
+**Bug real encontrado y corregido en el camino**: `cargar-sql.mjs` llevaba el
+`sort_order` con **un contador global**. Como los archivos se recorren en orden
+alfabético y `1ro-primaria-*` ordena antes que `ciencias-01`, agregar la lección
+de 1ro **habría renumerado en silencio las 9 de 6to** (de 10..90 a 20..100).
+Nadie habría visto un error: solo el orden del catálogo cambiado. Corregido a un
+contador **por curso** (`Map`), así 6to conserva 10..90 sin importar cuántas
+lecciones de 1ro se agreguen. Confirmado en producción después de cargar: 6to
+sigue exactamente en 10..90.
+
+**Verificado contra producción, en este orden:**
+- La lección quedó con 3 preguntas, 8 opciones, **las 8 con dibujo**, 3
+  correctas, publicada, curso `1ro. Primaria`.
+- Las respuestas correctas caen en las posiciones **2, 2 y 3** -- no todas en el
+  mismo botón (el defecto que tenían las 36 de 6to).
+- **Las 8 rutas de `image_path` existen de verdad en `storage.objects`** del
+  bucket `academia-imagenes` (8/8). Una ruta que no existe no da error: la
+  opción se queda sin dibujo y el niño, que no lee, no puede contestar.
+- **Sesión real de un alumno de 1ro simulada** (`set local role authenticated` +
+  `request.jwt.claims`, transacción revertida): ve la lección de su curso ✅, ve
+  las 8 opciones con dibujo ✅, y **no ve ninguna de las 9 de 6to** ✅.
+- Limpio después: 0 usuarios de Auth de prueba, 0 perfiles `student`, 10
+  lecciones y 39 preguntas -- exactamente las 9+1 y 36+3 esperadas.
+
+**El estudiante todavía no puede abrirla**: sigue sin haber ni un solo login de
+estudiante creado (`users_profiles where role='student'` -> 0). Ver el punto 4
+de los pendientes.
 
 ## 6to: la respuesta correcta ya no está siempre en el primer botón (2026-09-13)
 

@@ -19,7 +19,10 @@ const enlaces = JSON.parse(await readFile(process.argv[2], 'utf8'))
 const archivos = (await readdir(path.join(RAIZ, 'lecciones'))).filter((f) => f.endsWith('.json')).sort()
 
 const datos = []
-let orden = 0
+// El orden se lleva POR CURSO, no global: si fuera global, agregar una lección
+// de 1ro (que ordena alfabéticamente antes) renumeraría en silencio las 9 de
+// 6to que ya están en producción con sort_order 10..90.
+const orden = new Map()
 for (const archivo of archivos) {
   const g = JSON.parse(await readFile(path.join(RAIZ, 'lecciones', archivo), 'utf8'))
   const url = enlaces[g.id]
@@ -31,7 +34,7 @@ for (const archivo of archivos) {
   // sube `subir-imagenes.mjs`; aquí solo se anota la ruta que tendrá.
   datos.push({
     materia: g.materia, curso: g.curso, titulo: g.titulo, descripcion: g.descripcion,
-    video: url, orden: (orden += 10),
+    video: url, orden: (orden.set(g.curso, (orden.get(g.curso) ?? 0) + 10), orden.get(g.curso)),
     preguntas: g.cuestionario.map((p, i) => ({
       p: p.pregunta,
       o: p.opciones.map((op, j) => (typeof op === 'object'

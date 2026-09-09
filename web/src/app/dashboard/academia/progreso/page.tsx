@@ -140,6 +140,16 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
     if (!porMateria.has(materia)) porMateria.set(materia, [])
     porMateria.get(materia)!.push(l)
   }
+  // Dentro de cada materia, agrupadas por curso. La consulta ordena por
+  // `sort_order`, que se lleva POR CURSO (ver produccion/lib/cargar-sql.mjs),
+  // así que sin esto 1ro y 6to salen intercalados: "El ciclo del agua (6to)",
+  // "¿Está vivo? (1ro)", "El sistema digestivo (6to)"... Con 10 lecciones
+  // molesta; con las 93 del plan de 1ro la lista deja de servir.
+  for (const suyas of porMateria.values()) {
+    suyas.sort((a, b) =>
+      (a.grade_level ?? '').localeCompare(b.grade_level ?? '', 'es') ||
+      lessons.indexOf(a) - lessons.indexOf(b))
+  }
   const materias = Array.from(porMateria.entries()).sort((a, b) => a[0].localeCompare(b[0], 'es'))
 
   const attempts = (attemptsRaw ?? []) as unknown as AttemptRow[]
