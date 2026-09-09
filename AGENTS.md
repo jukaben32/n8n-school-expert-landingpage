@@ -2918,6 +2918,171 @@ sin `?? []`) vivía también en `academia/[id]/page.tsx` desde el 2026-08-22 -- 
 ESTUDIANTE contesta el cuestionario. Sigue siendo frágil por depender de una garantía que Supabase no
 promete siempre, así que se guardó igual.
 
+## Conciliación automática con Alegra, todos los días a las 7pm (2026-09-09)
+
+Pedido del usuario, el mismo día de la conciliación manual: *"Necesito que cada
+día hagas tú misma el macheo de los pagos de Alegra con la plataforma, puede ser
+7:00 pm, de lunes a viernes, y debemos poner una alerta en la plataforma con la
+fecha y hora última actualización."*
+
+**Se construyó dentro de la app, NO como una sesión de Claude programada.** El
+motivo es concreto: cada sesión de este proyecto ha dependido de que el usuario
+pegue un PAT de Supabase nuevo, que después se borra. Una corrida desatendida a
+las 7pm no tendría ninguna credencial, y dejar un token de administración
+guardado para que un agente escriba dinero en producción todos los días es
+justo lo que no conviene. Dentro de la app, el trabajo corre aunque nadie esté,
+la credencial vive donde ya viven las demás, y queda registro de cada corrida.
+
+### La regla que decide qué se carga solo
+
+**Solo se registra automáticamente lo inequívoco. Todo lo demás va a una bandeja
+de revisión.** No es prudencia decorativa -- es la medida real del 2026-09-09:
+de 34 cobros, **26 emparejaron exactos y 8 necesitaron criterio humano** (4
+descuadres de una letra entre Alegra y la plataforma, 2 hermanos bajo un mismo
+e-CF, 1 nombre distinto, 1 estudiante que no existía aquí). Adivinar esos 8 es
+meterle plata al estudiante equivocado.
+
+Orden de emparejamiento, de más confiable a menos:
+
+| # | Cómo | ¿Se carga solo? |
+|---|---|---|
+| 1 | Matrícula (`client.identification` tipo `IE`) contra `students.student_code` | Sí |
+| 2 | Nombre exacto normalizado | Sí |
+| 3 | Cédula del tutor (tipo `CED`) y la familia tiene **un** inscrito | Sí |
+| 3b | Cédula del tutor y la familia tiene **varios** inscritos = e-CF conjunto | No → bandeja |
+| 4 | Nombre a una letra de distancia (Levenshtein) | No → bandeja, **con el candidato sugerido** |
+| — | Nada coincide | No → bandeja |
+
+**Nunca genera NCF** (`ncf`/`ncf_type` en null, igual que `recordExternalPayment`):
+el e-CF real ya lo emitió Alegra y uno local sería un documento fantasma ante la
+DGII. **Nunca aplica mora**: cierra cada cuota por lo que de verdad se cobró
+(decisión explícita del usuario). Solo cuenta como cuota lo facturado como
+Mensualidad/Abono/Colegiatura -- **Libros, Uniformes y Recargo por Mora quedan
+fuera del monto**, porque no son cuota.
+
+### El punto ciego del script manual, ya cerrado
+
+El script del 2026-09-09 comparaba por **monto** para no duplicar, y por eso
+cuando un estudiante tenía dos facturas del mismo monto y solo una cargada,
+**saltaba las dos**. Le pasó a Heather Liz (dos de RD$1,950 el mismo día) y se
+detectó revisando a mano. Ahora `invoices.external_reference` guarda el e-CF con
+índice único `(school_id, external_reference, student_id)`: el mismo comprobante
+no entra dos veces para el mismo estudiante, y dos comprobantes distintos del
+mismo monto entran los dos. El `student_id` en el índice es a propósito -- un
+e-CF conjunto cubre a varios hermanos, una fila por hijo.
+
+Para los 72 cobros cargados antes de que existiera esa columna (sin referencia),
+queda una guarda blanda: si el estudiante ya tiene una factura pagada del mismo
+monto y la misma fecha sin referencia, **no se salta en silencio** -- va a la
+bandeja como `posible_duplicado` para que una persona decida.
+
+### Piezas
+
+| Dónde | Qué |
+|---|---|
+| `web/src/lib/accounting/alegraMatching.ts` | Núcleo puro: normalizar nombres, separar la parte de mensualidad, emparejar. Sin Supabase ni Next.js -- por eso se puede probar de verdad. |
+| `web/src/lib/accounting/alegraClient.ts` | Cliente REST de Alegra (solo lectura de facturas). `fetch` crudo, no SDK, igual que el resto del proyecto. |
+| `web/src/lib/accounting/reconcileAlegraPayments.ts` | El motor: trae, empareja, carga lo inequívoco, manda el resto a la bandeja, registra la corrida. |
+| `web/src/app/api/cron/alegra/route.ts` | Route Handler que dispara pg_cron. Autorización por `Authorization: Bearer <CRON_SECRET>`, comparado en tiempo constante. |
+| `web/src/app/dashboard/tesoreria/alegra/` | Bandeja de revisión + historial de corridas + botón "Conciliar ahora". |
+| `web/src/components/tesoreria/AlegraSyncBanner.tsx` | La alerta de "última actualización" en Cuentas por Cobrar. |
+| `supabase/migrations/20260912000000_alegra_sync.sql` | `students.student_code` único por colegio, `invoices.external_reference`, `alegra_sync_runs`, `alegra_payment_matches`. |
+| `supabase/migrations/20260912010000_alegra_sync_cron.sql` | pg_cron `0 23 * * 1-5` (= 7:00 pm hora RD) → pg_net → la ruta. |
+| `scripts/test-alegra-matching.mjs` | 22 comprobaciones del núcleo, con los casos reales del 2026-09-09. |
+
+**Sin módulo nuevo en `permissions.ts` a propósito**: la bandeja usa el mismo
+permiso `tesoreria` y se llega por un enlace desde Cuentas por Cobrar. Un módulo
+nuevo obligaría a tocar `Sidebar.tsx` también, y esos dos archivos
+desincronizados ya dejaron funciones inalcanzables aquí más de una vez.
+
+**`students.student_code` pasó de `unique` GLOBAL a `unique (school_id,
+student_code)`** -- cierra de paso la trampa que este archivo venía avisando (con
+un segundo colegio de matrículas `AA-NNNN`, la primera colisión revienta el alta
+del estudiante) y habilita poblar la matrícula, que es lo que vuelve confiable el
+emparejamiento automático.
+
+### Trampas del repo respetadas (cada una costó un día en su momento)
+
+- **`net.http_post()` con `body` jsonb, NUNCA `::text`** (bugs #7 y #12).
+- **`/api/cron` agregado a `publicPrefixRoutes` de `web/src/proxy.ts`** -- si no,
+  el middleware de auth redirige la llamada a `/login` y la corrida nunca ocurre,
+  exactamente el fallo silencioso de `/sw.js` y del callback de Azul.
+- **El archivo `'use server'` no exporta ninguna constante**, solo funciones async
+  (el bug que tumbó Cuentas por Cobrar entera el 2026-09-03).
+- **Ningún `page.tsx` pasa una función como prop** -- toda la interactividad vive
+  en el componente cliente (el `onClick` que rompió Academia el 2026-09-07).
+
+### Verificado en esta sesión
+
+1. **Migración contra Postgres local con esquema espejo**, aplicada **dos veces**
+   (idempotente) y 6 escenarios: un segundo colegio ya puede usar la misma
+   matrícula ✅ y el mismo colegio no ✅; el e-CF se backfilleó bien desde la
+   descripción de los 28 cobros del 2026-09-09 ✅; el mismo e-CF para el mismo
+   estudiante se rechaza ✅ y para un hermano se acepta ✅; las dos facturas del
+   mismo monto de Heather Liz conviven con e-CF distinto ✅.
+2. **Sintaxis del cron verificada localmente**: sin pg_cron degrada con aviso en
+   vez de reventar, y sin el secreto cargado no llama a nadie ✅.
+3. **`scripts/test-alegra-matching.mjs`: 22 de 22 OK**, con los casos reales --
+   incluido que los cuatro descuadres de una letra (Olivarez/Olivares,
+   Morale/Morales, Andrian/Adrian, Sara/Sarha) ya **sugieren el estudiante
+   correcto** en la bandeja en vez de llegar en blanco.
+4. **La forma de la respuesta de Alegra se verificó contra la cuenta real** con el
+   conector MCP (facturas E31/E32 de septiembre), no de memoria.
+5. `npx tsc --noEmit`, `npm run lint` y `npm run build` completos, limpios.
+
+### Aplicado a producción el 2026-09-09 (PAT de un solo uso, ya no se usa)
+
+El usuario pasó un Personal Access Token de Supabase y con él se aplicó la parte
+de base de datos, verificada consulta por consulta:
+
+- Las dos migraciones (`20260912000000` y `20260912010000`) aplicadas: las dos
+  tablas, `invoices.external_reference`, los dos índices, RLS activa y sus dos
+  políticas de lectura.
+- **El `unique` GLOBAL de `students.student_code` quedó eliminado** y
+  reemplazado por el índice único por colegio -- se confirmó con `pg_constraint`
+  que ya no queda ninguna restricción única global sobre esa tabla.
+- `pg_cron` 1.6.4 habilitada (`create extension`, aceptado por la Management
+  API) y el horario registrado: `0 23 * * 1-5`, `active`, base `postgres`.
+- **Backfill correcto**: los 28 cobros de Alegra cargados el 2026-09-09 quedaron
+  con su e-CF extraído de la descripción a `external_reference`. O sea que el
+  guardaduplicados por comprobante ya cubre lo que había, no solo lo que venga.
+- `app_site_url` confirmada en `https://www.educacionmanantial.com`.
+- **Probado en vivo que sin el secreto la tarea NO llama a nadie**: se ejecutó
+  `private.disparar_alegra_sync()` y `net._http_response` quedó en 11 filas
+  antes y 11 después. Es el comportamiento buscado -- avisa y se detiene, en vez
+  de mandar llamadas que la app va a rechazar con 401 todos los días.
+
+### Lo que sigue faltando (necesita acceso a Vercel, que esta sesión no tiene)
+
+**Los pasos exactos viven en `docs/ACTIVAR_CONCILIACION_ALEGRA.md`** y en una
+página para compartir por WhatsApp:
+<https://claude.ai/code/artifact/cc2a01b5-3764-4776-9a17-8be54086482c>
+
+Quedan 4: desplegar la rama, las tres variables en Vercel (+ redesplegar, que no
+es opcional), cargar `alegra_cron_secret` con el MISMO valor que `CRON_SECRET`, y
+probar con "Conciliar ahora" antes de confiar en la corrida automática. El
+resumen de todo lo demás:
+
+Esta sesión no tuvo credenciales de Supabase ni de Vercel -- el bloqueo de
+siempre. En orden:
+
+1. **Aplicar las dos migraciones** (`20260912000000` y `20260912010000`).
+2. **`ALEGRA_EMAIL` / `ALEGRA_TOKEN` en Vercel (Production)** -- se sacan de
+   Alegra → Configuración → API. Sin ellas el motor no falla feo: registra la
+   corrida como `sin_credenciales` y la alerta lo dice.
+3. **`CRON_SECRET` en Vercel** (una cadena larga al azar) y el MISMO valor en la
+   base:
+   `insert into private.app_settings (key, value) values ('alegra_cron_secret', '...') on conflict (key) do update set value = excluded.value;`
+4. **Habilitar `pg_cron`** en Supabase → Database → Extensions, y volver a aplicar
+   `20260912010000` para que quede programado.
+5. **Probarlo a mano primero**, con el botón "Conciliar ahora" de
+   `/dashboard/tesoreria/alegra`, antes de confiar en la corrida automática.
+
+**Pendiente recomendado, no hecho**: poblar `students.student_code` con la
+matrícula que ya tiene cada contacto en Alegra. La columna ya acepta el valor por
+colegio tras esta migración. Mientras esté vacía, el emparejamiento depende del
+nombre, que es lo frágil.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -4055,6 +4220,185 @@ distinguían por la etiqueta de acceso). La contrapartida es que **no se ejercit
 el camino corregido de `inviteStaffAccess` en producción** -- el arreglo de
 paginación y el del mensaje siguen sin una prueba en vivo desde la pantalla.
 
+## Facturar por familia NO es un error: es un requisito fiscal (2026-09-09)
+
+**Corrige una recomendación equivocada de este mismo archivo.** La sección de Cuentas
+por Cobrar viene recomendando desde el 2026-08-27 "facturar mensualidad siempre por
+estudiante individual" para que el reporte pueda atribuir lo cobrado a cada hijo. El
+usuario aclaró el 2026-09-09 por qué el colegio no lo hace, y la razón es buena: la
+factura con valor fiscal que la familia usa para **reportar gastos educativos** ante la
+DGII pide la **cédula del padre, madre o tutor** que declara el gasto -- no la del
+estudiante, que es un menor. Y **la DGII la acepta en conjunto**, cubriendo a varios
+hermanos en un mismo comprobante.
+
+O sea que el comprobante conjunto a nombre del tutor **debe seguir existiendo**. Lo que
+estaba mal no era la factura del colegio, era pretender que el documento fiscal y la
+atribución interna fueran la misma cosa.
+
+**La regla que queda, y que hay que respetar en cualquier trabajo futuro de Tesorería:**
+
+- **Plano fiscal (Alegra):** un e-CF a nombre del tutor, con su cédula, que puede cubrir
+  a varios hermanos. Alegra sigue siendo la única fuente de verdad del NCF/e-CF.
+- **Plano interno (MentorIApp):** una fila de pago **por estudiante**, aunque varias
+  citen el **mismo número de documento**. Así `calculate_receivable_status` puede
+  descontar la cuota de cada hijo por separado sin inventar ninguna heurística de
+  reparto, y la trazabilidad al comprobante real se conserva en la nota.
+
+Caso real que originó la aclaración: el e-CF **E310000000060** (2026-09-04, RD$4,500,
+cédula 02300785520 de Osvaldo Nuñez Castro, nota "Mes de Agosto de Onaimi Y Osvaldo")
+cubre la media cuota de agosto de **dos** estudiantes de Secundaria, RD$2,250 cada uno.
+Se registra como **dos** pagos, ambos con el mismo e-CF en la nota.
+
+**Cambio operativo que anunció el colegio**: a partir del 2026-09-10 se instruirá que
+los cobros se hagan separados por estudiante. Eso reduce el caso conjunto de aquí en
+adelante, pero **no lo elimina retroactivamente** ni quita la previsión fiscal -- una
+familia puede seguir necesitando el comprobante a nombre del tutor.
+
+### Conciliación con Alegra: lo verificado el 2026-09-09 (carga TODAVÍA no hecha)
+
+Primera sesión con el conector `mcp.alegra` habilitado. Funciona bien en lectura.
+
+Universo desde el 1 de septiembre: **37 facturas / RD$83,017.50**, todas ya `closed` y
+`balance: 0` en Alegra. De esas, **33 son Mensualidad/Abono por RD$77,052.50** (las
+otras 4 son Libros y Uniformes, RD$5,965 -- no tocan Cuentas por Cobrar). Se convierten
+en **34 filas de pago** por estudiante (el e-CF conjunto de arriba se parte en dos).
+
+**Hallazgo que confirma el diagnóstico del colegio sobre la mora**: de las 33 facturas
+de mensualidad, **32 no cobraron ningún recargo**. La única que sí es la
+**E320000000410** (2026-09-08, Jayden Josias De los Santos Reynoso, 22-0025): línea
+"Recargo por Mora" de **RD$102.50**, exactamente el 5% de RD$2,050 -- y es además la
+única facturada por **Octavio Mesa**; las otras 36 las hizo Omairy García. Decisión del
+usuario: cerrar cada cuota **por lo que realmente se cobró**, sin aplicar mora
+retroactiva. Como el recargo de esa pantalla es **calculado, no una factura real**, basta
+con no llamar nunca a `generateLateFeeCharge`: al quedar la cuota saldada el recargo
+implícito desaparece solo.
+
+**Coincidencia útil de modelos, verificada**: casi todo se facturó como **50% de la
+mensualidad** con nota "MES DE AGOSTO" (1,950 de 3,900 Inicial / 2,050 de 4,100 Primaria
+/ 2,250 de 4,500 Secundaria) -- exactamente la media cuota de agosto que ya genera
+`installment_schedule` con `tuition_installments_count = 10.5`. Los montos de Alegra y
+los de la plataforma cuadran sin conversión.
+
+**Adelantos**: hay cobros que van más allá de agosto -- "ABONO A SEP", "MES DE AGO Y SEP"
+(RD$5,850) y uno de **"mes de octubre"** (RD$2,050). El usuario confirmó que entren
+ahora; el FIFO de `calculate_receivable_status` los absorbe sin nada especial.
+
+**Pendiente real, y por qué**: la carga **no se ejecutó**. Esta sesión no tuvo ninguna
+credencial de Supabase (sin link, sin CLI, sin variables) -- el mismo bloqueo ya
+documentado muchas veces aquí. Antes de escribir hay que hacer, en este orden:
+
+1. **Lectura primero, obligatoria**: cruzar contra los pagos ya registrados. Al
+   2026-09-07 producción ya tenía **44 pagos por RD$90,100** cargados con "Registrar pago
+   externo", todos de septiembre -- **es muy probable que se solapen con estos 33**.
+   Cargar sin cruzar duplicaría cobros reales.
+2. Confirmar que `students.student_code` guarda de verdad el formato `24-0033` que usa
+   Alegra como `identification` de tipo `IE`. Si no, el emparejamiento es por nombre.
+3. Resolver por nombre las **6 atribuciones** cuyo comprobante va a nombre del tutor
+   (cédula, tipo `CED`): Carlos Reyes (1, Inicial), Sabrina Silvestre (1, Primaria),
+   Yomar Matos (2 hijos: Secundaria y Primaria) y Osvaldo Nuñez Castro (2 hermanos,
+   Secundaria).
+4. Registrar con el mismo camino que ya usa la app (`recordExternalPayment`): factura
+   `status='pagado'` con **`ncf`/`ncf_type` en `null`** -- nunca generar comprobante,
+   porque el e-CF real ya existe en Alegra y un NCF local sería un documento fantasma
+   ante la DGII.
+5. `npm run smoke` al terminar.
+
+La matrícula estudiantil (`students.student_code`) **está vacía en producción** -- el
+usuario lo confirmó el 2026-09-09: *"no tenemos en nuestro proyecto la matricula
+estudiantil, no lo haremos ahora"*. Sólo vive en los **contactos de Alegra**, como
+`identification` de tipo `IE`. **Su patrón**: últimos 2 dígitos del año de inscripción +
+guion + número de inscrito en orden de llegada -- `24-0033` = inscrito en 2024, el nº 33.
+
+Esto era un bloqueo silencioso que se detectó a tiempo: la primera versión del script
+emparejaba por `student_code` y **habría marcado las 28 filas como `SIN EMPAREJAR`**, sin
+cargar nada y sin decir por qué. Reescrito para emparejar por **nombre normalizado**
+(minúsculas, sin acentos, sin puntuación, espacios colapsados y `trim`). Las rarezas
+reales de los nombres de Alegra que esto resuelve, todas verificadas: `HEATHER LIZ RONDON
+CASTILLO` en mayúsculas, `Dhanel Elian  Leonardo Mercedes` con doble espacio, `Teylor
+Andrian Diaz Mota ` con espacio final (**el `trim` faltaba en la primera versión y ese
+solo caso no habría emparejado**), el guion de `Saint-Hilaire` y la ñ de `Nuñez`.
+
+El script está listo en **`supabase/seeds/20260909_alegra_cobros_septiembre.sql`**, en dos
+partes: PARTE 1 diagnóstico (solo lectura) y PARTE 2 carga (transacción, con el bloque de
+reversión comentado al final). Empareja en este orden de preferencia: matrícula (por si
+algún día se puebla), **nombre exacto normalizado**, nombre aproximado (todas las palabras
+de Alegra presentes -- **se reporta pero NUNCA se carga solo**), y para los e-CF a nombre
+del tutor por `guardians.national_id` o, si está vacía, por nombre del tutor, desambiguando
+hermanos por nombre de pila o por `school_level_for_grade(grade_level)`. El normalizador
+vive en `pg_temp`, así que **no deja nada en producción**.
+
+**Verificado contra un Postgres local con esquema espejo y `student_code` puesto en NULL**
+(reproduciendo producción, no el caso cómodo): 33 de 34 filas emparejan por nombre; el
+estudiante omitido a propósito sale `SIN EMPAREJAR` en vez de adivinar; los hermanos de un
+mismo e-CF se separan bien (por nombre de pila y por nivel); un pago igual ya existente
+dispara la guarda de duplicado; una fila con `deleted_at` no confunde; la carga deja **0
+facturas con NCF y 0 pagos huérfanos**; el e-CF conjunto queda repartido entre 2
+estudiantes distintos; **re-ejecutarlo inserta 0** (idempotente por el e-CF en la
+descripción) y la reversión borra sólo lo suyo.
+
+### EJECUTADA contra produccion el 2026-09-09 (PAT de un solo uso, ya borrado)
+
+**Cargadas 28 de las 34 filas: RD$64,952.50**, en dos pasadas (PARTE 2 = 22 filas /
+RD$52,652.50; PARTE 3 = 6 casos resueltos con el usuario / RD$12,300). Verificado tras
+cargar: 28 facturas y 28 pagos, **0 con NCF**, **0 pagos huerfanos**, metodo `alegra` en
+todos. Produccion paso de **44 pagos externos / RD$90,100** a **72 / RD$155,052.50**; el
+motor de mora paso de RD$420,290 vencidos y 44 estudiantes al dia (medicion del 2026-09-07)
+a **RD$369,690 vencidos y 68 al dia**.
+
+**El emparejamiento por nombre funciono en datos reales**: 26 de 34 exactas a la primera.
+El cruce por cedula del tutor fue el que mas valor dio -- encontro a *Onaimi Nayeli* y
+*Osvaldo Andres Nuñez Rivera* (el e-CF conjunto, separado en dos filas como manda la regla
+fiscal) y a las dos hijas de Yomar Matos (*Karolyn* y *Yosmailyn Matos Montero*): ninguna
+habria aparecido cruzando por nombre, porque el comprobante va a nombre del padre.
+
+**El guardaduplicados evito duplicar 4 cobros reales**: Sanem, Eliette, Gianeder y una de
+las dos de Heather Liz ya estaban cargadas el 2026-09-07 con "Registrar pago externo".
+**Pero tenia un punto ciego**: compara por monto, asi que cuando un estudiante tiene DOS
+facturas del mismo monto y solo una cargada, salta las dos. Le paso a **Heather Liz** (dos
+de RD$1,950 el mismo dia: agosto + abono a septiembre) -- se detecto revisando los pagos
+previos uno por uno y se cargo la segunda a mano en la PARTE 3. **Si se vuelve a usar este
+script, revisar ese caso explicitamente.**
+
+**Cuatro no emparejaron por diferencias de escritura** entre Alegra y la base:
+`Olivarez`/`Olivares`, `Morale`/`Morales`, `Andrian`/`Adrian`, `Sara`/`Sarha`. Se cargaron
+contra el nombre de la base. **No se cambio ningun nombre**: en dos casos la base se ve mas
+correcta que Alegra, y sobrescribir el nombre de un menor con un posible error de digitacion
+del POS seria meter el error al reves.
+**Pendiente, con fuente ya definida**: el usuario revisa el 2026-09-10 las **actas de
+nacimiento** que el colegio tiene en su poder y confirma con Secretaria la escritura legal de
+los cuatro. Esa es la fuente correcta -- no Alegra ni la base. Segun lo que digan las actas,
+se corrige del lado que este mal (puede ser Alegra en dos de los casos).
+
+**Dos siguen sin cargar, a proposito:**
+- **Blayder Emmanuel Solis Castillo** (RD$2,050, adelanto de octubre). La base tiene
+  *Bladimir Emmanuel Solis Sosa*, 1ro. Primaria. A favor: el telefono de la factura
+  (829-467-7220) es el de **Yarimir Solis Sosa**, cuyo apellido explica el "Solis Sosa", y
+  sus otros dos hijos (matriculas 24-0039 y 24-0040, consecutivas con el 24-0041 de Blayder)
+  si emparejaron. En contra: cambian el nombre de pila Y el segundo apellido. **El usuario
+  pidio confirmarlo con Secretaria antes de cargarlo** -- lo revisa el 2026-09-10 junto con las
+  actas de nacimiento.
+- **Victor Emmanuel Sanchez Pilier** (RD$2,250, matricula 16-0059): **no existe en la
+  plataforma**, ni activo ni con `deleted_at`. Hay un *Eythan Gadiel Angomas Pilier* (mismo
+  apellido, posible hermano) pero ningun Victor. Hay que darlo de alta antes de registrarle
+  el pago.
+
+**Nota de metodo**: `list_school_receivables` es `security definer` y **rechaza al rol
+`postgres` de la Management API** (`No autorizado para ver las cuentas por cobrar de este
+colegio`) porque no tiene fila en `users_profiles`. Para medir desde ahi hay que llamar a
+`calculate_receivable_status` con un `cross join lateral`, que es `security invoker`.
+
+**Pendiente aparte, recomendado pero NO hecho** (no hace falta para esta carga): traer la
+matrícula de Alegra a `students.student_code`. La columna ya existe desde `init.sql`, así
+que no requiere migración -- sólo un backfill emparejando por nombre una sola vez. Vale la
+pena porque el nombre es frágil (una tilde, un apellido de casada, un error de digitación
+rompen el cruce) mientras que la matrícula es estable y con significado.
+**⚠️ La trampa que esto tenía YA ESTÁ RESUELTA (2026-09-09)**: `student_code` era
+`text unique` **global, no por colegio** (`init.sql` línea 45), así que al afiliar un
+segundo colegio con matrículas del mismo patrón `AA-NNNN` la primera colisión habría
+reventado el alta del estudiante. La migración `20260912000000_alegra_sync.sql` eliminó
+esa restricción global y la reemplazó por `unique (school_id, student_code)` --
+aplicada y confirmada en producción leyendo `pg_constraint`. El backfill ya se puede
+hacer sin tocar nada más.
 ## Analíticas mostraba RD$0 de mora mientras el Panel mostraba RD$388,175 (2026-09-09)
 
 Reportado por el usuario comparando dos capturas suyas de la misma sesión:
