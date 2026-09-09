@@ -3032,6 +3032,10 @@ emparejamiento automático.
 
 ### Falta para encenderlo (nada de esto lo pudo hacer esta sesión)
 
+**Los pasos exactos, listos para pasarle a quien tenga los accesos, viven en
+`docs/ACTIVAR_CONCILIACION_ALEGRA.md`** (6 pasos, con la consulta de
+comprobación de cada uno y una sección de "si algo no funciona"). El resumen:
+
 Esta sesión no tuvo credenciales de Supabase ni de Vercel -- el bloqueo de
 siempre. En orden:
 
