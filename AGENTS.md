@@ -4054,3 +4054,60 @@ borrara en la interfaz la ficha equivocada (las dos se llaman igual y solo se
 distinguían por la etiqueta de acceso). La contrapartida es que **no se ejercitó
 el camino corregido de `inviteStaffAccess` en producción** -- el arreglo de
 paginación y el del mensaje siguen sin una prueba en vivo desde la pantalla.
+
+## Analíticas mostraba RD$0 de mora mientras el Panel mostraba RD$388,175 (2026-09-09)
+
+Reportado por el usuario comparando dos capturas suyas de la misma sesión:
+`/dashboard/reportes` -> "Cobros del mes en curso" decía **Facturado RD$155,053 /
+Cobrado RD$155,053 / Pendiente-vencido RD$0**, y `/dashboard/secretaria` en la
+misma sesión decía **Cartera vencida RD$388,175 · 176 estudiantes · 159
+familias**.
+
+**Es el mismo bug que ya se corrigió dos veces**, en el Panel y en Plataforma
+(2026-09-07), y que quedó sin corregir aquí: `reportes/page.tsx` sumaba
+`invoices.status = 'pendiente' | 'vencido'`. **Nada en todo el sistema escribe
+jamás `'vencido'`** (ni trigger, ni cron, ni job -- ya verificado sobre las 70+
+migraciones y todo `web/src`), y el colegio crea cada factura ya `'pagado'`
+desde "Registrar pago externo". Con eso, ese número estaba **estructuralmente
+condenado a RD$0**, no desactualizado -- exactamente el mismo diagnóstico que la
+tarjeta del Panel.
+
+**Corregido leyendo la MISMA RPC** `list_school_receivables` que ya usan el Panel
+y Cuentas por Cobrar -- un solo motor de mora para las tres pantallas, no una
+tercera versión que pueda divergir. Se reutilizó también la regla del Panel de
+excluir el tramo `corriente` (`aging_bucket <> 'corriente'`): la RPC devuelve
+`overdue_amount` en cuanto pasa el día 1, pero la familia puede pagar sin
+recargo hasta el día 5, así que eso todavía no es cartera vencida. El rótulo
+pasó de "Pendiente / vencido" a **"Cartera vencida"** con el desglose
+"N estudiantes · N familias" debajo, igual que el Panel.
+
+**Verificado ANTES de escribir el cambio**, simulando la sesión igual que
+PostgREST (`set local role authenticated` + `request.jwt.claims` con el auth_id
+real del super_admin de la captura, en transacción revertida): la tarjeta va a
+mostrar **RD$388,175 · 176 estudiantes · 159 familias** (RD$369,690 de deuda +
+RD$18,485 de recargo) -- **coincide al peso con el Panel de la captura**.
+`corriente` daba RD$0 ese día, así que la exclusión no altera el número hoy,
+pero evita que vuelva a inflarse los días 1 al 5 de cada mes.
+
+**Riesgo revisado antes de tocar nada (importante)**: la captura es de un
+`super_admin` usando "Entrar como director", y `list_school_receivables` es
+`security definer` que exige `users_profiles.school_id = p_school_id` -- el caso
+límite que este archivo viene avisando desde el 2026-09-07. Se comprobó en
+producción que **los 8 perfiles que pueden alcanzar el módulo `reportes`**
+(super_admin, los 4 director, los 2 school_admin y finance) tienen hoy el
+`school_id` de ese colegio, así que la RPC funciona para todos. Y si algún día
+fallara, PostgREST devuelve un objeto de error (no lanza), así que
+`Promise.all` no se rompe: la tarjeta queda en cero y `QueryErrorBanner` muestra
+el error -- por eso se agregó `receivablesError` al banner. **La pantalla no se
+cae**, mismo comportamiento que el Panel.
+
+**Lo que NO se tocó, a propósito**: "Facturado" y "Cobrado" del mes siguen
+saliendo de `invoices` -- eso sí es literalmente lo facturado y cobrado, y
+"Cobrado RD$155,053" ya cuadra con la tarjeta homónima del Panel. El gráfico
+"Facturado vs. cobrado (últimos 6 meses)" también se dejó igual: es una lectura
+de facturas y su rótulo dice la verdad, aunque hoy las dos series se solapen
+porque cada factura nace pagada. El gráfico cuota-por-cuota del Panel
+(`list_school_monthly_cashflow`) es el que sí muestra lo exigible.
+
+**Para revertir**: un solo commit, un solo archivo
+(`web/src/app/dashboard/reportes/page.tsx`), sin nada que deshacer en la base.
