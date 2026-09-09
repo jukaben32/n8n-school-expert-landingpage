@@ -3300,6 +3300,66 @@ sigue exactamente en 10..90.
 estudiante creado (`users_profiles where role='student'` -> 0). Ver el punto 4
 de los pendientes.
 
+### El catálogo de Academia se organiza por curso y se puede filtrar (2026-09-09)
+
+Observación del usuario sobre `/dashboard/academia/progreso`: la lección de 1ro
+salía **entre** las de 6to dentro de "Ciencias Naturales", porque la pantalla
+agrupaba solo por materia y ordenaba por `sort_order`, que se lleva por curso.
+Con 10 lecciones se veía raro; con las 93 del plan de 1ro la lista deja de
+servir. Esta pantalla importa más de lo que parece: `/dashboard/academia`
+**redirige** aquí para el personal y "Nueva lección" aterriza aquí al guardar.
+
+- Ahora agrupa por **CURSO** y dentro por materia. El modelo mental del docente
+  es "mi curso"; a la maestra de 1ro las lecciones de 6to no le sirven nunca.
+- **Filtro por curso y por materia**, con las opciones sacadas del propio
+  catálogo. Si solo hay un curso (o una materia), el filtro no aparece.
+- **`LessonCatalog.tsx` es un componente CLIENTE a propósito.** El filtro
+  necesita `onChange` y `progreso/page.tsx` es un Server Component -- pasarle
+  una función como prop desde ahí es justo lo que tumbó esta pantalla el
+  2026-09-07. La página solo le entrega datos planos ya serializables; el
+  enlace "Ver video" sigue siendo un ancla sin `onClick`.
+- El orden de cursos se extrajo a **`web/src/lib/schedule/gradeLevelOrder.ts`**
+  (`compareGradeLevels`), no vive dentro del componente: así se puede probar sin
+  React, igual que `gradeLevelCategory.ts`, que es de donde saca el nivel.
+  Ordenar `grade_level` alfabéticamente intercala los cursos ("1ro. Primaria",
+  "1ro. Secundaria", "2do. Primaria"...), que es peor que no ordenar.
+
+**Qué NO se tocó, a propósito**: ninguna de las 3 consultas a Supabase, ninguna
+policy ni permiso, la tabla "Cuestionarios contestados", y **nada de la vista
+del estudiante** -- `/dashboard/academia` ya le muestra solo su curso y abre en
+"la que sigue"; ahí un filtro sobraría. Academia es una pantalla de profesores y
+dirección, y el arreglo se quedó en ella.
+
+**Cómo se verificó, porque aquí `next build` limpio NO prueba que la pantalla
+cargue** (lección del 2026-09-07):
+1. **Orden de cursos contra los 16 cursos REALES de producción**: dan Párvulo,
+   Kinder, Pre Kinder, Pre Primario, 1ro..6to Primaria, 1ro..6to Secundaria.
+   Y con las variantes mal escritas ya vistas en la base ("6to Secundaria" sin
+   punto, "3r0. Primaria", "Pre-primario"): 7 de 7 OK, incluido que un curso
+   irreconocible va al final y **no desaparece**.
+2. **El componente real, compilado con `tsc` y renderizado con
+   `react-dom/server`** -- no una copia: 17 comprobaciones sobre el catálogo real
+   de hoy y sobre los bordes que revientan en producción y no en pruebas cómodas
+   (lista vacía, lección sin curso, lección sin cuestionario, pregunta con
+   `quiz_options` vacías, borrador, y las 103 lecciones del plan completo con el
+   conteo por curso correcto).
+   **Dos "fallas" de esa corrida eran aserciones mías mal escritas, no bugs**:
+   el ✓ se renderiza como carácter literal y no como entidad HTML, y el conteo
+   correcto era 94/9 y no 93/10. Las dos se comprobaron leyendo el HTML real
+   antes de darlas por buenas.
+3. `tsc --noEmit`, `npm run lint` (los 11 problemas son preexistentes, en otros
+   archivos) y `npm run build` limpios. `npm run smoke`: **37 de 37**.
+
+**Error propio, corregido en el camino**: la primera versión usaba una clase CSS
+`dash-input` que **no existe en este proyecto** -- los desplegables habrían salido
+sin ningún estilo. Se cambió por la misma clase que usan los `<select>` de
+"Nueva Lección", para que las dos pantallas de Academia se vean de la misma
+familia. Ni `tsc` ni el build avisan de una clase inventada.
+
+**Para revertir**: un solo commit; borrar `LessonCatalog.tsx` y
+`gradeLevelOrder.ts` y devolver el bloque del catálogo a `page.tsx`. Nada que
+deshacer en la base.
+
 ## 6to: la respuesta correcta ya no está siempre en el primer botón (2026-09-13)
 
 Cerrado el pendiente que dejó la sesión anterior. Las 36 preguntas tenían

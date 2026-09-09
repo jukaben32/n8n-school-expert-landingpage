@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import LessonCatalog, { type CatalogLesson } from './LessonCatalog'
 
 export const metadata: Metadata = {
   title: 'Progreso — Academia — MentorIApp',
@@ -134,23 +135,30 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
     preguntasPorLeccion.get(q.lesson_id)!.push(q)
   }
 
-  const porMateria = new Map<string, LessonRow[]>()
-  for (const l of lessons) {
-    const materia = l.subjects?.name ?? 'Sin materia'
-    if (!porMateria.has(materia)) porMateria.set(materia, [])
-    porMateria.get(materia)!.push(l)
-  }
-  // Dentro de cada materia, agrupadas por curso. La consulta ordena por
-  // `sort_order`, que se lleva POR CURSO (ver produccion/lib/cargar-sql.mjs),
-  // así que sin esto 1ro y 6to salen intercalados: "El ciclo del agua (6to)",
-  // "¿Está vivo? (1ro)", "El sistema digestivo (6to)"... Con 10 lecciones
-  // molesta; con las 93 del plan de 1ro la lista deja de servir.
-  for (const suyas of porMateria.values()) {
-    suyas.sort((a, b) =>
-      (a.grade_level ?? '').localeCompare(b.grade_level ?? '', 'es') ||
-      lessons.indexOf(a) - lessons.indexOf(b))
-  }
-  const materias = Array.from(porMateria.entries()).sort((a, b) => a[0].localeCompare(b[0], 'es'))
+  // Datos planos y ya ordenados para el catálogo. El agrupado por curso y
+  // materia, y el filtro, viven en `LessonCatalog` (componente cliente): esta
+  // página es un Server Component y no puede pasarle un `onChange` a nada.
+  const catalogo: CatalogLesson[] = lessons.map((l) => ({
+    id: l.id,
+    title: l.title,
+    grade_level: l.grade_level,
+    video_url: l.video_url,
+    is_published: l.is_published,
+    materia: l.subjects?.name ?? 'Sin materia',
+    preguntas: (preguntasPorLeccion.get(l.id) ?? [])
+      .slice()
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((q) => ({
+        id: q.id,
+        prompt: q.prompt,
+        // Supabase puede devolver `null` en vez de `[]` para un embed de
+        // uno-a-muchos sin filas visibles -- spreadear eso reventaba toda la
+        // página con "Algo salió mal" (2026-09-07).
+        opciones: [...(q.quiz_options ?? [])]
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((o) => ({ id: o.id, label: o.label, is_correct: o.is_correct })),
+      })),
+  }))
 
   const attempts = (attemptsRaw ?? []) as unknown as AttemptRow[]
   const lowScoreThreshold = 0.6
@@ -176,100 +184,7 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
       </div>
 
       {/* Catálogo de lecciones */}
-      {materias.length > 0 && (
-        <div className="space-y-5">
-          {materias.map(([materia, suyas]) => (
-            <section key={materia} className="space-y-2">
-              <h2 className="text-sm font-bold font-barlow uppercase tracking-wider" style={{ color: 'var(--dash-text-muted)' }}>
-                {materia} · {suyas.length}
-              </h2>
-              <div className="dash-card divide-y" style={{ borderColor: 'rgba(150,225,196,.08)' }}>
-                {suyas.map((l) => {
-                  const qs = (preguntasPorLeccion.get(l.id) ?? []).sort((a, b) => a.sort_order - b.sort_order)
-                  return (
-                    <details key={l.id} className="group">
-                      <summary className="px-4 py-3 flex items-center justify-between gap-4 cursor-pointer list-none">
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate" style={{ color: 'var(--dash-text)' }}>{l.title}</p>
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-faint)' }}>
-                            {l.grade_level ?? 'sin curso'} · {qs.length} preguntas ·
-                            <span className="group-open:hidden"> ver cuestionario</span>
-                            <span className="hidden group-open:inline"> ocultar</span>
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          {l.is_published ? (
-                            <span className="rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[11px] font-bold px-2.5 py-1">
-                              Publicada
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-bold px-2.5 py-1">
-                              Borrador
-                            </span>
-                          )}
-                          {/* NO agregar onClick aquí. Esto es un Server
-                              Component: pasar una función como prop a un
-                              elemento hace que React lance "Event handlers
-                              cannot be passed to Client Component props" al
-                              SERIALIZAR el árbol -- después de que la función
-                              de página ya retornó, así que ni un try/catch
-                              alrededor lo atrapa, y `tsc`/`next build` pasan
-                              limpios porque esta ruta es dinámica (ƒ) y solo
-                              revienta en una petición real. Eso fue justo lo
-                              que tumbó esta pantalla el 2026-09-07 (ver
-                              AGENTS.md). El enlace abre en pestaña nueva; que
-                              además despliegue el acordeón es inofensivo. */}
-                          <a
-                            href={l.video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold underline"
-                            style={{ color: 'var(--dash-accent)' }}
-                          >
-                            Ver video
-                          </a>
-                        </div>
-                      </summary>
-
-                      {qs.length > 0 ? (
-                        <ol className="px-4 pb-4 pt-1 space-y-4">
-                          {qs.map((q, i) => (
-                            <li key={q.id} className="rounded-xl p-4" style={{ background: 'rgba(150,225,196,.06)' }}>
-                              <p className="text-sm font-semibold" style={{ color: 'var(--dash-text)' }}>
-                                {i + 1}. {q.prompt}
-                              </p>
-                              <ul className="mt-2 space-y-1">
-                                {/* Supabase puede devolver `null` en vez de `[]` para un embed
-                                    de uno-a-muchos sin filas visibles -- spreadear eso reventaba
-                                    toda la pagina con "Algo salió mal" (2026-09-07). Mismo patrón
-                                    defensivo que ya usa el resto de este archivo (`?? []`). */}
-                                {[...(q.quiz_options ?? [])].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
-                                  <li
-                                    key={o.id}
-                                    className="text-sm flex items-start gap-2"
-                                    style={{ color: o.is_correct ? 'var(--dash-accent)' : 'var(--dash-text-muted)' }}
-                                  >
-                                    <span aria-hidden="true">{o.is_correct ? '✓' : '·'}</span>
-                                    <span className={o.is_correct ? 'font-semibold' : ''}>{o.label}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </li>
-                          ))}
-                        </ol>
-                      ) : (
-                        <p className="px-4 pb-4 text-sm" style={{ color: 'var(--dash-text-faint)' }}>
-                          Esta lección todavía no tiene cuestionario.
-                        </p>
-                      )}
-                    </details>
-                  )
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
+      {catalogo.length > 0 && <LessonCatalog lecciones={catalogo} />}
 
       {/* Cuestionarios contestados */}
       <h2 className="text-sm font-bold font-barlow uppercase tracking-wider pt-2" style={{ color: 'var(--dash-text-muted)' }}>
