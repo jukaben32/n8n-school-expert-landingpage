@@ -3255,9 +3255,16 @@ pantalla, hasta que recargue. Con el colegio usando esto todos los dias a las
    no arregla nada, hay que recargar. Ahora nombra las dos causas y da el unico
    consejo que sirve para las dos: **recargar y volver a llenar**, aclarando que
    no se guardo nada a medias asi que no se duplica.
-2. **Encender Skew Protection en Vercel** (Project -> Settings -> Advanced ->
-   Skew Protection). No se activo desde la sesion: es un cambio de configuracion
-   de produccion que el usuario no pidio. **Pendiente de decidir con el.**
+2. **Encender Skew Protection en Vercel -- NO SE PUEDE HOY.** El usuario lo
+   autorizo el 2026-09-10 y el intento por API fallo con
+   `invalid_billing_plan: Skew Protection is only available for Pro and
+   Enterprise plans`. El equipo (`juans-projects-0e0054fc`) esta en plan
+   **hobby**. Requiere subir a Pro (~US$20/mes por usuario). Mientras tanto la
+   unica mitigacion gratis es **no desplegar en horario de colegio** y que el
+   mensaje de error diga "recarga" (ya corregido, punto 1).
+   Ojo aparte, no es un detalle menor: el plan Hobby de Vercel es para uso
+   **personal y no comercial**, y esto es una plataforma que se le cobra a un
+   colegio. Subir a Pro no es solo por Skew Protection.
 
 **Regla que deja esto**: antes de culpar a la sesion por una Server Action que
 no responde, mirar la hora del ultimo despliegue de produccion
