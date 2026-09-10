@@ -3121,6 +3121,89 @@ matrícula que ya tiene cada contacto en Alegra. La columna ya acepta el valor p
 colegio tras esta migración. Mientras esté vacía, el emparejamiento depende del
 nombre, que es lo frágil.
 
+## Cierre de pendientes de la conciliacion Alegra (2026-09-10)
+
+**Los cuatro nombres**: Secretaria los reviso contra las actas. La plataforma
+conserva **Adrian** (no "Andrian"), **Sarha** (no "Sara") y **Morales** (no
+"Morale") -- o sea que en esos tres el error estaba en ALEGRA, no aqui, tal como
+se sospechaba el 2026-09-09. Los pagos ya se habian cargado contra el nombre de
+la base, asi que no quedo nada mal atribuido y no hubo que tocar ningun pago.
+
+**Blayder Emmanuel Solis Castillo**: Secretaria confirmo y corrigio el nombre en
+la plataforma (antes estaba como "Bladimir Emmanuel Solis Sosa"), asi que ya
+empareja con Alegra. Su cobro se cargo el 2026-09-10: e-CF **E320000000391**,
+2026-09-03, RD$2,050, `cash`, `ncf`/`ncf_type` en null.
+
+**La nota de Alegra de ese cobro esta equivocada y se corrigio al cargarlo.**
+Alegra dice `anotation = "mes de octubre"`; el colegio confirmo que corresponde a
+**agosto**, y el propio documento lo respalda sin depender de la palabra de nadie:
+la linea es *Mensualidad* de la lista de precios **Primaria** (RD$4,100) con **50%
+de descuento** = RD$2,050, que es exactamente la media cuota de agosto que genera
+`installment_schedule` con `tuition_installments_count = 10.5`. Un mes de octubre
+completo serian RD$4,100. Ademas la factura es del 3 de septiembre. La descripcion
+cargada deja las dos versiones escritas, para que dentro de un ano se entienda por
+que no coinciden con Alegra.
+
+**Dato aprovechable**: el contacto de Blayder en Alegra trae matricula `24-0041`.
+Sigue pendiente (recomendado, no hecho) el backfill de `students.student_code`.
+
+### "La plataforma no esta guardando" al dar de alta a Victor Emmanuel Sanchez Pilier
+
+Reportado por el usuario el 2026-09-10. **Sin resolver todavia: falta el texto
+exacto del error.** Lo que SI quedo descartado con evidencia, para que nadie lo
+vuelva a mirar:
+
+- **NO es la migracion `20260912000000`** (el unique de `student_code` por
+  colegio). Produccion tiene **0 estudiantes con matricula y 0 con cadena vacia**,
+  asi que ese indice parcial no puede dispararse. Ademas
+  `createStudentWithFamily` escribe `student.studentCode || null`, nunca `''`.
+- **NO es RLS ni la base.** Se reprodujeron los 4 inserts reales de
+  `createStudentWithFamily` (families -> guardians -> students ->
+  student_guardians) con la sesion simulada igual que PostgREST, en transaccion
+  revertida, para **reception, school_admin, director y super_admin**: los cuatro
+  roles completan los 4 inserts sin error.
+- **NO es permisos.** `reception` SI tiene `estudiantes_nuevo` en
+  `permissions.ts`, y `submitNewStudent` no exige nada mas.
+- **NO es manejo de error mudo.** `handleSubmit` de `NewStudentForm.tsx` pone un
+  mensaje en pantalla en todos sus caminos de fallo.
+
+**Las dos causas que quedan vivas**, las dos con sintoma de "no pasa nada":
+
+1. **`birth_date` es obligatoria** -- y no es capricho de la pantalla:
+   `students.birth_date` es **NOT NULL** en la base. Si no se tiene la fecha de
+   nacimiento del estudiante, el formulario no puede enviarse y el navegador solo
+   muestra su globito nativo sobre el selector Dia/Mes/Ano, que se pierde de vista
+   facil. Con Victor, que se esta dando de alta solo para poder registrarle un
+   pago, es muy probable que la fecha no este a mano.
+2. **El selector de "Familia existente" exige coincidencia EXACTA de texto**:
+   `families.find((f) => f.name === familyQuery)` (`NewStudentForm.tsx:70`). Es un
+   `<input list>` con `<datalist>`, asi que se puede escribir cualquier cosa; si
+   no calza carácter por carácter con el nombre guardado, `selectedFamily` queda
+   null y sale *"Escribe el nombre de la familia y selecciónala de la lista"* --
+   que suena a error de quien lo usa, no del sistema. Y el formulario **abre en
+   modo "existente" por defecto** cuando ya hay familias.
+
+**Lo primero que hay que pedir**: el texto exacto que aparece en pantalla (o una
+captura). Con eso se distingue entre las dos en un minuto. Si resulta ser la 2,
+lo correcto es hacer la comparacion tolerante (normalizada, como ya hace
+`alegraMatching.ts`) en vez de exigir el clic en la sugerencia.
+
+### Como se saca el token de API de Alegra (respuesta que soporte no supo dar)
+
+El usuario llamo a Alegra y no entendieron el pedido; quedo un ticket sin
+responder. La ruta esta en la documentacion de Alegra misma
+(<https://ayuda.alegra.com/dom/integraciones-via-api>), y **no esta donde uno la
+buscaria** (no es "Configuracion"):
+
+1. Icono de **Soluciones -> Administrar mis soluciones**.
+2. Ya dentro de **Mi Alegra**, menu **Integraciones** -> seccion
+   **Integración Manual (API)**.
+3. Copiar **Usuario** (= `ALEGRA_EMAIL`) y **Token** (= `ALEGRA_TOKEN`).
+
+Hay un boton **Renovar token** que invalida integraciones previas -- no tocarlo
+salvo que se quiera desconectar algo. Ojo tambien: algunos planes de Alegra
+limitan cuantas integraciones activas se permiten.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
