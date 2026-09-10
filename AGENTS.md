@@ -3320,6 +3320,94 @@ que el middleware hace en cada peticion de `/dashboard/*` sigue igual, aunque
 solo importe para tutores morosos. No es la causa y ampliar el cambio aqui es
 justo lo que este archivo prohibe.
 
+### LA CAUSA REAL, encontrada en los logs: un `export type` en un archivo 'use server'
+
+**Ni la sesion, ni el despliegue, ni el middleware.** Las tres hipotesis
+anteriores de esta seccion eran plausibles y las dos primeras estaban
+equivocadas; se dejan escritas porque cada una se descarto con evidencia y
+para que nadie las vuelva a recorrer.
+
+**El dato que lo resolvio lo dio la consola del navegador**: `Failed to load
+resource: the server responded with a status of 500`. Un **500**, no un 307.
+Eso descarto de un golpe la sesion y el middleware.
+
+**Y descarto tambien el despliegue**, con una prueba directa contra
+produccion: un `Next-Action` id inventado responde **`404 Server action not
+found`**, no 500. Si fuera desajuste de version, el sintoma seria 404.
+
+**El mensaje real** salio de los logs de runtime de Vercel (ver "Nota de
+metodo" abajo -- esta vez SI se pudieron leer):
+
+```
+ReferenceError: DuplicateStudentMatch is not defined
+    at module evaluation (.next/server/chunks/ssr/web_19-xrre._.js:1:6895)
+    at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:853:9)
+```
+
+**La causa**: `estudiantes/nuevo/actions.ts` (un archivo `'use server'`) tenia
+
+```ts
+export type { DuplicateStudentMatch }
+```
+
+agregado el 2026-09-07 al mover la alerta de duplicados al nucleo compartido.
+Parece inofensivo -- un re-export de tipo deberia borrarse al compilar. **Con
+Turbopack no se borra**: lo compila como un re-export de VALOR, y como el
+nombre solo existe en el sistema de tipos, el modulo revienta **al evaluarse**,
+antes de correr una sola linea de la accion. Resultado: HTTP 500 en la POST del
+boton Guardar.
+
+**Probado, no supuesto**: se recompilo a proposito con el re-export puesto y el
+identificador **aparece en un `.js` ejecutable** de `.next/server`; sin el, no
+aparece en ninguno.
+
+**Encaja con las fechas sin margen de duda**: el re-export entro el 2026-09-07 y
+**el ultimo estudiante creado en produccion es del 2026-09-03**. O sea que el
+alta de estudiante llevaba UNA SEMANA rota para todo el colegio, no solo para
+Victor -- y nadie lo reporto hasta que Secretaria necesito dar de alta a alguien.
+
+**Corregido**: se quito el re-export; `NewStudentForm.tsx` importa el tipo de su
+origen (`@/lib/students/createStudentWithFamily`), que es lo que ya hacia bien
+`EnrollmentScansReview.tsx`. Auditado el resto: **era el unico caso** en todo
+`web/src`.
+
+```bash
+for f in $(grep -rl "^'use server'" --include=*.ts --include=*.tsx web/src); do
+  grep -qE "^export (type )?\{" "$f" && echo "$f"
+done
+```
+
+**LA REGLA, ahora con dos victimas**: un archivo `'use server'` de este proyecto
+**no exporta NADA que no sea una funcion async -- ni una constante, NI UN
+TIPO**. La version anterior de esta regla (2026-09-03, el bug de
+`EXTERNAL_PAYMENT_SOURCES` que tumbo Cuentas por Cobrar) decia "cualquier
+constante/tipo/dato compartido va en un modulo aparte", pero se leyo como que
+un `export type` era seguro. No lo es.
+
+**Y otra vez lo mismo**: `tsc`, `eslint` y `next build` pasan los tres limpios.
+Es la tercera vez en este archivo que un fallo de runtime del navegador/servidor
+no lo detecta ninguna de las tres herramientas (los otros dos: el
+`EXTERNAL_PAYMENT_SOURCES` del 2026-09-03 y el `onClick` en un Server Component
+del 2026-09-07). **En este proyecto, build limpio no prueba que una pantalla
+funcione.**
+
+### Nota de metodo: los logs de runtime de Vercel SI se pueden leer
+
+`AGENTS.md` decia desde el 2026-09-07 que los logs de runtime "no son
+accesibles". Eso era cierto **con un token de proyecto**. Con un token de
+**equipo** (el que uso el colega) el CLI si autentica y los sirve:
+
+```bash
+npx vercel logs https://www.educacionmanantial.com --token "$VERCEL_TOKEN" --json
+```
+
+Es **en vivo**: hay que dejarlo corriendo y reproducir el error mientras tanto.
+Los endpoints REST de logs de runtime (`/v1/deployments/{id}/runtime-logs`,
+`/v1/projects/{id}/logs`, `/v1/observability/logs`) devuelven **404** -- solo
+`/v2|v3/deployments/{id}/events` funciona y trae unicamente logs de BUILD.
+**Este es el camino a usar la proxima vez que una pantalla falle en produccion
+sin decir por que**, en vez de perder rondas en hipotesis.
+
 ### ⚠️ Lo mismo pasa en otros 10 formularios -- mapeado, NO corregido
 
 Misma forma exacta: `setSaving(true)`/`startTransition` + `await <accion>` **sin

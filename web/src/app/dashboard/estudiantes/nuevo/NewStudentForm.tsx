@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { submitNewStudent, type DuplicateStudentMatch } from './actions'
+import { submitNewStudent } from './actions'
+// El tipo se importa de su ORIGEN, nunca re-exportado desde actions.ts
+// (un archivo 'use server' solo puede exportar funciones async -- ver el
+// comentario largo en actions.ts, costó una semana de altas rotas).
+import type { DuplicateStudentMatch } from '@/lib/students/createStudentWithFamily'
 import DateInputES from '@/components/DateInputES'
 
 interface Family { id: string; name: string }

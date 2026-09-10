@@ -12,9 +12,26 @@ import {
   type StudentFieldsInput,
 } from '@/lib/students/createStudentWithFamily'
 
-// Se re-exporta para no romper a NewStudentForm.tsx, que la importa de
-// aquí desde antes de que la comprobación se moviera al núcleo compartido.
-export type { DuplicateStudentMatch }
+// ⛔ NO volver a re-exportar nada desde este archivo, ni siquiera un tipo.
+//
+// Aquí vivía `export type { DuplicateStudentMatch }`, y **tumbó el alta de
+// estudiante entera durante una semana** (del 2026-09-03, último estudiante
+// creado, al 2026-09-10). Turbopack NO borra un re-export de tipo en un
+// archivo 'use server': lo compila como un re-export de VALOR, y como el
+// nombre solo existe en el sistema de tipos, el módulo revienta al evaluarse.
+// El log de producción, textual:
+//
+//   ReferenceError: DuplicateStudentMatch is not defined
+//       at module evaluation (.next/server/chunks/ssr/web_19-xrre._.js)
+//
+// Se traduce en un HTTP 500 en la POST de la Server Action, así que el botón
+// Guardar no responde nada. Ni `tsc`, ni `eslint`, ni `next build` lo avisan
+// -- es puramente de runtime, igual que el bug de EXTERNAL_PAYMENT_SOURCES
+// del 2026-09-03.
+//
+// Quien necesite el tipo lo importa de su origen
+// (@/lib/students/createStudentWithFamily), que es lo que ya hacía bien
+// EnrollmentScansReview.tsx.
 
 export type SubmitNewStudentInput = (
   | { mode: 'new'; student: StudentFieldsInput; familyName: string; guardians: DraftGuardianInput[] }
