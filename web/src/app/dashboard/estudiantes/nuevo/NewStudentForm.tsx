@@ -112,23 +112,48 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
     setSaving(true)
 
     const student = { firstName, lastName, birthDate, gender: gender || null, enrollmentStatus, gradeLevel: gradeLevel.trim() || null }
-    const result =
-      mode === 'new'
-        ? await submitNewStudent({
-            mode: 'new',
-            student,
-            familyName,
-            guardians: guardians.map((g) => ({
-              firstName: g.firstName,
-              lastName: g.lastName,
-              phone: g.phone,
-              email: g.email || null,
-              relationship: g.relationship as 'madre' | 'padre' | 'tutor_legal' | 'otro',
-              nationalId: g.nationalId || null,
-            })),
-            confirmDuplicate,
-          })
-        : await submitNewStudent({ mode: 'existing', student, familyId: selectedFamily!.id, confirmDuplicate })
+
+    // El try/catch NO es decorativo. La Server Action puede no llegar a
+    // responder nunca: el middleware de `proxy.ts` corre en CADA petición de
+    // /dashboard/*, incluida la de este botón, y si la sesión venció mientras
+    // se llenaba el formulario redirige el POST a /login -- la acción no
+    // corre, no se escribe nada, y el navegador recibe una redirección HTML
+    // en vez de una respuesta de acción. Sin este catch, la promesa quedaba
+    // rechazada sin atender, `setSaving(false)` nunca se ejecutaba y el botón
+    // se quedaba en "Guardando…" para siempre, sin un solo mensaje.
+    // Reportado en producción el 2026-09-10 (alta de Victor Emmanuel Sanchez
+    // Pilier): nada en la base, nada en pantalla, el botón colgado.
+    let result: Awaited<ReturnType<typeof submitNewStudent>>
+    try {
+      result =
+        mode === 'new'
+          ? await submitNewStudent({
+              mode: 'new',
+              student,
+              familyName,
+              guardians: guardians.map((g) => ({
+                firstName: g.firstName,
+                lastName: g.lastName,
+                phone: g.phone,
+                email: g.email || null,
+                relationship: g.relationship as 'madre' | 'padre' | 'tutor_legal' | 'otro',
+                nationalId: g.nationalId || null,
+              })),
+              confirmDuplicate,
+            })
+          : await submitNewStudent({ mode: 'existing', student, familyId: selectedFamily!.id, confirmDuplicate })
+    } catch {
+      // Lo que se escribió en el formulario NO se pierde: el estado sigue en
+      // memoria, así que basta con volver a iniciar sesión en otra pestaña y
+      // tocar Guardar de nuevo aquí, sin recargar.
+      setError(
+        'No se pudo guardar: el servidor no respondió. Casi siempre es que la sesión venció mientras ' +
+        'llenabas el formulario. Abre la plataforma en otra pestaña para volver a entrar, y luego toca ' +
+        'Guardar aquí otra vez — NO recargues esta página, no se ha perdido nada de lo que escribiste.'
+      )
+      setSaving(false)
+      return
+    }
 
     if (result.duplicates) {
       setDuplicates(result.duplicates)

@@ -84,16 +84,24 @@ function MatchCard({ match, students }: { match: PendingMatch; students: Student
   const submit = () => {
     setError(null)
     startTransition(async () => {
-      const result = await resolveAlegraMatch(match.id, studentId, Number(amount), note)
-      if (!result.ok) setError(result.error ?? 'No se pudo registrar.')
+      try {
+        const result = await resolveAlegraMatch(match.id, studentId, Number(amount), note)
+        if (!result.ok) setError(result.error ?? 'No se pudo registrar.')
+      } catch {
+        setError('El servidor no respondió. Si la sesión venció, vuelve a entrar en otra pestaña e inténtalo de nuevo.')
+      }
     })
   }
 
   const discard = () => {
     setError(null)
     startTransition(async () => {
-      const result = await discardAlegraMatch(match.id, discardNote)
-      if (!result.ok) setError(result.error ?? 'No se pudo descartar.')
+      try {
+        const result = await discardAlegraMatch(match.id, discardNote)
+        if (!result.ok) setError(result.error ?? 'No se pudo descartar.')
+      } catch {
+        setError('El servidor no respondió. Si la sesión venció, vuelve a entrar en otra pestaña e inténtalo de nuevo.')
+      }
     })
   }
 
@@ -229,9 +237,13 @@ export default function AlegraMatchesReview({ matches, students }: { matches: Pe
   const syncNow = () => {
     setMessage(null); setError(null)
     startTransition(async () => {
-      const result = await runAlegraSyncNow()
-      if (result.ok) setMessage(result.resumen ?? 'Conciliación completada.')
-      else setError(result.error ?? 'No se pudo conciliar.')
+      try {
+        const result = await runAlegraSyncNow()
+        if (result.ok) setMessage(result.resumen ?? 'Conciliación completada.')
+        else setError(result.error ?? 'No se pudo conciliar.')
+      } catch {
+        setError('El servidor no respondió. Si la sesión venció, vuelve a entrar en otra pestaña e inténtalo de nuevo.')
+      }
     })
   }
 

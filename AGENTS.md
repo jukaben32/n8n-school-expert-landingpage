@@ -3183,10 +3183,61 @@ vuelva a mirar:
    que suena a error de quien lo usa, no del sistema. Y el formulario **abre en
    modo "existente" por defecto** cuando ya hay familias.
 
-**Lo primero que hay que pedir**: el texto exacto que aparece en pantalla (o una
-captura). Con eso se distingue entre las dos en un minuto. Si resulta ser la 2,
-lo correcto es hacer la comparacion tolerante (normalizada, como ya hace
-`alegraMatching.ts`) en vez de exigir el clic en la sugerencia.
+**Resuelto el mismo dia con la captura: no era ninguna de las dos.** El boton se
+quedaba en **"Guardando..."** con el formulario entero lleno (fecha de nacimiento
+incluida), o sea que si envio. Y no se escribio NADA: 0 familias, 0 tutores, 0
+estudiantes creados ese dia. Es decir, **la Server Action nunca llego a correr**.
+
+**El mecanismo**: `proxy.ts` corre en CADA peticion de `/dashboard/*` -- incluida
+la POST del propio boton Guardar, porque una Server Action hace POST a la misma
+URL de la pagina. Si `supabase.auth.getUser()` devuelve null ahi (token vencido
+mientras se llenaba el formulario, que es largo), el middleware devuelve
+`NextResponse.redirect('/login')` **para esa POST**: la accion no corre, no se
+escribe nada, y el navegador recibe una redireccion HTML en vez de una respuesta
+de accion. Es la misma familia de bug que `/sw.js` y el callback de Azul, pero
+por vencimiento de sesion en vez de por ruta no excluida -- y aqui **no se puede
+excluir la ruta**: una POST sin sesion NO debe dejarse pasar.
+
+**El defecto que si se corrigio**, y que vale para todos los casos futuros:
+`handleSubmit` de `NewStudentForm.tsx` **no tenia try/catch** alrededor del
+`await submitNewStudent(...)`. Con la promesa rechazada, `setSaving(false)` nunca
+se ejecutaba: boton colgado para siempre, cero mensajes, y la persona sin idea de
+que su sesion vencio. Ahora atrapa el fallo, libera el boton y dice que hacer --
+incluyendo lo mas importante: **volver a entrar en OTRA pestaña y tocar Guardar
+de nuevo sin recargar**, porque el estado del formulario sigue en memoria y no se
+pierde nada de lo escrito.
+
+**Descartado antes de llegar ahi** (para que nadie lo vuelva a mirar): no es la
+migracion `20260912000000` (0 estudiantes con matricula, el indice parcial no
+puede dispararse); no es RLS ni la base (los 4 inserts corren para reception,
+school_admin, director y super_admin con sesion simulada, y la consulta de
+duplicados tarda 21 ms); no es permisos; no es codigo viejo (los tres dominios
+sirven el mismo despliegue).
+
+### ⚠️ Lo mismo pasa en otros 10 formularios -- mapeado, NO corregido
+
+Misma forma exacta: `setSaving(true)`/`startTransition` + `await <accion>` **sin
+try/catch**, asi que cualquier fallo de red o de sesion deja el boton colgado sin
+mensaje. Encontrados con:
+
+```bash
+grep -rl "setSaving(true)\|setLoading(true)\|startTransition" --include=*.tsx web/src \
+  | xargs grep -L "try {"
+```
+
+`agenda/nuevo/NewEventForm`, `asistencia/AbsenceJustifications`,
+`autorizaciones/nuevo/NewAuthorizationForm`, `encuestas/NewPollForm`,
+`estudiantes/[id]/EditStudentButton`, `horarios/periodos/PeriodsManager`,
+`notas/periodos/PeriodsManager`, `personal/EditStaffButton`,
+`planificacion/[scheduleId]/PlanForm`, `website/InquiriesPanel`,
+`website/SchoolWebsiteForm`.
+
+**No se corrigieron los 10 de una vez a proposito**: la correccion automatizada a
+escala del 2026-09-07 (los banners de error en las 27 paginas) introdujo 3 bugs
+propios en el camino. Hacerlo por tandas, con `tsc`/`build`/`smoke` detras de cada
+una. Se corrigieron solo dos: el reportado (`NewStudentForm`) y
+`tesoreria/alegra/AlegraMatchesReview` -- este ultimo porque lo escribio la misma
+sesion el dia anterior y arrastraba el mismo defecto.
 
 ### Como se saca el token de API de Alegra (respuesta que soporte no supo dar)
 
