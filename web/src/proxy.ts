@@ -41,6 +41,29 @@ export async function proxy(request: NextRequest) {
   // Refrescar la sesión (importante para tokens expirados)
   const { data: { user } } = await supabase.auth.getUser()
 
+  /**
+   * Toda redirección que salga de aquí DEBE pasar por esta función.
+   *
+   * getUser() renueva el token cuando está vencido, y el `setAll` de arriba
+   * deja las cookies nuevas en `supabaseResponse`. Si en vez de esa respuesta
+   * devolvemos un NextResponse.redirect() recién creado, esas cookies se
+   * PIERDEN -- pero del lado de Supabase el refresh token viejo ya se rotó
+   * (refresh_token_rotation_enabled = true en este proyecto). O sea: el
+   * navegador se queda con un token muerto y la sesión no vuelve a
+   * refrescarse nunca, aunque la persona siga viendo la pantalla (el App
+   * Router sirve de su propia caché lo que ya tenía cargado).
+   *
+   * Ese es el estado que rompió el alta de estudiante el 2026-09-10: la
+   * página se veía bien, pero la POST del botón Guardar -- que también pasa
+   * por este middleware -- llegaba sin sesión válida y se iba a /login, así
+   * que la Server Action nunca corría y no se escribía nada.
+   */
+  const redirectTo = (url: URL) => {
+    const response = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
+    return response
+  }
+
   // Rutas públicas que NO requieren autenticación.
   // OJO: '/' se compara con igualdad exacta, nunca con startsWith, porque
   // TODA ruta empieza con '/' — usarlo en el .some(startsWith) de abajo
@@ -61,14 +84,14 @@ export async function proxy(request: NextRequest) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+    return redirectTo(loginUrl)
   }
 
   // Si el usuario está autenticado y quiere ir a /login o /registro
   if (user && (pathname.startsWith('/login') || pathname.startsWith('/registro'))) {
     const dashboardUrl = request.nextUrl.clone()
     dashboardUrl.pathname = '/dashboard'
-    return NextResponse.redirect(dashboardUrl)
+    return redirectTo(dashboardUrl)
   }
 
   // Fase 2 de Cuentas por Cobrar: un tutor (guardian) con algún hijo con más
@@ -95,7 +118,7 @@ export async function proxy(request: NextRequest) {
       if (isBlocked) {
         const pagosUrl = request.nextUrl.clone()
         pagosUrl.pathname = '/dashboard/pagos'
-        return NextResponse.redirect(pagosUrl)
+        return redirectTo(pagosUrl)
       }
     }
   }

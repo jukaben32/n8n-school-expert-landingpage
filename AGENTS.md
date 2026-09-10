@@ -3270,6 +3270,56 @@ pantalla, hasta que recargue. Con el colegio usando esto todos los dias a las
 no responde, mirar la hora del ultimo despliegue de produccion
 (`GET /v6/deployments?projectId=...`). Si hay uno reciente, es eso.
 
+### LA CAUSA DE FONDO: el middleware perdia las cookies renovadas al redirigir
+
+Tercer intento fallido, ya sin ningun despliegue de por medio (los de PR #24/#25
+fueron a las 03:37 y 03:46 UTC; este fallo fue pasadas las 04:20). O sea que el
+despliegue explicaba el segundo intento pero **no este**. Buscando de verdad
+aparecio un bug real en `web/src/proxy.ts`, y es de los que se llevan por delante
+a cualquiera, no solo a este formulario.
+
+**La prueba que lo fijo**, hecha contra produccion sin sesion:
+
+```
+POST /dashboard/estudiantes/nuevo  (como hace el boton Guardar)
+  -> HTTP 307  location: /login?redirect=%2Fdashboard%2Festudiantes%2Fnuevo
+```
+
+Una Server Action hace POST a la URL de su propia pagina, asi que **pasa por el
+middleware igual que un GET**. Sin sesion valida se va a /login: la accion no
+corre y no se escribe nada.
+
+**Por que su sesion dejaba de ser valida.** `getUser()` renueva el token cuando
+esta vencido, y el `setAll` del cliente de `@supabase/ssr` deja las cookies
+nuevas en `supabaseResponse`. Pero las tres ramas de redireccion devolvian un
+`NextResponse.redirect()` **recien creado**, sin copiar esas cookies. Y como
+`refresh_token_rotation_enabled = true` en este proyecto, del lado de Supabase el
+refresh token viejo YA se roto: el navegador se queda con un token muerto y **no
+vuelve a refrescar nunca**. La persona sigue viendo la pantalla (el App Router
+sirve de su propia cache lo que ya tenia cargado) pero toda peticion nueva llega
+sin sesion.
+
+**Confirmado en `auth.sessions` de produccion** para su cuenta: la sesion
+`4ca7a8ab` (creada el 2026-09-03) tiene `refreshed_at = 04:11:39` y despues
+**ni un refresh mas**, mientras ella seguia usando la app. Exactamente el
+sintoma: token muerto, pantalla viva.
+
+**Corregido**: un helper `redirectTo(url)` que copia
+`supabaseResponse.cookies.getAll()` a la redireccion. Las tres ramas
+(`/login`, `/dashboard`, y el confinamiento del tutor moroso a
+`/dashboard/pagos`) pasan por el. Es el patron que la propia documentacion de
+`@supabase/ssr` exige y que este middleware nunca tuvo.
+
+**Alcance real, mas alla del alta de estudiante**: cualquier persona del colegio
+cuya sesion se renovara justo en una peticion que terminara en redireccion
+quedaba con la sesion rota sin darse cuenta. Encaja con reportes viejos de
+"me saca" / "no guarda" que nunca se pudieron reproducir.
+
+**Lo que NO se toco** (menor radio de impacto): la consulta de `users_profiles`
+que el middleware hace en cada peticion de `/dashboard/*` sigue igual, aunque
+solo importe para tutores morosos. No es la causa y ampliar el cambio aqui es
+justo lo que este archivo prohibe.
+
 ### ⚠️ Lo mismo pasa en otros 10 formularios -- mapeado, NO corregido
 
 Misma forma exacta: `setSaving(true)`/`startTransition` + `await <accion>` **sin
