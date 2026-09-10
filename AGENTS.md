@@ -3255,6 +3255,38 @@ Hay un boton **Renovar token** que invalida integraciones previas -- no tocarlo
 salvo que se quiera desconectar algo. Ojo tambien: algunos planes de Alegra
 limitan cuantas integraciones activas se permiten.
 
+## Los nombres: Alegra es la fuente MENOS confiable, no la mas (2026-09-10)
+
+Cerrados los descuadres de nombre que dejo la conciliacion del 2026-09-09, con la
+fuente correcta: las **actas de nacimiento** que el colegio tiene en su poder,
+revisadas por Secretaria y por el usuario. El resultado importa como regla, no
+como anecdota:
+
+| Nombre | Plataforma | Alegra | Quien tenia razon |
+|---|---|---|---|
+| Teylor **Adrian** Diaz Mota | Adrian | And**r**ian | La plataforma |
+| **Sarha** Abigail Calis Gonzalez | Sarha | Sara | La plataforma |
+| Camille Saint Hilaire **Morales** | Morales | Morale | La plataforma |
+| Victor **Enmanuel** Sanchez Pilier | Enmanuel | E**mm**anuel | La plataforma (acta confirmada por el usuario) |
+
+**Cuatro de cuatro a favor de la plataforma.** La regla practica: cuando un nombre
+no calce entre los dos sistemas, **no sobrescribir el de la plataforma con el de
+Alegra**. Alegra es la fuente de verdad del comprobante fiscal (NCF/e-CF), no de
+como se escribe el nombre de un menor -- eso lo dice el acta. La decision del
+2026-09-09 de cargar los pagos contra el nombre de la base y NO tocar ningun
+nombre resulto ser la correcta.
+
+El usuario corrigio los nombres **del lado de Alegra** el 2026-09-10. Dato util
+por si alguien se preocupa: renombrar un contacto en Alegra **no altera los e-CF
+ya emitidos** -- quedan timbrados con los datos que tenian al emitirse, asi que
+no hay ningun efecto fiscal retroactivo.
+
+**Consecuencia para el emparejamiento automatico**: por esto la tolerancia de una
+letra (Levenshtein) de `alegraMatching.ts` **sugiere pero nunca carga sola** -- si
+cargara, estaria confiando en el lado que mas se equivoca. Y por esto vale tanto
+poblar `students.student_code`: una matricula no tiene faltas de ortografia. El
+primer caso real ya esta: Victor lleva su `16-0059`.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

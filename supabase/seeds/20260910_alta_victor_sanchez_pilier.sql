@@ -23,12 +23,13 @@
 --   students.student_code, que desde la migracion 20260912000000 es unico
 --   POR COLEGIO y ya se puede poblar sin riesgo.
 --
--- ⚠️ DOS COSAS QUE HAY QUE CONFIRMAR CON SECRETARIA:
---   1. El nombre: aqui se usa "Victor ENMANUEL" (con N), que es lo que
---      tecleo Bethania. Alegra dice "Victor EMMANUEL" (con M). Es el mismo
---      tipo de descuadre que los otros cuatro nombres, donde Alegra resulto
---      ser el equivocado -- pero confirmarlo contra el acta de nacimiento.
---   2. LA FAMILIA QUEDA SIN TUTOR. `guardians` exige first_name/last_name
+-- ✅ EL NOMBRE YA ESTA CONFIRMADO (2026-09-10): el usuario reviso la foto del
+--    ACTA DE NACIMIENTO -- "Victor ENMANUEL" (con N) es el correcto, que es lo
+--    que usa este script. Alegra lo tenia mal ("Emmanuel", con M) y el usuario
+--    lo corrigio del lado de Alegra ese mismo dia. Nada que decidir aqui.
+--
+-- ⚠️ LO QUE SI QUEDA PENDIENTE:
+--   LA FAMILIA QUEDA SIN TUTOR. `guardians` exige first_name/last_name
 --      NOT NULL y no habia ningun nombre real disponible; no se invento uno.
 --      El telefono que trae la factura de Alegra es 829-713-3189.
 --      Agregar el tutor desde /dashboard/familias/[id]/editar en cuanto se
