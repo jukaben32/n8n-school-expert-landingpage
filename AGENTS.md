@@ -3481,6 +3481,28 @@ cargara, estaria confiando en el lado que mas se equivoca. Y por esto vale tanto
 poblar `students.student_code`: una matricula no tiene faltas de ortografia. El
 primer caso real ya esta: Victor lleva su `16-0059`.
 
+## Pendiente inmediato del colegio: ~6 fichas de inscripcion sin cargar (2026-09-10)
+
+Dicho por el usuario al cerrar la sesion del 2026-09-10: *"tenemos unas 6 fichas pendientes
+de cargar en el colegio"*.
+
+**Importa el contexto**: el alta de estudiante estuvo rota del 2026-09-03 al 2026-09-10 (ver
+la seccion del `export type`). O sea que **cualquier intento de esa semana no escribio nada**
+-- si Secretaria trato de registrar a alguien y "no guardo", ese estudiante NO esta en el
+sistema y no quedo ni rastro del intento. Vale la pena preguntarle si hubo otros casos
+ademas de Victor antes de asumir que solo son 6.
+
+Dos caminos, los dos ya funcionan:
+1. **A mano**, `/dashboard/estudiantes/nuevo` -- ya corregido y probado en vivo.
+2. **Escaneando**, `/dashboard/estudiantes/escaneos` -- sube fotos o un PDF multipagina y
+   Claude extrae los campos a una bandeja de revision editable. **Nunca se ha probado con
+   una llamada real a Claude** (ver la seccion de OCR): `ANTHROPIC_API_KEY` esta configurada
+   en Vercel pero la extraccion nunca se ejercito con un documento de verdad. Si se prueba
+   con estas 6, hacerlo con UNA primero y revisar campo por campo antes de confirmar.
+
+Recordatorio del alcance: `students.birth_date` es **NOT NULL**, asi que sin fecha de
+nacimiento no se puede crear el estudiante por ninguna de las dos vias.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
@@ -4775,10 +4797,24 @@ se corrige del lado que este mal (puede ser Alegra en dos de los casos).
   si emparejaron. En contra: cambian el nombre de pila Y el segundo apellido. **El usuario
   pidio confirmarlo con Secretaria antes de cargarlo** -- lo revisa el 2026-09-10 junto con las
   actas de nacimiento.
-- **Victor Emmanuel Sanchez Pilier** (RD$2,250, matricula 16-0059): **no existe en la
-  plataforma**, ni activo ni con `deleted_at`. Hay un *Eythan Gadiel Angomas Pilier* (mismo
-  apellido, posible hermano) pero ningun Victor. Hay que darlo de alta antes de registrarle
-  el pago.
+- ~~**Victor Emmanuel Sanchez Pilier**~~ -- **CERRADO el 2026-09-10.** No se podia dar de
+  alta por el bug del `export type` en un archivo 'use server' (ver esa seccion). Con eso
+  corregido, Secretaria lo creo desde la pantalla: `Victor Enmanuel Sanchez Pilier`
+  (con N, segun el acta), 2012-03-17, 3ro. Secundaria, familia nueva "Sanchez Pilier".
+  Su cobro se cargo verificando la factura contra Alegra por API, no de memoria:
+  e-CF **E320000000401**, 2026-09-04, RD$2,250, `cash`, nota "mes de ago" -- linea
+  *Mensualidad* de la lista de precios **Secundaria** (RD$4,500) al **50%**, o sea la media
+  cuota de agosto exacta que genera `installment_schedule`, coherente con su curso.
+  `ncf`/`ncf_type` en null. **Queda al dia**: exigible RD$2,250 / cobrado RD$2,250 /
+  vencido RD$0.
+  De paso se le grabo `student_code = '16-0059'` (la matricula que trae su contacto de
+  Alegra) -- **es el primer y unico valor real de esa columna en produccion**, y el que
+  vuelve confiable el emparejamiento automatico para el (una matricula no tiene faltas de
+  ortografia). El backfill del resto sigue pendiente.
+  **La familia "Sanchez Pilier" quedo sin tutor** -- no habia nombre real disponible y no
+  se invento uno. El telefono de la factura es **829-713-3189**. Sin tutor no puede recibir
+  acceso al Portal Familiar ni los avisos de ausencia por correo: agregarlo desde
+  `/dashboard/familias/[id]/editar` en cuanto se tenga el nombre.
 
 **Nota de metodo**: `list_school_receivables` es `security definer` y **rechaza al rol
 `postgres` de la Management API** (`No autorizado para ver las cuentas por cobrar de este
