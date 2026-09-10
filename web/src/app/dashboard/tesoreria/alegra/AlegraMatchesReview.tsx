@@ -88,7 +88,7 @@ function MatchCard({ match, students }: { match: PendingMatch; students: Student
         const result = await resolveAlegraMatch(match.id, studentId, Number(amount), note)
         if (!result.ok) setError(result.error ?? 'No se pudo registrar.')
       } catch {
-        setError('El servidor no respondió. Si la sesión venció, vuelve a entrar en otra pestaña e inténtalo de nuevo.')
+        setError('El servidor no respondió y no se aplicó nada. Recarga la página (Ctrl+R) e inténtalo otra vez -- pasa cuando la plataforma se actualiza o la sesión vence mientras la pantalla está abierta.')
       }
     })
   }
@@ -100,7 +100,7 @@ function MatchCard({ match, students }: { match: PendingMatch; students: Student
         const result = await discardAlegraMatch(match.id, discardNote)
         if (!result.ok) setError(result.error ?? 'No se pudo descartar.')
       } catch {
-        setError('El servidor no respondió. Si la sesión venció, vuelve a entrar en otra pestaña e inténtalo de nuevo.')
+        setError('El servidor no respondió y no se aplicó nada. Recarga la página (Ctrl+R) e inténtalo otra vez -- pasa cuando la plataforma se actualiza o la sesión vence mientras la pantalla está abierta.')
       }
     })
   }
@@ -242,7 +242,7 @@ export default function AlegraMatchesReview({ matches, students }: { matches: Pe
         if (result.ok) setMessage(result.resumen ?? 'Conciliación completada.')
         else setError(result.error ?? 'No se pudo conciliar.')
       } catch {
-        setError('El servidor no respondió. Si la sesión venció, vuelve a entrar en otra pestaña e inténtalo de nuevo.')
+        setError('El servidor no respondió y no se aplicó nada. Recarga la página (Ctrl+R) e inténtalo otra vez -- pasa cuando la plataforma se actualiza o la sesión vence mientras la pantalla está abierta.')
       }
     })
   }

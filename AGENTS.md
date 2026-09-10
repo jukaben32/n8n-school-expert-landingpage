@@ -3214,6 +3214,55 @@ school_admin, director y super_admin con sesion simulada, y la consulta de
 duplicados tarda 21 ms); no es permisos; no es codigo viejo (los tres dominios
 sirven el mismo despliegue).
 
+### La causa real NO era la sesion: era un despliegue nuevo (Skew Protection apagada)
+
+El diagnostico de arriba (sesion vencida en el POST de la Server Action) es un
+mecanismo REAL y sigue siendo posible, pero **no fue lo que le paso a Bethania**.
+Volvio a fallar una segunda vez, ya en el dominio correcto
+(`www.educacionmanantial.com`), y con el mensaje nuevo saliendo bien. Al revisar
+Vercel aparecio la causa:
+
+| Hora (UTC) | Despliegue |
+|---|---|
+| 09-10 03:37 | production READY -- merge del PR #24 |
+| 09-10 03:46 | production READY -- merge del PR #25 |
+| 09-10 ~04:0x | ella llena el formulario y toca Guardar -> falla |
+
+**El id de una Server Action se deriva del build.** Cuando entra un despliegue
+nuevo, la pagina que el navegador ya tiene cargada sigue apuntando al id viejo,
+que en el servidor nuevo no existe: el POST falla, la promesa se rechaza y no se
+escribe nada. Vercel tiene **Skew Protection** exactamente para esto (mantiene
+sirviendo el despliegue viejo a las pestañas viejas durante una ventana), y en
+este proyecto **esta APAGADA** -- verificado por API el 2026-09-10:
+`skewProtectionMaxAge = null`.
+
+Confirmado ademas por la base: **ningun estudiante creado desde el 2026-09-03**,
+o sea que los intentos fallidos no escribieron absolutamente nada -- ni una
+familia huerfana.
+
+**Consecuencia practica, y no es solo de este formulario**: cada vez que se
+fusiona un PR a `main`, TODA persona que tenga la plataforma abierta en ese
+momento se queda con una pagina que ya no puede guardar nada, en cualquier
+pantalla, hasta que recargue. Con el colegio usando esto todos los dias a las
+7:50am, desplegar en horario de trabajo tiene ese costo.
+
+**Dos cosas quedan de aqui:**
+
+1. **El mensaje de error se corrigio** (`NewStudentForm.tsx` y
+   `AlegraMatchesReview.tsx`): decia "casi siempre es que la sesion vencio... NO
+   recargues esta pagina", y ese consejo es **el equivocado para este caso** --
+   si la pagina quedo vieja por un despliegue, volver a entrar en otra pestaña
+   no arregla nada, hay que recargar. Ahora nombra las dos causas y da el unico
+   consejo que sirve para las dos: **recargar y volver a llenar**, aclarando que
+   no se guardo nada a medias asi que no se duplica.
+2. **Encender Skew Protection en Vercel** (Project -> Settings -> Advanced ->
+   Skew Protection). No se activo desde la sesion: es un cambio de configuracion
+   de produccion que el usuario no pidio. **Pendiente de decidir con el.**
+
+**Regla que deja esto**: antes de culpar a la sesion por una Server Action que
+no responde, mirar la hora del ultimo despliegue de produccion
+(`GET /v6/deployments?projectId=...`). Si hay uno reciente, es eso.
+
 ### ⚠️ Lo mismo pasa en otros 10 formularios -- mapeado, NO corregido
 
 Misma forma exacta: `setSaving(true)`/`startTransition` + `await <accion>` **sin

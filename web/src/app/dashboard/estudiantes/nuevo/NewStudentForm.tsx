@@ -114,15 +114,26 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
     const student = { firstName, lastName, birthDate, gender: gender || null, enrollmentStatus, gradeLevel: gradeLevel.trim() || null }
 
     // El try/catch NO es decorativo. La Server Action puede no llegar a
-    // responder nunca: el middleware de `proxy.ts` corre en CADA petición de
-    // /dashboard/*, incluida la de este botón, y si la sesión venció mientras
-    // se llenaba el formulario redirige el POST a /login -- la acción no
-    // corre, no se escribe nada, y el navegador recibe una redirección HTML
-    // en vez de una respuesta de acción. Sin este catch, la promesa quedaba
-    // rechazada sin atender, `setSaving(false)` nunca se ejecutaba y el botón
-    // se quedaba en "Guardando…" para siempre, sin un solo mensaje.
-    // Reportado en producción el 2026-09-10 (alta de Victor Emmanuel Sanchez
-    // Pilier): nada en la base, nada en pantalla, el botón colgado.
+    // responder nunca, y son DOS causas distintas con el mismo síntoma:
+    //
+    //   1. Despliegue nuevo mientras la página estaba abierta. El id de una
+    //      Server Action se deriva del build; tras un despliegue, el id que
+    //      tiene esta página ya no existe en el servidor y el POST falla.
+    //      Vercel tiene Skew Protection justo para esto y en este proyecto
+    //      está APAGADA (verificado el 2026-09-10: skewProtectionMaxAge null).
+    //   2. Sesión vencida. El middleware de `proxy.ts` corre en CADA petición
+    //      de /dashboard/*, incluida la POST de este botón, y sin sesión la
+    //      redirige a /login -- la acción no corre y el navegador recibe una
+    //      redirección HTML en vez de una respuesta de acción.
+    //
+    // En los dos casos no se escribe NADA (confirmado en producción: ningún
+    // estudiante creado en los intentos fallidos). Sin este catch, la promesa
+    // quedaba rechazada sin atender, `setSaving(false)` nunca se ejecutaba y
+    // el botón se quedaba en "Guardando…" para siempre, sin un solo mensaje.
+    // Reportado en producción el 2026-09-10 (alta de Victor Enmanuel Sanchez
+    // Pilier): nada en la base, nada en pantalla, el botón colgado. La causa
+    // real de ese caso fue la 1 -- dos despliegues a producción (PR #24 y
+    // #25) en los 45 minutos anteriores al reporte.
     let result: Awaited<ReturnType<typeof submitNewStudent>>
     try {
       result =
@@ -143,13 +154,14 @@ export default function NewStudentForm({ families, gradeLevelOptions }: NewStude
             })
           : await submitNewStudent({ mode: 'existing', student, familyId: selectedFamily!.id, confirmDuplicate })
     } catch {
-      // Lo que se escribió en el formulario NO se pierde: el estado sigue en
-      // memoria, así que basta con volver a iniciar sesión en otra pestaña y
-      // tocar Guardar de nuevo aquí, sin recargar.
+      // Recargar es el único consejo que sirve para las DOS causas: si la
+      // página quedó vieja por un despliegue, volver a tocar Guardar falla
+      // igual por más que se vuelva a entrar en otra pestaña.
       setError(
-        'No se pudo guardar: el servidor no respondió. Casi siempre es que la sesión venció mientras ' +
-        'llenabas el formulario. Abre la plataforma en otra pestaña para volver a entrar, y luego toca ' +
-        'Guardar aquí otra vez — NO recargues esta página, no se ha perdido nada de lo que escribiste.'
+        'No se pudo guardar y NO se creó nada — el servidor no respondió. Pasa por dos motivos: la ' +
+        'plataforma se actualizó mientras llenabas el formulario, o tu sesión venció. Los dos se ' +
+        'arreglan igual: recarga esta página (Ctrl+R) y vuelve a llenarla. Como no se guardó nada a ' +
+        'medias, no se va a duplicar.'
       )
       setSaving(false)
       return
