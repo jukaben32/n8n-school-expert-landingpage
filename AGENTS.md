@@ -3121,6 +3121,140 @@ matrícula que ya tiene cada contacto en Alegra. La columna ya acepta el valor p
 colegio tras esta migración. Mientras esté vacía, el emparejamiento depende del
 nombre, que es lo frágil.
 
+## Cierre de pendientes de la conciliacion Alegra (2026-09-10)
+
+**Los cuatro nombres**: Secretaria los reviso contra las actas. La plataforma
+conserva **Adrian** (no "Andrian"), **Sarha** (no "Sara") y **Morales** (no
+"Morale") -- o sea que en esos tres el error estaba en ALEGRA, no aqui, tal como
+se sospechaba el 2026-09-09. Los pagos ya se habian cargado contra el nombre de
+la base, asi que no quedo nada mal atribuido y no hubo que tocar ningun pago.
+
+**Blayder Emmanuel Solis Castillo**: Secretaria confirmo y corrigio el nombre en
+la plataforma (antes estaba como "Bladimir Emmanuel Solis Sosa"), asi que ya
+empareja con Alegra. Su cobro se cargo el 2026-09-10: e-CF **E320000000391**,
+2026-09-03, RD$2,050, `cash`, `ncf`/`ncf_type` en null.
+
+**La nota de Alegra de ese cobro esta equivocada y se corrigio al cargarlo.**
+Alegra dice `anotation = "mes de octubre"`; el colegio confirmo que corresponde a
+**agosto**, y el propio documento lo respalda sin depender de la palabra de nadie:
+la linea es *Mensualidad* de la lista de precios **Primaria** (RD$4,100) con **50%
+de descuento** = RD$2,050, que es exactamente la media cuota de agosto que genera
+`installment_schedule` con `tuition_installments_count = 10.5`. Un mes de octubre
+completo serian RD$4,100. Ademas la factura es del 3 de septiembre. La descripcion
+cargada deja las dos versiones escritas, para que dentro de un ano se entienda por
+que no coinciden con Alegra.
+
+**Dato aprovechable**: el contacto de Blayder en Alegra trae matricula `24-0041`.
+Sigue pendiente (recomendado, no hecho) el backfill de `students.student_code`.
+
+### "La plataforma no esta guardando" al dar de alta a Victor Emmanuel Sanchez Pilier
+
+Reportado por el usuario el 2026-09-10. **Sin resolver todavia: falta el texto
+exacto del error.** Lo que SI quedo descartado con evidencia, para que nadie lo
+vuelva a mirar:
+
+- **NO es la migracion `20260912000000`** (el unique de `student_code` por
+  colegio). Produccion tiene **0 estudiantes con matricula y 0 con cadena vacia**,
+  asi que ese indice parcial no puede dispararse. Ademas
+  `createStudentWithFamily` escribe `student.studentCode || null`, nunca `''`.
+- **NO es RLS ni la base.** Se reprodujeron los 4 inserts reales de
+  `createStudentWithFamily` (families -> guardians -> students ->
+  student_guardians) con la sesion simulada igual que PostgREST, en transaccion
+  revertida, para **reception, school_admin, director y super_admin**: los cuatro
+  roles completan los 4 inserts sin error.
+- **NO es permisos.** `reception` SI tiene `estudiantes_nuevo` en
+  `permissions.ts`, y `submitNewStudent` no exige nada mas.
+- **NO es manejo de error mudo.** `handleSubmit` de `NewStudentForm.tsx` pone un
+  mensaje en pantalla en todos sus caminos de fallo.
+
+**Las dos causas que quedan vivas**, las dos con sintoma de "no pasa nada":
+
+1. **`birth_date` es obligatoria** -- y no es capricho de la pantalla:
+   `students.birth_date` es **NOT NULL** en la base. Si no se tiene la fecha de
+   nacimiento del estudiante, el formulario no puede enviarse y el navegador solo
+   muestra su globito nativo sobre el selector Dia/Mes/Ano, que se pierde de vista
+   facil. Con Victor, que se esta dando de alta solo para poder registrarle un
+   pago, es muy probable que la fecha no este a mano.
+2. **El selector de "Familia existente" exige coincidencia EXACTA de texto**:
+   `families.find((f) => f.name === familyQuery)` (`NewStudentForm.tsx:70`). Es un
+   `<input list>` con `<datalist>`, asi que se puede escribir cualquier cosa; si
+   no calza carácter por carácter con el nombre guardado, `selectedFamily` queda
+   null y sale *"Escribe el nombre de la familia y selecciónala de la lista"* --
+   que suena a error de quien lo usa, no del sistema. Y el formulario **abre en
+   modo "existente" por defecto** cuando ya hay familias.
+
+**Resuelto el mismo dia con la captura: no era ninguna de las dos.** El boton se
+quedaba en **"Guardando..."** con el formulario entero lleno (fecha de nacimiento
+incluida), o sea que si envio. Y no se escribio NADA: 0 familias, 0 tutores, 0
+estudiantes creados ese dia. Es decir, **la Server Action nunca llego a correr**.
+
+**El mecanismo**: `proxy.ts` corre en CADA peticion de `/dashboard/*` -- incluida
+la POST del propio boton Guardar, porque una Server Action hace POST a la misma
+URL de la pagina. Si `supabase.auth.getUser()` devuelve null ahi (token vencido
+mientras se llenaba el formulario, que es largo), el middleware devuelve
+`NextResponse.redirect('/login')` **para esa POST**: la accion no corre, no se
+escribe nada, y el navegador recibe una redireccion HTML en vez de una respuesta
+de accion. Es la misma familia de bug que `/sw.js` y el callback de Azul, pero
+por vencimiento de sesion en vez de por ruta no excluida -- y aqui **no se puede
+excluir la ruta**: una POST sin sesion NO debe dejarse pasar.
+
+**El defecto que si se corrigio**, y que vale para todos los casos futuros:
+`handleSubmit` de `NewStudentForm.tsx` **no tenia try/catch** alrededor del
+`await submitNewStudent(...)`. Con la promesa rechazada, `setSaving(false)` nunca
+se ejecutaba: boton colgado para siempre, cero mensajes, y la persona sin idea de
+que su sesion vencio. Ahora atrapa el fallo, libera el boton y dice que hacer --
+incluyendo lo mas importante: **volver a entrar en OTRA pestaña y tocar Guardar
+de nuevo sin recargar**, porque el estado del formulario sigue en memoria y no se
+pierde nada de lo escrito.
+
+**Descartado antes de llegar ahi** (para que nadie lo vuelva a mirar): no es la
+migracion `20260912000000` (0 estudiantes con matricula, el indice parcial no
+puede dispararse); no es RLS ni la base (los 4 inserts corren para reception,
+school_admin, director y super_admin con sesion simulada, y la consulta de
+duplicados tarda 21 ms); no es permisos; no es codigo viejo (los tres dominios
+sirven el mismo despliegue).
+
+### ⚠️ Lo mismo pasa en otros 10 formularios -- mapeado, NO corregido
+
+Misma forma exacta: `setSaving(true)`/`startTransition` + `await <accion>` **sin
+try/catch**, asi que cualquier fallo de red o de sesion deja el boton colgado sin
+mensaje. Encontrados con:
+
+```bash
+grep -rl "setSaving(true)\|setLoading(true)\|startTransition" --include=*.tsx web/src \
+  | xargs grep -L "try {"
+```
+
+`agenda/nuevo/NewEventForm`, `asistencia/AbsenceJustifications`,
+`autorizaciones/nuevo/NewAuthorizationForm`, `encuestas/NewPollForm`,
+`estudiantes/[id]/EditStudentButton`, `horarios/periodos/PeriodsManager`,
+`notas/periodos/PeriodsManager`, `personal/EditStaffButton`,
+`planificacion/[scheduleId]/PlanForm`, `website/InquiriesPanel`,
+`website/SchoolWebsiteForm`.
+
+**No se corrigieron los 10 de una vez a proposito**: la correccion automatizada a
+escala del 2026-09-07 (los banners de error en las 27 paginas) introdujo 3 bugs
+propios en el camino. Hacerlo por tandas, con `tsc`/`build`/`smoke` detras de cada
+una. Se corrigieron solo dos: el reportado (`NewStudentForm`) y
+`tesoreria/alegra/AlegraMatchesReview` -- este ultimo porque lo escribio la misma
+sesion el dia anterior y arrastraba el mismo defecto.
+
+### Como se saca el token de API de Alegra (respuesta que soporte no supo dar)
+
+El usuario llamo a Alegra y no entendieron el pedido; quedo un ticket sin
+responder. La ruta esta en la documentacion de Alegra misma
+(<https://ayuda.alegra.com/dom/integraciones-via-api>), y **no esta donde uno la
+buscaria** (no es "Configuracion"):
+
+1. Icono de **Soluciones -> Administrar mis soluciones**.
+2. Ya dentro de **Mi Alegra**, menu **Integraciones** -> seccion
+   **Integración Manual (API)**.
+3. Copiar **Usuario** (= `ALEGRA_EMAIL`) y **Token** (= `ALEGRA_TOKEN`).
+
+Hay un boton **Renovar token** que invalida integraciones previas -- no tocarlo
+salvo que se quiera desconectar algo. Ojo tambien: algunos planes de Alegra
+limitan cuantas integraciones activas se permiten.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
