@@ -1,16 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { inviteGuardianAccess } from '../actions'
+import { inviteGuardianAccess, resendGuardianAccessLinkAction } from '../actions'
 
-export default function GrantGuardianAccessButton({ guardianId, hasEmail }: { guardianId: string; hasEmail: boolean }) {
+type AccessActionMode = 'grant' | 'resend'
+
+interface GrantGuardianAccessButtonProps {
+  guardianId: string
+  hasEmail: boolean
+  mode?: AccessActionMode
+}
+
+export default function GrantGuardianAccessButton({ guardianId, hasEmail, mode = 'grant' }: GrantGuardianAccessButtonProps) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [message, setMessage] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null)
+  const isResend = mode === 'resend'
 
   async function handleInvite() {
     setStatus('sending')
-    const result = await inviteGuardianAccess(guardianId)
+    setMessage(null)
+    setCredentials(null)
+
+    const result = isResend
+      ? await resendGuardianAccessLinkAction(guardianId)
+      : await inviteGuardianAccess(guardianId)
+
     setStatus(result.ok ? 'sent' : 'error')
     setMessage(result.message)
     if (result.credentials) setCredentials(result.credentials)
@@ -27,7 +42,7 @@ export default function GrantGuardianAccessButton({ guardianId, hasEmail }: { gu
   }
 
   if (status === 'sent') {
-    return <p className="text-[10px] font-semibold text-green-600 dark:text-green-400">✓ Invitado</p>
+    return <p className="text-[10px] font-semibold text-green-600 dark:text-green-400">{isResend ? '✓ Enlace enviado' : '✓ Invitado'}</p>
   }
 
   return (
@@ -38,9 +53,9 @@ export default function GrantGuardianAccessButton({ guardianId, hasEmail }: { gu
         disabled={status === 'sending'}
         className="text-[10px] font-semibold text-primary dark:text-accent-light hover:underline disabled:opacity-50"
       >
-        {status === 'sending' ? 'Enviando...' : hasEmail ? 'Dar acceso al sistema' : 'Crear acceso (sin correo)'}
+        {status === 'sending' ? 'Enviando...' : isResend ? 'Reenviar enlace' : hasEmail ? 'Dar acceso al sistema' : 'Crear acceso (sin correo)'}
       </button>
-      {status === 'error' && <p className="text-[10px] text-red-600 dark:text-red-400 mt-0.5">{message}</p>}
+      {status === 'error' && <p className="text-[10px] text-red-600 dark:text-red-400 mt-0.5 max-w-52">{message}</p>}
     </div>
   )
 }

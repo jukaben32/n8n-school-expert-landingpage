@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import PasswordInput from '@/components/PasswordInput'
 import { respondAuthorizationAction } from './actions'
 
 const inputClass =
@@ -63,7 +64,7 @@ export default function RespondAuthorizationForm({ authorizationRequestId, stude
       </div>
       <div>
         <label className={labelClass}>Tu contraseña (para confirmar que eres tú)</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+        <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
       </div>
       {error && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>}
       <div className="flex gap-2">

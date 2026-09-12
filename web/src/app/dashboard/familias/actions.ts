@@ -35,6 +35,14 @@ interface GuardianRow {
   school_id: string
 }
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
+function isPseudoEmail(email: string | null | undefined): boolean {
+  return !!email && normalizeEmail(email).endsWith('@mentoriapp.local')
+}
+
 /**
  * Invita a un tutor (padre/madre/tutor legal) a tener su propio acceso al
  * Portal Familiar.
@@ -96,6 +104,93 @@ export async function inviteGuardianAccess(guardianId: string): Promise<InviteRe
     return inviteByEmail(admin, guardian as GuardianRow, schoolId)
   }
   return createPhoneBasedAccess(admin, guardian as GuardianRow, schoolId)
+}
+
+/**
+ * Reenvía un enlace fresco para que un tutor que YA tiene acceso pueda
+ * establecer/restablecer su contraseña. No crea usuarios, no crea perfiles y
+ * no cambia permisos; solo usa la cuenta de Auth ya vinculada al tutor.
+ */
+export async function resendGuardianAccessLinkAction(guardianId: string): Promise<InviteResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, message: 'No hay sesión activa.' }
+
+  const { data: profile } = await supabase
+    .from('users_profiles')
+    .select('role, school_id')
+    .eq('auth_id', user.id)
+    .single()
+
+  if (!profile || !canAccess(profile.role, 'familias')) {
+    return { ok: false, message: 'No tienes permiso para reenviar accesos de tutores.' }
+  }
+
+  const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
+
+  const { data: guardian } = await supabase
+    .from('guardians')
+    .select('id, first_name, last_name, email, phone, school_id')
+    .eq('id', guardianId)
+    .single()
+
+  if (!guardian || (guardian as GuardianRow).school_id !== schoolId) {
+    return { ok: false, message: 'No se encontró ese tutor en este colegio.' }
+  }
+
+  const guardianEmail = normalizeEmail((guardian as GuardianRow).email ?? '')
+  if (!guardianEmail || isPseudoEmail(guardianEmail)) {
+    return { ok: false, message: 'Este tutor no tiene un correo real registrado.' }
+  }
+
+  const { data: linkedProfile } = await supabase
+    .from('users_profiles')
+    .select('auth_id')
+    .eq('guardian_id', guardianId)
+    .maybeSingle()
+
+  if (!linkedProfile) {
+    return { ok: false, message: 'Este tutor todavía no tiene acceso. Usa "Dar acceso al sistema" primero.' }
+  }
+
+  const admin = createAdminClient()
+  const { data: authUserData, error: authUserError } = await admin.auth.admin.getUserById(linkedProfile.auth_id)
+  if (authUserError || !authUserData.user) {
+    return { ok: false, message: 'No se pudo revisar la cuenta de acceso vinculada.' }
+  }
+
+  const currentAuthEmail = normalizeEmail(authUserData.user.email ?? '')
+  if (currentAuthEmail !== guardianEmail) {
+    if (!isPseudoEmail(currentAuthEmail)) {
+      return { ok: false, message: 'El acceso está vinculado a otro correo. Revisa la ficha antes de reenviar.' }
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(linkedProfile.auth_id, {
+      email: guardianEmail,
+      email_confirm: true,
+    })
+    if (updateError) {
+      if (updateError.message?.toLowerCase().includes('already been registered')) {
+        return { ok: false, message: 'Ese correo ya está en uso por otra cuenta -- no se pudo sincronizar el acceso.' }
+      }
+      return { ok: false, message: `No se pudo sincronizar el correo de acceso: ${updateError.message}` }
+    }
+  }
+
+  const siteUrl = getPublicSiteUrl()
+  if (!siteUrl) {
+    return { ok: false, message: 'Falta configurar NEXT_PUBLIC_SITE_URL en produccion.' }
+  }
+
+  const { error: resetError } = await admin.auth.resetPasswordForEmail(guardianEmail, {
+    redirectTo: `${siteUrl}/actualizar-contrasena`,
+  })
+  if (resetError) {
+    return { ok: false, message: `No se pudo enviar el enlace: ${resetError.message}` }
+  }
+
+  revalidatePath('/dashboard/familias')
+  return { ok: true, message: `Enlace enviado a ${guardianEmail}.` }
 }
 
 async function inviteByEmail(

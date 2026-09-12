@@ -155,7 +155,10 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
                   <p className="text-xs text-slate-400 dark:text-slate-500">{g.relationship} · {g.phone}{g.email ? ` · ${g.email}` : ''}</p>
                 </div>
                 {guardiansWithAccess.has(g.id) ? (
-                  <p className="text-[10px] font-semibold text-green-600 dark:text-green-400 shrink-0">✓ Tiene acceso</p>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[10px] font-semibold text-green-600 dark:text-green-400">✓ Tiene acceso</p>
+                    {g.email && !g.email.toLowerCase().endsWith('@mentoriapp.local') && <GrantGuardianAccessButton guardianId={g.id} hasEmail={true} mode="resend" />}
+                  </div>
                 ) : (
                   <GrantGuardianAccessButton guardianId={g.id} hasEmail={!!g.email} />
                 )}

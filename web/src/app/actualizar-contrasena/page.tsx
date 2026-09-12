@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import PasswordInput from '@/components/PasswordInput'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -44,8 +45,11 @@ function ActualizarContrasenaPage() {
   const [hasSession, setHasSession] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [resetEmail, setResetEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
+  const [resetStatus, setResetStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -97,12 +101,31 @@ function ActualizarContrasenaPage() {
     const supabase = createClient()
     const { error: updateError } = await supabase.auth.updateUser({ password })
     if (updateError) {
-      setError('No se pudo actualizar la contraseña. Intenta de nuevo.')
+      setError('No se pudo actualizar la contraseña. Si el enlace venció, solicita uno nuevo abajo.')
       setStatus('error')
       return
     }
     router.push('/dashboard')
     router.refresh()
+  }
+
+  async function handleRequestNewLink(e: React.FormEvent) {
+    e.preventDefault()
+    setResetStatus('sending')
+    setResetMessage(null)
+    try {
+      const supabase = createClient()
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/actualizar-contrasena` : undefined,
+      })
+      if (resetError) throw resetError
+      setResetStatus('sent')
+      setResetMessage('Si ese correo tiene acceso, enviamos un enlace nuevo para crear la contraseña.')
+    } catch (resetError) {
+      console.error('[actualizar-contrasena] resetPasswordForEmail', resetError)
+      setResetStatus('error')
+      setResetMessage('No pudimos enviar el enlace. Verifica el correo o pide ayuda al colegio.')
+    }
   }
 
   if (checkingSession) {
@@ -115,16 +138,50 @@ function ActualizarContrasenaPage() {
 
   if (!hasSession) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-slate-950 dark:via-slate-900 dark:to-primary-dark/20">
-        <div className="max-w-md text-center space-y-3">
+      <main className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-slate-950 dark:via-slate-900 dark:to-primary-dark/20">
+        <div className="w-full max-w-md text-center">
           <p className="text-4xl" aria-hidden="true">🔗</p>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white">Enlace vencido o inválido</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Este enlace ya expiró o ya fue usado. Pide uno nuevo desde{' '}
-            <a href="/recuperar-contrasena" className="text-primary dark:text-accent-light font-semibold hover:underline">
-              recuperar contraseña
-            </a>.
+          <h1 className="mt-3 text-xl font-black text-slate-900 dark:text-white">Enlace vencido o inválido</h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Escribe tu correo y te enviaremos un enlace nuevo para crear tu contraseña.
           </p>
+
+          <form onSubmit={handleRequestNewLink} className="mt-5 space-y-3 rounded-3xl border border-white/70 bg-white/90 p-5 text-left shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+            <div>
+              <label htmlFor="resetEmail" className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Correo electrónico
+              </label>
+              <input
+                id="resetEmail"
+                type="email"
+                required
+                autoComplete="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </div>
+            {resetMessage && (
+              <div
+                role="status"
+                className={`rounded-xl border px-4 py-3 text-sm ${
+                  resetStatus === 'sent'
+                    ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
+                    : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                }`}
+              >
+                {resetMessage}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={resetStatus === 'sending'}
+              className="w-full rounded-full bg-primary py-3 text-sm font-semibold text-white shadow-glow transition hover:bg-primary-dark disabled:opacity-60"
+            >
+              {resetStatus === 'sending' ? 'Enviando...' : 'Enviar enlace nuevo'}
+            </button>
+          </form>
         </div>
       </main>
     )
@@ -145,9 +202,8 @@ function ActualizarContrasenaPage() {
             <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Contraseña nueva
             </label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               required
               autoComplete="new-password"
               value={password}
@@ -160,9 +216,8 @@ function ActualizarContrasenaPage() {
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Confírmala
             </label>
-            <input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               required
               autoComplete="new-password"
               value={confirmPassword}
