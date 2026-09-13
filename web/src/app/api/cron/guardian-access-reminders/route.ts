@@ -90,7 +90,7 @@ function isDue(profileCreatedAt: string, reminder: ReminderRow | undefined, now:
 
 function clampLimit(request: NextRequest): number {
   const fromQuery = Number.parseInt(request.nextUrl.searchParams.get('limit') ?? '', 10)
-  if (!Number.isFinite(fromQuery) || fromQuery <= 0) return 100
+  if (!Number.isFinite(fromQuery) || fromQuery <= 0) return 20
   return Math.min(fromQuery, 200)
 }
 
