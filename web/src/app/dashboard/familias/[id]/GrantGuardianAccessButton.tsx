@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { inviteGuardianAccess, resendGuardianAccessLinkAction } from '../actions'
+import { createGuardianTemporaryPasswordAction, inviteGuardianAccess, resendGuardianAccessLinkAction } from '../actions'
 
-type AccessActionMode = 'grant' | 'resend'
+type AccessActionMode = 'grant' | 'resend' | 'temp-password'
 
 interface GrantGuardianAccessButtonProps {
   guardianId: string
@@ -16,15 +16,23 @@ export default function GrantGuardianAccessButton({ guardianId, hasEmail, mode =
   const [message, setMessage] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null)
   const isResend = mode === 'resend'
+  const isTempPassword = mode === 'temp-password'
 
   async function handleInvite() {
+    if (isTempPassword) {
+      const confirmed = window.confirm('Esto reemplaza la contraseña actual del tutor. ¿Quieres generar una contraseña temporal nueva?')
+      if (!confirmed) return
+    }
+
     setStatus('sending')
     setMessage(null)
     setCredentials(null)
 
-    const result = isResend
-      ? await resendGuardianAccessLinkAction(guardianId)
-      : await inviteGuardianAccess(guardianId)
+    const result = isTempPassword
+      ? await createGuardianTemporaryPasswordAction(guardianId)
+      : isResend
+        ? await resendGuardianAccessLinkAction(guardianId)
+        : await inviteGuardianAccess(guardianId)
 
     setStatus(result.ok ? 'sent' : 'error')
     setMessage(result.message)
@@ -53,7 +61,9 @@ export default function GrantGuardianAccessButton({ guardianId, hasEmail, mode =
         disabled={status === 'sending'}
         className="text-[10px] font-semibold text-primary dark:text-accent-light hover:underline disabled:opacity-50"
       >
-        {status === 'sending' ? 'Enviando...' : isResend ? 'Reenviar enlace' : hasEmail ? 'Dar acceso al sistema' : 'Crear acceso (sin correo)'}
+        {status === 'sending'
+          ? isTempPassword ? 'Generando...' : 'Enviando...'
+          : isTempPassword ? 'Clave temporal' : isResend ? 'Reenviar enlace' : hasEmail ? 'Dar acceso al sistema' : 'Crear acceso (sin correo)'}
       </button>
       {status === 'error' && <p className="text-[10px] text-red-600 dark:text-red-400 mt-0.5 max-w-52">{message}</p>}
     </div>

@@ -193,6 +193,96 @@ export async function resendGuardianAccessLinkAction(guardianId: string): Promis
   return { ok: true, message: `Enlace enviado a ${guardianEmail}.` }
 }
 
+/**
+ * Crea una contraseña temporal para un tutor que YA tiene acceso.
+ * Es una salida de soporte para casos donde el enlace de correo se venció,
+ * fue usado desde otro dispositivo o el padre no logra completar el flujo.
+ */
+export async function createGuardianTemporaryPasswordAction(guardianId: string): Promise<InviteResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, message: 'No hay sesión activa.' }
+
+  const { data: profile } = await supabase
+    .from('users_profiles')
+    .select('role, school_id')
+    .eq('auth_id', user.id)
+    .single()
+
+  if (!profile || !canAccess(profile.role, 'familias')) {
+    return { ok: false, message: 'No tienes permiso para gestionar accesos de tutores.' }
+  }
+
+  const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
+
+  const { data: guardian } = await supabase
+    .from('guardians')
+    .select('id, first_name, last_name, email, phone, school_id')
+    .eq('id', guardianId)
+    .single()
+
+  if (!guardian || (guardian as GuardianRow).school_id !== schoolId) {
+    return { ok: false, message: 'No se encontró ese tutor en este colegio.' }
+  }
+
+  const { data: linkedProfile } = await supabase
+    .from('users_profiles')
+    .select('auth_id')
+    .eq('guardian_id', guardianId)
+    .maybeSingle()
+
+  if (!linkedProfile) {
+    return { ok: false, message: 'Este tutor todavía no tiene acceso. Usa "Dar acceso al sistema" primero.' }
+  }
+
+  const admin = createAdminClient()
+  const { data: authUserData, error: authUserError } = await admin.auth.admin.getUserById(linkedProfile.auth_id)
+  if (authUserError || !authUserData.user) {
+    return { ok: false, message: 'No se pudo revisar la cuenta de acceso vinculada.' }
+  }
+
+  const guardianEmail = normalizeEmail((guardian as GuardianRow).email ?? '')
+  const currentAuthEmail = normalizeEmail(authUserData.user.email ?? '')
+  let username = currentAuthEmail
+
+  if (guardianEmail && !isPseudoEmail(guardianEmail)) {
+    if (currentAuthEmail && currentAuthEmail !== guardianEmail && !isPseudoEmail(currentAuthEmail)) {
+      return { ok: false, message: 'El acceso está vinculado a otro correo. Revisa la ficha antes de cambiar la contraseña.' }
+    }
+    username = guardianEmail
+  }
+
+  if (!username) {
+    return { ok: false, message: 'No se encontró un usuario válido para este acceso.' }
+  }
+
+  const tempPassword = generateTempPassword()
+  const shouldSyncEmail = guardianEmail && !isPseudoEmail(guardianEmail) && currentAuthEmail !== guardianEmail
+  const { error: updateError } = shouldSyncEmail
+    ? await admin.auth.admin.updateUserById(linkedProfile.auth_id, {
+        email: guardianEmail,
+        password: tempPassword,
+        email_confirm: true,
+      })
+    : await admin.auth.admin.updateUserById(linkedProfile.auth_id, {
+        password: tempPassword,
+        email_confirm: true,
+      })
+
+  if (updateError) {
+    if (updateError.message?.toLowerCase().includes('already been registered')) {
+      return { ok: false, message: 'Ese correo ya está en uso por otra cuenta -- no se pudo actualizar el acceso.' }
+    }
+    return { ok: false, message: `No se pudo crear la contraseña temporal: ${updateError.message}` }
+  }
+
+  revalidatePath('/dashboard/familias')
+  return {
+    ok: true,
+    message: 'Contraseña temporal creada. Entrégala al tutor y pídele cambiarla después.',
+    credentials: { username, password: tempPassword },
+  }
+}
 async function inviteByEmail(
   admin: ReturnType<typeof createAdminClient>,
   guardian: GuardianRow,

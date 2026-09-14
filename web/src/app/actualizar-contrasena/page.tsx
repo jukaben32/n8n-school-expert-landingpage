@@ -50,6 +50,7 @@ function ActualizarContrasenaPage() {
   const [resetStatus, setResetStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
+  const [linkMessage, setLinkMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -61,20 +62,27 @@ function ActualizarContrasenaPage() {
         if (exchangeError) {
           console.error('[actualizar-contrasena] exchangeCodeForSession', exchangeError)
         }
-      } else if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+      } else if (typeof window !== 'undefined' && window.location.hash) {
         // Enlace disparado desde el panel (inviteUserByEmail / resetPasswordForEmail
         // del admin client) -- no es PKCE, así que no trae `?code=`. Supabase lo
         // manda como fragmento de URL en su lugar; se lee a mano porque el
         // cliente (configurado en flowType 'pkce') no lo procesa solo.
         const hashParams = new URLSearchParams(window.location.hash.slice(1))
-        const access_token = hashParams.get('access_token')
-        const refresh_token = hashParams.get('refresh_token')
-        if (access_token && refresh_token) {
-          const { error: setSessionError } = await supabase.auth.setSession({ access_token, refresh_token })
-          if (setSessionError) {
-            console.error('[actualizar-contrasena] setSession (enlace de admin)', setSessionError)
-          }
+        const hashError = hashParams.get('error') ?? hashParams.get('error_code') ?? hashParams.get('error_description')
+        if (hashError) {
+          setLinkMessage('Ese enlace ya venció o fue usado. Escribe tu correo y te enviamos uno nuevo.')
           window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+        } else if (window.location.hash.includes('access_token')) {
+          const access_token = hashParams.get('access_token')
+          const refresh_token = hashParams.get('refresh_token')
+          if (access_token && refresh_token) {
+            const { error: setSessionError } = await supabase.auth.setSession({ access_token, refresh_token })
+            if (setSessionError) {
+              const { error: refreshError } = await supabase.auth.refreshSession({ refresh_token })
+              if (refreshError) console.error('[actualizar-contrasena] refreshSession (enlace de admin)', refreshError)
+            }
+            window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+          }
         }
       }
       const { data: { session } } = await supabase.auth.getSession()
@@ -145,6 +153,11 @@ function ActualizarContrasenaPage() {
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Escribe tu correo y te enviaremos un enlace nuevo para crear tu contraseña.
           </p>
+          {linkMessage && (
+            <div role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+              {linkMessage}
+            </div>
+          )}
 
           <form onSubmit={handleRequestNewLink} className="mt-5 space-y-3 rounded-3xl border border-white/70 bg-white/90 p-5 text-left shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
             <div>
