@@ -5,6 +5,40 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import PasswordInput from '@/components/PasswordInput'
 import { createClient } from '@/lib/supabase/client'
 
+type RecoveryTokens = {
+  accessToken: string
+  refreshToken: string
+}
+
+type AuthErrorLike = {
+  code?: string
+  message?: string
+}
+
+function isSessionUpdateError(error: AuthErrorLike) {
+  const code = error.code ?? ''
+  const message = (error.message ?? '').toLowerCase()
+  return (
+    code === 'session_expired' ||
+    code === 'session_not_found' ||
+    code === 'bad_jwt' ||
+    code === 'refresh_token_already_used' ||
+    code === 'refresh_token_not_found' ||
+    message.includes('expired') ||
+    message.includes('jwt') ||
+    message.includes('session') ||
+    message.includes('auth session missing')
+  )
+}
+
+function getPasswordUpdateMessage(error: AuthErrorLike) {
+  const code = error.code ?? ''
+  if (code === 'weak_password') return 'La contraseña es muy débil. Prueba con una más larga o combina letras y números.'
+  if (code === 'same_password') return 'La contraseña nueva debe ser diferente a la anterior.'
+  if (isSessionUpdateError(error)) return 'La sesión del enlace se perdió. Estamos intentando guardarla por una vía segura; si vuelve a fallar, pide una clave temporal al colegio.'
+  return 'No se pudo actualizar la contraseña. Intenta otra vez o pide ayuda al colegio.'
+}
+
 /**
  * Actualizar contraseña — pantalla común para dos orígenes de enlace, que
  * NO comparten el mismo formato de URL:
@@ -51,6 +85,7 @@ function ActualizarContrasenaPage() {
   const [error, setError] = useState<string | null>(null)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
   const [linkMessage, setLinkMessage] = useState<string | null>(null)
+  const [recoveryTokens, setRecoveryTokens] = useState<RecoveryTokens | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -61,25 +96,46 @@ function ActualizarContrasenaPage() {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
         if (exchangeError) {
           console.error('[actualizar-contrasena] exchangeCodeForSession', exchangeError)
+          setLinkMessage('Ese enlace ya venció o fue usado. Escribe tu correo y te enviamos uno nuevo.')
         }
       } else if (typeof window !== 'undefined' && window.location.hash) {
         // Enlace disparado desde el panel (inviteUserByEmail / resetPasswordForEmail
-        // del admin client) -- no es PKCE, así que no trae `?code=`. Supabase lo
-        // manda como fragmento de URL en su lugar; se lee a mano porque el
-        // cliente (configurado en flowType 'pkce') no lo procesa solo.
+        // del admin client) -- no es PKCE, así que no trae `?code=`.
         const hashParams = new URLSearchParams(window.location.hash.slice(1))
         const hashError = hashParams.get('error') ?? hashParams.get('error_code') ?? hashParams.get('error_description')
         if (hashError) {
           setLinkMessage('Ese enlace ya venció o fue usado. Escribe tu correo y te enviamos uno nuevo.')
           window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
         } else if (window.location.hash.includes('access_token')) {
-          const access_token = hashParams.get('access_token')
-          const refresh_token = hashParams.get('refresh_token')
-          if (access_token && refresh_token) {
-            const { error: setSessionError } = await supabase.auth.setSession({ access_token, refresh_token })
+          const accessToken = hashParams.get('access_token')
+          const refreshToken = hashParams.get('refresh_token')
+          if (accessToken && refreshToken) {
+            const originalTokens = { accessToken, refreshToken }
+            setRecoveryTokens(originalTokens)
+            const { data: setSessionData, error: setSessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            })
+
+            if (setSessionData.session) {
+              setRecoveryTokens({
+                accessToken: setSessionData.session.access_token,
+                refreshToken: setSessionData.session.refresh_token,
+              })
+            }
+
             if (setSessionError) {
-              const { error: refreshError } = await supabase.auth.refreshSession({ refresh_token })
-              if (refreshError) console.error('[actualizar-contrasena] refreshSession (enlace de admin)', refreshError)
+              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({ refresh_token: refreshToken })
+              if (refreshData.session) {
+                setRecoveryTokens({
+                  accessToken: refreshData.session.access_token,
+                  refreshToken: refreshData.session.refresh_token,
+                })
+              }
+              if (refreshError) {
+                console.error('[actualizar-contrasena] refreshSession (enlace de admin)', refreshError)
+                setLinkMessage('Ese enlace ya venció o fue usado. Escribe tu correo y te enviamos uno nuevo.')
+              }
             }
             window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
           }
@@ -93,6 +149,23 @@ function ActualizarContrasenaPage() {
     resolveSession()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function updatePasswordFromLink(tokens: RecoveryTokens) {
+    const response = await fetch('/api/auth/update-password-from-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        password,
+      }),
+    })
+    const result = await response.json().catch(() => null) as { ok?: boolean; message?: string; email?: string } | null
+    if (!response.ok || !result?.ok) {
+      throw new Error(result?.message ?? 'No se pudo guardar la contraseña. Pide un enlace nuevo o una clave temporal al colegio.')
+    }
+    return result.email ?? null
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -109,7 +182,28 @@ function ActualizarContrasenaPage() {
     const supabase = createClient()
     const { error: updateError } = await supabase.auth.updateUser({ password })
     if (updateError) {
-      setError('No se pudo actualizar la contraseña. Si el enlace venció, solicita uno nuevo abajo.')
+      console.error('[actualizar-contrasena] updateUser', {
+        code: updateError.code,
+        message: updateError.message,
+        status: updateError.status,
+      })
+
+      if (recoveryTokens && isSessionUpdateError(updateError)) {
+        try {
+          const email = await updatePasswordFromLink(recoveryTokens)
+          if (email) await supabase.auth.signInWithPassword({ email, password })
+          router.push('/dashboard')
+          router.refresh()
+          return
+        } catch (fallbackError) {
+          console.error('[actualizar-contrasena] updatePasswordFromLink', fallbackError)
+          setError(fallbackError instanceof Error ? fallbackError.message : 'No se pudo guardar la contraseña. Pide ayuda al colegio.')
+          setStatus('error')
+          return
+        }
+      }
+
+      setError(getPasswordUpdateMessage(updateError))
       setStatus('error')
       return
     }
