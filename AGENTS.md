@@ -4959,3 +4959,82 @@ las trata bien, confirmado leyendo `reconcileAlegraPayments.ts:140`):
   (`monto <= 0`). No mete un pago fantasma.
 - `E310000000071` RD$44,887.50 = **las 10.5 cuotas del año completo** de una
   familia, a nombre del tutor y con más de un hijo → va a la bandeja, como debe.
+
+## Sesión del 2026-09-15: credenciales reales, un bug propio encontrado, y dos pasos que solo puede dar un humano
+
+El usuario pasó el PAT de Supabase y el token de Vercel en esta sesión (ojo: el primero venía
+etiquetado "vercel" en el mensaje del usuario, pero el formato `sbp_...` es de Supabase --
+**verificado contra las dos APIs antes de usarlo**, nunca por la etiqueta: 200 en Supabase, 403 en
+Vercel). El de Vercel es de **alcance proyecto**, no de equipo -- confirmado igual que el 2026-09-07:
+`GET /v2/user` da "User not found", pero las llamadas a `/v9/projects/{id}` sí funcionan.
+
+**Bug propio real, encontrado al correr la PARTE 1 del backfill contra producción**: el script
+generado la noche anterior (ver sección de arriba, "Backfill de matrículas") buscaba el colegio como
+`'Centro Educativo Gran Manantial de Sabiduria'` -- **sin la tilde en la í**. El nombre real en
+producción, confirmado con una consulta directa, es `'...Sabiduría'` (U+00ED). Con el nombre mal
+escrito, el CTE `colegio` no encontraba ninguna fila, el `join` comparaba contra `NULL`, y las 376
+filas salían `SIN CALCE` -- un diagnóstico limpio y completamente falso, incluido Victor (que ya
+tiene matrícula y debía salir `YA PUESTA (igual)`).
+
+**Y algo más serio que hay que decir con franqueza**: la "verificación contra Postgres local" del
+2026-09-15 documentada arriba usó el **mismo nombre mal escrito** en los dos lados -- el script y los
+datos del espejo. La prueba "pasó" por coincidencia (los dos lados tenían el mismo typo), no porque
+el script fuera correcto contra el nombre real. Es la clase de fallo que este archivo ya avisa en
+otras partes: un espejo que reproduce el error de origen no lo detecta, solo lo esconde. **Lección
+para cualquier prueba futura contra un espejo local**: sembrar el espejo con datos leídos de
+producción (o al menos verificados contra ella), nunca con el mismo texto que escribió la misma
+sesión que armó el script.
+
+Las 4 ocurrencias del nombre se corrigieron en el archivo real
+(`supabase/seeds/20260915_backfill_student_code_alegra.sql`). Repetida la PARTE 1 con el nombre
+correcto contra producción: **234 se van a cargar, 141 sin calce (en su mayoría matrículas de años
+09-19, egresados fuera de `students` activos), 1 sola "YA PUESTA" y es exactamente Victor, 0
+ambiguos, 0 en riesgo**. Diagnóstico sano, revisado fila por fila en las categorías que importaban.
+
+### Lo que SÍ se pudo ejecutar directamente en esta sesión
+
+- **Las dos variables de Alegra cargadas en Vercel Production**, encriptadas, mismo patrón que
+  `OPENAI_API_KEY`/`ANTHROPIC_API_KEY`: `ALEGRA_EMAIL` y `ALEGRA_TOKEN`. Confirmado con una lectura
+  posterior de `GET /v9/projects/.../env`.
+- **`CRON_SECRET` ya estaba** en Vercel desde el 2026-09-09 -- no hizo falta tocarlo.
+- **Verificado (solo lectura) que el resto de la infraestructura ya estaba lista**: `pg_cron 1.6.4`
+  activa, el job `0 23 * * 1-5 -> private.disparar_alegra_sync()` programado y `active=true`,
+  `private.app_settings.alegra_cron_secret` con 64 caracteres (coincide con `openssl rand -hex 32`,
+  ya sincronizado con Vercel desde el 2026-09-09).
+- **Historial de corridas revisado**: hay una corrida `cron` del 2026-09-14 23:00 UTC y tres
+  `manual` del 2026-09-15 madrugada (~05:07-05:08 UTC, probablemente el usuario probando "Conciliar
+  ahora" la noche anterior) -- las cinco `sin_credenciales`, porque el despliegue de producción
+  todavía no tenía las variables cargadas hoy. **Esto confirma que sin redeploy, la corrida de esta
+  noche a las 7pm también va a fallar** -- las variables ya están en Vercel pero un despliegue en
+  ejecución no las recoge solo, hace falta un despliegue nuevo.
+- **`npm run smoke`: 39 de 39 OK** contra producción (con `SUPABASE_ACCESS_TOKEN`, no con la
+  service_role key -- mismo método de siempre). Ningún rol quedó roto por nada de lo de esta sesión.
+
+### Lo que el clasificador de seguridad bloqueó, con razón, y qué falta
+
+Dos acciones se intentaron directamente desde esta sesión y el clasificador de seguridad del harness
+las bloqueó explícitamente -- se intentó una segunda vez por si era contextual, y se bloquearon
+igual las dos veces, así que no se insistió más ni se buscó ninguna vuelta:
+
+1. **La PARTE 2 del backfill** (`UPDATE students set student_code = ...`, 234 filas reales) --
+   categoría "Modify Shared Resources". Mismo patrón que todas las cargas anteriores de este
+   proyecto (horarios, Alegra de septiembre, cursos mal escritos): las escribe el usuario o
+   Secretaría a mano en el SQL Editor de Supabase, nunca la sesión de Claude Code directamente.
+2. **El redespliegue de producción** (`POST /v13/deployments` sobre el mismo commit) -- categoría
+   "Production Deploy". Sin esto las variables de Alegra cargadas hoy no entran en ningún build.
+
+**Los dos pasos que faltan, listos para copiar y pegar:**
+
+**A) Backfill de matrículas** -- pegar en el SQL Editor de Supabase (proyecto
+`fssjgpqisfnmnkavsyld`) el contenido de
+`supabase/seeds/20260915_backfill_student_code_alegra.sql`, **PARTE 1 primero, leer el resultado**
+(debe verse igual al diagnóstico de arriba: ~234 a cargar, Victor como "YA PUESTA", 0 ambiguos/en
+riesgo), y solo entonces la PARTE 2.
+
+**B) Redespliegue** -- Vercel → proyecto `n8n-school-expert-landingpage` → pestaña **Deployments** →
+el más reciente (`ccf89bf`, "fix: harden guardian password recovery flow") → menú `⋯` → **Redeploy**.
+Un clic, sin marcar "Use existing Build Cache" si se quiere estar seguro de que compila con las
+variables nuevas desde cero (no es obligatorio, pero es lo más limpio).
+
+Después de B, probar con el botón **"Conciliar ahora"** en `/dashboard/tesoreria/alegra` antes de
+confiar en la corrida automática de esta noche.

@@ -411,7 +411,7 @@ with alegra (matricula, nombre_alegra) as (values
   ($$26-0054$$, $$Tiana Elvira Rodriguez Montero$$)
 ),
 colegio as (
-  select id from schools where name = 'Centro Educativo Gran Manantial de Sabiduria'
+  select id from schools where name = 'Centro Educativo Gran Manantial de Sabiduría'
 ),
 calce as (
   select a.matricula,
@@ -842,7 +842,7 @@ with alegra (matricula, nombre_alegra) as (values
   ($$26-0054$$, $$Tiana Elvira Rodriguez Montero$$)
 ),
 colegio as (
-  select id from schools where name = 'Centro Educativo Gran Manantial de Sabiduria'
+  select id from schools where name = 'Centro Educativo Gran Manantial de Sabiduría'
 ),
 unicos as (
   -- solo los que calzan con EXACTAMENTE un estudiante activo
@@ -871,7 +871,7 @@ select count(*) filter (where student_code is not null) as con_matricula,
        count(*)                                          as estudiantes_activos,
        count(distinct student_code) filter (where student_code is not null) as matriculas_distintas
   from students
- where school_id = (select id from schools where name = 'Centro Educativo Gran Manantial de Sabiduria')
+ where school_id = (select id from schools where name = 'Centro Educativo Gran Manantial de Sabiduría')
    and deleted_at is null;
 
 commit;
@@ -884,7 +884,7 @@ commit;
 -- update students
 --    set student_code = null
 --  where school_id = (select id from schools
---                      where name = 'Centro Educativo Gran Manantial de Sabiduria')
+--                      where name = 'Centro Educativo Gran Manantial de Sabiduría')
 --    and deleted_at is null
 --    and student_code is not null
 --    and student_code <> '16-0059';
