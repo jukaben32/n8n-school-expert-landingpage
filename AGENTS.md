@@ -4889,3 +4889,73 @@ porque cada factura nace pagada. El gráfico cuota-por-cuota del Panel
 
 **Para revertir**: un solo commit, un solo archivo
 (`web/src/app/dashboard/reportes/page.tsx`), sin nada que deshacer en la base.
+
+## Backfill de matrículas (`students.student_code`) desde Alegra — SQL listo, sin aplicar (2026-09-15)
+
+Cierra el "pendiente recomendado" que este archivo viene arrastrando desde el
+2026-09-09. El script está en
+`supabase/seeds/20260915_backfill_student_code_alegra.sql`, generado desde la
+**API real de Alegra** (`GET /api/v1/contacts`, 478 contactos: 376 con
+identificación tipo `IE` = matrícula, 50 `RNC` de proveedores, 50 `CED`, 2 sin
+identificación). Los 376 van embebidos como `values` en el propio script — no
+hace falta volver a llamar a Alegra para aplicarlo.
+
+**Por qué importa ahora y no "algún día"**: de las 16 facturas nuevas que vería
+la primera corrida de la conciliación (11 al 14 de septiembre), **11 traen
+matrícula** — el único criterio que el motor carga solo con confianza. Con la
+columna vacía, esas 11 caen al emparejamiento por nombre, que ya falló cuatro
+veces el 2026-09-09 (Olivarez/Olivares, Morale/Morales, Andrian/Adrian,
+Sara/Sarha).
+
+**Garantías del script** (las tres verificadas, no afirmadas):
+- Empareja **solo por nombre exacto normalizado** y **solo cuando calza con un
+  único estudiante activo**. Ambiguo o sin calce → queda listado, no se toca.
+- **Nunca sobrescribe** un `student_code` que ya tenga valor (el `16-0059` de
+  Victor sale intacto), ni asigna una matrícula ya usada en ese colegio.
+- El normalizador vive en `pg_temp`, igual que el seed del 2026-09-09: **no deja
+  nada en producción**.
+
+**Dos bugs propios encontrados al construirlo, los dos con el mismo patrón de
+"diagnóstico limpio y falso"** — por eso se probó contra Postgres local en vez
+de confiar en la lectura:
+
+1. **`translate(t, 'aeiouun', 'aeiouun')`** — origen y destino iguales, o sea
+   sin efecto. Todo nombre con tilde (*Rondón*, *Núñez*) habría salido "SIN
+   CALCE" y el diagnóstico se habría visto perfecto. Venía de escribir el
+   reemplazo con concatenación dentro de una f-string de Python, donde la
+   interpolación se escribe con llaves.
+2. **`min(uuid)` no existe en Postgres.** La PARTE 2 entera abortaba con
+   `function min(uuid) does not exist`. No escribía nada (la transacción
+   revierte), pero no cargaba tampoco. Reemplazado por `(array_agg(s.id))[1]`,
+   seguro porque el `having count(*) = 1` ya garantiza una sola fila.
+
+**Verificado contra Postgres local con esquema espejo**, 8 escenarios, todos con
+el resultado esperado: tilde asimétrica (*Rondón* en la plataforma vs *Rondon*
+en Alegra) **empareja** ✅; nombre en MAYÚSCULAS empareja ✅; estudiante que ya
+tiene matrícula no se toca ✅; nombre duplicado entre dos activos queda
+`AMBIGUO` ✅; el homónimo con borrado suave se ignora y solo se carga el activo
+✅; un estudiante de otro colegio con el mismo nombre no se toca ✅; correrlo dos
+veces no cambia nada ✅; la reversión deja solo el `16-0059` ✅.
+
+**Pendiente**: correr la PARTE 1 en el SQL Editor, **leer el diagnóstico**, y
+solo entonces la PARTE 2. Esta sesión no tuvo credenciales de Supabase (el
+bloqueo de siempre).
+
+### Y sigue faltando lo único que enciende la conciliación
+
+`ALEGRA_EMAIL` / `ALEGRA_TOKEN` **todavía no están en Vercel**. Las credenciales
+ya existen y se verificaron contra la API real el 2026-09-15 (`GET /company` →
+200, *Centro Educativo Gran Manantial de Sabiduria, srl*, RNC 133009252; el
+listado y el detalle de facturas responden con todos los campos que el motor
+necesita). Lo que faltó fue un **token de equipo de Vercel** — esta sesión
+arrancó sin ninguno, y el CLI está instalado pero sin `auth.json`.
+
+**Dato útil medido de paso, sobre facturas que no son cuota limpia** (el motor
+las trata bien, confirmado leyendo `reconcileAlegraPayments.ts:140`):
+- `E320000000424` RD$2,217.08 = 2,050 de Mensualidad + **167.08 de Recargo por
+  Mora** → cuenta 2,050, el recargo queda fuera.
+- `E310000000068` RD$10,000 de *"Inscripcion de Lauren y Abdias"* → la línea es
+  **inscripción**, no mensualidad: el monto de cuota da 0 y la salta
+  (`monto <= 0`). No mete un pago fantasma.
+- `E310000000071` RD$44,887.50 = **las 10.5 cuotas del año completo** de una
+  familia, a nombre del tutor y con más de un hijo → va a la bandeja, como debe.
