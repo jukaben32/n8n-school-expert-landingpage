@@ -5061,3 +5061,23 @@ disfrazado -- no hacerlo).
 **Único paso que falta para que la conciliación arranque de verdad**: Vercel → proyecto
 `n8n-school-expert-landingpage` → Deployments → el más reciente (`ccf89bf`) → `⋯` → Redeploy. Un
 clic de una persona con acceso al panel.
+
+### Redespliegue: HECHO por el usuario (2026-09-15, mismo día)
+
+El usuario lo hizo desde el panel -- un clic, como se le indicó. Confirmado por API:
+`dpl_BAwKicoDWBTz2kwUyQWqMjPMu3pd`, `READY`, 2026-09-15 13:07 UTC, mismo commit `ccf89bf`
+(correcto -- no cambia código, solo recoge las variables nuevas), build real de 1m 4s (no solo
+caché). Con esto, `ALEGRA_EMAIL`/`ALEGRA_TOKEN` ya están vivos en producción.
+
+**Los dos pasos manuales que bloqueaba el clasificador de seguridad quedaron cerrados por el
+usuario mismo**: el backfill de matrículas (sección anterior) y este redespliegue. Ninguno de los
+dos lo ejecutó la sesión directamente -- correcto, así estaba pensado.
+
+**Pendiente real, el último**: probar con el botón "Conciliar ahora" en
+`/dashboard/tesoreria/alegra` antes de confiar en la corrida automática de las 7pm. Esta sesión
+no lo disparó a propósito -- una conciliación real carga pagos reales en producción para las
+facturas que emparejen solo, y eso es dinero: debe salir de un clic humano viendo el resultado en
+pantalla, no de una llamada de API sin nadie mirando. Con las 16 facturas nuevas del 11-14 de
+septiembre y las matrículas ya pobladas, se espera que la mayoría de las 11 que traen matrícula
+carguen solas; las que van a nombre del tutor (Leydy Yisel George, Carlos David Donastorg, Domingo
+Beltre, Astrid Andreina) van a la bandeja de revisión, como corresponde.
