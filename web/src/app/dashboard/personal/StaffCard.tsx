@@ -27,6 +27,8 @@ export default function StaffCard({
   desde,
   tieneAcceso,
   accesoLabel,
+  tambienTutor = false,
+  defaultOpen = false,
   acciones,
   detalle,
 }: {
@@ -37,10 +39,14 @@ export default function StaffCard({
   desde: string
   tieneAcceso: boolean
   accesoLabel: string | null
+  /** Su misma cuenta está vinculada además a una ficha de tutor (doble rol). */
+  tambienTutor?: boolean
+  /** Llega desplegada -- la usa el buscador global (?abrir=<staffId>). */
+  defaultOpen?: boolean
   acciones: React.ReactNode
   detalle: React.ReactNode
 }) {
-  const [abierto, setAbierto] = useState(false)
+  const [abierto, setAbierto] = useState(defaultOpen)
 
   return (
     <div className="dash-card px-4 py-3 print:border print:border-slate-300 print:rounded-none print:shadow-none">
@@ -75,6 +81,15 @@ export default function StaffCard({
                   sin acceso
                 </span>
               )}
+              {tambienTutor && (
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-bold font-barlow uppercase tracking-wider"
+                  style={{ background: 'rgba(245,200,66,.18)', color: 'var(--dash-warning)' }}
+                  title="Su misma cuenta también entra como tutor/a: ve a su hijo desde «Vista de Familia»."
+                >
+                  también tutor/a
+                </span>
+              )}
             </div>
             <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--dash-text-muted)' }}>
               {phone ? `${phone} · ` : ''}{email}
@@ -93,6 +108,7 @@ export default function StaffCard({
           <p className="text-xs mb-3" style={{ color: 'var(--dash-text-faint)' }}>
             En el colegio desde {desde}
             {accesoLabel ? ` · Acceso: ${accesoLabel}` : ''}
+            {tambienTutor ? ' · vinculada también como tutor/a' : ''}
           </p>
           {detalle}
         </div>

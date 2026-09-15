@@ -3,16 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { changeAccessRoleAction } from './actions'
+import { assignableAccessRoles, accessRoleLabels } from '@/lib/auth/accessRoleLabels'
 
-const roleOptions = [
-  { value: 'director', label: 'Director' },
-  { value: 'school_admin', label: 'Administrador de colegio' },
-  { value: 'teacher', label: 'Docente' },
-  { value: 'finance', label: 'Finanzas' },
-  { value: 'reception', label: 'Recepción' },
-]
-
-const roleLabels: Record<string, string> = Object.fromEntries(roleOptions.map((r) => [r.value, r.label]))
+const roleOptions = [...assignableAccessRoles]
 
 export default function ChangeAccessRoleButton({ profileId, currentRole }: { profileId: string; currentRole: string }) {
   const router = useRouter()
@@ -54,6 +47,11 @@ export default function ChangeAccessRoleButton({ profileId, currentRole }: { pro
         disabled={saving}
         className="text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary"
       >
+        {!roleOptions.some((r) => r.value === currentRole) && (
+          <option value={currentRole}>
+            {accessRoleLabels[currentRole] ?? currentRole} (actual)
+          </option>
+        )}
         {roleOptions.map((r) => (
           <option key={r.value} value={r.value}>{r.label}</option>
         ))}
@@ -78,5 +76,3 @@ export default function ChangeAccessRoleButton({ profileId, currentRole }: { pro
     </div>
   )
 }
-
-export { roleLabels as accessRoleLabels }

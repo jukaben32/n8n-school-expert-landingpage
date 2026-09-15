@@ -5,7 +5,8 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
-import ChangeAccessRoleButton, { accessRoleLabels } from './ChangeAccessRoleButton'
+import ChangeAccessRoleButton from './ChangeAccessRoleButton'
+import { accessRoleLabels, assignableAccessRoles } from '@/lib/auth/accessRoleLabels'
 import PublicRegistrationLinkButton from './PublicRegistrationLinkButton'
 import TeacherGradeAssignments from './TeacherGradeAssignments'
 import EditStaffButton from './EditStaffButton'
@@ -39,7 +40,14 @@ type StaffRow = {
  * Personal — Solo para dirección/administración/súper admin.
  * Ficha de cada empleado: datos de contacto + formación profesional.
  */
-export default async function PersonalPage() {
+export default async function PersonalPage({
+  searchParams,
+}: {
+  // ?abrir=<staffId> -- lo usa el buscador global para dejar la ficha de
+  // esa persona ya desplegada, porque Personal no tiene página de detalle.
+  searchParams: Promise<{ abrir?: string }>
+}) {
+  const { abrir } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -75,11 +83,14 @@ export default async function PersonalPage() {
 
   const { data: linkedProfiles, error: linkedProfilesError } = await supabase
     .from('users_profiles')
-    .select('id, staff_id, role')
+    .select('id, staff_id, role, guardian_id')
     .eq('school_id', schoolId)
     .not('staff_id', 'is', null)
   const staffWithAccess = new Map(
-    (linkedProfiles ?? []).map((p) => [p.staff_id as string, { profileId: p.id as string, role: p.role as string }])
+    (linkedProfiles ?? []).map((p) => [
+      p.staff_id as string,
+      { profileId: p.id as string, role: p.role as string, guardianId: p.guardian_id as string | null },
+    ])
   )
 
   const [{ data: assignments }, { data: studentsWithGrade }] = await Promise.all([
@@ -171,6 +182,8 @@ export default async function PersonalPage() {
                 desde={formatDate(s.hire_date)}
                 tieneAcceso={!!acceso}
                 accesoLabel={acceso ? (accessRoleLabels[acceso.role] ?? acceso.role) : null}
+                tambienTutor={!!acceso?.guardianId}
+                defaultOpen={abrir === s.id}
                 acciones={
                   <>
                     <EditStaffButton staff={s} />
@@ -179,6 +192,17 @@ export default async function PersonalPage() {
                 }
                 detalle={
                   <>
+                    {/* Su cuenta existe pero con un rol que no es de
+                        trabajo (típicamente 'guardian'): entra al sistema
+                        y solo ve el Portal Familiar, aunque su ficha diga
+                        Docente. Se avisa aquí porque desde fuera era
+                        indistinguible de "no tiene acceso". */}
+                    {acceso && !assignableAccessRoles.some((r) => r.value === acceso.role) && (
+                      <p className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                        ⚠️ Su cuenta entra como <strong>{accessRoleLabels[acceso.role] ?? acceso.role}</strong>, así que
+                        no verá las pantallas de su puesto. Corrígelo en «Cambiar rol de acceso».
+                      </p>
+                    )}
                     <div>
                       {acceso ? (
                         <ChangeAccessRoleButton

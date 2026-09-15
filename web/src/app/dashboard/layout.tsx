@@ -6,6 +6,7 @@ import { MobileNavProvider } from '@/components/dashboard/MobileNavContext'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { exitSchoolView } from './plataforma/actions'
 import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
+import UnlinkedAccountNotice from '@/components/dashboard/UnlinkedAccountNotice'
 
 // La redirección dura (Fase 2 de Cuentas por Cobrar) vive en el middleware
 // (proxy.ts), no aquí -- un redirect() lanzado desde un Server Component
@@ -41,13 +42,24 @@ export default async function DashboardLayout({
     .eq('auth_id', user.id)
     .single()
 
-  const role = profile?.role ?? 'guardian'
-  const { schoolId, isViewingOtherSchool, schoolName: overrideSchoolName } = await getActiveSchool(role, profile?.school_id ?? '')
+  // Una cuenta de Auth sin fila en `users_profiles` NO es un tutor: es una
+  // cuenta que quedó sin vincular. Antes aquí decía
+  // `profile?.role ?? 'guardian'`, así que esas personas entraban al Portal
+  // Familiar con el menú de familia y sin ningún dato, sin ningún aviso --
+  // le pasó a una docente el 2026-09-15 y había 10 cuentas así en
+  // producción, 4 de ellas ya usadas para entrar. Ver
+  // UnlinkedAccountNotice.
+  if (!profile) {
+    return <UnlinkedAccountNotice email={user.email ?? ''} />
+  }
+
+  const role = profile.role
+  const { schoolId, isViewingOtherSchool, schoolName: overrideSchoolName } = await getActiveSchool(role, profile.school_id ?? '')
 
   // Fase 2 de Cuentas por Cobrar: solo aplica a tutores puros -- un perfil
   // de personal con doble rol (guardian_id secundario) tiene `role` distinto
   // a 'guardian', así que nunca cae aquí.
-  const isBlockedByOverdue = role === 'guardian' && profile?.guardian_id
+  const isBlockedByOverdue = role === 'guardian' && profile.guardian_id
     ? await checkGuardianOverdueBlock(profile.guardian_id)
     : false
 
@@ -111,7 +123,7 @@ export default async function DashboardLayout({
             schoolName={schoolName}
             newLeadsCount={newLeadsCount}
             newMessagesCount={newMessagesCount}
-            guardianId={role !== 'guardian' ? profile?.guardian_id ?? null : null}
+            guardianId={role !== 'guardian' ? profile.guardian_id ?? null : null}
           />
 
           {/* Área principal */}

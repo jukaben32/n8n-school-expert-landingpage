@@ -3503,6 +3503,96 @@ Dos caminos, los dos ya funcionan:
 Recordatorio del alcance: `students.birth_date` es **NOT NULL**, asi que sin fecha de
 nacimiento no se puede crear el estudiante por ninguna de las dos vias.
 
+## Dos bugs del 2026-09-15: el buscador global y las docentes que caian al Portal Familiar
+
+Reportados juntos por el colegio ("el buscador no funciona" + "muestra a Vianela solo
+en el portal familiar y es docente tambien"). Resultaron ser dos cosas
+independientes, y la segunda era mucho mas grave de lo que parecia.
+
+### 1. El buscador global nunca encontro a nadie por NOMBRE COMPLETO
+
+`globalSearchAction` mandaba la frase entera contra cada columna por separado
+(`first_name.ilike.%Vianela Santana%`), y ninguna columna contiene nombre y
+apellido juntos -- asi que buscar como escribe cualquiera ("Vianela Santana")
+daba siempre "Sin resultados". Solo funcionaba tecleando una sola palabra.
+Ademas **el personal no era buscable en absoluto** (el reporte vino de alguien
+buscando a una docente desde la propia pantalla de Personal), ni los tutores.
+
+Corregido: la frase se parte en palabras y cada una se exige contra nombre O
+apellido (`.or()` encadenado = AND en PostgREST), y se agregaron `staff` y
+`guardians` a la busqueda, cada uno detras de su `canAccess` de siempre. Las
+palabras se limpian de `,()%*\"'` -- una coma rompia la sintaxis del filtro
+`or=(...)`, y como la funcion **ignoraba el `error` de cada consulta**, eso se
+veia exactamente igual que "sin resultados". Ahora cada consulta registra su
+error.
+
+Como Personal no tiene pagina de detalle, un resultado de personal navega a
+`/dashboard/personal?abrir=<staffId>` y `StaffCard` llega ya desplegada.
+
+**Limitacion conocida, sin resolver**: `ilike` no ignora acentos, asi que
+buscar "Rodriguez" no encuentra "Rodriguez" con tilde. Arreglarlo de verdad
+pide `unaccent` con su indice (migracion), no un filtro de PostgREST.
+
+### 2. LO GRAVE: cualquier cuenta sin perfil entraba como TUTOR, en silencio
+
+`dashboard/layout.tsx` y `dashboard/page.tsx` resolvian el rol con
+`profile?.role ?? 'guardian'`. O sea: una cuenta de Auth **sin fila en
+`users_profiles`** no daba ningun error -- entraba al Portal Familiar con el
+menu de familia y sin ningun dato, como si fuera tutora.
+
+Medido en produccion el 2026-09-15: **10 cuentas huerfanas, 4 ya usadas para
+entrar**, y las 4 son DOCENTES. El patron es identico en las cuatro: cada una
+tiene su perfil de docente correcto en una cuenta que **nunca ha usado**, y
+entro con otro correo suyo:
+
+| Docente | Cuenta con su perfil (nunca usada) | Cuenta con la que entro |
+|---|---|---|
+| Vianela Santana Reyes | leonardo0115santana@gmail.com | vianelasantana08@gmail.com |
+| Yucleidi Pozo Pio | luzcreidipipop@gmail.com | luzcreidyp@gmail.com |
+| Jenniffer Liliana Soriano | js2065984@gmail.com | jenniferlilianasororiano@gmail.com |
+| Gabriela Angelica Lugo Ochoa | angelica050505@icloud.com | gabilugo0502@gmail.com |
+
+Eso explica el reporte entero: Vianela **no estaba mal configurada como
+tutora** -- de hecho no existe ninguna ficha de tutora suya en la base. Solo
+entro con el correo equivocado y la app se lo trago.
+
+Corregido: sin perfil ya no se adivina rol. Se muestra
+`UnlinkedAccountNotice` -- una pantalla que dice con QUE correo entro (unico
+dato que le permite al colegio identificar la cuenta) y la invita a entrar con
+el otro. `dashboard/page.tsx` tambien devuelve `null` en ese caso: si
+redirigiera, su redirect ganaria sobre lo que el layout quiere mostrar.
+
+**Anadido a `npm run smoke`** (ahora 42 comprobaciones): una global que falla
+si alguna cuenta que YA inicio sesion se quedo sin perfil, y dos que arman una
+busqueda por nombre completo con una fila real de `staff`/`guardians` y exigen
+que se encuentre a si misma -- si alguien vuelve a mandar la frase entera
+contra una sola columna, salta.
+
+### 3. De paso: "Acceso: teacher" en ingles crudo (mismo patron que ya costo caro)
+
+La ficha de Personal mostraba `Acceso: teacher` en vez de `Docente`. El mapa
+de etiquetas se exportaba desde `ChangeAccessRoleButton.tsx`, que lleva
+`'use client'`: cuando un Server Component importa un VALOR de un modulo de
+cliente, el bundler le entrega una referencia de cliente y no el objeto real,
+asi que `accessRoleLabels['teacher']` quedaba `undefined`. Es el mismo bug que
+tumbo Cuentas por Cobrar entera el 2026-09-03 con `EXTERNAL_PAYMENT_SOURCES`,
+pero cruzando la frontera contraria. Movido a `web/src/lib/auth/accessRoleLabels.ts`,
+un modulo plano.
+
+**LA REGLA, ampliada**: en este proyecto ninguna constante ni tipo compartido
+entre servidor y cliente vive en un archivo con `'use server'` NI con
+`'use client'`. Va siempre en un modulo plano.
+
+La ficha de Personal ahora ademas: avisa en ambar cuando la cuenta de alguien
+entra con un rol que no es de trabajo (tipicamente `guardian`, indistinguible
+antes de "no tiene acceso"), marca con una insignia a quien tiene doble rol
+(`guardian_id` en su mismo perfil), y el selector de "Cambiar rol de acceso"
+ya no aparece en blanco cuando el rol actual no es uno de los asignables.
+
+**Pendiente real**: las 4 docentes siguen sin poder trabajar hasta que su
+perfil se mueva a la cuenta que de verdad usan (o entren con la otra). Es un
+cambio de datos en produccion, no de codigo.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

@@ -21,7 +21,13 @@ export default async function DashboardPage() {
 
   if (profileError) console.error('[perfil]', profileError)
 
-  const role = profile?.role ?? 'guardian'
+  // Sin perfil no se adivina el rol: el layout ya muestra la pantalla de
+  // "cuenta sin vincular". Si aquí se redirigiera (antes caía a
+  // /dashboard/portal-familiar por el `?? 'guardian'`), ese redirect
+  // ganaría sobre lo que el layout quiere mostrar.
+  if (!profile) return null
+
+  const role = profile.role
 
   // Redirección según el rol
   const roleRoutes: Record<string, string> = {

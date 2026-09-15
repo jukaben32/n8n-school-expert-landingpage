@@ -109,6 +109,8 @@ const CHECKS = {
     ['Facturas', `select count(*) from invoices;`],
     ['Personal', `select count(*) from staff;`],
     ['Justificaciones de ausencia', `select count(*) from attendance_justifications;`],
+    ['Buscador: personal por nombre completo', 'BUSCADOR_PERSONAL'],
+    ['Buscador: tutores por nombre completo', 'BUSCADOR_TUTORES'],
   ],
   school_admin: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -170,6 +172,39 @@ function reviewJustificationSql() {
   `
 }
 
+/**
+ * El buscador global (globalSearchAction) exige cada palabra de lo que se
+ * teclea contra nombre O apellido, por separado. Antes mandaba la frase
+ * entera contra cada columna, así que buscar por NOMBRE COMPLETO -- que es
+ * como escribe cualquiera -- nunca encontraba nada (reportado por el
+ * colegio el 2026-09-15).
+ *
+ * No se fija en ninguna persona concreta: toma una fila real de la tabla,
+ * arma la búsqueda con su nombre y su apellido, y exige que se encuentre a
+ * sí misma. Si alguien vuelve a mandar la frase entera contra una sola
+ * columna, esto falla.
+ */
+function buscadorPorNombreCompletoSql(tabla) {
+  return `
+    do $$
+    declare v record; n int; nom text; ape text;
+    begin
+      select first_name, last_name into v from ${tabla}
+       where deleted_at is null and first_name <> '' and last_name <> '' limit 1;
+      if not found then return; end if;
+      nom := split_part(btrim(v.first_name), ' ', 1);
+      ape := split_part(btrim(v.last_name), ' ', 1);
+      select count(*) into n from ${tabla}
+       where deleted_at is null
+         and (first_name ilike '%' || nom || '%' or last_name ilike '%' || nom || '%')
+         and (first_name ilike '%' || ape || '%' or last_name ilike '%' || ape || '%');
+      if n = 0 then
+        raise exception 'El buscador no encuentra a "% %" en ${tabla} por nombre completo', nom, ape;
+      end if;
+    end $$;
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -203,6 +238,8 @@ async function main() {
       const body =
         consulta === 'INSERT_ATTENDANCE' ? insertAttendanceSql()
         : consulta === 'REVIEW_JUSTIFICATION' ? reviewJustificationSql()
+        : consulta === 'BUSCADOR_PERSONAL' ? buscadorPorNombreCompletoSql('staff')
+        : consulta === 'BUSCADOR_TUTORES' ? buscadorPorNombreCompletoSql('guardians')
         : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {
@@ -212,6 +249,30 @@ async function main() {
         console.log(`  FALLA ${nombre}\n        → ${r.error}`)
       }
     }
+  }
+
+  // Comprobación global, no por rol: una cuenta de Auth que ya inició
+  // sesión pero no tiene fila en `users_profiles` entra al sistema SIN rol.
+  // Hasta el 2026-09-15 eso la mandaba en silencio al Portal Familiar como
+  // si fuera tutora (le pasó a dos docentes). Ahora ve una pantalla que lo
+  // explica -- pero sigue sin poder trabajar, así que esto tiene que
+  // saltar para que el colegio la vincule.
+  console.log('\nCUENTAS SIN VINCULAR (global)')
+  total++
+  const huerfanas = await sql(`
+    select coalesce(string_agg(u.email, ', '), '') as correos
+    from auth.users u
+    left join users_profiles p on p.auth_id = u.id
+    where p.id is null and u.last_sign_in_at is not null;
+  `)
+  if (!huerfanas.ok) {
+    fallos++
+    console.log(`  FALLA No se pudo comprobar\n        → ${huerfanas.error}`)
+  } else if (huerfanas.rows[0]?.correos) {
+    fallos++
+    console.log(`  FALLA Hay cuentas que ya entraron sin perfil vinculado\n        → ${huerfanas.rows[0].correos}`)
+  } else {
+    console.log('  OK    Ninguna cuenta usada se quedó sin perfil')
   }
 
   console.log(`\n${'='.repeat(60)}`)

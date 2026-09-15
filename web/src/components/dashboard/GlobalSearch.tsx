@@ -6,11 +6,15 @@ import { globalSearchAction, type SearchResult } from './globalSearchAction'
 
 const typeLabels: Record<SearchResult['type'], string> = {
   estudiante: 'Estudiante',
+  personal: 'Personal',
+  tutor: 'Tutor/a',
   familia: 'Familia',
   factura: 'Factura',
 }
 const typeIcons: Record<SearchResult['type'], string> = {
   estudiante: '🎒',
+  personal: '🧑‍🏫',
+  tutor: '👤',
   familia: '👨‍👩‍👧',
   factura: '💳',
 }
@@ -71,7 +75,7 @@ export default function GlobalSearch() {
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
-          placeholder="Buscar estudiante, familia, factura..."
+          placeholder="Buscar persona, familia, factura..."
           className="dash-chip w-full pl-10 pr-4 py-2 text-sm text-dash-text placeholder-dash-text-faint focus:outline-none focus:ring-2 focus:ring-dash-accent/50 focus:border-transparent transition"
         />
       </div>
