@@ -3589,9 +3589,45 @@ antes de "no tiene acceso"), marca con una insignia a quien tiene doble rol
 (`guardian_id` en su mismo perfil), y el selector de "Cambiar rol de acceso"
 ya no aparece en blanco cuando el rol actual no es uno de los asignables.
 
-**Pendiente real**: las 4 docentes siguen sin poder trabajar hasta que su
-perfil se mueva a la cuenta que de verdad usan (o entren con la otra). Es un
-cambio de datos en produccion, no de codigo.
+### Arreglado en produccion el mismo dia (autorizado por el usuario)
+
+Se movio el perfil de cada docente a la cuenta que de verdad usa
+(`users_profiles.auth_id`), y se sincronizo `staff.email` con esa misma
+cuenta -- si no, un "reenviar acceso" futuro habria mandado el correo a la
+cuenta que ya no tiene perfil y se reproduce el problema. Las cuentas viejas
+quedan como huerfanas SIN uso, asi que la comprobacion nueva del smoke no
+las marca (solo mira las que ya iniciaron sesion). **No se borro ninguna
+cuenta de Auth** -- es irreversible y nadie lo pidio.
+
+De paso: **Yucleidi Pozo Pio es docente Y tutora** (familia Carmona Pozo, su
+hija Wilmeiry). Su ficha de tutora no estaba vinculada a su perfil, asi que
+se le puso el `guardian_id` -- es el caso exacto para el que existe
+"Vista de Familia".
+
+Verificado simulando la sesion de cada una igual que PostgREST, no supuesto:
+
+| Docente | Estudiantes visibles ahora | Antes |
+|---|---|---|
+| Vianela Santana Reyes | 27 | 0 (portal de familia vacio) |
+| Yucleidi Pozo Pio | 66 + su hija por Vista de Familia | 0 |
+| Jenniffer Liliana Soriano | 301 (tiene "Todo el colegio", Ed. Fisica) | 0 |
+| Gabriela Angelica Lugo Ochoa | 23 | 0 |
+
+`npm run smoke`: **42 de 42**, incluida la comprobacion nueva de cuentas sin
+vincular, que antes fallaba nombrando a las cuatro.
+
+**Para revertir** (los `auth_id` anteriores):
+`3b7b4c18…`→`1bfd78ef…`, `6aae7095…`→`f56dd129…` (y `guardian_id` a null),
+`de467347…`→`6097f2a4…`, `65b72504…`→`709dbb32…`; los correos de ficha eran
+`leonardo0115santana@`, `jeniferlilianasororiano@` (una sola n) y
+`angelica050505@icloud.com`.
+
+**Lo que queda abierto**: ninguna de las cuatro habia podido trabajar en la
+plataforma desde que se le dio acceso -- vale la pena avisarles que ya
+pueden entrar con su correo de siempre. Y el hueco de fondo sigue: nada
+impide invitar a alguien a un correo que esa persona no usa, porque el
+correo de la ficha lo teclea quien invita. La pantalla nueva al menos hace
+que el sintoma sea legible en vez de mudo.
 
 ## Convenciones de trabajo
 
