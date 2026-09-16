@@ -3320,6 +3320,66 @@ confirmación. Sigue sin haber ningún login de estudiante de 1ro creado en
 producción (27 inscritos, 0 con cuenta) -- el mismo pendiente #4 de la lista
 de arriba.
 
+### Primer trimestre completo: 35 de 93 lecciones, 11 ya cargadas en Academia (2026-09-18)
+
+Continuación de la sección anterior, el mismo día: el usuario decidió NO
+esperar la revisión de la maestra ("vamos a suponer que todo esta bien y
+que la profesora los verifique luego") y pidió seguir "repitiendo el
+proceso hasta el final". A partir de aquí se produjo todo sin pausa: guion
+→ `revisar-guiones.mjs` → `producir.mjs` (voz+MP4) → `subir-imagenes.mjs` →
+hoja de YouTube → el usuario sube y devuelve los enlaces →
+`anotar-enlace.mjs` → `cargar-sql.mjs` → aplicado a producción.
+
+**Escritos, producidos y ENVIADOS para YouTube** (23 lecciones en 4 lotes):
+- Lote 2 (5): Lengua U0-03/U1-02/U1-03, Matemática U0-02/U1-03 -- **ya con
+  enlace y CARGADAS en Academia**.
+- Lote 3 (6): Naturales U2-02/U2-03/U3-01/U3-02, Sociales U2-02/U3-02 --
+  producidas, esperando enlaces.
+- Lote 4 (12): Lengua U2 completa (3) + U3 completa (3), Matemática U2
+  completa (3) + U3 completa (3) -- producidas, esperando enlaces.
+
+**Con esto, las 4 materias quedan completas hasta Unidad 3** -- Lengua
+12/12, Matemática 11/11, Naturales 7/7, Sociales 5/5 -- cerrando el
+**primer trimestre completo del plan: 35 de las 93 lecciones**.
+
+**Estado real en producción al cerrar esta sesión**: **11 lecciones
+cargadas y publicadas** en Academia (las 6 de la tanda piloto + las 5 del
+lote 2, que ya tenían enlace). Las **18 restantes** (lote 3 + lote 4) están
+producidas (MP4 real, sincronía verificada, imágenes ya subidas al bucket)
+pero **sin cargar** -- esperando que el usuario suba los videos a YouTube y
+devuelva los enlaces.
+
+**Bug encontrado en el camino, mismo patrón que ya costó antes**: al cargar
+el lote 2, el `sort_order` que genera `cargar-sql.mjs` vuelve a arrancar en
+10 para cada carga -- el script no consulta el máximo real ya usado en
+producción. Con 6 lecciones ya cargadas (hasta `sort_order 60`), cargar el
+lote 2 sin corregir habría colisionado desde el 10. **Se volvió a verificar
+el máximo real antes de generar el SQL** (mismo paso manual que la vez
+anterior) y se desplazó a 70-110. **Esto se va a repetir en cada lote
+mientras `cargar-sql.mjs` no consulte producción antes de numerar** -- si
+se retoma este trabajo, valdría la pena arreglarlo de raíz en el script en
+vez de seguir haciéndolo a mano cada vez.
+
+**Reparto de respuestas correctas, verificado en el conjunto completo**:
+`lib/revisar-guiones.mjs 1ro` sobre las 35 lecciones → **0 problemas**,
+49% en la posición más repetida (el umbral de aviso es 50%). Varias
+lecciones individuales salieron con las 3 correctas en la misma posición
+al escribirlas por primera vez (invertir el orden de opciones corrige esto
+sin tocar el contenido ni el `visual` de las escenas que leen las
+preguntas en voz alta -- solo el orden en que aparecen los botones).
+
+**Costo real de voz de esta sesión**: ~23 lecciones × ~US$0.008 promedio
+≈ US$0.18 total (OpenRouter, `gpt-audio-mini`).
+
+**Pendiente real para continuar**:
+1. Los enlaces de YouTube del lote 3 (6) y lote 4 (12) -- 18 en total.
+2. Una vez con enlace, `anotar-enlace.mjs` + `cargar-sql.mjs` (con el
+   `sort_order` verificado a mano contra producción, ver arriba) + aplicar.
+3. Seguir con el **segundo trimestre** (Unidad 4 en adelante de cada
+   materia) -- 58 lecciones restantes de las 93 del plan.
+4. La maestra de 1ro sigue sin haber visto nada de esto en vivo -- decisión
+   consciente del usuario, no un olvido.
+
 ### 5 guiones nuevos, completando Lengua/Matemática U0-U1 (2026-09-18)
 
 Con la maestra sin haber visto todavía la tanda piloto, el usuario pidió
