@@ -3941,7 +3941,7 @@ alcance para no bloquear la demo con la cuenta de Cloudflare y la migración de
 `video_provider`, que solo acepta `youtube`/`vimeo`), y correr el SQL que
 genera `lib/cargar-sql.mjs`.
 
-## ⚠️ PENDIENTE PRIORITARIO — Academia no acota al profesor por curso ni materia (2026-09-06)
+## ✅ RESUELTO (2026-09-18) — Academia ya acota al profesor por curso (2026-09-06)
 
 **El usuario lo pidió explícitamente y con prioridad.** No se hizo el mismo día
 porque faltaban 4 días para la presentación del colegio y tocar RLS con ese
@@ -4044,6 +4044,52 @@ bueno humano").
    igual que se hizo con el arreglo de cursos del 2026-09-06.
 3. **Agregar la comprobación a `scripts/smoke-roles.mjs`**, que es el requisito
    permanente de este proyecto para cualquier cambio de policy.
+
+### Hecho y verificado (2026-09-18)
+
+Aplicada la migración `20260918000000_academia_restrict_teacher_scope.sql`
+-- divide `lessons_staff_all`, `quiz_questions_staff_all` (ya venían
+divididas de un intento previo pegado a mano en el SQL Editor) y
+`quiz_options_staff_manage` (la que faltaba: el intento previo falló por
+referenciar una columna inexistente, `quiz_question_id` en vez de
+`question_id` -- confirmado leyendo `information_schema.columns` contra
+producción antes de escribir nada) en lectura amplia (`_staff_read`, sin
+cambios) + escritura acotada (`_staff_write`/`_update`/`_delete`) via
+`teacher_is_assigned_to_grade(school_id, grade_level, 'regular')`, mismo
+patrón ya usado en Horarios/Notas/Asistencia.
+
+**Verificado con sesión real simulada contra producción, en transacciones
+con ROLLBACK** (Ruth Rebeca Mingo Rodríguez, asignada a 1ro-5to
+Secundaria): crea lección en su curso ✅, no puede en uno ajeno (6to.
+Primaria) ✅, no puede crear pregunta en lección ajena ✅, no puede crear
+opción en pregunta ajena ✅ (el caso exacto que había fallado), sigue
+viendo el catálogo completo (12 lecciones) ✅, y un director sigue sin
+ninguna restricción de curso ✅.
+
+**Trampa real encontrada al escribir la comprobación para
+`scripts/smoke-roles.mjs`, no al escribir la policy**: la primera versión
+del test intentaba encontrar "un curso que el profesor NO tiene asignado"
+haciendo `JOIN teacher_assignments` con el cliente de sesión del propio
+profesor -- y esa tabla no tiene ninguna policy de lectura para `teacher`,
+así que el JOIN devolvía `[]` vacío (no error), exactamente el patrón que
+ya documenta este archivo ("leer con el cliente del usuario lo que la RLS
+no le abre no da error: devuelve vacío"). Con la lista de "asignados" vacía,
+el test eligió el PROPIO curso del profesor como si fuera "ajeno" y el
+insert tuvo éxito -- se reportó como una falla de seguridad real hasta que
+se verificó: no era un hueco en la policy, era el test leyendo una tabla
+que RLS le cierra al profesor. Corregido usando
+`teacher_is_assigned_to_grade()` (la misma función `security definer` que
+usa la policy real) en vez de reimplementar la comparación con un JOIN.
+Con eso, `scripts/smoke-roles.mjs`: **44 de 44 comprobaciones, todas OK**
+(las 2 nuevas de Academia + las 42 que ya existían, sin ninguna regresión
+en otro rol).
+
+**Génesis Rodríguez (Orientación) sigue sin ninguna asignación** en
+`teacher_assignments`, así que con este cambio tampoco puede crear
+lecciones de Academia (antes tampoco veía estudiantes en Asistencia/
+Actualizaciones por la misma razón, ver "Cursos mal escritos" más abajo).
+Sigue siendo una decisión pendiente con el usuario, no tocada en este
+cambio -- ver esa sección para el contexto completo.
 
 ## PLAN DEFINITIVO — Producción de contenido de Academia (2026-09-06)
 
