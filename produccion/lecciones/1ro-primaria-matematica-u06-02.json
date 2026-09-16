@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u06-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U6. Después de mis tareas",
+  "titulo": "El reloj: la hora en punto",
+  "descripcion": "Leer relojes análogos y digitales en horas en punto.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "El reloj nos dice qué hora es. Hoy vamos a aprender a leer la hora en punto.",
+      "visual": "<div class='rotulo'>El reloj</div><h1 class='chico'>La hora en punto</h1><div class='dib max'>🕐</div>"
+    },
+    {
+      "narracion": "El reloj tiene dos manecillas: la manecilla corta dice la hora, y la manecilla larga dice los minutos.",
+      "visual": "<h1>Dos manecillas</h1><div class='fila'><div class='tarjeta'><div class='detalle'>Corta</div><div class='pie'>la hora</div></div><div class='tarjeta destaca'><div class='detalle'>Larga</div><div class='pie'>los minutos</div></div></div>"
+    },
+    {
+      "narracion": "Cuando es una hora en punto, la manecilla larga apunta hacia el doce, y la manecilla corta apunta hacia el número de la hora.",
+      "visual": "<h1>En punto</h1><div class='dib max'>🕒</div><div class='pie'>Larga en el 12</div>"
+    },
+    {
+      "narracion": "Si la manecilla corta apunta al tres y la larga al doce, son las tres en punto.",
+      "visual": "<h1>Las tres en punto</h1><div class='dib max'>🕒</div><div class='num verde'>3:00</div>"
+    },
+    {
+      "narracion": "En un reloj digital, la hora en punto se ve con dos ceros después de los dos puntos, como en siete cero cero.",
+      "visual": "<h1>Reloj digital</h1><div class='num verde'>7:00</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si la manecilla corta apunta al nueve y la larga al doce, ¿qué hora es? Las nueve en punto.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🕘</div><div class='num verde'>9:00</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué manecilla dice la hora, la corta o la larga?",
+      "visual": "<div class='pregunta'>¿Qué manecilla dice la hora?</div><div class='opciones'><div class='opcion'><div class='palabra'>La corta</div></div><div class='opcion'><div class='palabra'>La larga</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Cuando es una hora en punto, ¿hacia dónde apunta la manecilla larga?",
+      "visual": "<div class='pregunta'>¿Hacia dónde apunta la larga en punto?</div><div class='opciones'><div class='opcion'><div class='num'>12</div></div><div class='opcion'><div class='num'>6</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. En un reloj digital, ¿qué números aparecen después de los dos puntos en una hora en punto? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué aparece después de los dos puntos?</div><div class='opciones'><div class='opcion'><div class='num'>00</div></div><div class='opcion'><div class='num'>30</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué manecilla dice la hora, la corta o la larga?",
+      "opciones": [
+        { "texto": "La corta", "visual": "<div class='detalle'>corta</div>" },
+        { "texto": "La larga", "visual": "<div class='detalle'>larga</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Cuando es una hora en punto, ¿hacia dónde apunta la manecilla larga?",
+      "opciones": [
+        { "texto": "6", "visual": "<div class='num'>6</div>" },
+        { "texto": "12", "visual": "<div class='num'>12</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "En un reloj digital, ¿qué números aparecen después de los dos puntos en una hora en punto?",
+      "opciones": [
+        { "texto": "30", "visual": "<div class='num'>30</div>" },
+        { "texto": "00", "visual": "<div class='num'>00</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

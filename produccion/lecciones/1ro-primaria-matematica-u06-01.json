@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u06-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U6. Después de mis tareas",
+  "titulo": "Los días de la semana",
+  "descripcion": "El calendario y para qué sirve.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "La semana tiene siete días. Hoy vamos a aprender sus nombres y el orden en que van.",
+      "visual": "<div class='rotulo'>La semana</div><h1 class='chico'>Tiene siete días</h1><div class='dib max'>📅</div>"
+    },
+    {
+      "narracion": "Los días son: lunes, martes, miércoles, jueves, viernes, sábado y domingo. Siempre van en ese mismo orden.",
+      "visual": "<h1>Los siete días</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Lunes</li><li><span class='bolita'>2️⃣</span> Martes</li><li><span class='bolita'>3️⃣</span> Miércoles</li></ol>"
+    },
+    {
+      "narracion": "Después siguen jueves, viernes, sábado y domingo. Y cuando termina el domingo, vuelve a empezar el lunes.",
+      "visual": "<h1>Y siguen</h1><ol class='lista'><li><span class='bolita'>4️⃣</span> Jueves</li><li><span class='bolita'>5️⃣</span> Viernes</li><li><span class='bolita'>6️⃣</span> Sábado</li><li><span class='bolita'>7️⃣</span> Domingo</li></ol>"
+    },
+    {
+      "narracion": "Sábado y domingo se llaman fin de semana. Son los días en que normalmente no vas a la escuela.",
+      "visual": "<h1>El fin de semana</h1><div class='fila'><div class='dib mini'>🎉</div><div class='detalle'>Sábado y domingo</div></div>"
+    },
+    {
+      "narracion": "El calendario nos sirve para saber qué día es hoy, cuándo es tu cumpleaños, o cuántos días faltan para algo importante.",
+      "visual": "<h1 class='chico'>¿Para qué sirve?</h1><div class='dib max'>🎂</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si hoy es lunes, ¿qué día viene mañana? Martes, porque va justo después de lunes.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='detalle'>Lunes</div><div class='signo'>➜</div><div class='detalle'>Martes</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuántos días tiene la semana?",
+      "visual": "<div class='pregunta'>¿Cuántos días tiene la semana?</div><div class='opciones'><div class='opcion'><div class='num'>7</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál es el primer día de la semana?",
+      "visual": "<div class='pregunta'>¿Cuál es el primer día?</div><div class='opciones'><div class='opcion'><div class='palabra'>Lunes</div></div><div class='opcion'><div class='palabra'>Domingo</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuáles son los días del fin de semana? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuáles son los días del fin de semana?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sábado y domingo</div></div><div class='opcion'><div class='palabra'>Lunes y martes</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántos días tiene la semana?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "7", "visual": "<div class='num'>7</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál es el primer día de la semana?",
+      "opciones": [
+        { "texto": "Lunes", "visual": "<div class='palabra'>Lunes</div>" },
+        { "texto": "Domingo", "visual": "<div class='palabra'>Domingo</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuáles son los días del fin de semana?",
+      "opciones": [
+        { "texto": "Lunes y martes", "visual": "<div class='dib'>📚</div>" },
+        { "texto": "Sábado y domingo", "visual": "<div class='dib'>🎉</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

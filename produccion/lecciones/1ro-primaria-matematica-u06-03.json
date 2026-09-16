@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u06-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U6. Después de mis tareas",
+  "titulo": "Antes, ahora y después",
+  "descripcion": "Ordenar secuencias de actividades en el tiempo.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las cosas que hacemos durante el día pasan en un orden. Hoy vamos a aprender a usar las palabras antes, ahora y después.",
+      "visual": "<div class='rotulo'>El orden del tiempo</div><h1 class='chico'>Antes, ahora y después</h1><div class='dib max'>⏳</div>"
+    },
+    {
+      "narracion": "Antes de desayunar, te lavas las manos. Eso pasa primero, antes del desayuno.",
+      "visual": "<h1>Antes</h1><div class='tarjeta'><div class='dib mini'>🧼</div><div class='detalle'>Te lavas las manos</div></div>"
+    },
+    {
+      "narracion": "Ahora desayunas. Eso pasa en el momento de en medio, después de lavarte las manos.",
+      "visual": "<h1>Ahora</h1><div class='tarjeta destaca'><div class='dib mini'>🍳</div><div class='detalle'>Desayunas</div></div>"
+    },
+    {
+      "narracion": "Después del desayuno, te cepillas los dientes. Eso pasa al final, cuando ya terminaste de comer.",
+      "visual": "<h1>Después</h1><div class='tarjeta'><div class='dib mini'>🪥</div><div class='detalle'>Te cepillas los dientes</div></div>"
+    },
+    {
+      "narracion": "Todo el día está hecho de cosas que pasan en orden: primero una, después otra, y después otra más.",
+      "visual": "<h1 class='chico'>Todo tiene un orden</h1><div class='fila apretada'><div class='dib mini'>🧼</div><div class='signo'>➜</div><div class='dib mini'>🍳</div><div class='signo'>➜</div><div class='dib mini'>🪥</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Primero te bañas, luego te vistes. ¿Qué pasa antes: bañarte o vestirte? Bañarte pasa antes.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib mini'>🛁</div><div class='signo'>➜</div><div class='dib mini'>👕</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Te lavas las manos y luego desayunas. ¿Qué pasa primero?",
+      "visual": "<div class='pregunta'>¿Qué pasa primero?</div><div class='opciones'><div class='opcion'><div class='dib'>🧼</div></div><div class='opcion'><div class='dib'>🍳</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Después de desayunar, ¿qué haces?",
+      "visual": "<div class='pregunta'>Después de desayunar, ¿qué haces?</div><div class='opciones'><div class='opcion'><div class='palabra'>Te cepillas los dientes</div></div><div class='opcion'><div class='palabra'>Te duermes</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si primero te bañas y luego te vistes, ¿qué pasa antes? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué pasa antes?</div><div class='opciones'><div class='opcion'><div class='dib'>🛁</div></div><div class='opcion'><div class='dib'>👕</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Te lavas las manos y luego desayunas. ¿Qué pasa primero?",
+      "opciones": [
+        { "texto": "Desayunas", "visual": "<div class='dib'>🍳</div>" },
+        { "texto": "Te lavas las manos", "visual": "<div class='dib'>🧼</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Después de desayunar, ¿qué haces?",
+      "opciones": [
+        { "texto": "Te duermes", "visual": "<div class='dib'>😴</div>" },
+        { "texto": "Te cepillas los dientes", "visual": "<div class='dib'>🪥</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si primero te bañas y luego te vistes, ¿qué pasa antes?",
+      "opciones": [
+        { "texto": "Te bañas", "visual": "<div class='dib'>🛁</div>" },
+        { "texto": "Te vistes", "visual": "<div class='dib'>👕</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

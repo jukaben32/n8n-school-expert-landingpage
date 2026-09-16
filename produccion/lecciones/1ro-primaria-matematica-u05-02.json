@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u05-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U5. En el museo",
+  "titulo": "Líneas rectas, curvas y mixtas",
+  "descripcion": "Reconocer y trazar líneas rectas, curvas y mixtas.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las figuras están hechas de líneas. Hoy vamos a conocer tres tipos de líneas: rectas, curvas y mixtas.",
+      "visual": "<div class='rotulo'>Las líneas</div><h1 class='chico'>Tres tipos de líneas</h1><div class='dib max'>✏️</div>"
+    },
+    {
+      "narracion": "La línea recta no tiene curvas, va derechito de un punto a otro. El borde de una regla es una línea recta.",
+      "visual": "<h1>Línea recta</h1><div class='tarjeta destaca'><div class='detalle'>────────</div></div><div class='pie'>Va derechito</div>"
+    },
+    {
+      "narracion": "La línea curva se dobla y da vueltas, como el borde de una pelota o una ola del mar.",
+      "visual": "<h1>Línea curva</h1><div class='tarjeta destaca'><div class='dib mini'>〰️</div></div><div class='pie'>Se dobla y da vueltas</div>"
+    },
+    {
+      "narracion": "La línea mixta mezcla las dos: tiene partes rectas y partes curvas juntas en el mismo dibujo.",
+      "visual": "<h1>Línea mixta</h1><div class='dib max'>🐍</div><div class='pie'>Partes rectas y curvas juntas</div>"
+    },
+    {
+      "narracion": "Mira a tu alrededor: el borde de una mesa suele ser recto, el borde de una taza suele ser curvo. Ya puedes distinguirlas.",
+      "visual": "<h1 class='chico'>Búscalas a tu alrededor</h1><div class='fila'><div class='dib mini'>🪑</div><div class='dib mini'>☕</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. El borde de una rueda de bicicleta, ¿es una línea recta o curva? Curva, porque es redonda.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🚲</div><div class='signo'>➜</div><div class='dib mini'>〰️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Una línea que va derechito sin doblarse, ¿cómo se llama?",
+      "visual": "<div class='pregunta'>¿Cómo se llama una línea sin doblarse?</div><div class='opciones'><div class='opcion'><div class='palabra'>Recta</div></div><div class='opcion'><div class='palabra'>Curva</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Una línea que mezcla partes rectas y curvas, ¿cómo se llama?",
+      "visual": "<div class='pregunta'>Partes rectas y curvas juntas, ¿cómo se llama?</div><div class='opciones'><div class='opcion'><div class='palabra'>Mixta</div></div><div class='opcion'><div class='palabra'>Recta</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. El borde de una pelota, ¿es una línea recta o curva? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿El borde de una pelota es...?</div><div class='opciones'><div class='opcion'><div class='palabra'>Curva</div></div><div class='opcion'><div class='palabra'>Recta</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Una línea que va derechito sin doblarse, ¿cómo se llama?",
+      "opciones": [
+        { "texto": "Recta", "visual": "<div class='detalle'>────</div>" },
+        { "texto": "Curva", "visual": "<div class='dib'>〰️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Una línea que mezcla partes rectas y curvas, ¿cómo se llama?",
+      "opciones": [
+        { "texto": "Recta", "visual": "<div class='detalle'>────</div>" },
+        { "texto": "Mixta", "visual": "<div class='dib'>🐍</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "El borde de una pelota, ¿es una línea recta o curva?",
+      "opciones": [
+        { "texto": "Recta", "visual": "<div class='detalle'>────</div>" },
+        { "texto": "Curva", "visual": "<div class='dib'>〰️</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u04-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U4. ¡Qué diversa es la vida!",
+  "titulo": "Decenas y unidades",
+  "descripcion": "Valor de posición: componer y descomponer números de dos cifras.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un número de dos cifras, como el treinta y cuatro, tiene dos partes: las decenas y las unidades.",
+      "visual": "<div class='rotulo'>Decenas y unidades</div><h1 class='chico'>Las dos partes del número</h1><div class='num verde'>34</div>"
+    },
+    {
+      "narracion": "La primera cifra son las decenas, grupos de diez. La segunda cifra son las unidades, lo que sobra sin llegar a diez.",
+      "visual": "<h1>Dos cifras</h1><div class='fila'><div class='tarjeta destaca'><div class='num'>3</div><div class='pie'>decenas</div></div><div class='tarjeta'><div class='num'>4</div><div class='pie'>unidades</div></div></div>"
+    },
+    {
+      "narracion": "En el treinta y cuatro, hay tres decenas: eso son tres grupos de diez, o sea treinta. Y hay cuatro unidades sueltas.",
+      "visual": "<h1>3 decenas + 4 unidades</h1><div class='fila apretada'><div class='num'>10</div><div class='num'>10</div><div class='num'>10</div><div class='signo'>+</div><div class='num'>4</div></div>"
+    },
+    {
+      "narracion": "Eso se llama descomponer: treinta y cuatro es treinta más cuatro. Y componer es lo contrario: juntar treinta y cuatro para formar treinta y cuatro.",
+      "visual": "<h1>Componer y descomponer</h1><div class='fila'><div class='num'>30</div><div class='signo'>+</div><div class='num'>4</div><div class='signo'>=</div><div class='num verde'>34</div></div>"
+    },
+    {
+      "narracion": "Otro ejemplo: el número cincuenta y dos tiene cinco decenas y dos unidades. Cinco grupos de diez, más dos sueltas.",
+      "visual": "<h1>Otro ejemplo</h1><div class='fila'><div class='tarjeta destaca'><div class='num'>5</div><div class='pie'>decenas</div></div><div class='tarjeta'><div class='num'>2</div><div class='pie'>unidades</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. En el número sesenta y siete, ¿cuántas decenas hay? Seis decenas, y siete unidades.",
+      "visual": "<h1>Practiquemos</h1><div class='num verde'>67</div><div class='fila'><div class='tarjeta destaca'><div class='num'>6</div><div class='pie'>decenas</div></div><div class='tarjeta'><div class='num'>7</div><div class='pie'>unidades</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. En el número treinta y cuatro, ¿cuántas decenas hay?",
+      "visual": "<div class='pregunta'>En el 34, ¿cuántas decenas hay?</div><div class='opciones'><div class='opcion'><div class='num'>3</div></div><div class='opcion'><div class='num'>4</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. En el número cincuenta y dos, ¿cuántas unidades hay?",
+      "visual": "<div class='pregunta'>En el 52, ¿cuántas unidades hay?</div><div class='opciones'><div class='opcion'><div class='num'>5</div></div><div class='opcion'><div class='num'>2</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Treinta más cuatro, ¿qué número forma? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>30 + 4 = ?</div><div class='opciones'><div class='opcion'><div class='num'>34</div></div><div class='opcion'><div class='num'>43</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "En el número treinta y cuatro, ¿cuántas decenas hay?",
+      "opciones": [
+        { "texto": "3", "visual": "<div class='num'>3</div>" },
+        { "texto": "4", "visual": "<div class='num'>4</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "En el número cincuenta y dos, ¿cuántas unidades hay?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Treinta más cuatro, ¿qué número forma?",
+      "opciones": [
+        { "texto": "43", "visual": "<div class='num'>43</div>" },
+        { "texto": "34", "visual": "<div class='num'>34</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

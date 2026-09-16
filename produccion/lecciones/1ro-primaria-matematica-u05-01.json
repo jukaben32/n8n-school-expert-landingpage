@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u05-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U5. En el museo",
+  "titulo": "Círculo, cuadrado, triángulo y rectángulo",
+  "descripcion": "Nombrar y distinguir las figuras planas básicas.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hoy vamos a conocer cuatro figuras que ves todos los días: el círculo, el cuadrado, el triángulo y el rectángulo.",
+      "visual": "<div class='rotulo'>Las figuras</div><h1 class='chico'>Cuatro figuras</h1><div class='fila apretada'><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div><div class='dib mini'>🔺</div><div class='dib mini'>🟥</div></div>"
+    },
+    {
+      "narracion": "El círculo es redondo, no tiene esquinas ni lados rectos. Una pelota o una rueda tienen forma de círculo.",
+      "visual": "<h1>El círculo</h1><div class='dib max'>⚪</div><div class='pie'>Redondo, sin esquinas</div>"
+    },
+    {
+      "narracion": "El cuadrado tiene cuatro lados iguales y cuatro esquinas. Una ventana o un azulejo suelen tener forma de cuadrado.",
+      "visual": "<h1>El cuadrado</h1><div class='dib max'>🟦</div><div class='pie'>4 lados iguales, 4 esquinas</div>"
+    },
+    {
+      "narracion": "El triángulo tiene tres lados y tres esquinas. Un pedazo de pizza o el techo de una casa suelen tener forma de triángulo.",
+      "visual": "<h1>El triángulo</h1><div class='dib max'>🔺</div><div class='pie'>3 lados, 3 esquinas</div>"
+    },
+    {
+      "narracion": "El rectángulo tiene cuatro lados y cuatro esquinas, pero dos lados son más largos que los otros dos. Una puerta o un libro suelen tener forma de rectángulo.",
+      "visual": "<h1>El rectángulo</h1><div class='dib max'>🟥</div><div class='pie'>4 lados, dos más largos</div>"
+    },
+    {
+      "narracion": "Practiquemos. Una señal de alto tiene forma redonda, sin esquinas. ¿Qué figura es? Un círculo.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🛑</div><div class='signo'>➜</div><div class='dib mini'>⚪</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál figura no tiene esquinas?",
+      "visual": "<div class='pregunta'>¿Cuál figura no tiene esquinas?</div><div class='opciones'><div class='opcion'><div class='dib'>⚪</div></div><div class='opcion'><div class='dib'>🟦</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántos lados tiene un triángulo?",
+      "visual": "<div class='pregunta'>¿Cuántos lados tiene un triángulo?</div><div class='opciones'><div class='opcion'><div class='num'>3</div></div><div class='opcion'><div class='num'>4</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál figura tiene cuatro lados iguales? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál tiene 4 lados iguales?</div><div class='opciones'><div class='opcion'><div class='dib'>🟦</div></div><div class='opcion'><div class='dib'>🔺</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál figura no tiene esquinas?",
+      "opciones": [
+        { "texto": "Círculo", "visual": "<div class='dib'>⚪</div>" },
+        { "texto": "Cuadrado", "visual": "<div class='dib'>🟦</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuántos lados tiene un triángulo?",
+      "opciones": [
+        { "texto": "4", "visual": "<div class='num'>4</div>" },
+        { "texto": "3", "visual": "<div class='num'>3</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál figura tiene cuatro lados iguales?",
+      "opciones": [
+        { "texto": "Triángulo", "visual": "<div class='dib'>🔺</div>" },
+        { "texto": "Cuadrado", "visual": "<div class='dib'>🟦</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

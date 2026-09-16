@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u05-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U5. En el museo",
+  "titulo": "Mosaicos y patrones",
+  "descripcion": "Construir y continuar patrones con figuras.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un patrón es cuando algo se repite siguiendo un orden. Hoy vamos a construir patrones con las figuras que ya conoces.",
+      "visual": "<div class='rotulo'>Los patrones</div><h1 class='chico'>Algo que se repite</h1><div class='fila apretada'><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div></div>"
+    },
+    {
+      "narracion": "Mira este patrón: círculo, cuadrado, círculo, cuadrado. Se repite siempre en el mismo orden.",
+      "visual": "<h1>Círculo, cuadrado...</h1><div class='fila apretada'><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div></div>"
+    },
+    {
+      "narracion": "Para saber qué sigue en un patrón, busca qué se repite. Si va círculo, cuadrado, círculo, cuadrado, círculo... ¿qué sigue? Cuadrado.",
+      "visual": "<h1>¿Qué sigue?</h1><div class='fila apretada'><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div><div class='dib mini'>⚪</div><div class='dib mini'>🟦</div><div class='dib mini'>⚪</div><div class='signo'>❓</div></div>"
+    },
+    {
+      "narracion": "Los mosaicos son dibujos hechos con figuras que se repiten, como los azulejos del piso. Muchos mosaicos usan patrones de figuras y colores.",
+      "visual": "<h1>Los mosaicos</h1><div class='fila apretada'><div class='dib mini'>🟦</div><div class='dib mini'>🔺</div><div class='dib mini'>🟦</div><div class='dib mini'>🔺</div></div>"
+    },
+    {
+      "narracion": "También puedes hacer patrones más largos, como triángulo, triángulo, círculo, triángulo, triángulo, círculo.",
+      "visual": "<h1>Patrones más largos</h1><div class='fila apretada'><div class='dib mini'>🔺</div><div class='dib mini'>🔺</div><div class='dib mini'>⚪</div><div class='dib mini'>🔺</div><div class='dib mini'>🔺</div><div class='dib mini'>⚪</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si el patrón va triángulo, círculo, triángulo, círculo, triángulo... ¿qué figura sigue? Círculo.",
+      "visual": "<h1>Practiquemos</h1><div class='fila apretada'><div class='dib mini'>🔺</div><div class='dib mini'>⚪</div><div class='dib mini'>🔺</div><div class='dib mini'>⚪</div><div class='dib mini'>🔺</div><div class='signo'>➜</div><div class='dib mini'>⚪</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué es un patrón?",
+      "visual": "<div class='pregunta'>¿Qué es un patrón?</div><div class='opciones'><div class='opcion'><div class='palabra'>Algo que se repite</div></div><div class='opcion'><div class='palabra'>Un número grande</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Si el patrón va círculo, cuadrado, círculo, cuadrado, círculo... ¿qué sigue?",
+      "visual": "<div class='pregunta'>⚪🟦⚪🟦⚪ ¿qué sigue?</div><div class='opciones'><div class='opcion'><div class='dib'>🟦</div></div><div class='opcion'><div class='dib'>⚪</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué son los mosaicos? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué son los mosaicos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Dibujos con figuras repetidas</div></div><div class='opcion'><div class='palabra'>Un solo número</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué es un patrón?",
+      "opciones": [
+        { "texto": "Un número grande", "visual": "<div class='num'>99</div>" },
+        { "texto": "Algo que se repite", "visual": "<div class='dib'>🔁</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si el patrón va círculo, cuadrado, círculo, cuadrado, círculo... ¿qué sigue?",
+      "opciones": [
+        { "texto": "Círculo", "visual": "<div class='dib'>⚪</div>" },
+        { "texto": "Cuadrado", "visual": "<div class='dib'>🟦</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué son los mosaicos?",
+      "opciones": [
+        { "texto": "Dibujos con figuras repetidas", "visual": "<div class='dib'>🧩</div>" },
+        { "texto": "Un solo número", "visual": "<div class='num'>7</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

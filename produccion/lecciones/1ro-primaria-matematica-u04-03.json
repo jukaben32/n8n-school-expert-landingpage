@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u04-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U4. ¡Qué diversa es la vida!",
+  "titulo": "Mayor, menor o igual",
+  "descripcion": "Comparar números con los signos mayor que, menor que e igual.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cuando comparamos dos números, uno puede ser mayor, menor, o igual que el otro. Hoy aprendemos los signos para eso.",
+      "visual": "<div class='rotulo'>Comparamos números</div><h1 class='chico'>Mayor, menor o igual</h1><div class='fila'><div class='num'>&gt;</div><div class='num'>&lt;</div><div class='num'>=</div></div>"
+    },
+    {
+      "narracion": "El signo mayor que se parece a una boca abierta que apunta al número más grande. Ocho es mayor que cinco: ocho, mayor que, cinco.",
+      "visual": "<h1>Mayor que</h1><div class='fila'><div class='num'>8</div><div class='num verde'>&gt;</div><div class='num'>5</div></div>"
+    },
+    {
+      "narracion": "El signo menor que apunta al número más chiquito. Tres es menor que siete: tres, menor que, siete.",
+      "visual": "<h1>Menor que</h1><div class='fila'><div class='num'>3</div><div class='num verde'>&lt;</div><div class='num'>7</div></div>"
+    },
+    {
+      "narracion": "Y cuando los dos números son iguales, usamos el signo igual, dos rayitas. Seis es igual a seis.",
+      "visual": "<h1>Igual</h1><div class='fila'><div class='num'>6</div><div class='num verde'>=</div><div class='num'>6</div></div>"
+    },
+    {
+      "narracion": "Un truco fácil: la boca del signo siempre se abre hacia el número más grande, como si se lo fuera a comer.",
+      "visual": "<h1 class='chico'>El truco</h1><div class='dib max'>🐊</div><div class='pie'>Se come al número más grande</div>"
+    },
+    {
+      "narracion": "Practiquemos. Compara nueve y cuatro. ¿Cuál signo va en el medio? Nueve es mayor que cuatro.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>9</div><div class='num verde'>&gt;</div><div class='num'>4</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Entre ocho y cinco, ¿cuál signo va en el medio?",
+      "visual": "<div class='pregunta'>8 __ 5</div><div class='opciones'><div class='opcion'><div class='num'>&gt;</div></div><div class='opcion'><div class='num'>&lt;</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Entre tres y siete, ¿cuál signo va en el medio?",
+      "visual": "<div class='pregunta'>3 __ 7</div><div class='opciones'><div class='opcion'><div class='num'>&gt;</div></div><div class='opcion'><div class='num'>&lt;</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si dos números son exactamente iguales, ¿qué signo usas? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Números iguales, ¿qué signo usas?</div><div class='opciones'><div class='opcion'><div class='num'>=</div></div><div class='opcion'><div class='num'>&gt;</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Entre ocho y cinco, ¿cuál signo va en el medio?",
+      "opciones": [
+        { "texto": "<", "visual": "<div class='num'>&lt;</div>" },
+        { "texto": ">", "visual": "<div class='num'>&gt;</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Entre tres y siete, ¿cuál signo va en el medio?",
+      "opciones": [
+        { "texto": "<", "visual": "<div class='num'>&lt;</div>" },
+        { "texto": ">", "visual": "<div class='num'>&gt;</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Si dos números son exactamente iguales, ¿qué signo usas?",
+      "opciones": [
+        { "texto": ">", "visual": "<div class='num'>&gt;</div>" },
+        { "texto": "=", "visual": "<div class='num'>=</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

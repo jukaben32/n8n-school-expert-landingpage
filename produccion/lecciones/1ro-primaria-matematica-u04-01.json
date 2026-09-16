@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u04-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U4. ¡Qué diversa es la vida!",
+  "titulo": "Contamos de 10 en 10 hasta 99",
+  "descripcion": "Contar de diez en diez para llegar hasta el 99.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes contar del uno al diecinueve. Hoy vamos a aprender a contar más rápido, de diez en diez.",
+      "visual": "<div class='rotulo'>De 10 en 10</div><h1 class='chico'>Contamos más rápido</h1><div class='fila'><div class='num'>10</div><div class='num'>20</div><div class='num'>30</div></div>"
+    },
+    {
+      "narracion": "Contar de diez en diez es como contar grupos de diez cosas. Diez, veinte, treinta, cuarenta.",
+      "visual": "<h1>Grupos de diez</h1><div class='fila apretada'><div class='num'>10</div><div class='num'>20</div><div class='num'>30</div><div class='num'>40</div></div>"
+    },
+    {
+      "narracion": "Sigue contando: cincuenta, sesenta, setenta, ochenta, noventa. Fíjate que siempre terminan en cero.",
+      "visual": "<h1>Seguimos</h1><div class='fila apretada'><div class='num'>50</div><div class='num'>60</div><div class='num'>70</div><div class='num'>80</div><div class='num'>90</div></div>"
+    },
+    {
+      "narracion": "Después del noventa viene el número más grande que vamos a aprender este año: noventa y nueve.",
+      "visual": "<h1>El más grande</h1><div class='tarjeta destaca'><div class='num verde'>99</div></div>"
+    },
+    {
+      "narracion": "Contar de diez en diez es muy útil: si tienes diez cajas con diez lápices cada una, contando de diez en diez sabes rápido cuántos lápices tienes en total.",
+      "visual": "<h1 class='chico'>Es muy útil</h1><div class='dib max'>✏️</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si vas contando diez, veinte, treinta, cuarenta... ¿qué número sigue? Cincuenta.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>10</div><div class='num'>20</div><div class='num'>30</div><div class='num'>40</div><div class='signo'>➜</div><div class='num verde'>50</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Contando de diez en diez, ¿qué número viene después del veinte?",
+      "visual": "<div class='pregunta'>Después de 20, ¿qué sigue?</div><div class='opciones'><div class='opcion'><div class='num'>30</div></div><div class='opcion'><div class='num'>21</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál es el número más grande que aprendimos hoy?",
+      "visual": "<div class='pregunta'>¿Cuál es el número más grande?</div><div class='opciones'><div class='opcion'><div class='num'>99</div></div><div class='opcion'><div class='num'>19</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿En qué número siempre terminan los números al contar de diez en diez? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿En qué terminan esos números?</div><div class='opciones'><div class='opcion'><div class='num'>0</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Contando de diez en diez, ¿qué número viene después del veinte?",
+      "opciones": [
+        { "texto": "30", "visual": "<div class='num'>30</div>" },
+        { "texto": "21", "visual": "<div class='num'>21</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál es el número más grande que aprendimos hoy?",
+      "opciones": [
+        { "texto": "19", "visual": "<div class='num'>19</div>" },
+        { "texto": "99", "visual": "<div class='num'>99</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿En qué número siempre terminan los números al contar de diez en diez?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "0", "visual": "<div class='num'>0</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}
