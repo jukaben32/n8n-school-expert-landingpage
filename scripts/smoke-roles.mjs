@@ -82,6 +82,8 @@ const CHECKS = {
     ['Notas', `select count(*) from grades;`],
     ['Justificaciones: ver las de sus grados', `select count(*) from attendance_justifications;`],
     ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
+    ['Academia: crear lección en SU curso asignado', 'ACADEMIA_CREAR_EN_CURSO'],
+    ['Academia: NO puede crear en curso ajeno', 'ACADEMIA_NO_CREAR_EN_AJENO'],
   ],
   guardian: [
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
@@ -205,6 +207,80 @@ function buscadorPorNombreCompletoSql(tabla) {
   `
 }
 
+/**
+ * 2026-09-18: Academia (lessons/quiz_questions/quiz_options) pasó de una
+ * sola policy ALL sin restricción a acotar la ESCRITURA por asignación
+ * docente -- mismo patrón que Asistencia/Notas/Horarios
+ * (teacher_is_assigned_to_grade con 3 argumentos, categoría 'regular').
+ * Antes cualquier profesor podía crear/editar lecciones de cualquier curso.
+ *
+ * Prueba positiva: el profesor SÍ puede crear en un curso que de verdad
+ * tiene asignado (busca su propia asignación real, no asume ninguna).
+ */
+function academiaCrearEnCursoSql() {
+  return `
+    do $$
+    declare v_school uuid; v_grade text; v_subject uuid; v_id uuid;
+    begin
+      select school_id into v_school from users_profiles where auth_id = auth.uid();
+      -- OJO: no leer teacher_assignments con el cliente del profesor -- su
+      -- RLS no se lo permite (devuelve vacío, no error, mismo patrón que ya
+      -- costó un día con Mensajes/families). Usar la función oficial
+      -- security definer, igual que la policy real.
+      select distinct s.grade_level into v_grade from students s
+      where s.school_id = v_school and s.deleted_at is null and s.grade_level is not null
+        and teacher_is_assigned_to_grade(v_school, s.grade_level, 'regular')
+      limit 1;
+      if v_grade is null then
+        return; -- este profesor no tiene ningún curso asignado con estudiantes reales, se omite
+      end if;
+      select id into v_subject from subjects where school_id = v_school limit 1;
+      insert into lessons (school_id, subject_id, title, video_url, video_provider, grade_level, is_published)
+      values (v_school, v_subject, 'SMOKE-academia-curso-propio', 'https://youtube.com/watch?v=smoke', 'youtube', v_grade, false)
+      returning id into v_id;
+      if v_id is null then
+        raise exception 'No se pudo crear la lección de prueba en el curso asignado (%)', v_grade;
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * Prueba negativa: el profesor NO puede crear en un curso real del colegio
+ * que no tiene asignado. Si el insert tiene éxito, es un hueco de
+ * seguridad real -- se relanza como excepción para que el script lo marque
+ * FALLA (no "OK" invertido: un insert exitoso aquí es el fallo).
+ */
+function academiaNoCrearEnAjenoSql() {
+  return `
+    do $$
+    declare v_school uuid; v_grade text; v_subject uuid; v_inserted boolean := false;
+    begin
+      select school_id into v_school from users_profiles where auth_id = auth.uid();
+      -- misma razón que en academiaCrearEnCursoSql: usar la función oficial,
+      -- no un JOIN a teacher_assignments con el cliente del profesor.
+      select distinct s.grade_level into v_grade from students s
+      where s.school_id = v_school and s.deleted_at is null and s.grade_level is not null
+        and not teacher_is_assigned_to_grade(v_school, s.grade_level, 'regular')
+      limit 1;
+      if v_grade is null then
+        return; -- no hay ningún curso "ajeno" disponible para este profesor, se omite
+      end if;
+      select id into v_subject from subjects where school_id = v_school limit 1;
+      begin
+        insert into lessons (school_id, subject_id, title, video_url, video_provider, grade_level, is_published)
+        values (v_school, v_subject, 'SMOKE-academia-curso-ajeno', 'https://youtube.com/watch?v=smoke2', 'youtube', v_grade, false);
+        v_inserted := true;
+      exception when insufficient_privilege then
+        v_inserted := false;
+      end;
+      if v_inserted then
+        raise exception 'RIESGO: el profesor pudo crear una lección en un curso que NO tiene asignado (%)', v_grade;
+      end if;
+    end $$;
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -240,6 +316,8 @@ async function main() {
         : consulta === 'REVIEW_JUSTIFICATION' ? reviewJustificationSql()
         : consulta === 'BUSCADOR_PERSONAL' ? buscadorPorNombreCompletoSql('staff')
         : consulta === 'BUSCADOR_TUTORES' ? buscadorPorNombreCompletoSql('guardians')
+        : consulta === 'ACADEMIA_CREAR_EN_CURSO' ? academiaCrearEnCursoSql()
+        : consulta === 'ACADEMIA_NO_CREAR_EN_AJENO' ? academiaNoCrearEnAjenoSql()
         : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {
