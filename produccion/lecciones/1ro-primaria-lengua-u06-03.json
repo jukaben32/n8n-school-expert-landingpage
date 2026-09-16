@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u06-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U6. Había una vez",
+  "titulo": "Invento el final",
+  "descripcion": "Producción oral creativa: inventar un final con sentido.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes que todo cuento tiene principio, medio y final. Hoy vamos a inventar finales para cuentos que empiezan a la mitad.",
+      "visual": "<div class='rotulo'>Invento el final</div><h1 class='chico'>Tú pones el final</h1><div class='dib max'>✨</div>"
+    },
+    {
+      "narracion": "Un buen final debe tener sentido con lo que pasó antes. Si el conejo se perdió buscando zanahorias, el final debe resolver eso.",
+      "visual": "<h1>Debe tener sentido</h1><div class='tarjeta'><div class='dib mini'>🐰</div><div class='detalle'>El conejo se perdió</div></div>"
+    },
+    {
+      "narracion": "Un final con sentido sería: el conejo encontró el camino y volvió a casa. Eso sí resuelve el problema del cuento.",
+      "visual": "<h1>Un final que sí tiene sentido</h1><div class='tarjeta destaca'><div class='dib mini'>🏡</div><div class='detalle'>Encontró el camino a casa</div></div>"
+    },
+    {
+      "narracion": "Un final sin sentido sería algo que no tiene nada que ver, como que de repente empiece a nevar en la playa. Eso no resuelve nada del cuento.",
+      "visual": "<h1>Un final sin sentido</h1><div class='tarjeta'><div class='dib mini'>❄️</div><div class='detalle'>Nieva en la playa, sin razón</div></div>"
+    },
+    {
+      "narracion": "Para inventar un buen final, piensa: ¿cuál era el problema del cuento? Y luego imagina cómo se resuelve ese problema, no otra cosa.",
+      "visual": "<h1 class='chico'>Piensa en el problema</h1><div class='dib max'>🤔</div>"
+    },
+    {
+      "narracion": "Practiquemos. Un gato se subió a un árbol muy alto y no podía bajar. ¿Cuál final tiene sentido? Un bombero lo ayudó a bajar del árbol.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib mini'>🚒</div><div class='detalle'>Un bombero lo ayudó a bajar</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un buen final, ¿debe tener sentido con el cuento o puede ser cualquier cosa?",
+      "visual": "<div class='pregunta'>¿Cómo debe ser un buen final?</div><div class='opciones'><div class='opcion'><div class='palabra'>Con sentido</div></div><div class='opcion'><div class='palabra'>Cualquier cosa</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Si un gato se subió a un árbol y no podía bajar, ¿cuál final tiene sentido?",
+      "visual": "<div class='pregunta'>¿Cuál final tiene sentido?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un bombero lo ayuda a bajar</div></div><div class='opcion'><div class='palabra'>Llueve en la luna</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Antes de inventar el final, ¿en qué debes pensar primero? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿En qué piensas antes de inventar el final?</div><div class='opciones'><div class='opcion'><div class='palabra'>En el problema del cuento</div></div><div class='opcion'><div class='palabra'>En el color del cielo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un buen final, ¿debe tener sentido con el cuento o puede ser cualquier cosa?",
+      "opciones": [
+        { "texto": "Cualquier cosa", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Con sentido", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si un gato se subió a un árbol y no podía bajar, ¿cuál final tiene sentido?",
+      "opciones": [
+        { "texto": "Un bombero lo ayuda a bajar", "visual": "<div class='dib'>🚒</div>" },
+        { "texto": "Llueve en la luna", "visual": "<div class='dib'>🌙</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Antes de inventar el final, ¿en qué debes pensar primero?",
+      "opciones": [
+        { "texto": "En el color del cielo", "visual": "<div class='dib'>🌤️</div>" },
+        { "texto": "En el problema del cuento", "visual": "<div class='dib'>🤔</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

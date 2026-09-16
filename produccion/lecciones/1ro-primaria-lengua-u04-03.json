@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u04-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U4. Pequeños mensajes",
+  "titulo": "Le escribo un recado a mi mamá",
+  "descripcion": "Producción escrita: escribir un recado completo.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un recado es un mensaje escrito para alguien que no está en ese momento. Lo dejas en un lugar donde esa persona lo va a ver.",
+      "visual": "<div class='rotulo'>El recado</div><h1 class='chico'>Para alguien que no está</h1><div class='dib max'>📝</div>"
+    },
+    {
+      "narracion": "Un buen recado tiene tres partes: para quién es, qué le quieres decir, y quién lo escribió.",
+      "visual": "<h1>Tres partes</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Para quién</li><li><span class='bolita'>2️⃣</span> Qué le dices</li><li><span class='bolita'>3️⃣</span> Quién lo escribió</li></ol>"
+    },
+    {
+      "narracion": "Mira este ejemplo: Mamá, fui al colmado con papá. Vuelvo pronto. Tu hijo, Pedro. Tiene las tres partes completas.",
+      "visual": "<h1>Ejemplo</h1><div class='tarjeta destaca'><div class='detalle'>Mamá,</div><div class='detalle'>Fui al colmado con papá.</div><div class='detalle'>Pedro</div></div>"
+    },
+    {
+      "narracion": "Fíjate que empieza diciendo para quién es: Mamá. Eso ayuda a que la persona correcta sepa que el recado es para ella.",
+      "visual": "<h1 class='chico'>Empieza con el nombre</h1><div class='palabra-grande'>Mamá,</div><div class='pie'>Para quién es</div>"
+    },
+    {
+      "narracion": "Y termina con quién lo escribió, para que sepan de quién vino el recado. Así no hay confusión.",
+      "visual": "<h1>Termina con tu nombre</h1><div class='palabra-grande'>Pedro</div><div class='pie'>Quién lo escribió</div>"
+    },
+    {
+      "narracion": "Practiquemos. Imagina que sales a jugar y tu mamá no está en casa. ¿Qué le dirías en un recado? Salí a jugar. Vuelvo a las cinco.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='detalle'>Salí a jugar.</div><div class='detalle'>Vuelvo a las cinco.</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuántas partes tiene un buen recado?",
+      "visual": "<div class='pregunta'>¿Cuántas partes tiene un recado?</div><div class='opciones'><div class='opcion'><div class='num'>3</div></div><div class='opcion'><div class='num'>1</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Con qué debe empezar un recado?",
+      "visual": "<div class='pregunta'>¿Con qué debe empezar?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un dibujo</div></div><div class='opcion'><div class='palabra'>Para quién es</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Con qué debe terminar un recado? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Con qué debe terminar?</div><div class='opciones'><div class='opcion'><div class='palabra'>Quién lo escribió</div></div><div class='opcion'><div class='palabra'>Un número</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántas partes tiene un buen recado?",
+      "opciones": [
+        { "texto": "3", "visual": "<div class='num'>3</div>" },
+        { "texto": "1", "visual": "<div class='num'>1</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué debe empezar un recado?",
+      "opciones": [
+        { "texto": "Un dibujo", "visual": "<div class='dib'>🎨</div>" },
+        { "texto": "Para quién es", "visual": "<div class='dib'>👤</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Con qué debe terminar un recado?",
+      "opciones": [
+        { "texto": "Quién lo escribió", "visual": "<div class='dib'>✍️</div>" },
+        { "texto": "Un número", "visual": "<div class='dib'>🔢</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

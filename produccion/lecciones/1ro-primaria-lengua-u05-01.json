@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u05-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U5. Leemos noticias",
+  "titulo": "¿Qué es una noticia?",
+  "descripcion": "Qué pasó, dónde y cuándo: los datos de una noticia.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Una noticia cuenta algo que pasó de verdad. No es un cuento inventado, es algo real que sucedió.",
+      "visual": "<div class='rotulo'>La noticia</div><h1 class='chico'>Algo que pasó de verdad</h1><div class='dib max'>📰</div>"
+    },
+    {
+      "narracion": "Una noticia responde tres preguntas importantes: ¿qué pasó?, ¿dónde pasó?, y ¿cuándo pasó?",
+      "visual": "<h1>Tres preguntas</h1><ol class='lista'><li><span class='bolita'>❓</span> ¿Qué pasó?</li><li><span class='bolita'>📍</span> ¿Dónde pasó?</li><li><span class='bolita'>📅</span> ¿Cuándo pasó?</li></ol>"
+    },
+    {
+      "narracion": "Mira este ejemplo: Ayer llovió mucho en Santiago. Qué pasó: llovió mucho. Dónde: en Santiago. Cuándo: ayer.",
+      "visual": "<h1>Un ejemplo</h1><div class='tarjeta destaca'><div class='detalle'>Ayer llovió mucho en Santiago</div></div>"
+    },
+    {
+      "narracion": "Las noticias pueden ser sobre muchas cosas: el clima, un partido de béisbol, algo que pasó en la escuela, o una fiesta del pueblo.",
+      "visual": "<h1>De muchos temas</h1><div class='fila apretada'><div class='dib mini'>🌧️</div><div class='dib mini'>⚾</div><div class='dib mini'>🏫</div></div>"
+    },
+    {
+      "narracion": "Fíjate en la diferencia: un cuento se inventa, pero una noticia debe ser verdad. No puedes inventar una noticia, porque entonces ya no sería noticia.",
+      "visual": "<h1 class='chico'>Verdad, no invento</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>📰</div><div class='detalle'>Verdad</div></div><div class='tarjeta'><div class='dib mini'>🧚</div><div class='detalle'>Cuento inventado</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tu equipo de béisbol ganó el partido el sábado en el parque, ¿cómo lo contarías como noticia? El sábado, mi equipo ganó el partido en el parque.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='detalle'>El sábado, mi equipo ganó</div><div class='detalle'>el partido en el parque</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Una noticia, ¿cuenta algo inventado o algo que pasó de verdad?",
+      "visual": "<div class='pregunta'>¿Una noticia cuenta algo...?</div><div class='opciones'><div class='opcion'><div class='palabra'>Inventado</div></div><div class='opcion'><div class='palabra'>Que pasó de verdad</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuáles son las tres preguntas que responde una noticia?",
+      "visual": "<div class='pregunta'>¿Qué preguntas responde una noticia?</div><div class='opciones'><div class='opcion'><div class='palabra'>Qué, dónde y cuándo</div></div><div class='opcion'><div class='palabra'>Cómo se llama y cuántos años tiene</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Puedes inventar una noticia? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Puedes inventar una noticia?</div><div class='opciones'><div class='opcion'><div class='palabra'>No, debe ser verdad</div></div><div class='opcion'><div class='palabra'>Sí, como quieras</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Una noticia, ¿cuenta algo inventado o algo que pasó de verdad?",
+      "opciones": [
+        { "texto": "Inventado", "visual": "<div class='dib'>🧚</div>" },
+        { "texto": "Que pasó de verdad", "visual": "<div class='dib'>📰</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuáles son las tres preguntas que responde una noticia?",
+      "opciones": [
+        { "texto": "Qué, dónde y cuándo", "visual": "<div class='dib'>❓</div>" },
+        { "texto": "Cómo se llama y cuántos años tiene", "visual": "<div class='dib'>🎂</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Puedes inventar una noticia?",
+      "opciones": [
+        { "texto": "No, debe ser verdad", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Sí, como quieras", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

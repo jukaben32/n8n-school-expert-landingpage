@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u04-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U4. Pequeños mensajes",
+  "titulo": "Junto sílabas y formo palabras",
+  "descripcion": "Unir sílabas para formar palabras nuevas.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las palabras están hechas de pedacitos que se llaman sílabas. Si juntas los pedacitos correctos, en el orden correcto, se forma una palabra.",
+      "visual": "<div class='rotulo'>Sílabas</div><h1 class='chico'>Los pedacitos de las palabras</h1><div class='fila apretada'><div class='silaba'>ma</div><div class='silaba'>no</div></div>"
+    },
+    {
+      "narracion": "Mira: ma más no forma mano. Los dos pedacitos juntos hacen una palabra completa.",
+      "visual": "<h1>ma + no = mano</h1><div class='fila'><div class='silaba'>ma</div><div class='signo'>+</div><div class='silaba'>no</div><div class='signo'>=</div><div class='palabra-grande'>mano</div></div>"
+    },
+    {
+      "narracion": "Otro ejemplo: ca más sa forma casa. Fíjate que el orden importa: sa más ca no forma nada que conozcamos.",
+      "visual": "<h1>ca + sa = casa</h1><div class='fila'><div class='silaba'>ca</div><div class='signo'>+</div><div class='silaba'>sa</div><div class='signo'>=</div><div class='palabra-grande'>casa</div></div>"
+    },
+    {
+      "narracion": "Algunas palabras tienen tres pedacitos. Za más pa más to forma zapato. Tres sílabas juntas hacen la palabra completa.",
+      "visual": "<h1>za + pa + to = zapato</h1><div class='fila apretada'><div class='silaba'>za</div><div class='silaba'>pa</div><div class='silaba'>to</div></div><div class='palabra-grande'>zapato</div>"
+    },
+    {
+      "narracion": "Puedes practicar diciendo las sílabas despacito y después juntándolas rápido: ma-no, mano. ca-sa, casa.",
+      "visual": "<h1 class='chico'>Dilo despacio, después rápido</h1><div class='dib mini'>🐢</div><div class='signo'>➜</div><div class='dib mini'>🐇</div>"
+    },
+    {
+      "narracion": "Practiquemos. ¿Qué palabra se forma con pe más lo? Pelo. Junta las sílabas y dilo en voz alta.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='silaba'>pe</div><div class='signo'>+</div><div class='silaba'>lo</div><div class='signo'>=</div><div class='palabra-grande'>pelo</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué palabra se forma con las sílabas ma y no?",
+      "visual": "<div class='pregunta'>ma + no = ?</div><div class='opciones'><div class='opcion'><div class='palabra'>mano</div></div><div class='opcion'><div class='palabra'>casa</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántas sílabas tiene la palabra zapato?",
+      "visual": "<div class='pregunta'>¿Cuántas sílabas tiene zapato?</div><div class='opciones'><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>3</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué palabra se forma con las sílabas ca y sa? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>ca + sa = ?</div><div class='opciones'><div class='opcion'><div class='palabra'>mano</div></div><div class='opcion'><div class='palabra'>casa</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué palabra se forma con las sílabas ma y no?",
+      "opciones": [
+        { "texto": "Mano", "visual": "<div class='palabra-grande'>mano</div>" },
+        { "texto": "Casa", "visual": "<div class='palabra-grande'>casa</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuántas sílabas tiene la palabra zapato?",
+      "opciones": [
+        { "texto": "2", "visual": "<div class='num'>2</div>" },
+        { "texto": "3", "visual": "<div class='num'>3</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué palabra se forma con las sílabas ca y sa?",
+      "opciones": [
+        { "texto": "Mano", "visual": "<div class='palabra-grande'>mano</div>" },
+        { "texto": "Casa", "visual": "<div class='palabra-grande'>casa</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

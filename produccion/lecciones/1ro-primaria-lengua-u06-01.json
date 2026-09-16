@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u06-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U6. Había una vez",
+  "titulo": "Todo cuento tiene tres partes",
+  "descripcion": "Principio, medio y final de un cuento.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Había una vez... así empiezan muchos cuentos. Hoy vamos a aprender que todo cuento tiene tres partes.",
+      "visual": "<div class='rotulo'>El cuento</div><h1 class='chico'>Tiene tres partes</h1><div class='dib max'>📖</div>"
+    },
+    {
+      "narracion": "La primera parte es el principio. Ahí nos dicen quién es el personaje y dónde está. Por ejemplo: Había una vez un conejo que vivía en el bosque.",
+      "visual": "<h1>1. El principio</h1><div class='tarjeta destaca'><div class='dib mini'>🐰</div><div class='detalle'>Había una vez un conejo</div></div>"
+    },
+    {
+      "narracion": "La segunda parte es el medio. Ahí pasa algo, un problema o una aventura. El conejo se perdió buscando zanahorias.",
+      "visual": "<h1>2. El medio</h1><div class='tarjeta'><div class='dib mini'>🥕</div><div class='detalle'>El conejo se perdió</div></div>"
+    },
+    {
+      "narracion": "La tercera parte es el final. Ahí se resuelve el problema. El conejo encontró el camino de vuelta a su casa.",
+      "visual": "<h1>3. El final</h1><div class='tarjeta destaca'><div class='dib mini'>🏡</div><div class='detalle'>Encontró el camino a casa</div></div>"
+    },
+    {
+      "narracion": "Principio, medio y final. Las tres partes van siempre en ese orden, una después de la otra.",
+      "visual": "<h1 class='chico'>En orden</h1><div class='fila apretada'><div class='dib mini'>1️⃣</div><div class='signo'>➜</div><div class='dib mini'>2️⃣</div><div class='signo'>➜</div><div class='dib mini'>3️⃣</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Piensa en el cuento de los tres cerditos. ¿Cuál es el principio? Había una vez tres cerditos que construyeron sus casas.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib mini'>🐷</div><div class='detalle'>Tres cerditos construyen casas</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuántas partes tiene un cuento?",
+      "visual": "<div class='pregunta'>¿Cuántas partes tiene un cuento?</div><div class='opciones'><div class='opcion'><div class='num'>3</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿En cuál parte nos dicen quién es el personaje?",
+      "visual": "<div class='pregunta'>¿Dónde nos dicen quién es el personaje?</div><div class='opciones'><div class='opcion'><div class='palabra'>En el principio</div></div><div class='opcion'><div class='palabra'>En el final</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿En cuál parte se resuelve el problema del cuento? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Dónde se resuelve el problema?</div><div class='opciones'><div class='opcion'><div class='palabra'>En el final</div></div><div class='opcion'><div class='palabra'>En el principio</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántas partes tiene un cuento?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "3", "visual": "<div class='num'>3</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿En cuál parte nos dicen quién es el personaje?",
+      "opciones": [
+        { "texto": "En el principio", "visual": "<div class='num'>1️⃣</div>" },
+        { "texto": "En el final", "visual": "<div class='num'>3️⃣</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿En cuál parte se resuelve el problema del cuento?",
+      "opciones": [
+        { "texto": "En el principio", "visual": "<div class='num'>1️⃣</div>" },
+        { "texto": "En el final", "visual": "<div class='num'>3️⃣</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

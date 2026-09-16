@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u05-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U5. Leemos noticias",
+  "titulo": "Cuento una noticia de mi escuela",
+  "descripcion": "Producción oral y escrita: contar una noticia completa.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes qué es una noticia. Ahora vamos a contar una noticia completa sobre algo que pasó en tu escuela.",
+      "visual": "<div class='rotulo'>Mi noticia</div><h1 class='chico'>Algo que pasó en mi escuela</h1><div class='dib max'>🏫</div>"
+    },
+    {
+      "narracion": "Piensa en algo que pasó de verdad en tu escuela esta semana. Puede ser una fiesta, un juego, una visita, o algo que aprendiste.",
+      "visual": "<h1>Piensa en algo real</h1><div class='fila apretada'><div class='dib mini'>🎉</div><div class='dib mini'>⚽</div><div class='dib mini'>📚</div></div>"
+    },
+    {
+      "narracion": "Ahora arma tu noticia con las tres preguntas: ¿qué pasó?, ¿dónde?, ¿cuándo? Por ejemplo: El lunes hubo una fiesta en el patio de la escuela.",
+      "visual": "<h1>Arma tu noticia</h1><div class='tarjeta destaca'><div class='detalle'>El lunes hubo una fiesta</div><div class='detalle'>en el patio de la escuela.</div></div>"
+    },
+    {
+      "narracion": "Después ponle un titular corto: FIESTA EN LA ESCUELA. Así cualquiera sabe de qué trata antes de leer el resto.",
+      "visual": "<h1>Ponle un titular</h1><div class='palabra-grande'>FIESTA EN LA ESCUELA</div>"
+    },
+    {
+      "narracion": "Puedes contar tu noticia en voz alta a tu familia, o escribirla en un papel. Las dos formas sirven para compartir lo que pasó.",
+      "visual": "<h1>Contarla o escribirla</h1><div class='fila'><div class='dib mini'>🗣️</div><div class='dib mini'>✍️</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Imagina que un maestro nuevo llegó a tu escuela hoy. ¿Cuál sería el titular de esa noticia? LLEGA MAESTRO NUEVO.",
+      "visual": "<h1>Practiquemos</h1><div class='palabra-grande'>LLEGA MAESTRO NUEVO</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Para contar una noticia de tu escuela, ¿debe ser algo que pasó de verdad?",
+      "visual": "<div class='pregunta'>¿Debe ser algo real?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí, real</div></div><div class='opcion'><div class='palabra'>No, inventado</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué le pones a tu noticia además del texto?",
+      "visual": "<div class='pregunta'>¿Qué más le pones a tu noticia?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un titular</div></div><div class='opcion'><div class='palabra'>Nada más</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿De dónde debe salir la noticia que cuentas? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿De dónde sale tu noticia?</div><div class='opciones'><div class='opcion'><div class='palabra'>De algo que pasó</div></div><div class='opcion'><div class='palabra'>De un sueño</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Para contar una noticia de tu escuela, ¿debe ser algo que pasó de verdad?",
+      "opciones": [
+        { "texto": "Sí, real", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "No, inventado", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué le pones a tu noticia además del texto?",
+      "opciones": [
+        { "texto": "Un titular", "visual": "<div class='dib'>📰</div>" },
+        { "texto": "Nada más", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿De dónde debe salir la noticia que cuentas?",
+      "opciones": [
+        { "texto": "De un sueño", "visual": "<div class='dib'>💭</div>" },
+        { "texto": "De algo que pasó", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

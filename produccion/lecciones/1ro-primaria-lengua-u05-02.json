@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u05-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U5. Leemos noticias",
+  "titulo": "El titular dice mucho en poco",
+  "descripcion": "El titular resume la noticia en pocas palabras.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Arriba de cada noticia hay un título grande, que se llama titular. El titular te dice de qué trata la noticia, sin tener que leer todo.",
+      "visual": "<div class='rotulo'>El titular</div><h1 class='chico'>Un título grande arriba</h1><div class='tarjeta destaca'><div class='palabra-grande'>LLUEVE MUCHO</div></div>"
+    },
+    {
+      "narracion": "El titular dice lo más importante en pocas palabras. No cuenta todo, solo lo principal, para que sepas de qué trata antes de leer más.",
+      "visual": "<h1>Pocas palabras</h1><div class='palabra-grande'>ESCUELA GANA PREMIO</div><div class='pie'>Solo lo principal</div>"
+    },
+    {
+      "narracion": "Si el titular te interesa, sigues leyendo el resto de la noticia. Si no te interesa, pasas a otra. Por eso el titular es tan importante.",
+      "visual": "<h1 class='chico'>¿Sigo leyendo?</h1><div class='fila'><div class='dib mini'>👀</div><div class='signo'>➜</div><div class='dib mini'>📖</div></div>"
+    },
+    {
+      "narracion": "Mira estos dos titulares. NIÑOS PLANTAN ÁRBOLES te dice de qué trata la noticia rápido. Una frase muy larga y confusa no funciona igual de bien.",
+      "visual": "<h1>Buen titular</h1><div class='fila'><div class='tarjeta si'><div class='palabra'>NIÑOS PLANTAN ÁRBOLES</div></div><div class='tarjeta no'><div class='detalle'>una frase larga y confusa que no queda clara</div></div></div>"
+    },
+    {
+      "narracion": "El titular casi siempre va con letra más grande que el resto del texto, para que se note primero cuando abres el periódico.",
+      "visual": "<h1>Letra grande</h1><div class='palabra-grande'>TITULAR</div><div class='detalle'>el resto del texto va más pequeño</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si la noticia es que tu escuela ganó un concurso de dibujo, ¿cuál titular es mejor: ESCUELA GANA CONCURSO, o algo muy largo y difícil de entender?",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta si'><div class='palabra'>ESCUELA GANA CONCURSO</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Dónde va el titular en una noticia?",
+      "visual": "<div class='pregunta'>¿Dónde va el titular?</div><div class='opciones'><div class='opcion'><div class='palabra'>Arriba de todo</div></div><div class='opcion'><div class='palabra'>Al final</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cómo debe ser un buen titular?",
+      "visual": "<div class='pregunta'>¿Cómo debe ser un titular?</div><div class='opciones'><div class='opcion'><div class='palabra'>Muy largo</div></div><div class='opcion'><div class='palabra'>Corto y claro</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué te sirve leer el titular primero? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué sirve leer el titular?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para saber si te interesa</div></div><div class='opcion'><div class='palabra'>Para dibujar</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Dónde va el titular en una noticia?",
+      "opciones": [
+        { "texto": "Arriba de todo", "visual": "<div class='dib'>⬆️</div>" },
+        { "texto": "Al final", "visual": "<div class='dib'>⬇️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cómo debe ser un buen titular?",
+      "opciones": [
+        { "texto": "Muy largo", "visual": "<div class='dib'>📜</div>" },
+        { "texto": "Corto y claro", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Para qué te sirve leer el titular primero?",
+      "opciones": [
+        { "texto": "Para saber si te interesa", "visual": "<div class='dib'>👀</div>" },
+        { "texto": "Para dibujar", "visual": "<div class='dib'>🎨</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

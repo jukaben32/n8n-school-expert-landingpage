@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u06-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U6. Había una vez",
+  "titulo": "Los personajes del cuento",
+  "descripcion": "Quién es el personaje principal de un cuento.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Los personajes son quienes viven la historia en un cuento. Pueden ser personas, animales, o hasta objetos que hablan.",
+      "visual": "<div class='rotulo'>Los personajes</div><h1 class='chico'>Quiénes viven la historia</h1><div class='fila apretada'><div class='dib mini'>🧒</div><div class='dib mini'>🐻</div><div class='dib mini'>🧸</div></div>"
+    },
+    {
+      "narracion": "El personaje principal es el más importante, el que aparece en casi todo el cuento y a quien le pasan las cosas.",
+      "visual": "<h1>El personaje principal</h1><div class='tarjeta destaca'><div class='dib mini'>🐰</div><div class='detalle'>El más importante</div></div>"
+    },
+    {
+      "narracion": "En Caperucita Roja, el personaje principal es Caperucita. Ella es quien camina por el bosque y a quien le pasa la aventura.",
+      "visual": "<h1>Un ejemplo</h1><div class='tarjeta destaca'><div class='dib mini'>👧</div><div class='detalle'>Caperucita Roja</div></div>"
+    },
+    {
+      "narracion": "También hay otros personajes, como el lobo o la abuela. No son el principal, pero ayudan a que pase la historia.",
+      "visual": "<h1>Otros personajes</h1><div class='fila'><div class='dib mini'>🐺</div><div class='dib mini'>👵</div></div>"
+    },
+    {
+      "narracion": "Para saber quién es el principal, pregúntate: ¿de quién habla el cuento la mayor parte del tiempo? Esa es la respuesta.",
+      "visual": "<h1 class='chico'>¿De quién habla más?</h1><div class='dib max'>🤔</div>"
+    },
+    {
+      "narracion": "Practiquemos. En el cuento de los tres cerditos, ¿quién es el personaje principal? Los tres cerditos, porque de ellos habla toda la historia.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib mini'>🐷</div><div class='detalle'>Los tres cerditos</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué es un personaje?",
+      "visual": "<div class='pregunta'>¿Qué es un personaje?</div><div class='opciones'><div class='opcion'><div class='palabra'>Quien vive la historia</div></div><div class='opcion'><div class='palabra'>El título del cuento</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cómo se llama el personaje más importante del cuento?",
+      "visual": "<div class='pregunta'>¿Cómo se llama el más importante?</div><div class='opciones'><div class='opcion'><div class='palabra'>Personaje principal</div></div><div class='opcion'><div class='palabra'>Personaje chiquito</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. En Caperucita Roja, ¿quién es el personaje principal? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién es el principal en Caperucita?</div><div class='opciones'><div class='opcion'><div class='palabra'>Caperucita</div></div><div class='opcion'><div class='palabra'>El lobo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué es un personaje?",
+      "opciones": [
+        { "texto": "El título del cuento", "visual": "<div class='dib'>📕</div>" },
+        { "texto": "Quien vive la historia", "visual": "<div class='dib'>🧒</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cómo se llama el personaje más importante del cuento?",
+      "opciones": [
+        { "texto": "Personaje principal", "visual": "<div class='dib'>⭐</div>" },
+        { "texto": "Personaje chiquito", "visual": "<div class='dib'>🔹</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "En Caperucita Roja, ¿quién es el personaje principal?",
+      "opciones": [
+        { "texto": "El lobo", "visual": "<div class='dib'>🐺</div>" },
+        { "texto": "Caperucita", "visual": "<div class='dib'>👧</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

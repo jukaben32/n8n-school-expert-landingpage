@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u04-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U4. Pequeños mensajes",
+  "titulo": "Un mensaje para alguien",
+  "descripcion": "Para qué sirve un mensaje corto y a quién se lo escribo.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un mensaje es algo corto que le escribes a una persona, para decirle algo sin tener que hablar en ese momento.",
+      "visual": "<div class='rotulo'>El mensaje</div><h1 class='chico'>Algo corto para alguien</h1><div class='dib max'>💌</div>"
+    },
+    {
+      "narracion": "Un mensaje siempre es PARA alguien. Puede ser para tu mamá, para tu maestra, o para un amigo. Siempre tiene un destinatario.",
+      "visual": "<h1>¿Para quién?</h1><div class='fila'><div class='dib mini'>👩</div><div class='dib mini'>👩‍🏫</div><div class='dib mini'>🧒</div></div>"
+    },
+    {
+      "narracion": "Los mensajes se usan para decir cosas rápidas: dónde estás, a qué hora llegas, o que ya terminaste tu tarea.",
+      "visual": "<h1>¿Qué dicen?</h1><div class='tarjeta destaca'><div class='detalle'>Ya llegué a casa</div></div>"
+    },
+    {
+      "narracion": "Antes, los mensajes se escribían en papelitos. Ahora, muchas familias mandan mensajes por el teléfono, pero la idea es la misma: decir algo corto a alguien.",
+      "visual": "<h1 class='chico'>Papel o teléfono</h1><div class='fila'><div class='dib mini'>📝</div><div class='signo'>=</div><div class='dib mini'>📱</div></div>"
+    },
+    {
+      "narracion": "Un buen mensaje es corto y claro. No hace falta escribir mucho, solo lo importante, para que la otra persona entienda rápido.",
+      "visual": "<h1>Corto y claro</h1><div class='tarjeta si'><div class='detalle'>Voy tarde, espérame</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si quieres avisarle a tu mamá que llegaste bien a la escuela, ¿qué le escribirías? Un mensaje corto: Llegué bien.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='detalle'>Llegué bien</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un mensaje, ¿siempre es para alguien, o no es para nadie?",
+      "visual": "<div class='pregunta'>¿Un mensaje es para alguien?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí, para alguien</div></div><div class='opcion'><div class='palabra'>No, para nadie</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cómo debe ser un buen mensaje?",
+      "visual": "<div class='pregunta'>¿Cómo debe ser un buen mensaje?</div><div class='opciones'><div class='opcion'><div class='palabra'>Muy largo</div></div><div class='opcion'><div class='palabra'>Corto y claro</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué escribes un mensaje a tu mamá? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué le escribes a tu mamá?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para decirle algo rápido</div></div><div class='opcion'><div class='palabra'>Para dibujar</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un mensaje, ¿siempre es para alguien?",
+      "opciones": [
+        { "texto": "Sí, para alguien", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "No, para nadie", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cómo debe ser un buen mensaje?",
+      "opciones": [
+        { "texto": "Muy largo", "visual": "<div class='dib'>📜</div>" },
+        { "texto": "Corto y claro", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Para qué escribes un mensaje a tu mamá?",
+      "opciones": [
+        { "texto": "Para decirle algo rápido", "visual": "<div class='dib'>💌</div>" },
+        { "texto": "Para dibujar", "visual": "<div class='dib'>🎨</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}
