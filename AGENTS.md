@@ -4084,12 +4084,15 @@ Con eso, `scripts/smoke-roles.mjs`: **44 de 44 comprobaciones, todas OK**
 (las 2 nuevas de Academia + las 42 que ya existían, sin ninguna regresión
 en otro rol).
 
-**Génesis Rodríguez (Orientación) sigue sin ninguna asignación** en
-`teacher_assignments`, así que con este cambio tampoco puede crear
-lecciones de Academia (antes tampoco veía estudiantes en Asistencia/
-Actualizaciones por la misma razón, ver "Cursos mal escritos" más abajo).
-Sigue siendo una decisión pendiente con el usuario, no tocada en este
-cambio -- ver esa sección para el contexto completo.
+**Génesis Rodríguez (Orientación) -- resuelto el mismo día (2026-09-18).**
+El usuario confirmó explícitamente (vía `AskUserQuestion`, no asumido):
+"Todo el colegio", mismo patrón que Educación Física. Se le creó una fila
+en `teacher_assignments` (`school_id` + `staff_id` de Génesis,
+`grade_level = null`, `category = 'regular'`) -- dato puro, sin migración
+nueva. Verificado con sesión real simulada, en transacción con ROLLBACK:
+antes veía 0 estudiantes, ahora ve los 297 del colegio, y puede crear una
+lección de Academia en cualquier curso (probado con 6to. Primaria).
+`npm run smoke`: 44/44 sin regresión tras el cambio.
 
 ## PLAN DEFINITIVO — Producción de contenido de Academia (2026-09-06)
 
@@ -4278,10 +4281,11 @@ el usuario a mano en el SQL Editor: el clasificador de seguridad del harness
 bloquea las escrituras a producción desde la sesión de Claude Code (mismo
 bloqueo ya documentado para la carga de horarios).
 
-**Quedó fuera a propósito:** Génesis Rodríguez (Orientación y psicología) no
-tiene ninguna asignación, así que no ve a ningún estudiante. Puede ser
-intencional. Darle los 286 es **ampliar acceso**, no corregir un error -- no se
-tocó sin respuesta explícita del usuario. **Pendiente de decidir.**
+**Resuelto (2026-09-18)**, ver la sección "RESUELTO -- Academia ya acota al
+profesor por curso" más abajo: el usuario confirmó explícitamente "todo el
+colegio" para Génesis Rodríguez (Orientación y psicología) -- ya tiene su
+fila en `teacher_assignments` (`grade_level = null`, `category = 'regular'`)
+y ve a los 297 estudiantes del colegio.
 
 **Detalle menor descubierto de paso, sin corregir:** `students_read` no filtra
 `deleted_at`, así que un profesor todavía ve a los estudiantes con borrado suave
