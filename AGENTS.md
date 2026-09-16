@@ -3239,9 +3239,11 @@ falta el camino en la interfaz, no el permiso.
    encuentra la de OpenRouter. Mismo modelo (`gpt-audio-mini`) y misma voz
    (`marin`), así que suena igual que los 9 videos de 6to; lo único que cambia
    es el precio (~US$0.015/min en vez de US$0.0042).
-2. **Producir las 10 lecciones restantes de la tanda de 12** -- detenido a
-   pedido del usuario: *"para en el primero no hagas un segundo hasta que
-   hablemos"*. **No reanudar sin que lo diga.**
+2. ~~Producir las 10 lecciones restantes de la tanda de 12~~ -- la tanda
+   PILOTO (Unidad 1 de las 4 materias, 6 lecciones) quedó completa el
+   2026-09-18. Ver sección "Tanda piloto completa" más abajo. Quedan 6 de
+   las 12 ya escritas sin producir (U0/U2/U3, fuera de la piloto) -- esas sí
+   siguen esperando instrucción antes de continuar.
 3. Escribir los 81 guiones que faltan de los 93 del plan.
 4. **Crear los logins de los estudiantes de 1ro** (27 inscritos al 2026-09-09).
    Se hace desde `/dashboard/estudiantes/accesos`, que los imprime para
@@ -3252,6 +3254,69 @@ falta el camino en la interfaz, no el permiso.
    -- es lo único del plan que no está anclado a una fuente.
 6. ~~Repartir las respuestas correctas de las 9 lecciones de 6to~~ -- hecho y
    verificado el 2026-09-13 (sección siguiente).
+
+### Tanda piloto completa: Unidad 1 de las 4 materias (2026-09-18)
+
+Continuación de la sesión anterior (`session_01QrnmtNdZY97keLi11Pz3Fr`), que
+había quedado bloqueada preguntando "¿Listo para iniciar con
+`naturales-u01-02`?". Se retomó en una sesión nueva (sin el entorno de la
+anterior -- `ffmpeg`/Chromium/API keys había que rearmarlos), trayendo la rama
+`claude/student-portal-first-grade-jlesos` y fusionándola con el trabajo de
+esta sesión (rama `claude/continuar-videos-1ro`).
+
+Producidas y cargadas las **5 lecciones que faltaban** de la tanda piloto:
+*Mi tarjeta con mi nombre* (Lengua U1), *Los números del 0 al 9* y *Primero,
+segundo, tercero* (Matemática U1), *Las plantas también están vivas*
+(Naturales U1), *Yo soy único* (Sociales U1). Sumadas a *¿Está vivo o no está
+vivo?* (ya cargada el 2026-09-09), la Unidad 1 de las 4 materias queda
+**completa: 6 lecciones, 18 preguntas, 42 opciones con dibujo**.
+
+**Bug real encontrado y corregido en `producir.mjs`**: una escena que es solo
+una pregunta corta y aislada (ej. "Segunda pregunta. ¿Para qué sirve una
+tarjeta de identidad?", 9 palabras) hacía que `gpt-audio-mini` la
+**contestara** en vez de leerla -- confirmado con llamadas directas a la API
+fuera del pipeline (el modelo devolvía una explicación completa de qué es una
+tarjeta de identidad). Falló 2/2 corridas completas de `lengua-u01-01`,
+agotando los 7 reintentos existentes (3 directos + hasta 4 por pedazos), sin
+producir la lección. Fix: el mensaje de usuario ahora envuelve el guion en
+comillas angulares `« »`, y el system prompt explica que debe leer
+literalmente lo que está dentro sin responderlo -- probado 5 veces con el
+texto exacto que fallaba (subió de 0% a ~60% de éxito por intento, que
+combinado con los reintentos ya existentes baja la probabilidad de fallo
+completo a menos del 1%). No afecta texto largo ya funcionando (comparación
+exacta, sincronía 0.00s de desfase) ni la comprobación de fidelidad
+(`normalizar()` ya descarta toda puntuación).
+
+**Carga a Academia -- cuidado real con el `sort_order`**: `cargar-sql.mjs`
+lleva el contador por curso, pero **no sabe qué `sort_order` ya usan las
+lecciones que YA están en producción** (solo cuenta dentro del propio batch
+que genera). La única lección de 1ro ya cargada (`naturales-u01-01`) tenía
+`sort_order = 10`; el SQL generado para las 5 nuevas también arrancaba en 10,
+lo que habría dejado dos lecciones con el mismo orden. Detectado consultando
+producción ANTES de aplicar, corregido desplazando las 5 a 20/30/40/50/60.
+**Regla para la próxima tanda**: siempre consultar el `sort_order` máximo real
+del curso en producción antes de generar el SQL, no confiar en que el
+contador del script parta de cero.
+
+**Enlaces de YouTube identificados por título real, no por orden en que se
+pegaron** (`lib/anotar-enlace.mjs`, consulta `youtube.com/oembed`) -- el
+usuario pegó los 5 enlaces sin decir cuál era cuál; los 5 calzaron 1:1 contra
+el título del guion sin ambigüedad.
+
+**Verificado con sesión real simulada de un estudiante de 1ro** (cuenta de
+Auth + estudiante + familia + perfil, todo de prueba con nombre
+`PRUEBA-SMOKE`, en una transacción con `ROLLBACK`, cuenta de Auth borrada
+aparte al terminar -- 0 residuo confirmado): `current_student_id()` resuelve
+✅, ve las 6 lecciones de su curso en el orden correcto (10→60) ✅, cada una
+con sus preguntas y dibujos ✅, y **no ve ninguna lección de 6to** ✅.
+`npm run smoke`: sin regresión en ningún otro rol.
+
+**Pendiente real**: la tanda piloto está lista para que **la maestra de 1ro
+la vea completa**, que es el paso que el propio plan marca como obligatorio
+antes de seguir produciendo -- no reanudar la producción del resto sin esa
+confirmación. Sigue sin haber ningún login de estudiante de 1ro creado en
+producción (27 inscritos, 0 con cuenta) -- el mismo pendiente #4 de la lista
+de arriba.
 
 ### La primera lección de 1ro ya está en Academia (2026-09-09)
 
