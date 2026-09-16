@@ -88,7 +88,7 @@ const NIVELES: Nivel[] = [
     emoji: '💻',
     titulo: 'Portal Familiar',
     detalle: 'Sigue en tiempo real asistencia, calificaciones, comunicados y pagos de tus hijos, desde el celular.',
-    href: 'https://www.educacionmanantial.com',
+    href: 'https://www.educacionmanantial.com/login',
   },
 ]
 
@@ -131,6 +131,22 @@ export default async function AdmisionesPage({ params }: { params: Promise<{ sub
           .admisiones-float, .admisiones-float-slow, .admisiones-pop, .admisiones-bounce { animation: none; }
         }
       `}</style>
+
+      {/* Barra superior: acceso directo al Portal Familiar para quien ya es
+          familia del colegio -- no depende de que baje hasta la tarjeta de
+          Oferta académica para encontrarlo. */}
+      <div className="flex justify-end px-4 py-3 sm:px-6">
+        <a
+          href="https://www.educacionmanantial.com/login"
+          className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition hover:-translate-y-0.5"
+          style={{ borderColor: `${NAVY}33`, color: NAVY }}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H3" />
+          </svg>
+          Portal Familiar
+        </a>
+      </div>
 
       {/* Hero */}
       <section
