@@ -3244,7 +3244,9 @@ falta el camino en la interfaz, no el permiso.
    2026-09-18. Ver sección "Tanda piloto completa" más abajo. Quedan 6 de
    las 12 ya escritas sin producir (U0/U2/U3, fuera de la piloto) -- esas sí
    siguen esperando instrucción antes de continuar.
-3. Escribir los 81 guiones que faltan de los 93 del plan.
+3. Escribir los 81 guiones que faltan de los 93 del plan -- **5 más escritos
+   el 2026-09-18 (17 de 93 en total), 76 pendientes**. Ver sección "5 guiones
+   nuevos, completando Lengua/Matemática U0-U1" más abajo.
 4. **Crear los logins de los estudiantes de 1ro** (27 inscritos al 2026-09-09).
    Se hace desde `/dashboard/estudiantes/accesos`, que los imprime para
    entregarlos en mano. **A propósito no se crean desde una sesión de Claude**:
@@ -3317,6 +3319,65 @@ antes de seguir produciendo -- no reanudar la producción del resto sin esa
 confirmación. Sigue sin haber ningún login de estudiante de 1ro creado en
 producción (27 inscritos, 0 con cuenta) -- el mismo pendiente #4 de la lista
 de arriba.
+
+### 5 guiones nuevos, completando Lengua/Matemática U0-U1 (2026-09-18)
+
+Con la maestra sin haber visto todavía la tanda piloto, el usuario pidió
+seguir en lo que no depende de esa revisión: escribir guiones (sin producir
+video -- ni voz ni MP4) para tener contenido listo cuando dé luz verde.
+
+**Hallazgo antes de escribir nada**: `matematica-u01-02.json` (ya existente)
+contiene *"Primero, segundo, tercero"*, que en el plan es la **3ra** lección
+de esa unidad, no la 2da -- la lección 2 real (*"¿Cuántos hay? Más, menos e
+igual"*) nunca se había escrito. El sufijo `-NN` del nombre de archivo **no
+corresponde al orden del plan dentro de la unidad**, solo evita colisiones.
+Escribirla como `u01-02` habría sobrescrito la existente. Se nombró
+`u01-03` en su lugar. **Ojo con esto en cualquier tanda futura**: antes de
+nombrar un archivo nuevo, listar los `titulo` reales de los ya escritos de
+esa unidad (no confiar en que el sufijo numérico ya usado indique qué
+posición del plan falta).
+
+Escritos y verificados con `lib/revisar-guiones.mjs 1ro` (17 lecciones, 0
+problemas):
+- **Lengua U0-03** -- *El calendario de mi salón* (día siguiente al que se
+  muestra), cerrando U0 completa (3/3).
+- **Lengua U1-02** -- *El sonido con que empieza mi nombre* (sonido/letra
+  inicial).
+- **Lengua U1-03** -- *Nombres que riman*, cerrando U1 completa (3/3).
+- **Matemática U0-02** -- *Agrupamos por color, forma y tamaño*, cerrando U0
+  completa (2/2).
+- **Matemática U1-03** -- *¿Cuántos hay? Más, menos e igual* (la lección 2
+  del plan que faltaba), cerrando U1 completa (3/3).
+
+**Sesgo de conjunto corregido antes de terminar**: el revisor solo hace
+fallar una lección si sus 3 respuestas caen en la MISMA posición exacta (no
+disparó en ninguna de las 5) -- pero el aviso de CONJUNTO sí saltó: con las
+5 nuevas el reparto global de 1ro quedó en 51% en la 2da posición (por
+encima del umbral de aviso). Se invirtió el orden de opciones en 3 preguntas
+(una de `lengua-u01-02`, una de `lengua-u01-03`, una de `matematica-u01-03`)
+para bajarlo a 47% sin superar la mitad en ninguna posición.
+
+**Naturales y Sociales U0-U1 no se tocaron**: Naturales no tiene U0 en el
+plan y su U1 ya estaba completa (2/2); Sociales tampoco tiene U0 y su U1 ya
+estaba completa (1/1, un solo tema en esa unidad). No había nada que
+completar ahí en este lote.
+
+**Estado real de "hasta U3" (fin del primer trimestre) tras este lote**:
+
+| Materia | Escritas / total hasta U3 |
+|---|---|
+| Lengua | 6 de 12 (U0 y U1 completas; faltan las 6 de U2 y U3) |
+| Matemática | 5 de 11 (U0 y U1 completas; faltan las 6 de U2 y U3) |
+| Naturales | 3 de 7 (U1 completa; faltan 2 de U2, 2 de U3) |
+| Sociales | 3 de 5 (U1 completa; faltan 1 de U2, 1 de U3) |
+
+Quedan **18 guiones** para cerrar el primer trimestre completo (hasta U3 de
+las 4 materias) -- de los 76 que faltan del plan total de 93.
+
+**Sin producir ni cargar**: estos 5 son solo guion (JSON) -- no se corrió
+`producir.mjs` (nada de voz/MP4) ni `cargar-sql.mjs` (nada en producción).
+Coherente con la decisión del usuario de esperar la revisión de la maestra
+antes de comprometer más video.
 
 ### La primera lección de 1ro ya está en Academia (2026-09-09)
 

@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-lengua-u00-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U0. Un día muy especial",
+  "titulo": "El calendario de mi salón",
+  "descripcion": "Los días de la semana y para qué sirve el calendario.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "En tu salón hay un calendario pegado en la pared. El calendario dice qué día es hoy, y también dice qué días vienen después. Vamos a aprender a leerlo.",
+      "visual": "<div class='rotulo'>El calendario</div><h1 class='chico'>Dice qué día es</h1><div class='tabla'><div class='u'>L</div><div class='u'>M</div><div class='u'>M</div><div class='u'>J</div><div class='u'>V</div><div class='u'>S</div><div class='u'>D</div></div>"
+    },
+    {
+      "narracion": "La semana tiene siete días. Empieza el lunes y termina el domingo. Vamos a decirlos todos, en orden: lunes, martes, miércoles, jueves, viernes, sábado, domingo.",
+      "visual": "<h1>Los siete días</h1><div class='fila apretada'><div class='tarjeta'><div class='detalle'>lunes</div></div><div class='tarjeta'><div class='detalle'>martes</div></div><div class='tarjeta'><div class='detalle'>miércoles</div></div></div>"
+    },
+    {
+      "narracion": "De lunes a viernes vamos a la escuela. Son cinco días de clase. El sábado y el domingo son los días de descansar en casa, con la familia.",
+      "visual": "<h1 class='chico'>Escuela y descanso</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>🎒</div><div class='detalle'>Lunes a viernes</div></div><div class='tarjeta'><div class='dib mini'>🏠</div><div class='detalle'>Sábado y domingo</div></div></div>"
+    },
+    {
+      "narracion": "Cada mañana, la maestra marca en el calendario qué día es hoy. Hoy es martes. Ayer fue lunes. Y mañana será miércoles.",
+      "visual": "<div class='rotulo'>Hoy, ayer y mañana</div><div class='fila'><div class='tarjeta'><div class='detalle'>ayer</div><div class='palabra'>lunes</div></div><div class='tarjeta destaca'><div class='detalle'>hoy</div><div class='palabra'>martes</div></div><div class='tarjeta'><div class='detalle'>mañana</div><div class='palabra'>miércoles</div></div></div>"
+    },
+    {
+      "narracion": "El calendario también avisa cosas importantes. Si el viernes hay una fiesta en la escuela, la maestra lo marca ahí para que nadie se le olvide.",
+      "visual": "<h1>Avisa cosas importantes</h1><div class='tarjeta destaca'><div class='detalle'>viernes</div><div class='dib medio'>🎉</div><div class='pie'>Fiesta en la escuela</div></div>"
+    },
+    {
+      "narracion": "Fíjate en el orden. Después del lunes siempre viene el martes. Después del martes viene el miércoles. Los días van siempre en la misma fila, uno detrás del otro.",
+      "visual": "<h1 class='chico'>Siempre en el mismo orden</h1><div class='fila apretada'><div class='num claro'>1</div><div class='signo'>➜</div><div class='num claro'>2</div><div class='signo'>➜</div><div class='num verde'>3</div></div><div class='pie'>lunes ➜ martes ➜ miércoles</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si hoy es jueves, ¿qué día fue ayer? Fue miércoles. Y si hoy es jueves, ¿qué día viene mañana? Viene viernes.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='tarjeta'><div class='detalle'>ayer</div><div class='palabra'>miércoles</div></div><div class='tarjeta destaca'><div class='detalle'>hoy</div><div class='palabra'>jueves</div></div><div class='tarjeta'><div class='detalle'>mañana</div><div class='palabra'>viernes</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Piensa bien en el orden de los días.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Si hoy es lunes, ¿qué día viene después?",
+      "visual": "<div class='pregunta'>Hoy es lunes. ¿Qué día viene después?</div><div class='opciones'><div class='opcion'><div class='palabra'>martes</div></div><div class='opcion'><div class='palabra'>domingo</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántos días tiene la semana en total?",
+      "visual": "<div class='pregunta'>¿Cuántos días tiene la semana?</div><div class='opciones'><div class='opcion'><div class='num'>5</div></div><div class='opcion'><div class='num'>7</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuáles son los días de descansar en casa? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuáles son los días de descansar?</div><div class='opciones'><div class='opcion'><div class='dib'>🏠</div><div class='palabra'>Sábado y domingo</div></div><div class='opcion'><div class='dib'>🎒</div><div class='palabra'>Lunes y martes</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Hoy es lunes. ¿Qué día viene después?",
+      "opciones": [
+        { "texto": "Martes", "visual": "<div class='palabra-grande'>martes</div>" },
+        { "texto": "Domingo", "visual": "<div class='palabra-grande'>domingo</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuántos días tiene la semana?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "7", "visual": "<div class='num'>7</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuáles son los días de descansar en casa?",
+      "opciones": [
+        { "texto": "Sábado y domingo", "visual": "<div class='dib'>🏠</div>" },
+        { "texto": "Lunes y martes", "visual": "<div class='dib'>🎒</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

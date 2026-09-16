@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-lengua-u01-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U1. ¿Quién soy?",
+  "titulo": "Nombres que riman",
+  "descripcion": "Reconocer rimas entre palabras y nombres.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Dos palabras riman cuando terminan igual. Escucha: Ana y banana. Las dos terminan en ana. Por eso riman.",
+      "visual": "<div class='rotulo'>¿Qué es rimar?</div><h1 class='chico'>Terminan igual</h1><div class='palabra-grande'><span class='foco'>Ana</span> · pl<span class='foco'>átano</span></div>"
+    },
+    {
+      "narracion": "Vamos a escuchar más ejemplos. Pan y flan terminan igual, en an. Sol y col terminan igual, en ol. Casa y masa terminan igual, en asa.",
+      "visual": "<h1>Ejemplos de rimas</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🍞</div><div class='detalle'>pan</div></div><div class='signo'>=</div><div class='tarjeta'><div class='dib mini'>🍮</div><div class='detalle'>flan</div></div></div>"
+    },
+    {
+      "narracion": "Para saber si dos palabras riman, dilas despacito y escucha el final. Pe-DRO. Ve-DRO no existe, pero CUA-DRO sí. Pedro y cuadro riman, terminan igual: en dro.",
+      "visual": "<h1 class='chico'>Escucha el final</h1><div class='fila'><div class='tarjeta destaca'><div class='palabra'>Pe<span class='foco'>dro</span></div></div><div class='signo'>=</div><div class='tarjeta destaca'><div class='dib mini'>🖼️</div><div class='palabra'>cua<span class='foco'>dro</span></div></div></div>"
+    },
+    {
+      "narracion": "No todas las palabras riman entre sí. Sol y mesa NO riman. Sol termina en ol, y mesa termina en esa. Son finales distintos.",
+      "visual": "<h1>Estas NO riman</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>☀️</div><div class='detalle'>sol</div></div><div class='signo'>≠</div><div class='tarjeta'><div class='dib mini'>🪑</div><div class='detalle'>mesa</div></div></div>"
+    },
+    {
+      "narracion": "Muchos nombres riman entre sí. Juan y pan riman. María y sandía riman. Fíjate cómo suenan parecido al final.",
+      "visual": "<div class='rotulo'>Nombres que riman</div><div class='fila'><div class='tarjeta destaca'><div class='detalle'>Juan</div></div><div class='signo'>=</div><div class='tarjeta destaca'><div class='dib mini'>🍞</div><div class='detalle'>pan</div></div></div>"
+    },
+    {
+      "narracion": "Rimar es un juego divertido. Los cuentos y las canciones usan muchas rimas, porque suenan bonito al oído.",
+      "visual": "<h1 class='chico'>Un juego divertido</h1><div class='dib medio'>🎵</div><div class='pie'>Las canciones riman mucho</div>"
+    },
+    {
+      "narracion": "Practiquemos. Gato, ¿con cuál de estas dos palabras rima? ¿Con pato o con sol? Gato y pato terminan igual, en ato. Riman.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>🐱</div><div class='detalle'>gato</div></div><div class='signo'>=</div><div class='tarjeta destaca'><div class='dib mini'>🦆</div><div class='detalle'>pato</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Escucha bien el final de cada palabra.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Mira el sol. ¿Cuál de estas dos palabras rima con sol?",
+      "visual": "<div class='pregunta'>☀️ Sol. ¿Con cuál rima?</div><div class='opciones'><div class='opcion'><div class='dib'>🍞</div><div class='palabra'>pan</div></div><div class='opcion'><div class='dib'>🥬</div><div class='palabra'>col</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Casa y masa, ¿riman o no riman?",
+      "visual": "<div class='pregunta'>Casa y masa, ¿riman?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí riman</div></div><div class='opcion'><div class='palabra'>No riman</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Gato, ¿con cuál de estos dos rima? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>🐱 Gato. ¿Con cuál rima?</div><div class='opciones'><div class='opcion'><div class='dib'>🦆</div><div class='palabra'>pato</div></div><div class='opcion'><div class='dib'>🪑</div><div class='palabra'>mesa</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estas dos palabras rima con sol?",
+      "opciones": [
+        { "texto": "Pan", "visual": "<div class='dib'>🍞</div>" },
+        { "texto": "Col", "visual": "<div class='dib'>🥬</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Casa y masa, ¿riman?",
+      "opciones": [
+        { "texto": "Sí riman", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "No riman", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Gato, ¿con cuál de estas dos palabras rima?",
+      "opciones": [
+        { "texto": "Pato", "visual": "<div class='dib'>🦆</div>" },
+        { "texto": "Mesa", "visual": "<div class='dib'>🪑</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

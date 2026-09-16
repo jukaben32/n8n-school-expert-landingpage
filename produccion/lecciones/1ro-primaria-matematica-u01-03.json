@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u01-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U1. ¡Me gusta jugar!",
+  "titulo": "¿Cuántos hay? Más, menos e igual",
+  "descripcion": "Comparar cantidades: cuál grupo tiene más, cuál tiene menos, o si son iguales.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cuando comparamos dos grupos, hay tres cosas que pueden pasar: uno tiene más, uno tiene menos, o los dos tienen la misma cantidad. Vamos a aprender a verlo.",
+      "visual": "<div class='rotulo'>Comparar cantidades</div><h1 class='chico'>Más, menos o igual</h1><div class='fila apretada'><div class='num claro'>3</div><div class='signo'>?</div><div class='num claro'>5</div></div>"
+    },
+    {
+      "narracion": "Mira estos dos grupos de chinolas. Aquí hay dos. Allá hay cuatro. El grupo de cuatro tiene MÁS que el de dos.",
+      "visual": "<h1>Cuando hay más</h1><div class='fila'><div class='columna'><div class='conteo chica'><span class='obj'>🍊</span><span class='obj'>🍊</span></div><div class='num claro'>2</div></div><div class='signo'>&lt;</div><div class='columna'><div class='conteo chica'><span class='obj'>🍊</span><span class='obj'>🍊</span><span class='obj'>🍊</span><span class='obj'>🍊</span></div><div class='num verde'>4</div></div></div>"
+    },
+    {
+      "narracion": "Ahora al revés. Aquí hay cinco panes. Allá hay dos. El grupo de dos tiene MENOS que el de cinco.",
+      "visual": "<h1>Cuando hay menos</h1><div class='fila'><div class='columna'><div class='conteo chica'><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span></div><div class='num verde'>5</div></div><div class='signo'>&gt;</div><div class='columna'><div class='conteo chica'><span class='obj'>🍞</span><span class='obj'>🍞</span></div><div class='num claro'>2</div></div></div>"
+    },
+    {
+      "narracion": "Y a veces los dos grupos tienen la misma cantidad. Aquí hay tres mangos, y allá también hay tres. Son IGUALES.",
+      "visual": "<h1>Cuando son igual</h1><div class='fila'><div class='columna'><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='num claro'>3</div></div><div class='signo'>=</div><div class='columna'><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='num claro'>3</div></div></div>"
+    },
+    {
+      "narracion": "Para comparar sin equivocarse, primero cuenta cada grupo despacito, y después mira cuál número es más grande. El número más grande es el que tiene más.",
+      "visual": "<div class='rotulo'>El truco</div><h1 class='chico'>Cuenta y compara</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Cuenta el primer grupo</li><li><span class='bolita'>2️⃣</span> Cuenta el segundo grupo</li><li><span class='bolita'>3️⃣</span> El número más grande tiene más</li></ol>"
+    },
+    {
+      "narracion": "Practiquemos juntos. Aquí hay seis chichiguas, y allá hay seis también. Cuenta las dos filas. Son iguales, las dos tienen seis.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='conteo chica'><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span></div><div class='signo'>=</div><div class='conteo chica'><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Cuenta despacito antes de contestar.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos dos grupos tiene MÁS pelotas?",
+      "visual": "<div class='pregunta'>¿Cuál grupo tiene MÁS?</div><div class='opciones'><div class='opcion'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div></div><div class='opcion'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span></div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Aquí hay tres mangos y aquí hay tres mangos también. ¿Son iguales o son distintos?",
+      "visual": "<div class='pregunta'>🥭🥭🥭 y 🥭🥭🥭. ¿Son iguales?</div><div class='opciones'><div class='opcion'><div class='palabra'>Iguales</div></div><div class='opcion'><div class='palabra'>Distintos</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estos dos grupos tiene MENOS panes? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál grupo tiene MENOS?</div><div class='opciones'><div class='opcion'><div class='conteo chica'><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span></div></div><div class='opcion'><div class='conteo chica'><span class='obj'>🍞</span></div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos dos grupos tiene MÁS pelotas?",
+      "opciones": [
+        { "texto": "El de 4", "visual": "<div class='conteo'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div>" },
+        { "texto": "El de 2", "visual": "<div class='conteo'><span class='obj'>⚽</span><span class='obj'>⚽</span></div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Tres mangos y tres mangos. ¿Son iguales o distintos?",
+      "opciones": [
+        { "texto": "Iguales", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Distintos", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál de estos dos grupos tiene MENOS panes?",
+      "opciones": [
+        { "texto": "El de 4", "visual": "<div class='conteo'><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span><span class='obj'>🍞</span></div>" },
+        { "texto": "El de 1", "visual": "<div class='conteo'><span class='obj'>🍞</span></div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

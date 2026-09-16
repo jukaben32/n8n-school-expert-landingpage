@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-lengua-u01-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U1. ¿Quién soy?",
+  "titulo": "El sonido con que empieza mi nombre",
+  "descripcion": "El sonido y la letra con que empieza cada nombre.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todo nombre empieza con un sonido. El nombre de Marta empieza con el sonido de la eme: mmm, Marta. Ese primer sonido es muy importante.",
+      "visual": "<div class='rotulo'>El primer sonido</div><h1 class='chico'>Marta empieza con M</h1><div class='palabra-grande'><span class='foco'>M</span>arta</div>"
+    },
+    {
+      "narracion": "Vamos a escuchar el sonido de algunas letras. La eme suena como en mango. La pe suena como en pelota. La ese suena como en sol.",
+      "visual": "<h1>Escucha los sonidos</h1><div class='fila apretada'><div class='tarjeta'><div class='dib mini'>🥭</div><div class='detalle'>mango, M</div></div><div class='tarjeta'><div class='dib mini'>⚽</div><div class='detalle'>pelota, P</div></div><div class='tarjeta'><div class='dib mini'>☀️</div><div class='detalle'>sol, S</div></div></div>"
+    },
+    {
+      "narracion": "Cada quien tiene un sonido inicial en su nombre. Carlos empieza con ka. Diana empieza con de. Rosa empieza con erre.",
+      "visual": "<h1 class='chico'>El sonido de cada uno</h1><div class='fila'><div class='tarjeta'><div class='palabra'><span class='foco'>C</span>arlos</div></div><div class='tarjeta'><div class='palabra'><span class='foco'>D</span>iana</div></div><div class='tarjeta'><div class='palabra'><span class='foco'>R</span>osa</div></div></div>"
+    },
+    {
+      "narracion": "Dos cosas pueden empezar con el mismo sonido. Mango y Marta empiezan igual: con la eme. Fíjate cómo suenan parecido al principio.",
+      "visual": "<div class='rotulo'>El mismo sonido</div><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>🥭</div><div class='detalle'>Mango</div></div><div class='signo'>=</div><div class='tarjeta destaca'><div class='dib mini'>🙋</div><div class='detalle'>Marta</div></div></div><div class='pie'>Las dos empiezan con M</div>"
+    },
+    {
+      "narracion": "Pero pelota y sol NO empiezan igual. Pelota empieza con pe, y sol empieza con ese. Son sonidos distintos.",
+      "visual": "<h1 class='chico'>Sonidos distintos</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>⚽</div><div class='detalle'>Pelota, P</div></div><div class='signo'>≠</div><div class='tarjeta'><div class='dib mini'>☀️</div><div class='detalle'>Sol, S</div></div></div>"
+    },
+    {
+      "narracion": "Para saber el sonido inicial, di el nombre despacito y escucha solo la primera parte. Pe-drooo. Empieza con pe.",
+      "visual": "<h1>Dilo despacito</h1><div class='palabra-grande'><span class='foco'>Pe</span>dro</div><div class='pie'>Pe-dro: empieza con P</div>"
+    },
+    {
+      "narracion": "Practiquemos. El sol y la sandía, ¿empiezan con el mismo sonido? Sí, los dos empiezan con la ese.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>☀️</div><div class='detalle'>Sol</div></div><div class='signo'>=</div><div class='tarjeta destaca'><div class='dib mini'>🍉</div><div class='detalle'>Sandía</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Escucha bien el primer sonido de cada palabra.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Mira el mango. ¿Qué otro dibujo empieza con el mismo sonido?",
+      "visual": "<div class='pregunta'>🥭 Mango. ¿Cuál empieza igual?</div><div class='opciones'><div class='opcion'><div class='dib'>🐱</div><div class='palabra'>Mica</div></div><div class='opcion'><div class='dib'>☀️</div><div class='palabra'>Sol</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Con qué sonido empieza la palabra pelota?",
+      "visual": "<div class='pregunta'>⚽ Pelota. ¿Con qué sonido empieza?</div><div class='opciones'><div class='opcion'><div class='palabra'>S</div></div><div class='opcion'><div class='palabra'>P</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estos dos dibujos empieza con el mismo sonido que el sol? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>☀️ Sol. ¿Cuál empieza igual?</div><div class='opciones'><div class='opcion'><div class='dib'>🍉</div><div class='palabra'>Sandía</div></div><div class='opcion'><div class='dib'>🥭</div><div class='palabra'>Mango</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Mango empieza con M. ¿Cuál de estos dibujos empieza con el mismo sonido?",
+      "opciones": [
+        { "texto": "Mica", "visual": "<div class='dib'>🐱</div>" },
+        { "texto": "Sol", "visual": "<div class='dib'>☀️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué sonido empieza la palabra pelota?",
+      "opciones": [
+        { "texto": "S", "visual": "<div class='palabra-grande'>S</div>" },
+        { "texto": "P", "visual": "<div class='palabra-grande'>P</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál de estos empieza con el mismo sonido que sol?",
+      "opciones": [
+        { "texto": "Sandía", "visual": "<div class='dib'>🍉</div>" },
+        { "texto": "Mango", "visual": "<div class='dib'>🥭</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

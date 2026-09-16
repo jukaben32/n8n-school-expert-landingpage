@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u00-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U0. ¡De vuelta a clases!",
+  "titulo": "Agrupamos por color, forma y tamaño",
+  "descripcion": "Clasificar objetos según una característica: color, forma o tamaño.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Agrupar es juntar las cosas que se parecen. Podemos agrupar por color, por forma, o por tamaño. Hoy vamos a practicar los tres.",
+      "visual": "<div class='rotulo'>Agrupar</div><h1 class='chico'>Juntar lo parecido</h1><div class='fila apretada'><div class='dib mini'>🔴</div><div class='dib mini'>🔵</div><div class='dib mini'>🟢</div></div>"
+    },
+    {
+      "narracion": "Agrupar por color es fácil. Mira estas frutas: la manzana y el tomate son rojos. Van juntos. El plátano es amarillo, va aparte.",
+      "visual": "<h1>Por color</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>🍎</div><div class='dib mini'>🍅</div><div class='detalle'>rojos</div></div><div class='tarjeta'><div class='dib mini'>🍌</div><div class='detalle'>amarillo</div></div></div>"
+    },
+    {
+      "narracion": "También podemos agrupar por forma. El balón y la naranja son redondos. La caja de zapatos no es redonda, es cuadrada.",
+      "visual": "<h1>Por forma</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>⚽</div><div class='dib mini'>🍊</div><div class='detalle'>redondos</div></div><div class='tarjeta'><div class='dib mini'>📦</div><div class='detalle'>cuadrada</div></div></div>"
+    },
+    {
+      "narracion": "Y por último, el tamaño. El elefante es grande. La hormiga es pequeña. Cuando agrupamos por tamaño, juntamos lo grande con lo grande, y lo pequeño con lo pequeño.",
+      "visual": "<h1>Por tamaño</h1><div class='fila'><div class='tarjeta destaca'><div class='dib medio'>🐘</div><div class='detalle'>grande</div></div><div class='tarjeta'><div class='dib mini'>🐜</div><div class='detalle'>pequeña</div></div></div>"
+    },
+    {
+      "narracion": "Una misma cosa se puede agrupar de varias formas. Una pelota roja se puede agrupar con las cosas rojas, o con las cosas redondas. Depende de qué característica escojamos.",
+      "visual": "<div class='rotulo'>Se puede agrupar de varias formas</div><div class='fila'><div class='dib medio'>🔴</div></div><div class='pie'>Por color: roja. Por forma: redonda.</div>"
+    },
+    {
+      "narracion": "En el salón usamos esto todos los días. Los lápices en un bote, las tijeras en otro. Agrupamos los objetos que se parecen para encontrarlos más fácil.",
+      "visual": "<h1 class='chico'>En el salón</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>✏️</div><div class='detalle'>lápices</div></div><div class='tarjeta'><div class='dib mini'>✂️</div><div class='detalle'>tijeras</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Mira estas tres frutas: mango, mango y plátano. ¿Cuáles dos van juntas por ser iguales? Los dos mangos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>🥭</div></div><div class='tarjeta destaca'><div class='dib mini'>🥭</div></div><div class='tarjeta'><div class='dib mini'>🍌</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas. Fíjate bien en cada dibujo.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos dos grupos tiene todos los objetos redondos?",
+      "visual": "<div class='pregunta'>¿Cuál grupo es TODO redondo?</div><div class='opciones'><div class='opcion'><div class='fila apretada'><div class='dib mini'>⚽</div><div class='dib mini'>🍊</div></div></div><div class='opcion'><div class='fila apretada'><div class='dib mini'>📦</div><div class='dib mini'>⚽</div></div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. El elefante y la hormiga, ¿son del mismo tamaño?",
+      "visual": "<div class='pregunta'>Elefante y hormiga, ¿son del mismo tamaño?</div><div class='dib mini'>🐘🐜</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí</div></div><div class='opcion'><div class='palabra'>No</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. La manzana y el tomate, ¿con qué se agrupan? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>🍎🍅 ¿Por qué van juntos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Por su color</div></div><div class='opcion'><div class='palabra'>Por su tamaño</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos dos grupos tiene todos los objetos redondos?",
+      "opciones": [
+        { "texto": "Balón y naranja", "visual": "<div class='fila apretada'><span class='obj'>⚽</span><span class='obj'>🍊</span></div>" },
+        { "texto": "Caja y balón", "visual": "<div class='fila apretada'><span class='obj'>📦</span><span class='obj'>⚽</span></div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "El elefante y la hormiga, ¿son del mismo tamaño?",
+      "opciones": [
+        { "texto": "No", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Sí", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "La manzana y el tomate van juntos, ¿por qué característica?",
+      "opciones": [
+        { "texto": "Por su tamaño", "visual": "<div class='dib'>📏</div>" },
+        { "texto": "Por su color", "visual": "<div class='dib'>🔴</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}
