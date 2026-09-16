@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { MESSAGE_CATEGORY_LABELS, type MessageCategory } from '@/lib/messaging/categoryAccess'
+import { linkifyText } from '@/lib/text/linkifyText'
 
 interface MessageCardProps {
   id: string
@@ -125,7 +126,7 @@ export default function MessageCard({
           )}
           {body && (
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-              {body}
+              {linkifyText(body)}
             </p>
           )}
 
