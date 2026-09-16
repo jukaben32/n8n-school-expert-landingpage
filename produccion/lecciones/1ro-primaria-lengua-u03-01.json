@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u03-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U3. La lista de compras",
+  "titulo": "¿Qué es una lista?",
+  "descripcion": "La estructura de una lista: una cosa debajo de la otra.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cuando tu mamá va al colmado, muchas veces lleva un papelito con una lista. Una lista es una forma de escribir cosas para no se te olviden.",
+      "visual": "<div class='rotulo'>La lista</div><h1 class='chico'>Para no olvidar</h1><div class='dib max'>📝</div>"
+    },
+    {
+      "narracion": "Una lista se escribe de una forma especial: una cosa, y debajo la otra cosa, y debajo otra más. No se escriben todas juntas en una sola línea.",
+      "visual": "<h1>Una debajo de la otra</h1><ol class='lista'><li><span class='bolita'>🥚</span> huevos</li><li><span class='bolita'>🍞</span> pan</li><li><span class='bolita'>🥛</span> leche</li></ol>"
+    },
+    {
+      "narracion": "Fíjate en la diferencia. Esto NO es una lista: huevos pan leche, todo junto en una sola línea. Esto SÍ es una lista, cada cosa en su propia línea.",
+      "visual": "<h1 class='chico'>¿Cuál es una lista?</h1><div class='fila'><div class='tarjeta no'><div class='detalle'>huevos pan leche</div></div><div class='tarjeta si'><ol class='lista'><li>huevos</li><li>pan</li></ol></div></div>"
+    },
+    {
+      "narracion": "Las listas sirven para muchas cosas, no solo para comprar. Una lista de tareas, una lista de invitados a una fiesta, una lista de útiles escolares.",
+      "visual": "<h1>Para muchas cosas</h1><div class='fila apretada'><div class='dib mini'>🛒</div><div class='dib mini'>📋</div><div class='dib mini'>🎉</div></div>"
+    },
+    {
+      "narracion": "Lo bueno de una lista es que puedes ir tachando lo que ya conseguiste. Así sabes qué te falta sin tener que acordarte de memoria.",
+      "visual": "<h1 class='chico'>Vas tachando</h1><ol class='lista'><li><span class='bolita'>✅</span> huevos</li><li><span class='bolita'>⬜</span> pan</li></ol>"
+    },
+    {
+      "narracion": "Practiquemos. Mira estas dos formas de escribir la misma compra. ¿Cuál es la lista de verdad?",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='tarjeta no'><div class='detalle'>arroz habichuela</div></div><div class='tarjeta si'><ol class='lista'><li>arroz</li><li>habichuela</li></ol></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Para qué sirve escribir una lista?",
+      "visual": "<div class='pregunta'>¿Para qué sirve una lista?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para no olvidar</div></div><div class='opcion'><div class='palabra'>Para dibujar</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál de estas dos es una lista de verdad?",
+      "visual": "<div class='pregunta'>¿Cuál ES una lista?</div><div class='opciones'><div class='opcion'><div class='detalle'>huevos pan leche</div></div><div class='opcion'><ol class='lista'><li>huevos</li><li>pan</li></ol></div></div>"
+    },
+    {
+      "narracion": "Y la última. Cuando ya conseguiste algo de la lista, ¿qué puedes hacer con esa palabra? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Ya lo conseguiste. ¿Qué haces?</div><div class='opciones'><div class='opcion'><div class='palabra'>Lo tachas</div></div><div class='opcion'><div class='palabra'>Lo borras todo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Para qué sirve escribir una lista?",
+      "opciones": [
+        { "texto": "Para no olvidar", "visual": "<div class='dib'>🧠</div>" },
+        { "texto": "Para dibujar", "visual": "<div class='dib'>🎨</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál de estas dos es una lista de verdad?",
+      "opciones": [
+        { "texto": "huevos pan leche (todo junto)", "visual": "<div class='detalle'>huevos pan leche</div>" },
+        { "texto": "huevos, pan (una debajo de otra)", "visual": "<div class='dib'>📝</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Cuando ya conseguiste algo de la lista, ¿qué puedes hacer?",
+      "opciones": [
+        { "texto": "Lo tachas", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Lo borras todo", "visual": "<div class='dib'>🗑️</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

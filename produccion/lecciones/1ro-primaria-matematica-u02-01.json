@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u02-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U2. En el jardín de mi casa",
+  "titulo": "Del 10 al 19: nace la decena",
+  "descripcion": "Diez unidades hacen una decena. Los números del 10 al 19.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya conoces los números del cero al nueve. Ahora vamos a aprender qué pasa después del nueve. Pasa algo especial: nace un número nuevo, más grande.",
+      "visual": "<div class='rotulo'>Después del 9</div><h1 class='chico'>Nace algo nuevo</h1><div class='fila'><div class='num verde'>9</div><div class='signo'>➜</div><div class='num ambar'>?</div></div>"
+    },
+    {
+      "narracion": "Cuando juntas diez unidades, se forma un grupo nuevo llamado decena. Diez cositas sueltas se convierten en una decena completa.",
+      "visual": "<h1>Diez hacen una decena</h1><div class='conteo'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='pie'>Diez mangos = una decena</div>"
+    },
+    {
+      "narracion": "Ese número que tiene una decena completa se escribe con un uno y un cero: 10. El uno dice que hay una decena, y el cero dice que no sobra ninguna suelta.",
+      "visual": "<h1 class='chico'>El número 10</h1><div class='num'>10</div><div class='pie'>1 decena, 0 sueltas</div>"
+    },
+    {
+      "narracion": "Después del diez sigue el once, doce, trece, catorce, quince. Son diez cosas completas, más algunas sueltas.",
+      "visual": "<h1>Del 11 al 15</h1><div class='fila apretada'><div class='num claro'>11</div><div class='num claro'>12</div><div class='num claro'>13</div><div class='num claro'>14</div><div class='num verde'>15</div></div>"
+    },
+    {
+      "narracion": "Y seguimos: dieciséis, diecisiete, dieciocho, diecinueve. El diecinueve es el último antes de que nazca otra decena completa.",
+      "visual": "<h1>Del 16 al 19</h1><div class='fila apretada'><div class='num claro'>16</div><div class='num claro'>17</div><div class='num claro'>18</div><div class='num verde'>19</div></div>"
+    },
+    {
+      "narracion": "Fíjate en el 14: son diez cosas juntas en un grupo, más cuatro sueltas. Uno más cuatro juntos hacen catorce.",
+      "visual": "<h1 class='chico'>Ejemplo: el 14</h1><div class='fila'><div class='tarjeta destaca'><div class='num'>10</div></div><div class='signo'>+</div><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='signo'>=</div><div class='num verde'>14</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tienes una decena completa y tres mangos sueltos más, ¿cuántos mangos tienes en total? Tienes trece mangos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>10</div><div class='signo'>+</div><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='signo'>=</div><div class='num verde'>13</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuántas unidades hacen una decena?",
+      "visual": "<div class='pregunta'>¿Cuántas hacen una decena?</div><div class='opciones'><div class='opcion'><div class='num'>10</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál número viene después del nueve?",
+      "visual": "<div class='pregunta'>¿Qué número viene después del 9?</div><div class='opciones'><div class='opcion'><div class='num'>19</div></div><div class='opcion'><div class='num'>10</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Una decena completa más cuatro sueltos, ¿qué número forman? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>10 + 4 sueltos, ¿qué número es?</div><div class='opciones'><div class='opcion'><div class='num'>4</div></div><div class='opcion'><div class='num'>14</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántas unidades hacen una decena?",
+      "opciones": [
+        { "texto": "10", "visual": "<div class='num'>10</div>" },
+        { "texto": "5", "visual": "<div class='num'>5</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué número viene después del 9?",
+      "opciones": [
+        { "texto": "19", "visual": "<div class='num'>19</div>" },
+        { "texto": "10", "visual": "<div class='num'>10</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Una decena completa más cuatro sueltos, ¿qué número forman?",
+      "opciones": [
+        { "texto": "4", "visual": "<div class='num'>4</div>" },
+        { "texto": "14", "visual": "<div class='num'>14</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

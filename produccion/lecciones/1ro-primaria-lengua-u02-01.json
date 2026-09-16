@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-lengua-u02-01",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U2. Muchos letreros",
+  "titulo": "Los letreros hablan sin hablar",
+  "descripcion": "Para qué sirve un letrero y cómo leer el entorno.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Camina por la calle y mira para arriba. Hay letreros por todos lados: en las tiendas, en las esquinas, en los carros. Un letrero es un cartel que nos dice algo sin que nadie hable.",
+      "visual": "<div class='rotulo'>Los letreros</div><h1 class='chico'>Nos hablan sin hablar</h1><div class='dib max'>🪧</div>"
+    },
+    {
+      "narracion": "El letrero de PARE le dice al carro que se detenga. Es rojo, de ocho lados, y todos los que manejan lo conocen.",
+      "visual": "<h1>El PARE</h1><div class='tarjeta destaca'><div class='dib medio'>🛑</div><div class='palabra'>PARE</div></div>"
+    },
+    {
+      "narracion": "El letrero del colmado le dice a todo el mundo dónde comprar. Sin leer nada más, ya sabes que ahí venden cosas.",
+      "visual": "<h1>El colmado</h1><div class='tarjeta destaca'><div class='dib medio'>🏪</div><div class='palabra'>COLMADO</div></div>"
+    },
+    {
+      "narracion": "Los letreros también avisan peligro. Un letrero con un rayo dice que hay corriente eléctrica. Es mejor no acercarse.",
+      "visual": "<h1>Avisan peligro</h1><div class='tarjeta destaca'><div class='dib medio'>⚡</div><div class='palabra'>PELIGRO</div></div>"
+    },
+    {
+      "narracion": "Y otros letreros muestran el camino. Una flecha te dice para dónde queda algo, como la salida o el baño.",
+      "visual": "<h1>Muestran el camino</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>➡️</div><div class='detalle'>salida</div></div><div class='tarjeta'><div class='dib mini'>🚻</div><div class='detalle'>baño</div></div></div>"
+    },
+    {
+      "narracion": "Fíjate que los letreros usan pocas palabras, y a veces solo un dibujo. Eso es a propósito: se leen rápido, sin tener que detenerte mucho tiempo.",
+      "visual": "<h1 class='chico'>Pocas palabras, rápido</h1><div class='fila'><div class='dib mini'>🛑</div><div class='dib mini'>🚻</div><div class='dib mini'>⚡</div></div><div class='pie'>Un vistazo y ya sabes</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si ves un letrero con un tenedor y un cuchillo, ¿qué crees que hay ahí? Probablemente un restaurante, un lugar para comer.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib medio'>🍴</div><div class='pie'>Un restaurante</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué le dice al carro un letrero de PARE?",
+      "visual": "<div class='pregunta'>🛑 ¿Qué le dice al carro?</div><div class='opciones'><div class='opcion'><div class='palabra'>Que se detenga</div></div><div class='opcion'><div class='palabra'>Que vaya rápido</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Para qué sirve una flecha en un letrero?",
+      "visual": "<div class='pregunta'>➡️ ¿Para qué sirve la flecha?</div><div class='opciones'><div class='opcion'><div class='palabra'>Avisa un precio</div></div><div class='opcion'><div class='palabra'>Muestra el camino</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Un letrero con un rayo, ¿qué está avisando? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>⚡ ¿Qué está avisando?</div><div class='opciones'><div class='opcion'><div class='palabra'>Una fiesta</div></div><div class='opcion'><div class='palabra'>Peligro</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué le dice al carro un letrero de PARE?",
+      "opciones": [
+        { "texto": "Que se detenga", "visual": "<div class='dib'>🛑</div>" },
+        { "texto": "Que vaya rápido", "visual": "<div class='dib'>🏎️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Para qué sirve una flecha en un letrero?",
+      "opciones": [
+        { "texto": "Avisa un precio", "visual": "<div class='dib'>💰</div>" },
+        { "texto": "Muestra el camino", "visual": "<div class='dib'>➡️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Un letrero con un rayo, ¿qué está avisando?",
+      "opciones": [
+        { "texto": "Una fiesta", "visual": "<div class='dib'>🎉</div>" },
+        { "texto": "Peligro", "visual": "<div class='dib'>⚡</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

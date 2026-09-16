@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u03-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U3. De paseo a la playa",
+  "titulo": "¿Sumo o resto?",
+  "descripcion": "Elegir la operación correcta según lo que pide el problema.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes sumar y ya sabes restar. Ahora lo importante es saber CUÁNDO usar cada una. Vamos a aprender a escoger.",
+      "visual": "<div class='rotulo'>¿Sumo o resto?</div><h1 class='chico'>Escoger la operación</h1><div class='fila'><div class='num'>+</div><div class='num'>−</div></div>"
+    },
+    {
+      "narracion": "Si el problema dice que algo se JUNTA, que llega más, o que te regalan más, entonces SUMAS. Están agregando.",
+      "visual": "<h1>Cuando SUMAS</h1><div class='tarjeta destaca'><div class='dib mini'>➕</div><div class='detalle'>Llega más, se junta</div></div>"
+    },
+    {
+      "narracion": "Si el problema dice que algo se QUITA, que se va, que se pierde, o que te comes algo, entonces RESTAS. Están quitando.",
+      "visual": "<h1>Cuando RESTAS</h1><div class='tarjeta destaca'><div class='dib mini'>➖</div><div class='detalle'>Se va, se pierde</div></div>"
+    },
+    {
+      "narracion": "Escucha este problema: Tenías cinco caracoles y encontraste tres más en la orilla. ¿Cuántos caracoles tienes ahora? La palabra clave es ENCONTRASTE MÁS, eso es sumar.",
+      "visual": "<h1>Ejemplo 1</h1><div class='detalle'>Tenías 5, encontraste 3 más</div><div class='fila'><div class='num'>5</div><div class='signo'>+</div><div class='num'>3</div><div class='signo'>=</div><div class='num verde'>8</div></div>"
+    },
+    {
+      "narracion": "Ahora este otro: Tenías nueve chinolas y regalaste cuatro. ¿Cuántas chinolas te quedan? La palabra clave es REGALASTE, algo se fue: eso es restar.",
+      "visual": "<h1>Ejemplo 2</h1><div class='detalle'>Tenías 9, regalaste 4</div><div class='fila'><div class='num'>9</div><div class='signo'>−</div><div class='num'>4</div><div class='signo'>=</div><div class='num verde'>5</div></div>"
+    },
+    {
+      "narracion": "El truco es leer despacito el problema y buscar la palabra clave: si algo llega o se junta, sumas; si algo se va o se quita, restas.",
+      "visual": "<h1 class='chico'>El truco</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Lee despacio</li><li><span class='bolita'>2️⃣</span> Busca la palabra clave</li><li><span class='bolita'>3️⃣</span> Suma o resta</li></ol>"
+    },
+    {
+      "narracion": "Practiquemos. Tenías seis pelotas. Se te perdieron dos en el mar. ¿Sumas o restas para saber cuántas te quedan? Restas, porque se perdieron.",
+      "visual": "<h1>Practiquemos</h1><div class='detalle'>Tenías 6, se perdieron 2</div><div class='num'>−</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Tenías cuatro mangos y tu abuela te dio tres más. ¿Sumas o restas?",
+      "visual": "<div class='pregunta'>Tenías 4, te dieron 3 más. ¿Qué haces?</div><div class='opciones'><div class='opcion'><div class='num'>+</div></div><div class='opcion'><div class='num'>−</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Tenías ocho caramelos y te comiste cinco. ¿Sumas o restas?",
+      "visual": "<div class='pregunta'>Tenías 8, te comiste 5. ¿Qué haces?</div><div class='opciones'><div class='opcion'><div class='num'>+</div></div><div class='opcion'><div class='num'>−</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si algo se va o se pierde, ¿qué operación usas? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Algo se va o se pierde. ¿Qué operación es?</div><div class='opciones'><div class='opcion'><div class='palabra'>Restar</div></div><div class='opcion'><div class='palabra'>Sumar</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Tenías cuatro mangos y tu abuela te dio tres más. ¿Sumas o restas?",
+      "opciones": [
+        { "texto": "Sumo", "visual": "<div class='num'>+</div>" },
+        { "texto": "Resto", "visual": "<div class='num'>−</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Tenías ocho caramelos y te comiste cinco. ¿Sumas o restas?",
+      "opciones": [
+        { "texto": "Sumo", "visual": "<div class='num'>+</div>" },
+        { "texto": "Resto", "visual": "<div class='num'>−</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si algo se va o se pierde, ¿qué operación usas?",
+      "opciones": [
+        { "texto": "Restar", "visual": "<div class='num'>−</div>" },
+        { "texto": "Sumar", "visual": "<div class='num'>+</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

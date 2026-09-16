@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-lengua-u02-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U2. Muchos letreros",
+  "titulo": "Letreros de mi barrio",
+  "descripcion": "Palabras frecuentes en el entorno: PARE, SALIDA, BAÑO, COLMADO.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hay palabras que ves tantas veces en los letreros, que las puedes reconocer aunque todavía no leas bien. Vamos a aprenderlas.",
+      "visual": "<div class='rotulo'>Palabras que se repiten</div><h1 class='chico'>Las verás mucho</h1><div class='dib max'>🪧</div>"
+    },
+    {
+      "narracion": "PARE. Esta palabra la ves en las esquinas, siempre en un letrero rojo. Dice PARE, con mayúscula, corto y directo.",
+      "visual": "<h1>PARE</h1><div class='tarjeta destaca'><div class='dib medio'>🛑</div><div class='palabra-grande'>PARE</div></div>"
+    },
+    {
+      "narracion": "SALIDA. Esta palabra la ves en los cines, en las escuelas, en los supermercados. Te dice por dónde puedes irte.",
+      "visual": "<h1>SALIDA</h1><div class='tarjeta destaca'><div class='dib medio'>🚪</div><div class='palabra-grande'>SALIDA</div></div>"
+    },
+    {
+      "narracion": "BAÑO. Esta palabra la ves en las escuelas y en los restaurantes. Te dice dónde está el baño cuando lo necesitas.",
+      "visual": "<h1>BAÑO</h1><div class='tarjeta destaca'><div class='dib medio'>🚻</div><div class='palabra-grande'>BAÑO</div></div>"
+    },
+    {
+      "narracion": "COLMADO. Esta palabra la ves en casi todas las esquinas de tu barrio. Ahí venden de todo un poco: pan, leche, hasta hielo.",
+      "visual": "<h1>COLMADO</h1><div class='tarjeta destaca'><div class='dib medio'>🏪</div><div class='palabra-grande'>COLMADO</div></div>"
+    },
+    {
+      "narracion": "Si aprendes a reconocer cómo se ven estas palabras, sabrás qué dicen sin tener que leerlas letra por letra. Eso se llama lectura rápida.",
+      "visual": "<h1 class='chico'>Reconocer de un vistazo</h1><div class='fila apretada'><div class='palabra'>PARE</div><div class='palabra'>SALIDA</div><div class='palabra'>BAÑO</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si estás en la escuela y necesitas ir al baño, ¿qué palabra buscas en los letreros del pasillo? Buscas la palabra BAÑO.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib medio'>🏃</div><div class='signo'>➜</div><div class='palabra-grande'>BAÑO</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estas dos palabras dice PARE?",
+      "visual": "<div class='pregunta'>¿Cuál dice PARE?</div><div class='opciones'><div class='opcion'><div class='palabra'>PARE</div></div><div class='opcion'><div class='palabra'>BAÑO</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿En qué lugar es más probable ver la palabra COLMADO?",
+      "visual": "<div class='pregunta'>¿Dónde ves COLMADO?</div><div class='opciones'><div class='opcion'><div class='dib'>🏪</div><div class='palabra'>En la esquina</div></div><div class='opcion'><div class='dib'>🏫</div><div class='palabra'>En la escuela</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál de estas dos palabras dice SALIDA? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál dice SALIDA?</div><div class='opciones'><div class='opcion'><div class='palabra'>COLMADO</div></div><div class='opcion'><div class='palabra'>SALIDA</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estas dos palabras dice PARE?",
+      "opciones": [
+        { "texto": "PARE", "visual": "<div class='palabra-grande'>PARE</div>" },
+        { "texto": "BAÑO", "visual": "<div class='palabra-grande'>BAÑO</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿En qué lugar es más probable ver la palabra COLMADO?",
+      "opciones": [
+        { "texto": "En la esquina", "visual": "<div class='dib'>🏪</div>" },
+        { "texto": "En la escuela", "visual": "<div class='dib'>🏫</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál de estas dos palabras dice SALIDA?",
+      "opciones": [
+        { "texto": "COLMADO", "visual": "<div class='palabra-grande'>COLMADO</div>" },
+        { "texto": "SALIDA", "visual": "<div class='palabra-grande'>SALIDA</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

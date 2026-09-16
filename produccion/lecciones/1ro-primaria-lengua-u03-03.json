@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u03-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U3. La lista de compras",
+  "titulo": "Escribo la lista del colmado",
+  "descripcion": "Producción escrita: qué le falta a una lista y cómo completarla bien.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes qué es una lista. Ahora vamos a escribir una completa, para ir al colmado.",
+      "visual": "<div class='rotulo'>La lista del colmado</div><h1 class='chico'>Vamos a completarla</h1><div class='dib max'>🛒</div>"
+    },
+    {
+      "narracion": "En la casa siempre hace falta algo. Si se acabó la leche, va en la lista. Si se acabó el pan, también va en la lista.",
+      "visual": "<h1>Lo que hace falta</h1><ol class='lista'><li><span class='bolita'>🥛</span> leche</li><li><span class='bolita'>🍞</span> pan</li></ol>"
+    },
+    {
+      "narracion": "Cada cosa de la lista va en su propia línea, empezando con mayúscula. Y se escribe con letra clara, para que quien va al colmado entienda bien.",
+      "visual": "<h1>Bien escrita</h1><ol class='lista'><li><span class='bolita'>✅</span> Leche</li><li><span class='bolita'>✅</span> Pan</li><li><span class='bolita'>✅</span> Huevos</li></ol>"
+    },
+    {
+      "narracion": "A veces una lista está incompleta. Le falta algo importante. Mira esta lista: dice leche y pan, pero no dice cuántos. ¿Le falta algo?",
+      "visual": "<h1 class='chico'>¿Está completa?</h1><ol class='lista'><li>leche</li><li>pan</li></ol><div class='pie'>¿Falta algo más?</div>"
+    },
+    {
+      "narracion": "Una lista completa tiene todo lo que necesitas, sin que se te olvide nada. Antes de salir de casa, repásala una vez más.",
+      "visual": "<h1>Antes de salir</h1><div class='tarjeta destaca'><div class='dib mini'>👀</div><div class='detalle'>Repasa la lista</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Mira esta lista para hacer un sándwich: pan, jamón. ¿Qué otra cosa le falta a la lista? Le podría faltar el queso.",
+      "visual": "<h1>Practiquemos</h1><ol class='lista'><li>pan</li><li>jamón</li><li><span class='bolita'>➕</span> ¿queso?</li></ol>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Si se acabó la leche en tu casa, ¿qué debes hacer con esa palabra?",
+      "visual": "<div class='pregunta'>Se acabó la leche. ¿Qué haces?</div><div class='opciones'><div class='opcion'><div class='palabra'>La agregas a la lista</div></div><div class='opcion'><div class='palabra'>La olvidas</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Mira esta lista: pan, jamón. ¿Le falta algo para hacer un sándwich completo?",
+      "visual": "<div class='pregunta'>Lista: pan, jamón. ¿Está completa?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí, está completa</div></div><div class='opcion'><div class='palabra'>Le falta algo</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué debes hacer antes de salir de casa con tu lista? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Antes de salir de casa...</div><div class='opciones'><div class='opcion'><div class='palabra'>Repasar la lista</div></div><div class='opcion'><div class='palabra'>Romper la lista</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Si se acabó la leche en tu casa, ¿qué debes hacer con esa palabra?",
+      "opciones": [
+        { "texto": "La agregas a la lista", "visual": "<div class='dib'>➕</div>" },
+        { "texto": "La olvidas", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Mira esta lista: pan, jamón. ¿Le falta algo para hacer un sándwich completo?",
+      "opciones": [
+        { "texto": "Sí, está completa", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Le falta algo", "visual": "<div class='dib'>❓</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué debes hacer antes de salir de casa con tu lista?",
+      "opciones": [
+        { "texto": "Repasar la lista", "visual": "<div class='dib'>👀</div>" },
+        { "texto": "Romper la lista", "visual": "<div class='dib'>🗑️</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

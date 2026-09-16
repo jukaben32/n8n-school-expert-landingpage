@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u03-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U3. De paseo a la playa",
+  "titulo": "Quitar es restar",
+  "descripcion": "El signo menos (−): qué significa restar.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Restar es lo contrario de sumar. En vez de juntar, quitas. Si tienes cinco caracoles y te comes dos, te quedan menos caracoles que antes.",
+      "visual": "<div class='rotulo'>Restar es quitar</div><h1 class='chico'>Menos de lo que tenías</h1><div class='fila'><div class='conteo chica'><span class='obj'>🐚</span><span class='obj'>🐚</span><span class='obj'>🐚</span><span class='obj'>🐚</span><span class='obj'>🐚</span></div></div>"
+    },
+    {
+      "narracion": "El signo menos se escribe con una rayita: menos. Va entre el número que tenías y el número que quitaste.",
+      "visual": "<h1>El signo −</h1><div class='num'>−</div><div class='pie'>Significa quitar</div>"
+    },
+    {
+      "narracion": "Vamos a restar. Tenías cinco caracoles. Regalaste dos. Cuenta los que quedan: uno, dos, tres. Cinco menos dos es tres.",
+      "visual": "<h1>5 − 2</h1><div class='fila'><div class='conteo chica'><span class='obj'>🐚</span><span class='obj'>🐚</span><span class='obj'>🐚</span><span class='obj'>🐚</span><span class='obj'>🐚</span></div><div class='signo'>−</div><div class='conteo chica'><span class='obj'>🐚</span><span class='obj'>🐚</span></div><div class='signo'>=</div><div class='num verde'>3</div></div>"
+    },
+    {
+      "narracion": "Puedes restar tachando dibujos. Dibuja cinco pelotas, tacha dos, y cuenta las que quedan sin tachar. Eso es lo que te da la resta.",
+      "visual": "<h1>Tachando dibujos</h1><div class='fila apretada'><div class='dib mini'>⚽</div><div class='dib mini'>⚽</div><div class='dib mini'>⚽</div><div class='dib mini'>❌</div><div class='dib mini'>❌</div></div>"
+    },
+    {
+      "narracion": "En la resta, sí importa el orden. No es lo mismo cinco menos dos que dos menos cinco. Siempre se quita del número más grande.",
+      "visual": "<h1 class='chico'>El orden sí importa</h1><div class='fila'><div class='tarjeta si'><div class='detalle'>5 − 2 = 3</div></div><div class='tarjeta no'><div class='detalle'>2 − 5</div></div></div>"
+    },
+    {
+      "narracion": "Restar te ayuda todos los días. Si sales con diez pesos y gastas cuatro, ya sabes que te quedan seis pesos sin tener que preguntar.",
+      "visual": "<h1>Para la vida diaria</h1><div class='fila'><div class='num'>10</div><div class='signo'>−</div><div class='num'>4</div><div class='signo'>=</div><div class='num verde'>6</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Tenías siete mangos, y te comiste tres. ¿Cuántos mangos te quedan? Siete menos tres es cuatro.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>7</div><div class='signo'>−</div><div class='num'>3</div><div class='signo'>=</div><div class='num verde'>4</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué signo se usa para quitar?",
+      "visual": "<div class='pregunta'>¿Qué signo se usa para quitar?</div><div class='opciones'><div class='opcion'><div class='num'>−</div></div><div class='opcion'><div class='num'>+</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuánto es cinco menos dos?",
+      "visual": "<div class='pregunta'>5 − 2 = ?</div><div class='opciones'><div class='opcion'><div class='num'>7</div></div><div class='opcion'><div class='num'>3</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Tenías diez pesos y gastaste cuatro, ¿cuántos te quedan? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>10 − 4 = ?</div><div class='opciones'><div class='opcion'><div class='num'>14</div></div><div class='opcion'><div class='num'>6</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué signo se usa para quitar?",
+      "opciones": [
+        { "texto": "−", "visual": "<div class='num'>−</div>" },
+        { "texto": "+", "visual": "<div class='num'>+</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuánto es cinco menos dos?",
+      "opciones": [
+        { "texto": "7", "visual": "<div class='num'>7</div>" },
+        { "texto": "3", "visual": "<div class='num'>3</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Tenías diez pesos y gastaste cuatro, ¿cuántos te quedan?",
+      "opciones": [
+        { "texto": "14", "visual": "<div class='num'>14</div>" },
+        { "texto": "6", "visual": "<div class='num'>6</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

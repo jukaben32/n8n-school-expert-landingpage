@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-lengua-u02-03",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U2. Muchos letreros",
+  "titulo": "Escribo mi propio letrero",
+  "descripcion": "Producción escrita corta: hacer un letrero con letra grande y clara.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes que los letreros hablan sin hablar. Ahora te toca a ti hacer uno. Vamos a aprender los tres pasos.",
+      "visual": "<div class='rotulo'>Mi propio letrero</div><h1 class='chico'>Ahora tú lo haces</h1><div class='dib max'>✏️</div>"
+    },
+    {
+      "narracion": "Primer paso: piensa qué quieres decir. Un letrero dice UNA sola idea, corta y clara. Por ejemplo: SILENCIO.",
+      "visual": "<div class='rotulo'>Paso 1</div><h1>Una sola idea</h1><div class='tarjeta destaca'><div class='palabra-grande'>SILENCIO</div></div>"
+    },
+    {
+      "narracion": "Segundo paso: usa letra grande. Un letrero con letra chiquita no sirve, porque nadie lo puede leer desde lejos.",
+      "visual": "<div class='rotulo'>Paso 2</div><h1>Letra grande</h1><div class='fila'><div class='tarjeta si'><div class='palabra-grande'>SÍ</div></div><div class='tarjeta no'><div class='detalle'>no</div></div></div>"
+    },
+    {
+      "narracion": "Tercer paso: puedes agregar un dibujo que ayude a entender más rápido. Un dibujo de un dedo en la boca ayuda a entender SILENCIO sin leer.",
+      "visual": "<div class='rotulo'>Paso 3</div><h1>Agrega un dibujo</h1><div class='fila'><div class='dib medio'>🤫</div><div class='palabra'>SILENCIO</div></div>"
+    },
+    {
+      "narracion": "Ya tienes tu letrero listo: idea corta, letra grande, y un dibujo si quieres. Así se hace un letrero que cualquiera entiende rápido.",
+      "visual": "<h1 class='chico'>¡Listo!</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Una idea corta</li><li><span class='bolita'>2️⃣</span> Letra grande</li><li><span class='bolita'>3️⃣</span> Un dibujo</li></ol>"
+    },
+    {
+      "narracion": "Piensa qué letrero podrías poner en la puerta de tu cuarto. Podría decir: TOCA ANTES DE ENTRAR.",
+      "visual": "<h1>Para tu cuarto</h1><div class='tarjeta destaca'><div class='dib mini'>🚪</div><div class='palabra'>TOCA ANTES</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Mira estos dos letreros para un colmado. ¿Cuál está mejor hecho: el de letra grande y clara, o el de letra chiquita y torcida?",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='tarjeta si'><div class='palabra-grande'>ABIERTO</div></div><div class='tarjeta no'><div class='detalle'>abierto</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estos dos letreros se lee mejor de lejos?",
+      "visual": "<div class='pregunta'>¿Cuál se lee mejor de lejos?</div><div class='opciones'><div class='opcion'><div class='palabra-grande'>SÍ</div></div><div class='opcion'><div class='detalle'>sí</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Un letrero debe decir una idea corta, ¿o muchas ideas juntas?",
+      "visual": "<div class='pregunta'>¿Cuántas ideas debe decir un letrero?</div><div class='opciones'><div class='opcion'><div class='palabra'>Muchas ideas</div></div><div class='opcion'><div class='palabra'>Una idea corta</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué sirve agregar un dibujo al letrero? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué sirve el dibujo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Ayuda a entender rápido</div></div><div class='opcion'><div class='palabra'>Para que sea largo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estos dos letreros se lee mejor de lejos?",
+      "opciones": [
+        { "texto": "SÍ (letra grande)", "visual": "<div class='palabra-grande'>SÍ</div>" },
+        { "texto": "sí (letra chiquita)", "visual": "<div class='detalle'>sí</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Un letrero debe decir...",
+      "opciones": [
+        { "texto": "Muchas ideas", "visual": "<div class='dib'>📚</div>" },
+        { "texto": "Una idea corta", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Para qué sirve agregar un dibujo al letrero?",
+      "opciones": [
+        { "texto": "Ayuda a entender rápido", "visual": "<div class='dib'>⚡</div>" },
+        { "texto": "Para que sea largo", "visual": "<div class='dib'>📏</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

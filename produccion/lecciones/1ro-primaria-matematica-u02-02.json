@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u02-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U2. En el jardín de mi casa",
+  "titulo": "Juntar es sumar",
+  "descripcion": "El signo más (+) y el signo igual (=): qué significa sumar.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Sumar es juntar dos grupos para saber cuántos hay en total. Si tienes dos mangos y te dan tres más, ahora tienes más mangos que antes.",
+      "visual": "<div class='rotulo'>Sumar es juntar</div><h1 class='chico'>Más de lo que tenías</h1><div class='fila'><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='signo'>+</div><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div></div>"
+    },
+    {
+      "narracion": "El signo más se escribe con una cruz: +. Va entre los dos grupos que estás juntando. Dice: esto junto con esto otro.",
+      "visual": "<h1>El signo +</h1><div class='num'>+</div><div class='pie'>Significa juntar</div>"
+    },
+    {
+      "narracion": "El signo igual se escribe con dos rayitas: =. Va antes del resultado. Dice: esto es lo que da en total.",
+      "visual": "<h1>El signo =</h1><div class='num'>=</div><div class='pie'>Significa el resultado</div>"
+    },
+    {
+      "narracion": "Vamos a sumar dos y tres. Cuenta los dos mangos. Ahora cuenta los tres. Ahora cuéntalos todos juntos: uno, dos, tres, cuatro, cinco. Dos más tres es cinco.",
+      "visual": "<h1>2 + 3</h1><div class='fila'><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='signo'>+</div><div class='conteo chica'><span class='obj'>🥭</span><span class='obj'>🥭</span><span class='obj'>🥭</span></div><div class='signo'>=</div><div class='num verde'>5</div></div>"
+    },
+    {
+      "narracion": "Puedes sumar con los dedos de tus manos. Levanta dos dedos, después levanta uno más. Cuenta todos los dedos levantados: tienes tres.",
+      "visual": "<h1>Sumar con los dedos</h1><div class='dib medio'>✌️</div><div class='signo'>+</div><div class='dib mini'>☝️</div><div class='signo'>=</div><div class='num verde'>3</div>"
+    },
+    {
+      "narracion": "No importa el orden en que sumes. Dos más tres da lo mismo que tres más dos: los dos dan cinco.",
+      "visual": "<h1 class='chico'>El orden no importa</h1><div class='fila'><div class='detalle'>2 + 3 = 5</div><div class='signo'>=</div><div class='detalle'>3 + 2 = 5</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Tienes una chinola, y tu hermana te da una más. ¿Cuántas chinolas tienes ahora? Uno más uno es dos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib mini'>🍊</div><div class='signo'>+</div><div class='dib mini'>🍊</div><div class='signo'>=</div><div class='num verde'>2</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuánto es uno más uno?",
+      "visual": "<div class='pregunta'>1 + 1 = ?</div><div class='opciones'><div class='opcion'><div class='num'>1</div></div><div class='opcion'><div class='num'>2</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué signo se usa para juntar dos grupos?",
+      "visual": "<div class='pregunta'>¿Qué signo se usa para juntar?</div><div class='opciones'><div class='opcion'><div class='num'>+</div></div><div class='opcion'><div class='num'>=</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Cuenta: dos mangos más dos mangos, ¿cuántos mangos hay en total? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>🥭🥭 + 🥭🥭 = ?</div><div class='opciones'><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>4</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuánto es uno más uno?",
+      "opciones": [
+        { "texto": "1", "visual": "<div class='num'>1</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué signo se usa para juntar dos grupos?",
+      "opciones": [
+        { "texto": "+", "visual": "<div class='num'>+</div>" },
+        { "texto": "=", "visual": "<div class='num'>=</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Dos mangos más dos mangos, ¿cuántos hay en total?",
+      "opciones": [
+        { "texto": "2", "visual": "<div class='num'>2</div>" },
+        { "texto": "4", "visual": "<div class='num'>4</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

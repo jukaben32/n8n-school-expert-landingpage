@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-matematica-u02-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U2. En el jardín de mi casa",
+  "titulo": "Sumamos hasta 10",
+  "descripcion": "Practicar sumas con objetos, dedos y dibujos, sin pasar del 10.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes qué es sumar. Ahora vamos a practicar sumas que no pasan del diez, usando cosas de todos los días.",
+      "visual": "<div class='rotulo'>Sumamos hasta 10</div><h1 class='chico'>Practiquemos juntos</h1><div class='dib max'>🧮</div>"
+    },
+    {
+      "narracion": "Tienes cuatro chichiguas volando, y se te unen dos más. Cuenta todas: cuatro, cinco, seis. Cuatro más dos es seis.",
+      "visual": "<h1>4 + 2</h1><div class='fila'><div class='conteo chica'><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span><span class='obj'>🪁</span></div><div class='signo'>+</div><div class='conteo chica'><span class='obj'>🪁</span><span class='obj'>🪁</span></div><div class='signo'>=</div><div class='num verde'>6</div></div>"
+    },
+    {
+      "narracion": "Ahora una más grande. Tienes cinco pelotas, y te regalan cinco más. Cuenta todas: cinco más cinco es diez, justo una decena completa.",
+      "visual": "<h1>5 + 5</h1><div class='fila'><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='signo'>+</div><div class='conteo chica'><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span><span class='obj'>⚽</span></div><div class='signo'>=</div><div class='num verde'>10</div></div>"
+    },
+    {
+      "narracion": "Un truco útil: si ya sabes una suma, la puedes usar para resolver otra parecida. Si tres más tres es seis, entonces tres más cuatro es uno más: siete.",
+      "visual": "<h1 class='chico'>Un truco</h1><div class='fila'><div class='detalle'>3 + 3 = 6</div><div class='signo'>➜</div><div class='detalle'>3 + 4 = 7</div></div>"
+    },
+    {
+      "narracion": "Otra forma de sumar es contando hacia adelante. Si ya tienes siete, y quieres sumarle dos, cuenta: ocho, nueve. Siete más dos es nueve.",
+      "visual": "<h1>Contar hacia adelante</h1><div class='fila apretada'><div class='num verde'>7</div><div class='signo'>➜</div><div class='num claro'>8</div><div class='signo'>➜</div><div class='num claro'>9</div></div>"
+    },
+    {
+      "narracion": "Practica con tus dedos, con frijoles, con lo que tengas a mano. Mientras más practiques, más rápido vas a sumar de memoria.",
+      "visual": "<h1 class='chico'>Practica con lo que tengas</h1><div class='fila apretada'><div class='dib mini'>✋</div><div class='dib mini'>🫘</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Seis palitos de helado más tres palitos más, ¿cuántos palitos son en total? Seis más tres es nueve.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>6</div><div class='signo'>+</div><div class='num'>3</div><div class='signo'>=</div><div class='num verde'>9</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuánto es cuatro más dos?",
+      "visual": "<div class='pregunta'>4 + 2 = ?</div><div class='opciones'><div class='opcion'><div class='num'>6</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuánto es cinco más cinco?",
+      "visual": "<div class='pregunta'>5 + 5 = ?</div><div class='opciones'><div class='opcion'><div class='num'>9</div></div><div class='opcion'><div class='num'>10</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuánto es siete más dos? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>7 + 2 = ?</div><div class='opciones'><div class='opcion'><div class='num'>9</div></div><div class='opcion'><div class='num'>8</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuánto es cuatro más dos?",
+      "opciones": [
+        { "texto": "6", "visual": "<div class='num'>6</div>" },
+        { "texto": "5", "visual": "<div class='num'>5</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuánto es cinco más cinco?",
+      "opciones": [
+        { "texto": "9", "visual": "<div class='num'>9</div>" },
+        { "texto": "10", "visual": "<div class='num'>10</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuánto es siete más dos?",
+      "opciones": [
+        { "texto": "9", "visual": "<div class='num'>9</div>" },
+        { "texto": "8", "visual": "<div class='num'>8</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

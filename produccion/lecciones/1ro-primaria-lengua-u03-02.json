@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-lengua-u03-02",
+  "curso": "1ro. Primaria",
+  "materia": "Lengua Española",
+  "unidad": "U3. La lista de compras",
+  "titulo": "Palabras largas y palabras cortas",
+  "descripcion": "Comparar la longitud de las palabras.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las palabras no todas miden lo mismo. Algunas son cortas, como PAN. Otras son largas, como PLÁTANO. Vamos a compararlas.",
+      "visual": "<div class='rotulo'>Palabras largas y cortas</div><h1 class='chico'>No todas miden igual</h1><div class='fila'><div class='palabra'>PAN</div><div class='palabra-grande'>PLÁTANO</div></div>"
+    },
+    {
+      "narracion": "Para saber cuál es más larga, cuenta las letras de cada una. Pan tiene tres letras. Plátano tiene siete letras. Plátano es más larga.",
+      "visual": "<h1>Cuenta las letras</h1><div class='fila'><div class='columna'><div class='palabra'>PAN</div><div class='num claro'>3</div></div><div class='columna'><div class='palabra-grande'>PLÁTANO</div><div class='num verde'>7</div></div></div>"
+    },
+    {
+      "narracion": "Otro ejemplo: sol tiene tres letras, y mariposa tiene ocho letras. Mariposa es mucho más larga que sol.",
+      "visual": "<h1>Otro ejemplo</h1><div class='fila'><div class='columna'><div class='dib mini'>☀️</div><div class='palabra'>SOL</div></div><div class='columna'><div class='dib mini'>🦋</div><div class='palabra-grande'>MARIPOSA</div></div></div>"
+    },
+    {
+      "narracion": "No importa lo que signifique la palabra, sino cuántas letras tiene escritas. Una palabra de un animal grande puede ser corta, y una de algo pequeño puede ser larga.",
+      "visual": "<h1 class='chico'>Depende de las letras, no del tamaño real</h1><div class='fila'><div class='columna'><div class='dib mini'>🐘</div><div class='palabra'>OSO</div></div><div class='columna'><div class='dib mini'>🐜</div><div class='palabra-grande'>HORMIGA</div></div></div>"
+    },
+    {
+      "narracion": "Un truco fácil: apunta con el dedo debajo de cada letra mientras la dices. La palabra que necesita más toques de dedo es la más larga.",
+      "visual": "<h1>Un truco</h1><div class='palabra-grande'>P-L-Á-T-A-N-O</div><div class='pie'>7 toques de dedo</div>"
+    },
+    {
+      "narracion": "Practiquemos. Mira estas dos palabras: gato y elefante. ¿Cuál tiene más letras? Elefante tiene más letras que gato.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='columna'><div class='dib mini'>🐱</div><div class='palabra'>GATO</div></div><div class='columna'><div class='dib mini'>🐘</div><div class='palabra-grande'>ELEFANTE</div></div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál de estas dos palabras es más larga: pan o plátano?",
+      "visual": "<div class='pregunta'>¿Cuál es MÁS LARGA?</div><div class='opciones'><div class='opcion'><div class='palabra'>PAN</div></div><div class='opcion'><div class='palabra-grande'>PLÁTANO</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Para saber cuál palabra es más larga, ¿qué debes hacer?",
+      "visual": "<div class='pregunta'>¿Qué debes hacer para comparar?</div><div class='opciones'><div class='opcion'><div class='palabra'>Contar las letras</div></div><div class='opcion'><div class='palabra'>Adivinar</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Sol y mariposa, ¿cuál palabra es más corta? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál es MÁS CORTA?</div><div class='opciones'><div class='opcion'><div class='palabra-grande'>MARIPOSA</div></div><div class='opcion'><div class='palabra'>SOL</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál de estas dos palabras es más larga?",
+      "opciones": [
+        { "texto": "PAN", "visual": "<div class='palabra'>PAN</div>" },
+        { "texto": "PLÁTANO", "visual": "<div class='palabra-grande'>PLÁTANO</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Para saber cuál palabra es más larga, ¿qué debes hacer?",
+      "opciones": [
+        { "texto": "Contar las letras", "visual": "<div class='dib'>🔢</div>" },
+        { "texto": "Adivinar", "visual": "<div class='dib'>🎲</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Sol y mariposa, ¿cuál palabra es más corta?",
+      "opciones": [
+        { "texto": "MARIPOSA", "visual": "<div class='palabra-grande'>MARIPOSA</div>" },
+        { "texto": "SOL", "visual": "<div class='palabra'>SOL</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}
