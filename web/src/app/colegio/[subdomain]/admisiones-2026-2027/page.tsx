@@ -82,7 +82,7 @@ const NIVELES: Nivel[] = [
     emoji: '🌎',
     titulo: 'Inglés — Alianza con Amco',
     detalle: 'Programa de inglés estructurado por ciclos, en alianza con Amco, para estudiantes realmente bilingües.',
-    // TODO: pendiente el enlace de Amco que dará el colegio.
+    href: 'https://www.amco.me',
   },
   {
     emoji: '💻',
