@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-sociales-u03-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U3. Mi comunidad",
+  "titulo": "Mi escuela y quiénes trabajan en ella",
+  "descripcion": "La comunidad escolar: quiénes trabajan en la escuela y qué hace cada uno.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Tu escuela no funciona sola. Muchas personas trabajan ahí todos los días para que tú puedas aprender. Vamos a conocer a algunas.",
+      "visual": "<div class='rotulo'>Mi escuela</div><h1 class='chico'>Muchas personas trabajan aquí</h1><div class='dib max'>🏫</div>"
+    },
+    {
+      "narracion": "Tu maestra es quien te enseña todos los días. Ella prepara las clases, corrige tus tareas, y te ayuda cuando tienes una duda.",
+      "visual": "<h1>La maestra</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>👩‍🏫</div><div class='detalle'>Enseña</div></div></div>"
+    },
+    {
+      "narracion": "La directora dirige toda la escuela. Ella se asegura de que todo funcione bien: los maestros, los salones, los horarios.",
+      "visual": "<h1>La directora</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>👩‍💼</div><div class='detalle'>Dirige la escuela</div></div></div>"
+    },
+    {
+      "narracion": "En secretaría trabaja alguien que guarda los papeles importantes: tu nombre, tus notas, cuándo faltas. También contesta el teléfono.",
+      "visual": "<h1>Secretaría</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>💻</div><div class='detalle'>Guarda papeles</div></div><div class='tarjeta'><div class='dib mini'>📞</div><div class='detalle'>Contesta el teléfono</div></div></div>"
+    },
+    {
+      "narracion": "En la cocina, alguien prepara la comida para que todos los estudiantes puedan comer. Y el conserje limpia los salones y el patio.",
+      "visual": "<h1>Cocina y limpieza</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>👨‍🍳</div><div class='detalle'>Cocina</div></div><div class='tarjeta'><div class='dib mini'>🧹</div><div class='detalle'>Limpia</div></div></div>"
+    },
+    {
+      "narracion": "El de seguridad cuida la entrada de la escuela, para que solo entren las personas que deben entrar. Así todos están más seguros.",
+      "visual": "<h1>Seguridad</h1><div class='tarjeta destaca'><div class='dib mini'>👮</div><div class='detalle'>Cuida la entrada</div></div><div class='pie'>Nos mantiene seguros</div>"
+    },
+    {
+      "narracion": "Todas estas personas forman la comunidad escolar. Cada una hace una parte distinta, y juntas hacen que tu escuela funcione bien todos los días.",
+      "visual": "<h1 class='chico'>Todos forman un equipo</h1><div class='fila apretada'><div class='dib mini'>👩‍🏫</div><div class='dib mini'>👩‍💼</div><div class='dib mini'>👨‍🍳</div><div class='dib mini'>🧹</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Quién es la persona que te enseña todos los días en tu salón?",
+      "visual": "<div class='pregunta'>¿Quién te enseña todos los días?</div><div class='opciones'><div class='opcion'><div class='dib'>👩‍🏫</div><div class='palabra'>La maestra</div></div><div class='opcion'><div class='dib'>👨‍🍳</div><div class='palabra'>El cocinero</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Quién prepara la comida en la escuela?",
+      "visual": "<div class='pregunta'>¿Quién prepara la comida?</div><div class='opciones'><div class='opcion'><div class='dib'>🧹</div><div class='palabra'>El conserje</div></div><div class='opcion'><div class='dib'>👨‍🍳</div><div class='palabra'>El cocinero</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Quién dirige toda la escuela? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién dirige la escuela?</div><div class='opciones'><div class='opcion'><div class='dib'>👩‍💼</div><div class='palabra'>La directora</div></div><div class='opcion'><div class='dib'>👮</div><div class='palabra'>El de seguridad</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Quién es la persona que te enseña todos los días en tu salón?",
+      "opciones": [
+        { "texto": "La maestra", "visual": "<div class='dib'>👩‍🏫</div>" },
+        { "texto": "El cocinero", "visual": "<div class='dib'>👨‍🍳</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Quién prepara la comida en la escuela?",
+      "opciones": [
+        { "texto": "El conserje", "visual": "<div class='dib'>🧹</div>" },
+        { "texto": "El cocinero", "visual": "<div class='dib'>👨‍🍳</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Quién dirige toda la escuela?",
+      "opciones": [
+        { "texto": "La directora", "visual": "<div class='dib'>👩‍💼</div>" },
+        { "texto": "El de seguridad", "visual": "<div class='dib'>👮</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

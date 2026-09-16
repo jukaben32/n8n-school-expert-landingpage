@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-naturales-u02-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U2. Los animales",
+  "titulo": "¿Dónde viven y cómo se mueven?",
+  "descripcion": "Animales acuáticos, terrestres y los que vuelan: dónde viven y cómo se desplazan.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "No todos los animales viven en el mismo lugar. Unos viven en el agua, otros en la tierra, y otros vuelan por el aire. Vamos a conocerlos.",
+      "visual": "<div class='rotulo'>¿Dónde viven?</div><h1 class='chico'>Agua, tierra y aire</h1><div class='fila apretada'><div class='dib mini'>🐟</div><div class='dib mini'>🐕</div><div class='dib mini'>🐦</div></div>"
+    },
+    {
+      "narracion": "El pez vive en el agua. Nunca sale, porque respira por adentro del agua. Nada moviendo su cola de un lado a otro.",
+      "visual": "<h1>En el agua</h1><div class='tarjeta destaca'><div class='dib mini'>🐟</div><div class='detalle'>Nada con su cola</div></div>"
+    },
+    {
+      "narracion": "El perro vive en la tierra, como tú. Camina con sus cuatro patas. Muchos animales terrestres caminan o corren para moverse.",
+      "visual": "<h1>En la tierra</h1><div class='tarjeta destaca'><div class='dib mini'>🐕</div><div class='detalle'>Camina con sus patas</div></div>"
+    },
+    {
+      "narracion": "El pajarito vive volando. Tiene alas que baten para subir por el aire. Desde arriba, ve todo el pueblo pequeñito.",
+      "visual": "<h1>En el aire</h1><div class='tarjeta destaca'><div class='dib mini'>🐦</div><div class='detalle'>Vuela con sus alas</div></div>"
+    },
+    {
+      "narracion": "En República Dominicana hay muchos ejemplos. El tiburón vive en el mar. La iguana vive en la tierra. El zunzún, que es un pajarito muy pequeño, vuela de flor en flor.",
+      "visual": "<div class='rotulo'>Aquí en RD</div><div class='fila'><div class='tarjeta'><div class='dib mini'>🦈</div><div class='detalle'>mar</div></div><div class='tarjeta'><div class='dib mini'>🦎</div><div class='detalle'>tierra</div></div><div class='tarjeta'><div class='dib mini'>🐦</div><div class='detalle'>aire</div></div></div>"
+    },
+    {
+      "narracion": "Algunos animales se mueven de más de una forma. El pato camina en la tierra, pero también nada en el agua. No es raro que un animal sepa hacer las dos cosas.",
+      "visual": "<h1 class='chico'>Algunos hacen las dos cosas</h1><div class='fila'><div class='dib medio'>🦆</div></div><div class='pie'>El pato camina Y nada</div>"
+    },
+    {
+      "narracion": "Practiquemos. La tortuga marina, ¿dónde crees que vive? Vive en el agua del mar, aunque a veces sale a la playa a poner sus huevos.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib mini'>🐢</div><div class='detalle'>Vive en el mar</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Dónde vive el pez?",
+      "visual": "<div class='pregunta'>🐟 ¿Dónde vive el pez?</div><div class='opciones'><div class='opcion'><div class='dib'>💧</div><div class='palabra'>En el agua</div></div><div class='opcion'><div class='dib'>🌳</div><div class='palabra'>En la tierra</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Con qué se mueve el pajarito por el aire?",
+      "visual": "<div class='pregunta'>🐦 ¿Con qué se mueve por el aire?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sus patas</div></div><div class='opcion'><div class='palabra'>Sus alas</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. El perro, ¿cómo se mueve? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>🐕 ¿Cómo se mueve el perro?</div><div class='opciones'><div class='opcion'><div class='palabra'>Nadando</div></div><div class='opcion'><div class='palabra'>Caminando</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Dónde vive el pez?",
+      "opciones": [
+        { "texto": "En el agua", "visual": "<div class='dib'>💧</div>" },
+        { "texto": "En la tierra", "visual": "<div class='dib'>🌳</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué se mueve el pajarito por el aire?",
+      "opciones": [
+        { "texto": "Sus patas", "visual": "<div class='dib'>🦵</div>" },
+        { "texto": "Sus alas", "visual": "<div class='dib'>🕊️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cómo se mueve el perro?",
+      "opciones": [
+        { "texto": "Nadando", "visual": "<div class='dib'>💧</div>" },
+        { "texto": "Caminando", "visual": "<div class='dib'>🐾</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

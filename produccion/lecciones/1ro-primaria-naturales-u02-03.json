@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-naturales-u02-03",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U2. Los animales",
+  "titulo": "¿Qué comen los animales?",
+  "descripcion": "Animales que comen plantas, animales que comen otros animales, y los que comen de todo.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todos los animales comen para vivir, pero no todos comen lo mismo. Unos comen plantas, otros comen otros animales, y otros comen de todo un poco.",
+      "visual": "<div class='rotulo'>¿Qué comen?</div><h1 class='chico'>No todos comen igual</h1><div class='fila apretada'><div class='dib mini'>🐄</div><div class='dib mini'>🦁</div><div class='dib mini'>🐷</div></div>"
+    },
+    {
+      "narracion": "La vaca come solo plantas: hierba, hojas, pasto. Nunca come carne. A los animales que comen solo plantas se les llama herbívoros.",
+      "visual": "<h1>Solo plantas</h1><div class='tarjeta destaca'><div class='dib mini'>🐄</div><div class='dib mini'>🌿</div><div class='pie'>Herbívoro</div></div>"
+    },
+    {
+      "narracion": "El león come solo carne: caza otros animales para comer. Nunca come plantas. A estos animales se les llama carnívoros.",
+      "visual": "<h1>Solo carne</h1><div class='tarjeta destaca'><div class='dib mini'>🦁</div><div class='detalle'>Caza para comer</div><div class='pie'>Carnívoro</div></div>"
+    },
+    {
+      "narracion": "El puerco come de todo: plantas, frutas, y también carne. A los animales que comen de todo un poco se les llama omnívoros.",
+      "visual": "<h1>Un poco de todo</h1><div class='tarjeta destaca'><div class='dib mini'>🐷</div><div class='fila apretada'><div class='dib mini'>🌿</div><div class='dib mini'>🍎</div></div><div class='pie'>Omnívoro</div></div>"
+    },
+    {
+      "narracion": "Las personas también somos omnívoras. Comemos vegetales, frutas, y también carne y pescado.",
+      "visual": "<h1 class='chico'>Nosotros también</h1><div class='fila'><div class='dib mini'>🙋</div><div class='fila apretada'><div class='dib mini'>🥦</div><div class='dib mini'>🍗</div></div></div>"
+    },
+    {
+      "narracion": "La gallina come maíz y semillitas. La cabra come hierba. Fíjate en el pico o en la boca del animal: eso ayuda a saber qué come.",
+      "visual": "<h1>Ejemplos de aquí</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🐔</div><div class='detalle'>maíz</div></div><div class='tarjeta'><div class='dib mini'>🐐</div><div class='detalle'>hierba</div></div></div>"
+    },
+    {
+      "narracion": "Practiquemos. El tiburón caza peces para comer. Nunca come plantas. ¿Es herbívoro, carnívoro u omnívoro? Es carnívoro, porque come carne.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib mini'>🦈</div><div class='pie'>Carnívoro: caza peces</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. La vaca solo come plantas. ¿Cómo se le llama a ese tipo de animal?",
+      "visual": "<div class='pregunta'>🐄 Solo come plantas. ¿Cómo se llama?</div><div class='opciones'><div class='opcion'><div class='palabra'>Herbívoro</div></div><div class='opcion'><div class='palabra'>Carnívoro</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué come el león?",
+      "visual": "<div class='pregunta'>🦁 ¿Qué come el león?</div><div class='opciones'><div class='opcion'><div class='dib'>🌿</div><div class='palabra'>Plantas</div></div><div class='opcion'><div class='dib'>🥩</div><div class='palabra'>Carne</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Un animal que come plantas Y carne, ¿cómo se llama? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Come plantas y carne. ¿Cómo se llama?</div><div class='opciones'><div class='opcion'><div class='palabra'>Omnívoro</div></div><div class='opcion'><div class='palabra'>Herbívoro</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "La vaca solo come plantas. ¿Cómo se le llama a ese tipo de animal?",
+      "opciones": [
+        { "texto": "Herbívoro", "visual": "<div class='dib'>🌿</div>" },
+        { "texto": "Carnívoro", "visual": "<div class='dib'>🥩</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué come el león?",
+      "opciones": [
+        { "texto": "Plantas", "visual": "<div class='dib'>🌿</div>" },
+        { "texto": "Carne", "visual": "<div class='dib'>🥩</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Un animal que come plantas Y carne, ¿cómo se llama?",
+      "opciones": [
+        { "texto": "Omnívoro", "visual": "<div class='dib'>🍽️</div>" },
+        { "texto": "Herbívoro", "visual": "<div class='dib'>🌿</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-naturales-u03-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U3. Los seres humanos",
+  "titulo": "Mis cinco sentidos",
+  "descripcion": "Para qué sirve cada uno de los cinco sentidos.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Tienes cinco sentidos que te ayudan a conocer el mundo: la vista, el oído, el olfato, el gusto y el tacto. Vamos a conocerlos uno por uno.",
+      "visual": "<div class='rotulo'>Mis cinco sentidos</div><h1 class='chico'>Conocen el mundo</h1><div class='fila apretada'><div class='dib mini'>👀</div><div class='dib mini'>👂</div><div class='dib mini'>👃</div><div class='dib mini'>👅</div><div class='dib mini'>✋</div></div>"
+    },
+    {
+      "narracion": "La vista es con los ojos. Con la vista ves los colores, las formas, y a las personas que quieres. Es el sentido que más usamos.",
+      "visual": "<div class='rotulo'>Sentido 1</div><h1>La vista</h1><div class='tarjeta destaca'><div class='dib medio'>👀</div><div class='pie'>Para ver</div></div>"
+    },
+    {
+      "narracion": "El oído es con las orejas. Con el oído escuchas la música, la voz de tu mamá, y el ruido de los carros en la calle.",
+      "visual": "<div class='rotulo'>Sentido 2</div><h1>El oído</h1><div class='tarjeta destaca'><div class='dib medio'>👂</div><div class='pie'>Para escuchar</div></div>"
+    },
+    {
+      "narracion": "El olfato es con la nariz. Con el olfato hueles el pan recién horneado, las flores, y también los malos olores.",
+      "visual": "<div class='rotulo'>Sentido 3</div><h1>El olfato</h1><div class='tarjeta destaca'><div class='dib medio'>👃</div><div class='pie'>Para oler</div></div>"
+    },
+    {
+      "narracion": "El gusto es con la lengua. Con el gusto sabes si algo es dulce, como el mango, o salado, como las papitas.",
+      "visual": "<div class='rotulo'>Sentido 4</div><h1>El gusto</h1><div class='tarjeta destaca'><div class='dib medio'>👅</div><div class='pie'>Para saborear</div></div>"
+    },
+    {
+      "narracion": "El tacto es con la piel, sobre todo con las manos. Con el tacto sientes si algo está frío, caliente, suave o áspero.",
+      "visual": "<div class='rotulo'>Sentido 5</div><h1>El tacto</h1><div class='tarjeta destaca'><div class='dib medio'>✋</div><div class='pie'>Para tocar</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Para saber si una sopa está muy caliente antes de comerla, ¿qué sentido usas? Usas el tacto, tocando el plato con cuidado.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib medio'>🍲</div><div class='signo'>➜</div><div class='dib medio'>✋</div></div><div class='pie'>Tacto: sientes el calor</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Con qué sentido escuchas la música?",
+      "visual": "<div class='pregunta'>🎵 ¿Con qué sentido escuchas?</div><div class='opciones'><div class='opcion'><div class='dib'>👂</div><div class='palabra'>El oído</div></div><div class='opcion'><div class='dib'>👃</div><div class='palabra'>El olfato</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Con qué sentido sabes que el mango está dulce?",
+      "visual": "<div class='pregunta'>🥭 ¿Con qué sentido sabes que es dulce?</div><div class='opciones'><div class='opcion'><div class='dib'>👀</div><div class='palabra'>La vista</div></div><div class='opcion'><div class='dib'>👅</div><div class='palabra'>El gusto</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Con qué sentido sientes si algo está frío? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>🧊 ¿Con qué sentido sientes el frío?</div><div class='opciones'><div class='opcion'><div class='dib'>✋</div><div class='palabra'>El tacto</div></div><div class='opcion'><div class='dib'>👅</div><div class='palabra'>El gusto</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Con qué sentido escuchas la música?",
+      "opciones": [
+        { "texto": "El oído", "visual": "<div class='dib'>👂</div>" },
+        { "texto": "El olfato", "visual": "<div class='dib'>👃</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué sentido sabes que el mango está dulce?",
+      "opciones": [
+        { "texto": "La vista", "visual": "<div class='dib'>👀</div>" },
+        { "texto": "El gusto", "visual": "<div class='dib'>👅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Con qué sentido sientes si algo está frío?",
+      "opciones": [
+        { "texto": "El tacto", "visual": "<div class='dib'>✋</div>" },
+        { "texto": "El gusto", "visual": "<div class='dib'>👅</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

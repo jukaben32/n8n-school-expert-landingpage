@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-sociales-u02-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U2. Mi familia",
+  "titulo": "Mi árbol genealógico",
+  "descripcion": "De dónde vengo: papás, abuelos y las generaciones de mi familia.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Tú vienes de alguien. Tu mamá y tu papá te dieron la vida. Y tu mamá y tu papá también vienen de alguien: de tus abuelos.",
+      "visual": "<div class='rotulo'>¿De dónde vengo?</div><h1 class='chico'>Vengo de mi familia</h1><div class='fila'><div class='dib mini'>👵</div><div class='dib mini'>👨</div><div class='dib medio'>🙋</div></div>"
+    },
+    {
+      "narracion": "Un árbol genealógico es un dibujo que muestra a toda tu familia, de generación en generación. Arriba van los más viejitos, y abajo vas tú.",
+      "visual": "<h1>El árbol genealógico</h1><div class='columna'><div class='fila apretada'><div class='dib mini'>👵</div><div class='dib mini'>👴</div></div><div class='fila apretada'><div class='dib mini'>👩</div><div class='dib mini'>👨</div></div><div class='dib mini'>🙋</div></div>"
+    },
+    {
+      "narracion": "En la primera fila van tus abuelos: la mamá de tu mamá, y el papá de tu papá, por ejemplo. Ellos son los más viejitos del árbol.",
+      "visual": "<div class='rotulo'>Fila 1</div><h1 class='chico'>Mis abuelos</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>👵</div><div class='detalle'>abuela</div></div><div class='tarjeta destaca'><div class='dib mini'>👴</div><div class='detalle'>abuelo</div></div></div>"
+    },
+    {
+      "narracion": "En la segunda fila van tu mamá y tu papá. Ellos son los hijos de tus abuelos. Igual que tú eres el hijo o la hija de ellos.",
+      "visual": "<div class='rotulo'>Fila 2</div><h1 class='chico'>Mis papás</h1><div class='fila'><div class='tarjeta destaca'><div class='dib mini'>👩</div><div class='detalle'>mamá</div></div><div class='tarjeta destaca'><div class='dib mini'>👨</div><div class='detalle'>papá</div></div></div>"
+    },
+    {
+      "narracion": "Y abajo del todo vas tú, con tus hermanos si los tienes. Tú eres la parte más nueva del árbol.",
+      "visual": "<div class='rotulo'>Fila 3</div><h1 class='chico'>Yo</h1><div class='dib medio'>🙋</div><div class='pie'>La parte más nueva</div>"
+    },
+    {
+      "narracion": "Muchas veces te pareces a alguien de tu familia. Los ojos de tu papá, la sonrisa de tu abuela. Eso se llama parecido familiar.",
+      "visual": "<h1>Parecidos de familia</h1><div class='fila'><div class='dib mini'>👴</div><div class='signo'>➜</div><div class='dib mini'>👨</div><div class='signo'>➜</div><div class='dib mini'>🙋</div></div><div class='pie'>Los ojos pasan de abuelo a nieto</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tú eres el hijo de tu mamá, y tu mamá es la hija de tu abuela, entonces tu abuela es tu... abuela. Va arriba de tu mamá en el árbol.",
+      "visual": "<h1>Practiquemos</h1><div class='columna'><div class='dib mini'>👵</div><div class='dib mini'>👩</div><div class='dib mini'>🙋</div></div><div class='pie'>Abuela, mamá, yo</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Quién va en la fila más de arriba del árbol genealógico?",
+      "visual": "<div class='pregunta'>¿Quién va MÁS ARRIBA?</div><div class='opciones'><div class='opcion'><div class='dib'>👵</div><div class='palabra'>Los abuelos</div></div><div class='opcion'><div class='dib'>🙋</div><div class='palabra'>Yo</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿De quién es hija tu mamá?",
+      "visual": "<div class='pregunta'>Mi mamá es hija de...</div><div class='opciones'><div class='opcion'><div class='dib'>👵</div><div class='palabra'>Mi abuela</div></div><div class='opcion'><div class='dib'>🙋</div><div class='palabra'>De mí</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Quién va en la fila de más abajo del árbol? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién va MÁS ABAJO?</div><div class='opciones'><div class='opcion'><div class='dib'>👴</div><div class='palabra'>Los abuelos</div></div><div class='opcion'><div class='dib'>🙋</div><div class='palabra'>Yo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Quién va en la fila más de arriba del árbol genealógico?",
+      "opciones": [
+        { "texto": "Los abuelos", "visual": "<div class='dib'>👵</div>" },
+        { "texto": "Yo", "visual": "<div class='dib'>🙋</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿De quién es hija tu mamá?",
+      "opciones": [
+        { "texto": "De mí", "visual": "<div class='dib'>🙋</div>" },
+        { "texto": "De mi abuela", "visual": "<div class='dib'>👵</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Quién va en la fila de más abajo del árbol?",
+      "opciones": [
+        { "texto": "Yo", "visual": "<div class='dib'>🙋</div>" },
+        { "texto": "Los abuelos", "visual": "<div class='dib'>👴</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

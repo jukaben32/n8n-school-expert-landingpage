@@ -1,0 +1,84 @@
+{
+  "id": "1ro-primaria-naturales-u03-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U3. Los seres humanos",
+  "titulo": "Las partes de mi cuerpo",
+  "descripcion": "Cabeza, tronco y extremidades: las tres grandes partes del cuerpo humano.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Tu cuerpo tiene tres partes grandes: la cabeza, el tronco, y las extremidades. Vamos a conocerlas una por una.",
+      "visual": "<div class='rotulo'>Mi cuerpo</div><h1 class='chico'>Tres partes grandes</h1><svg width='300' height='420' viewBox='0 0 300 420'><circle cx='150' cy='60' r='50' fill='#f0c9a0'/><rect x='90' y='110' width='120' height='150' rx='20' fill='#4a9d3f'/><rect x='60' y='120' width='30' height='130' rx='15' fill='#f0c9a0'/><rect x='210' y='120' width='30' height='130' rx='15' fill='#f0c9a0'/><rect x='100' y='260' width='40' height='140' rx='15' fill='#2b5d8f'/><rect x='160' y='260' width='40' height='140' rx='15' fill='#2b5d8f'/></svg>"
+    },
+    {
+      "narracion": "La cabeza está arriba de todo. Ahí están tus ojos, tu nariz, tu boca, tus orejas, y adentro está tu cerebro, que piensa por ti.",
+      "visual": "<div class='rotulo'>Parte 1</div><h1>La cabeza</h1><svg width='260' height='260' viewBox='0 0 260 260'><circle cx='130' cy='130' r='100' fill='#f0c9a0'/><circle cx='95' cy='110' r='10' fill='#12323f'/><circle cx='165' cy='110' r='10' fill='#12323f'/><path d='M100 165 Q130 185 160 165' stroke='#12323f' stroke-width='6' fill='none' stroke-linecap='round'/></svg>"
+    },
+    {
+      "narracion": "El tronco es la parte de en medio: tu pecho, tu barriga y tu espalda. Adentro del tronco está tu corazón y tus pulmones.",
+      "visual": "<div class='rotulo'>Parte 2</div><h1>El tronco</h1><svg width='240' height='280' viewBox='0 0 240 280'><rect x='40' y='20' width='160' height='240' rx='30' fill='#4a9d3f'/><path d='M120 100 L100 140 L140 140 Z' fill='#e74c3c'/><text x='120' y='230' text-anchor='middle' font-family='DejaVu Sans' font-size='24' fill='#fff'>tronco</text></svg>"
+    },
+    {
+      "narracion": "Las extremidades son cuatro: dos brazos, que salen del tronco y terminan en manos, y dos piernas, que salen del tronco y terminan en pies.",
+      "visual": "<div class='rotulo'>Parte 3</div><h1>Las extremidades</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>💪</div><div class='detalle'>2 brazos</div></div><div class='tarjeta'><div class='dib mini'>🦵</div><div class='detalle'>2 piernas</div></div></div>"
+    },
+    {
+      "narracion": "Los brazos te sirven para agarrar, cargar y abrazar. Las piernas te sirven para caminar, correr y saltar.",
+      "visual": "<h1>Para qué sirven</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🤗</div><div class='detalle'>Brazos: agarrar</div></div><div class='tarjeta'><div class='dib mini'>🏃</div><div class='detalle'>Piernas: correr</div></div></div>"
+    },
+    {
+      "narracion": "Cada mano tiene cinco dedos, y cada pie también tiene cinco dedos. Cuéntalos: uno, dos, tres, cuatro, cinco.",
+      "visual": "<h1 class='chico'>Cinco dedos</h1><div class='conteo'><span class='obj'>✋</span></div><div class='pie'>5 dedos en cada mano</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si te duele la barriga, ¿en qué parte del cuerpo está el dolor? En el tronco, porque la barriga es parte del tronco.",
+      "visual": "<h1>Practiquemos</h1><div class='tarjeta destaca'><div class='dib mini'>🤕</div><div class='detalle'>Barriga = tronco</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Dónde están tus ojos y tu boca?",
+      "visual": "<div class='pregunta'>¿Dónde están los ojos y la boca?</div><div class='opciones'><div class='opcion'><div class='palabra'>En la cabeza</div></div><div class='opcion'><div class='palabra'>En las piernas</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántos brazos tiene una persona?",
+      "visual": "<div class='pregunta'>¿Cuántos brazos tenemos?</div><div class='opciones'><div class='opcion'><div class='num'>4</div></div><div class='opcion'><div class='num'>2</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué sirven las piernas? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué sirven las piernas?</div><div class='opciones'><div class='opcion'><div class='dib'>🏃</div><div class='palabra'>Para caminar</div></div><div class='opcion'><div class='dib'>👀</div><div class='palabra'>Para ver</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Dónde están tus ojos y tu boca?",
+      "opciones": [
+        { "texto": "En la cabeza", "visual": "<div class='dib'>😊</div>" },
+        { "texto": "En las piernas", "visual": "<div class='dib'>🦵</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuántos brazos tiene una persona?",
+      "opciones": [
+        { "texto": "4", "visual": "<div class='num'>4</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Para qué sirven las piernas?",
+      "opciones": [
+        { "texto": "Para ver", "visual": "<div class='dib'>👀</div>" },
+        { "texto": "Para caminar", "visual": "<div class='dib'>🏃</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}
