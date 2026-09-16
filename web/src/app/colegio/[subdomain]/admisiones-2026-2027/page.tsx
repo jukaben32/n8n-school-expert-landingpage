@@ -60,7 +60,9 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
   }
 }
 
-const NIVELES = [
+type Nivel = { emoji: string; titulo: string; detalle: string; href?: string }
+
+const NIVELES: Nivel[] = [
   {
     emoji: '🧸',
     titulo: 'Nivel Inicial',
@@ -80,11 +82,13 @@ const NIVELES = [
     emoji: '🌎',
     titulo: 'Inglés — Alianza con Amco',
     detalle: 'Programa de inglés estructurado por ciclos, en alianza con Amco, para estudiantes realmente bilingües.',
+    // TODO: pendiente el enlace de Amco que dará el colegio.
   },
   {
     emoji: '💻',
     titulo: 'Portal Familiar',
     detalle: 'Sigue en tiempo real asistencia, calificaciones, comunicados y pagos de tus hijos, desde el celular.',
+    href: 'https://www.educacionmanantial.com',
   },
 ]
 
@@ -208,21 +212,39 @@ export default async function AdmisionesPage({ params }: { params: Promise<{ sub
           </h2>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {NIVELES.map((n) => (
-              <div
-                key={n.titulo}
-                className="rounded-2xl bg-white border border-slate-100 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4"
-                  style={{ backgroundColor: `${NAVY}0f` }}
-                >
-                  {n.emoji}
+            {NIVELES.map((n) => {
+              const cardClass =
+                'rounded-2xl bg-white border border-slate-100 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg block'
+              const content = (
+                <>
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4"
+                    style={{ backgroundColor: `${NAVY}0f` }}
+                  >
+                    {n.emoji}
+                  </div>
+                  <p className="font-bold flex items-center gap-1.5" style={{ color: NAVY }}>
+                    {n.titulo}
+                    {n.href && (
+                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H18m0 0v4.5M18 6l-7.5 7.5M6 12v6a1 1 0 001 1h11a1 1 0 001-1v-5" />
+                      </svg>
+                    )}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">{n.detalle}</p>
+                </>
+              )
+
+              return n.href ? (
+                <a key={n.titulo} href={n.href} target="_blank" rel="noreferrer" className={cardClass}>
+                  {content}
+                </a>
+              ) : (
+                <div key={n.titulo} className={cardClass}>
+                  {content}
                 </div>
-                <p className="font-bold" style={{ color: NAVY }}>{n.titulo}</p>
-                <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">{n.detalle}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
