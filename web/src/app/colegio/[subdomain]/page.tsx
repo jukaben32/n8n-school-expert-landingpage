@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube, Linkedin, Music2 } from 'lucide-react'
 import { PLATFORM_NAME } from '@/lib/branding'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/publicClient'
 import { getWebsiteSettings, type SchoolWebsiteSettings } from '@/lib/websiteSettings'
 import InquiryForm from './InquiryForm'
 import InstallAppButton from './InstallAppButton'
@@ -30,7 +30,7 @@ type TestimonialRow = { quote: string; author_name: string; author_role: string 
 type FaqRow = { question: string; answer: string }
 
 async function getSchool(subdomain: string): Promise<SchoolPublic | null> {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('schools_public')
     .select('id, name, subdomain, tagline, logo_url, address, phone, email, website_settings, whatsapp_active, whatsapp_phone_number')
@@ -40,7 +40,7 @@ async function getSchool(subdomain: string): Promise<SchoolPublic | null> {
 }
 
 async function getWebsiteLists(schoolId: string) {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const [{ data: services }, { data: team }, { data: testimonials }, { data: faqs }] = await Promise.all([
     supabase.from('website_services').select('icon, name, description, duration, price, link_url').eq('school_id', schoolId).order('sort_order'),
     supabase.from('website_team_members').select('name, role, bio, photo_url').eq('school_id', schoolId).order('sort_order'),

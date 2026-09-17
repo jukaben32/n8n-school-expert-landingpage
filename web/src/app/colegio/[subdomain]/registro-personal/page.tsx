@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/publicClient'
 import StaffRegistrationForm from './StaffRegistrationForm'
 
 async function getSchool(subdomain: string) {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('schools_public')
     .select('id, name, subdomain')
