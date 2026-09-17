@@ -176,7 +176,7 @@ async function run(request: NextRequest) {
   }
 
   const dryRun = request.nextUrl.searchParams.get('dry_run') === '1'
-  const maxAttempts = readPositiveInt(process.env.GUARDIAN_ACCESS_MAX_REMINDERS, 3)
+  const maxAttempts = readPositiveInt(process.env.GUARDIAN_ACCESS_MAX_REMINDERS, 5)
   const limit = clampLimit(request)
   const now = Date.now()
   const admin = createAdminClient()
