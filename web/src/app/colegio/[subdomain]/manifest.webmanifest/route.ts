@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PLATFORM_NAME } from '@/lib/branding'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/publicClient'
 import { getWebsiteSettings } from '@/lib/websiteSettings'
 
 /**
@@ -19,7 +19,7 @@ import { getWebsiteSettings } from '@/lib/websiteSettings'
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ subdomain: string }> }) {
   const { subdomain } = await params
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: school } = await supabase
     .from('schools_public')
     .select('name, tagline, logo_url, website_settings')
