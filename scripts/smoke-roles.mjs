@@ -93,6 +93,7 @@ const CHECKS = {
     ['Portal: sus facturas', `select count(*) from invoices;`],
     ['Portal: comunicados', `select count(*) from messages;`],
     ['Portal: justificaciones de ausencia de sus hijos', `select count(*) from attendance_justifications;`],
+    ['Horario: solo el curso de sus hijos', 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS'],
   ],
   reception: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -126,6 +127,7 @@ const CHECKS = {
   student: [
     ['Academia: sus lecciones', `select count(*) from lessons;`],
     ['Encuestas: las de su curso', `select count(*) from polls;`],
+    ['Horario: solo el de su propio curso', 'STUDENT_HORARIO_SOLO_SU_CURSO'],
   ],
 }
 
@@ -281,6 +283,50 @@ function academiaNoCrearEnAjenoSql() {
   `
 }
 
+/**
+ * 2026-09-18 (Horario para familias/estudiantes): comprobación negativa de
+ * aislamiento, mismo espíritu que `academiaNoCrearEnAjenoSql` -- no depende
+ * de que exista una fila concreta (si `class_schedules` está vacío para este
+ * tutor, `bool_and` da NULL y no revienta), pero si CUALQUIER fila visible
+ * pertenece a un curso que no es el de ninguno de sus hijos, es un hueco de
+ * seguridad real y se relanza como excepción.
+ */
+function guardianHorarioSoloSusHijosSql() {
+  return `
+    do $$
+    declare v_ok boolean;
+    begin
+      select bool_and(cs.grade_level in (
+        select s.grade_level from students s
+        join student_guardians sg on sg.student_id = s.id
+        join guardians g on g.id = sg.guardian_id
+        join users_profiles up on up.guardian_id = g.id
+        where up.auth_id = auth.uid()
+      )) into v_ok
+      from class_schedules cs;
+      if v_ok is false then
+        raise exception 'RIESGO: el tutor ve el horario de un curso que no es de ninguno de sus hijos';
+      end if;
+    end $$;
+  `
+}
+
+/** Mismo principio que la de arriba, para el estudiante y su propio curso. */
+function studentHorarioSoloSuCursoSql() {
+  return `
+    do $$
+    declare v_ok boolean;
+    begin
+      select bool_and(cs.grade_level = (select grade_level from students where id = current_student_id()))
+      into v_ok
+      from class_schedules cs;
+      if v_ok is false then
+        raise exception 'RIESGO: el estudiante ve el horario de un curso que no es el suyo';
+      end if;
+    end $$;
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -318,6 +364,8 @@ async function main() {
         : consulta === 'BUSCADOR_TUTORES' ? buscadorPorNombreCompletoSql('guardians')
         : consulta === 'ACADEMIA_CREAR_EN_CURSO' ? academiaCrearEnCursoSql()
         : consulta === 'ACADEMIA_NO_CREAR_EN_AJENO' ? academiaNoCrearEnAjenoSql()
+        : consulta === 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS' ? guardianHorarioSoloSusHijosSql()
+        : consulta === 'STUDENT_HORARIO_SOLO_SU_CURSO' ? studentHorarioSoloSuCursoSql()
         : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {

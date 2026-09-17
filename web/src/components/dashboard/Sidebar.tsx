@@ -143,12 +143,17 @@ const navByRole: Record<string, NavGroup[]> = {
   guardian_blocked: [{ items: [
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
   ] }],
-  // Estudiante: exactamente lo que pidió el colegio -- Academia y
-  // Encuestas. A propósito NO lleva Comunicados ni Agenda: esas pantallas
-  // están escritas para el personal y los tutores (sus policies filtran
-  // por guardian_id/staff), así que a un estudiante le saldrían vacías.
+  // Estudiante: Academia, su Horario y Encuestas. A propósito NO lleva
+  // Comunicados ni Agenda: esas pantallas están escritas para el personal y
+  // los tutores (sus policies filtran por guardian_id/staff), así que a un
+  // estudiante le saldrían vacías. Horario sí tiene su propia policy de
+  // lectura para 'student' (class_schedules_student_read, migración
+  // 20260918010000) -- 'horarios' no está en ROLE_MODULES.student porque
+  // ese módulo es del staff; horarios/page.tsx atiende a guardian/student
+  // antes de llegar a ese gate (ver su comentario).
   student: [{ items: [
     { href: '/dashboard/academia',        label: 'Academia', icon: 'academia' },
+    { href: '/dashboard/horarios',        label: 'Horario', icon: 'horarios' },
     { href: '/dashboard/encuestas',       label: 'Encuestas', icon: 'encuestas' },
   ] }],
   // Mensajes y Actualizaciones estaban en la matriz de permisos del profesor

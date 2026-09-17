@@ -5,7 +5,9 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import ScheduleGrid from './ScheduleGrid'
+import ScheduleByDay, { type ChildSchedule } from './ScheduleByDay'
 import { periodsForGrade } from '@/lib/schedule/gradeLevelCategory'
+import { todaySchoolDayOfWeek } from '@/lib/schoolDate'
 
 export const metadata: Metadata = {
   title: 'Horarios — MentorIApp',
@@ -33,7 +35,7 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
 
   const { data: profile, error: profileError } = await supabase
     .from('users_profiles')
-    .select('id, role, school_id, staff_id')
+    .select('id, role, school_id, staff_id, guardian_id, student_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -41,11 +43,7 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
 
   const role = profile?.role ?? ''
   const schoolId = (await getActiveSchool(role, profile?.school_id ?? '')).schoolId
-  if (!profile || !canAccess(role, 'horarios')) {
-    redirect('/dashboard/portal-familiar')
-  }
-
-  const canEdit = canAccess(role, 'horarios_gestionar')
+  const todayDow = todaySchoolDayOfWeek()
 
   // Se traen todas las franjas del colegio y se filtran por nivel más abajo,
   // según el curso que se esté viendo: el colegio puede tener una rejilla
@@ -57,6 +55,130 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
     .eq('school_id', schoolId)
     .order('sort_order', { ascending: true })
   const allPeriods = (periodsRaw ?? []) as Period[]
+
+  // ── Familia: el horario de cada uno de sus hijos, día por día ───────────
+  // Va ANTES del gate de canAccess() de más abajo a propósito: 'guardian'
+  // no usa esa matriz de permisos (tiene su propia página dedicada,
+  // portal-familiar -- ver permissions.ts), así que ROLE_MODULES.guardian
+  // siempre es [] y canAccess('guardian', 'horarios') siempre da false. El
+  // Sidebar ya enlaza "Horario" para guardian desde que existe ese menú,
+  // pero con el gate por delante esta rama nunca se alcanzaba: cualquier
+  // padre que tocara el enlace rebotaba a portal-familiar sin llegar aquí.
+  if (role === 'guardian' && profile) {
+    const { data: myStudentsRaw } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, grade_level, student_guardians!inner(guardian_id)')
+      .eq('student_guardians.guardian_id', profile.guardian_id ?? '')
+      .is('deleted_at', null)
+      .not('grade_level', 'is', null)
+      .order('first_name', { ascending: true })
+    type MyStudent = { id: string; first_name: string; last_name: string; grade_level: string }
+    const myStudents = (myStudentsRaw ?? []) as unknown as MyStudent[]
+
+    if (myStudents.length === 0) {
+      return (
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Horario</h1>
+          <div className="dash-card border-dashed p-12 text-center">
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay un curso registrado para tu(s) hijo(s).</p>
+          </div>
+        </div>
+      )
+    }
+
+    const myGrades = Array.from(new Set(myStudents.map((s) => s.grade_level)))
+    const { data: slotsRaw } = await supabase
+      .from('class_schedules')
+      .select('day_of_week, period_id, grade_level, subjects(name), staff(first_name, last_name)')
+      .eq('school_id', schoolId)
+      .in('grade_level', myGrades)
+    const slots = (slotsRaw ?? []) as unknown as ScheduleSlot[]
+
+    const childrenData: ChildSchedule[] = myStudents.map((s) => ({
+      id: s.id,
+      label: `${s.first_name} ${s.last_name}`,
+      grade: s.grade_level,
+      periods: periodsForGrade(allPeriods, s.grade_level),
+      slots: slots
+        .filter((sl) => sl.grade_level === s.grade_level)
+        .map((sl) => ({
+          day_of_week: sl.day_of_week,
+          period_id: sl.period_id,
+          subject: sl.subjects?.name ?? null,
+          teacher: sl.staff ? `${sl.staff.first_name} ${sl.staff.last_name}` : null,
+        })),
+    }))
+
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Horario</h1>
+          <p className="text-sm text-slate-500 mt-1">El horario de clases de tu(s) hijo(s), día por día.</p>
+        </div>
+        <ScheduleByDay students={childrenData} todayDow={todayDow} />
+      </div>
+    )
+  }
+
+  // ── Estudiante: el horario de SU curso, día por día ──────────────────────
+  // Mismo motivo que arriba: ROLE_MODULES.student no incluye 'horarios', así
+  // que esta rama también tiene que ir antes del gate.
+  if (role === 'student' && profile) {
+    const { data: meRaw } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, grade_level')
+      .eq('id', profile.student_id ?? '')
+      .maybeSingle()
+    type Me = { id: string; first_name: string; last_name: string; grade_level: string | null }
+    const me = meRaw as Me | null
+
+    if (!me?.grade_level) {
+      return (
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Mi horario</h1>
+          <div className="dash-card border-dashed p-12 text-center">
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay un curso registrado para ti.</p>
+          </div>
+        </div>
+      )
+    }
+
+    const { data: slotsRaw } = await supabase
+      .from('class_schedules')
+      .select('day_of_week, period_id, grade_level, subjects(name), staff(first_name, last_name)')
+      .eq('school_id', schoolId)
+      .eq('grade_level', me.grade_level)
+    const slots = (slotsRaw ?? []) as unknown as ScheduleSlot[]
+
+    const childData: ChildSchedule = {
+      id: me.id,
+      label: `${me.first_name} ${me.last_name}`,
+      grade: me.grade_level,
+      periods: periodsForGrade(allPeriods, me.grade_level),
+      slots: slots.map((sl) => ({
+        day_of_week: sl.day_of_week,
+        period_id: sl.period_id,
+        subject: sl.subjects?.name ?? null,
+        teacher: sl.staff ? `${sl.staff.first_name} ${sl.staff.last_name}` : null,
+      })),
+    }
+
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Mi horario</h1>
+          <p className="text-sm text-slate-500 mt-1">Tus clases de {me.grade_level}, día por día.</p>
+        </div>
+        <ScheduleByDay students={[childData]} todayDow={todayDow} />
+      </div>
+    )
+  }
+
+  if (!profile || !canAccess(role, 'horarios')) {
+    redirect('/dashboard/portal-familiar')
+  }
+
+  const canEdit = canAccess(role, 'horarios_gestionar')
 
   // ── Profesor sin permiso de gestión: ve solo SU horario propio ──────────
   if (role === 'teacher' && !canEdit) {
@@ -107,47 +229,6 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
             )
           })
         )}
-      </div>
-    )
-  }
-
-  // ── Familia: ve el horario del/los grado(s) de sus hijos ────────────────
-  if (role === 'guardian') {
-    const { data: myProfile } = await supabase.from('users_profiles').select('guardian_id').eq('auth_id', user.id).single()
-    const { data: myStudents } = await supabase
-      .from('students')
-      .select('grade_level, student_guardians!inner(guardian_id)')
-      .eq('student_guardians.guardian_id', myProfile?.guardian_id ?? '')
-      .not('grade_level', 'is', null)
-    const myGrades = Array.from(new Set((myStudents ?? []).map((s) => s.grade_level as string).filter(Boolean)))
-
-    if (myGrades.length === 0) {
-      return (
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight mb-6">Horario</h1>
-          <div className="dash-card border-dashed p-12 text-center">
-            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Todavía no hay un curso registrado para tu(s) hijo(s).</p>
-          </div>
-        </div>
-      )
-    }
-
-    const { data: slotsRaw } = await supabase
-      .from('class_schedules')
-      .select('day_of_week, period_id, grade_level, subjects(name), staff(first_name, last_name)')
-      .eq('school_id', schoolId)
-      .in('grade_level', myGrades)
-    const slots = (slotsRaw ?? []) as unknown as ScheduleSlot[]
-
-    return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">Horario</h1>
-        {myGrades.map((grade) => (
-          <div key={grade}>
-            <p className="text-sm font-semibold mb-2" style={{ color: 'var(--dash-text-muted)' }}>{grade}</p>
-            <ReadOnlyGrid periods={periodsForGrade(allPeriods, grade)} days={DAYS} dayLabels={DAY_LABELS} slots={slots.filter((s) => s.grade_level === grade)} />
-          </div>
-        ))}
       </div>
     )
   }

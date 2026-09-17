@@ -3629,6 +3629,95 @@ impide invitar a alguien a un correo que esa persona no usa, porque el
 correo de la ficha lo teclea quien invita. La pantalla nueva al menos hace
 que el sintoma sea legible en vez de mudo.
 
+## Horario para familias y estudiantes -- la rama de guardian ya existía pero era código muerto (2026-09-17)
+
+Pedido del usuario: los padres querían ver el horario de clases de sus hijos desde
+Portal Familiar (con selector si tienen 2/3/4 hijos, y poder consultar el día que
+les interese), y lo mismo desde el login del estudiante.
+
+**Hallazgo real antes de escribir nada**: `/dashboard/horarios/page.tsx` YA tenía
+una rama completa para `role === 'guardian'` (agrupaba por grado, grilla semanal
+completa) desde la migración de Horarios (2026-08-21). El Sidebar de guardian YA
+tenía el enlace "Horario" apuntando ahí. Pero nunca funcionó: el propio archivo
+empieza con `if (!profile || !canAccess(role, 'horarios')) redirect(...)`, y
+`guardian` **no usa** `ROLE_MODULES` -- tiene su propia página dedicada
+(portal-familiar), así que `ROLE_MODULES.guardian = []` y
+`canAccess('guardian', 'horarios')` daba `false` siempre. Cualquier padre que
+tocara el enlace rebotaba a portal-familiar sin llegar nunca a la rama que ya
+existía para él. Mismo patrón de "el Sidebar tiene el enlace pero algo lo
+bloquea antes" que ya costó un día de clases con Mensajes/Actualizaciones del
+profesor (2026-09-03) -- aquí el bloqueo no era la RLS ni el Sidebar, era el
+propio gate de `canAccess()` de la página.
+
+**Corregido**: las ramas de `guardian` y `student` se movieron ANTES del gate
+de `canAccess()` (mismo principio que ya siguen Comunicados/Agenda/Asistencia
+para guardian: no pasan por esa matriz de permisos en absoluto). El estudiante
+tampoco estaba en `ROLE_MODULES.student` (solo `academia`+`encuestas`) -- se
+dejó así a propósito (ese módulo sigue siendo del staff) en vez de agregar
+`'horarios'` ahí, para no tener que explicar dos gates distintos para el mismo
+módulo.
+
+**RLS**: `class_schedules` ya tenía `class_schedules_guardian_read`
+(2026-08-21, ya corregida para doble rol en la migración 20260821060000) pero
+**nunca tuvo ninguna policy para `student`** -- confirmado leyendo
+`pg_policies` en producción antes de escribir la migración. Sin eso, un select
+desde una cuenta de estudiante habría devuelto 0 filas en silencio (no error),
+el mismo patrón de fallo mudo ya documentado varias veces aquí. Migración
+`20260918010000_class_schedules_student_read.sql`: función
+`student_can_see_schedule(school_id, grade_level)` `security definer`, mismo
+patrón que `student_can_see_lesson()` de Academia (`current_student_id()` +
+comparar `students.grade_level`, sin volver a pasar por las policies de
+`students` para evitar la recursión de RLS ya vista dos veces en este
+proyecto).
+
+**Nuevo componente** `ScheduleByDay.tsx` (cliente): selector de hijo/a (solo se
+muestra si hay más de uno) + pestañas de día (Lunes-Sábado), con el día de hoy
+ya seleccionado al entrar -- pensado para consultarse desde el celular, un
+vistazo rápido en vez de la grilla semanal completa que sigue usando el staff.
+"Hoy" se calcula con `todaySchoolDayOfWeek()` (nuevo, en `lib/schoolDate.ts`,
+mismo principio que `todaySchoolDate()`: con la hora de RD, no la del
+servidor -- ver el bug real ya documentado de Asistencia mostrando el día
+siguiente entre 8pm y medianoche). Domingo devuelve `0`: no hay franjas ese
+día, así que el componente cae al lunes con un aviso.
+
+**Verificado con Postgres local** (esquema espejo mínimo, aplicando el archivo
+de migración tal cual): estudiante ve solo el horario de su propio grado ✅, un
+estudiante con borrado suave no ve nada ✅, sin sesión 0 filas ✅, y un
+estudiante de OTRO colegio con el mismo texto de grado tampoco ve nada
+(aísla por `school_id`, no solo por el texto) ✅.
+
+**Verificado contra producción, con datos reales, en transacciones con
+ROLLBACK**: los 2 estudiantes con cuenta real (Daury Feliz, 6to. Secundaria;
+Darlyn Feliz, 5to. Secundaria) ven exactamente las 30 clases de su propio
+grado y ninguna otra. Se encontró una familia real con 3 hijos en 3 grados
+distintos (Reyes Bary: Madison en Kinder, Sebastian en 2do. Secundaria,
+Allison en 4to. Secundaria) -- exactamente el caso "2/3/4 hijos" que pidió el
+usuario -- y la tutora ve el horario de los dos que sí tienen franjas
+cargadas (2do./4to. Secundaria, 30 filas cada uno); Kinder no tiene ninguna
+franja cargada en todo el colegio (`class_periods.level` solo tiene
+`primaria`/`secundaria`, cero en `inicial`), así que para Madison el
+componente muestra el aviso de "todavía no hay franjas horarias para este
+curso" en vez de una grilla vacía sin explicación -- no es un bug de esta
+tarea, es que ese nivel nunca se cargó (ver "Carga de los horarios en
+producción" más arriba). Regresión: un director sigue viendo las 330 filas
+completas del colegio, sin cambio.
+
+**Hallazgo aparte, sin corregir en esta tarea** (aplica a TODO el proyecto,
+no solo a esta migración): `revoke execute ... from public` **no le quita el
+privilegio a `anon`** en este proyecto -- verificado con `pg_proc.proacl`
+que `anon` tiene EXECUTE explícito (vía un default-ACL de este proyecto que
+otorga `X` a `anon`/`authenticated`/`service_role` directamente, no a través
+del pseudo-rol PUBLIC, así que revocárselo a PUBLIC no lo toca). Se comprobó
+que el patrón "revoke...from public" de `current_student_id()` y
+`student_can_see_lesson()` (funciones ya en producción desde hace semanas)
+tiene exactamente el mismo problema -- no es nuevo de esta migración, es
+sistémico. **No es explotable** en la práctica: estas funciones dependen de
+`current_student_id()`, que lee `auth.uid()` y devuelve `null` para `anon`
+(sin JWT), así que siempre resuelven a `false` para un visitante sin sesión.
+Queda anotado por si alguna vez se audita el patrón de permisos de funciones
+de este proyecto a fondo -- la forma correcta sería `revoke execute on
+function ... from anon` explícito, no solo `from public`.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
