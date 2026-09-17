@@ -13,6 +13,7 @@ export interface WebsiteServiceInput {
   description: string
   duration: string
   price: string
+  linkUrl: string
 }
 
 export interface WebsiteTeamMemberInput {
@@ -134,6 +135,7 @@ export async function saveWebsiteContentAction(input: SaveWebsiteContentInput): 
           description: s.description.trim() || null,
           duration: s.duration.trim() || null,
           price: s.price.trim() || null,
+          link_url: s.linkUrl.trim() || null,
         }))
     )
     await replaceList(

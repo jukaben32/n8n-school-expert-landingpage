@@ -24,7 +24,7 @@ type SchoolPublic = {
   whatsapp_phone_number: string | null
 }
 
-type ServiceRow = { icon: string; name: string; description: string | null; duration: string | null; price: string | null }
+type ServiceRow = { icon: string; name: string; description: string | null; duration: string | null; price: string | null; link_url: string | null }
 type TeamRow = { name: string; role: string; bio: string | null; photo_url: string | null }
 type TestimonialRow = { quote: string; author_name: string; author_role: string | null; rating: number }
 type FaqRow = { question: string; answer: string }
@@ -42,7 +42,7 @@ async function getSchool(subdomain: string): Promise<SchoolPublic | null> {
 async function getWebsiteLists(schoolId: string) {
   const supabase = await createClient()
   const [{ data: services }, { data: team }, { data: testimonials }, { data: faqs }] = await Promise.all([
-    supabase.from('website_services').select('icon, name, description, duration, price').eq('school_id', schoolId).order('sort_order'),
+    supabase.from('website_services').select('icon, name, description, duration, price, link_url').eq('school_id', schoolId).order('sort_order'),
     supabase.from('website_team_members').select('name, role, bio, photo_url').eq('school_id', schoolId).order('sort_order'),
     supabase.from('website_testimonials').select('quote, author_name, author_role, rating').eq('school_id', schoolId).order('sort_order'),
     supabase.from('website_faqs').select('question, answer').eq('school_id', schoolId).order('sort_order'),
@@ -293,15 +293,30 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
           <div className="max-w-5xl mx-auto px-4">
             <h2 className="text-2xl font-black text-slate-900 text-center mb-10">Programas y servicios</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {services.map((s, i) => (
-                <div key={i} className="rounded-2xl bg-white border border-slate-100 p-5">
-                  <p className="font-bold text-slate-900">{s.name}</p>
-                  {s.description && <p className="text-sm text-slate-600 mt-1.5">{s.description}</p>}
-                  {(s.duration || s.price) && (
-                    <p className="text-xs text-slate-400 mt-3">{[s.duration, s.price].filter(Boolean).join(' · ')}</p>
-                  )}
-                </div>
-              ))}
+              {services.map((s, i) => {
+                const cardClass = 'rounded-2xl bg-white border border-slate-100 p-5 block transition hover:-translate-y-0.5 hover:shadow-md'
+                const content = (
+                  <>
+                    <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                      {s.name}
+                      {s.link_url && (
+                        <svg className="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H18m0 0v4.5M18 6l-7.5 7.5M6 12v6a1 1 0 001 1h11a1 1 0 001-1v-5" />
+                        </svg>
+                      )}
+                    </p>
+                    {s.description && <p className="text-sm text-slate-600 mt-1.5">{s.description}</p>}
+                    {(s.duration || s.price) && (
+                      <p className="text-xs text-slate-400 mt-3">{[s.duration, s.price].filter(Boolean).join(' · ')}</p>
+                    )}
+                  </>
+                )
+                return s.link_url ? (
+                  <a key={i} href={s.link_url} target="_blank" rel="noreferrer" className={cardClass}>{content}</a>
+                ) : (
+                  <div key={i} className={cardClass}>{content}</div>
+                )
+              })}
             </div>
           </div>
         </section>

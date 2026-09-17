@@ -48,7 +48,7 @@ type TestimonialRow = WebsiteTestimonialInput
 type FaqRow = WebsiteFaqInput
 
 function emptyService(): ServiceRow {
-  return { icon: 'sparkles', name: '', description: '', duration: '', price: '' }
+  return { icon: 'sparkles', name: '', description: '', duration: '', price: '', linkUrl: '' }
 }
 function emptyTeamMember(): TeamRow {
   return { name: '', role: '', bio: '', photoUrl: '' }
@@ -70,7 +70,7 @@ export default function SchoolWebsiteForm({
 }: {
   school: School
   initialSettings: SchoolWebsiteSettings
-  initialServices: { icon: string; name: string; description: string | null; duration: string | null; price: string | null }[]
+  initialServices: { icon: string; name: string; description: string | null; duration: string | null; price: string | null; link_url: string | null }[]
   initialTeamMembers: { name: string; role: string; bio: string | null; photo_url: string | null }[]
   initialTestimonials: { quote: string; author_name: string; author_role: string | null; rating: number }[]
   initialFaqs: { question: string; answer: string }[]
@@ -78,7 +78,7 @@ export default function SchoolWebsiteForm({
   const [settings, setSettings] = useState<SchoolWebsiteSettings>(initialSettings)
   const [services, setServices] = useState<ServiceRow[]>(
     initialServices.length
-      ? initialServices.map((s) => ({ icon: s.icon, name: s.name, description: s.description ?? '', duration: s.duration ?? '', price: s.price ?? '' }))
+      ? initialServices.map((s) => ({ icon: s.icon, name: s.name, description: s.description ?? '', duration: s.duration ?? '', price: s.price ?? '', linkUrl: s.link_url ?? '' }))
       : [emptyService()]
   )
   const [teamMembers, setTeamMembers] = useState<TeamRow[]>(
@@ -261,6 +261,7 @@ export default function SchoolWebsiteForm({
             <textarea placeholder="Descripción" rows={2} value={row.description} onChange={(e) => update({ ...row, description: e.target.value })} className={`${inputClass} sm:col-span-3`} />
             <input placeholder="Horario/duración (opcional)" value={row.duration} onChange={(e) => update({ ...row, duration: e.target.value })} className={inputClass} />
             <input placeholder="Precio (opcional)" value={row.price} onChange={(e) => update({ ...row, price: e.target.value })} className={inputClass} />
+            <input placeholder="Enlace (opcional, ej. acceso a una plataforma)" value={row.linkUrl} onChange={(e) => update({ ...row, linkUrl: e.target.value })} className={`${inputClass} sm:col-span-3`} />
           </>
         )}
         addLabel="+ Agregar programa/servicio"
