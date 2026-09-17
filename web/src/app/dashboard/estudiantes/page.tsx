@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import ExportStudentsButton from './ExportStudentsButton'
 
 export const metadata: Metadata = {
   title: 'Estudiantes — MentorIApp',
@@ -86,6 +87,17 @@ export default async function EstudiantesPage({
   const formatBirthDate = (d: string) =>
     new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
 
+  // Filas planas para descargar/imprimir el listado -- se arman con lo que
+  // la página ya cargó, sin ninguna consulta extra. Respeta el filtro de
+  // curso ya aplicado arriba.
+  const filasExport = students.map((s) => ({
+    nombre: `${s.last_name}, ${s.first_name}`,
+    curso: s.grade_level ?? '',
+    familia: s.families?.name ?? '',
+    nacimiento: formatBirthDate(s.birth_date),
+    estado: s.enrollment_status ?? 'prospecto',
+  }))
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <QueryErrorBanner errors={[{ label: 'los estudiantes', error: studentsError }]} />
@@ -100,7 +112,8 @@ export default async function EstudiantesPage({
             {students.length} estudiante{students.length !== 1 ? 's' : ''} registrado{students.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap print:hidden">
+          <ExportStudentsButton filas={filasExport} curso={curso} />
           {canAccess(profile.role, 'estudiantes_accesos') && (
             <Link
               id="btn-accesos-estudiantes"
@@ -140,7 +153,7 @@ export default async function EstudiantesPage({
 
       {/* Filtro por curso */}
       {gradeOptions.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 print:hidden">
           <Link
             href="/dashboard/estudiantes"
             className="rounded-full px-3.5 py-1.5 text-xs font-semibold font-barlow uppercase tracking-wide transition"
