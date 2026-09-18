@@ -3517,14 +3517,32 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
 2. Aplicar cada lote con `anotar-enlace.mjs` + `cargar-sql.mjs` (filtrado a los ids
    nuevos) + verificar el `sort_order` máximo real contra producción antes de generar
    el SQL -- la misma comprobación manual de siempre, el script no la hace solo.
-3. Escribir Sociales U4-U10 (13) -- es lo único que falta para cerrar los 93 guiones
-   del plan completo. Ciencias Naturales ya quedó con sus 21 guiones ESCRITOS,
-   VALIDADOS Y PRODUCIDOS (voz+MP4, lote 8, 14 lecciones: U4-U9 + el ABP de huracán,
-   que sí lleva video por ser información de seguridad), sumadas a Lengua (21/21) y
-   Matemática (32/32) ya completas. Solo Sociales queda con su primer trimestre
-   (U1-U3, 5 lecciones) sin el resto.
+3. ~~Escribir Sociales U4-U10~~ -- **hecho, lote 9 (13 lecciones)**. **Hallazgo real al
+   cerrar**: contar `ls lecciones/*.json` vs. MP4 en `salida/` reveló **6 lecciones
+   más** que llevaban escritas desde ANTES de esta sesión (parte de la tanda original
+   de "12 ya escritas" que documentaba `PLAN_1RO_PRIMARIA.md`) pero nunca se habían
+   producido con voz -- `lengua-u00-01` (*Mi nombre en la lista*), `lengua-u00-02`
+   (*¿Cuántas sílabas tiene tu nombre?*), `matematica-u00-01` (*Contamos del 1 al 10*),
+   `naturales-u02-01` (*Los animales por fuera*), `sociales-u02-01` (*Quiénes forman mi
+   familia*), `sociales-u03-01` (*Mi casa, mi calle, mi barrio*). Confirmado contra
+   producción que ninguna de las 6 estaba cargada. **Producidas en el lote 10** (la
+   comprobación que las encontró: nunca confiar solo en el relato de "está completo" --
+   contar archivos contra MP4 reales). **Con esto, los 92 videos del plan completo de
+   1ro están escritos, validados Y PRODUCIDOS DE VERDAD** (voz+MP4): Lengua 21/21,
+   Matemática 32/32, Naturales 21/21, Sociales 18/18 (el ABP de témperas naturales, el
+   único sin video por ser trabajo manual, no cuenta -- 93 lecciones del plan total, 92
+   con video). Ya no queda ningún guion por escribir ni ninguna lección por producir de
+   este plan.
 4. La maestra de 1ro sigue sin haber visto nada de esto en vivo -- decisión consciente y
-   repetida del usuario, no un olvido.
+   repetida del usuario, no un olvido. Sigue sin haber ningún login de estudiante de
+   1ro creado en producción (ver pendiente #4 más abajo).
+5. **Estado final de entrega**: 92 MP4 producidos, **86 ya entregados al usuario como
+   archivo descargable** vía `SendUserFile` (lotes 3, 5, 6, 7, 8, 9, 10 -- todos en esta
+   sesión, corrigiendo el bug de "solo mandé la hoja" documentado arriba) + 6 ya
+   cargados en Academia desde antes (piloto+lote2+lote4, 23 lecciones con enlace real).
+   **69 lecciones siguen esperando que el usuario las suba a YouTube y devuelva el
+   enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
+   que alcanzó a mitad de esta sesión.
 
 ### La primera lección de 1ro ya está en Academia (2026-09-09)
 
