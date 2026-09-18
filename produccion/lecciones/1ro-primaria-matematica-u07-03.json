@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u07-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U7. Divertirnos en familia",
+  "titulo": "Patrones de números",
+  "descripcion": "Contar de 2 en 2, de 5 en 5 y de 10 en 10.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes contar de diez en diez. Hoy vamos a aprender otras dos formas de contar rápido: de dos en dos y de cinco en cinco.",
+      "visual": "<div class='rotulo'>Contar más rápido</div><h1 class='chico'>De 2 en 2 y de 5 en 5</h1><div class='dib max'>🔢</div>"
+    },
+    {
+      "narracion": "Contar de dos en dos es saltarse un número cada vez: dos, cuatro, seis, ocho, diez.",
+      "visual": "<h1>De 2 en 2</h1><div class='fila apretada'><div class='num'>2</div><div class='num'>4</div><div class='num'>6</div><div class='num'>8</div><div class='num'>10</div></div>"
+    },
+    {
+      "narracion": "Contar de cinco en cinco es saltarse cuatro números cada vez: cinco, diez, quince, veinte, veinticinco.",
+      "visual": "<h1>De 5 en 5</h1><div class='fila apretada'><div class='num'>5</div><div class='num'>10</div><div class='num'>15</div><div class='num'>20</div><div class='num'>25</div></div>"
+    },
+    {
+      "narracion": "Y ya conoces contar de diez en diez: diez, veinte, treinta, cuarenta.",
+      "visual": "<h1>De 10 en 10</h1><div class='fila apretada'><div class='num'>10</div><div class='num'>20</div><div class='num'>30</div><div class='num'>40</div></div>"
+    },
+    {
+      "narracion": "Estos patrones son muy útiles: si cuentas dedos de dos en dos, o monedas de cinco en cinco, terminas mucho más rápido que contando de uno en uno.",
+      "visual": "<h1 class='chico'>Son muy útiles</h1><div class='dib max'>⚡</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si vas contando de dos en dos: dos, cuatro, seis, ocho... ¿qué número sigue? Diez.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>2</div><div class='num'>4</div><div class='num'>6</div><div class='num'>8</div><div class='signo'>➜</div><div class='num verde'>10</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Contando de dos en dos: dos, cuatro, seis... ¿qué número sigue?",
+      "visual": "<div class='pregunta'>2, 4, 6... ¿qué sigue?</div><div class='opciones'><div class='opcion'><div class='num'>8</div></div><div class='opcion'><div class='num'>7</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Contando de cinco en cinco: cinco, diez, quince... ¿qué número sigue?",
+      "visual": "<div class='pregunta'>5, 10, 15... ¿qué sigue?</div><div class='opciones'><div class='opcion'><div class='num'>16</div></div><div class='opcion'><div class='num'>20</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Contando de diez en diez: diez, veinte... ¿qué número sigue? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>10, 20... ¿qué sigue?</div><div class='opciones'><div class='opcion'><div class='num'>21</div></div><div class='opcion'><div class='num'>30</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Contando de dos en dos: dos, cuatro, seis... ¿qué número sigue?",
+      "opciones": [
+        { "texto": "7", "visual": "<div class='num'>7</div>" },
+        { "texto": "8", "visual": "<div class='num'>8</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Contando de cinco en cinco: cinco, diez, quince... ¿qué número sigue?",
+      "opciones": [
+        { "texto": "16", "visual": "<div class='num'>16</div>" },
+        { "texto": "20", "visual": "<div class='num'>20</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Contando de diez en diez: diez, veinte... ¿qué número sigue?",
+      "opciones": [
+        { "texto": "21", "visual": "<div class='num'>21</div>" },
+        { "texto": "30", "visual": "<div class='num'>30</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

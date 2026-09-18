@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u08-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U8. Formas a mi alrededor",
+  "titulo": "Caras, bordes y esquinas",
+  "descripcion": "Describir un cuerpo geométrico por sus partes.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Los cuerpos geométricos tienen partes con nombre. Hoy vamos a aprender qué son las caras, los bordes y las esquinas.",
+      "visual": "<div class='rotulo'>Las partes</div><h1 class='chico'>Caras, bordes y esquinas</h1><div class='dib max'>🎲</div>"
+    },
+    {
+      "narracion": "Las caras son las superficies planas de un cuerpo. Un cubo tiene seis caras, todas cuadradas.",
+      "visual": "<h1>Las caras</h1><div class='dib max'>🎲</div><div class='pie'>6 caras</div>"
+    },
+    {
+      "narracion": "Los bordes son las líneas donde se juntan dos caras. Un cubo tiene doce bordes.",
+      "visual": "<h1>Los bordes</h1><div class='dib max'>🎲</div><div class='pie'>Donde se juntan dos caras</div>"
+    },
+    {
+      "narracion": "Las esquinas, también llamadas vértices, son los puntos donde se juntan varios bordes. Un cubo tiene ocho esquinas.",
+      "visual": "<h1>Las esquinas</h1><div class='dib max'>🎲</div><div class='pie'>Donde se juntan los bordes</div>"
+    },
+    {
+      "narracion": "La esfera, en cambio, no tiene caras planas, ni bordes, ni esquinas: es completamente redonda por todos lados.",
+      "visual": "<h1>La esfera es distinta</h1><div class='dib max'>⚽</div><div class='pie'>Sin caras, bordes ni esquinas</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tocas un cuerpo geométrico y sientes una superficie plana, ¿qué parte estás tocando? Una cara.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>✋</div><div class='signo'>➜</div><div class='detalle'>Una cara</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cómo se llama la superficie plana de un cuerpo geométrico?",
+      "visual": "<div class='pregunta'>¿Cómo se llama la superficie plana?</div><div class='opciones'><div class='opcion'><div class='palabra'>Cara</div></div><div class='opcion'><div class='palabra'>Esquina</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cómo se llama el punto donde se juntan varios bordes?",
+      "visual": "<div class='pregunta'>¿Dónde se juntan los bordes?</div><div class='opciones'><div class='opcion'><div class='palabra'>Cara</div></div><div class='opcion'><div class='palabra'>Esquina</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál cuerpo geométrico no tiene caras planas ni esquinas? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál no tiene caras ni esquinas?</div><div class='opciones'><div class='opcion'><div class='dib'>🎲</div></div><div class='opcion'><div class='dib'>⚽</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cómo se llama la superficie plana de un cuerpo geométrico?",
+      "opciones": [
+        { "texto": "Cara", "visual": "<div class='palabra'>Cara</div>" },
+        { "texto": "Esquina", "visual": "<div class='palabra'>Esquina</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cómo se llama el punto donde se juntan varios bordes?",
+      "opciones": [
+        { "texto": "Cara", "visual": "<div class='palabra'>Cara</div>" },
+        { "texto": "Esquina", "visual": "<div class='palabra'>Esquina</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál cuerpo geométrico no tiene caras planas ni esquinas?",
+      "opciones": [
+        { "texto": "Cubo", "visual": "<div class='dib'>🎲</div>" },
+        { "texto": "Esfera", "visual": "<div class='dib'>⚽</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

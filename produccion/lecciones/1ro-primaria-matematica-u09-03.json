@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u09-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U9. En el súper",
+  "titulo": "Largo y corto, pesado y liviano",
+  "descripcion": "Comparar y estimar longitud y peso.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hoy vamos a comparar cosas usando dos parejas de palabras: largo y corto, pesado y liviano.",
+      "visual": "<div class='rotulo'>Comparamos</div><h1 class='chico'>Largo, corto, pesado, liviano</h1><div class='dib max'>⚖️</div>"
+    },
+    {
+      "narracion": "Una cosa larga mide mucho de un extremo a otro, como una soga. Una cosa corta mide poco, como un lápiz nuevo.",
+      "visual": "<h1>Largo y corto</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🪢</div><div class='detalle'>Largo</div></div><div class='tarjeta'><div class='dib mini'>✏️</div><div class='detalle'>Corto</div></div></div>"
+    },
+    {
+      "narracion": "Algo pesado cuesta mucho trabajo levantarlo, como una piedra grande. Algo liviano se levanta fácil, como una pluma.",
+      "visual": "<h1>Pesado y liviano</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>🪨</div><div class='detalle'>Pesado</div></div><div class='tarjeta'><div class='dib mini'>🪶</div><div class='detalle'>Liviano</div></div></div>"
+    },
+    {
+      "narracion": "Para comparar, ponemos dos cosas una al lado de la otra. Un autobús es más largo que una bicicleta.",
+      "visual": "<h1>Comparar dos cosas</h1><div class='fila'><div class='dib mini'>🚌</div><div class='signo'>&gt;</div><div class='dib mini'>🚲</div></div>"
+    },
+    {
+      "narracion": "También puedes estimar, que es adivinar sin medir exacto. Con solo mirar, ya sabes que un elefante pesa más que un gato.",
+      "visual": "<h1 class='chico'>Estimar</h1><div class='fila'><div class='dib mini'>🐘</div><div class='signo'>&gt;</div><div class='dib mini'>🐱</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Entre una hormiga y un perro, ¿cuál pesa más? El perro pesa más.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib mini'>🐜</div><div class='signo'>&lt;</div><div class='dib mini'>🐕</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Entre un tren y un patín, ¿cuál es más largo?",
+      "visual": "<div class='pregunta'>¿Cuál es más largo?</div><div class='opciones'><div class='opcion'><div class='dib'>🚂</div></div><div class='opcion'><div class='dib'>🛼</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Entre una piedra y una pluma, ¿cuál es más liviana?",
+      "visual": "<div class='pregunta'>¿Cuál es más liviana?</div><div class='opciones'><div class='opcion'><div class='dib'>🪨</div></div><div class='opcion'><div class='dib'>🪶</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Entre un elefante y un gato, ¿cuál pesa más? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál pesa más?</div><div class='opciones'><div class='opcion'><div class='dib'>🐘</div></div><div class='opcion'><div class='dib'>🐱</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Entre un tren y un patín, ¿cuál es más largo?",
+      "opciones": [
+        { "texto": "El tren", "visual": "<div class='dib'>🚂</div>" },
+        { "texto": "El patín", "visual": "<div class='dib'>🛼</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Entre una piedra y una pluma, ¿cuál es más liviana?",
+      "opciones": [
+        { "texto": "La piedra", "visual": "<div class='dib'>🪨</div>" },
+        { "texto": "La pluma", "visual": "<div class='dib'>🪶</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Entre un elefante y un gato, ¿cuál pesa más?",
+      "opciones": [
+        { "texto": "El elefante", "visual": "<div class='dib'>🐘</div>" },
+        { "texto": "El gato", "visual": "<div class='dib'>🐱</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u07-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U7. Divertirnos en familia",
+  "titulo": "Restamos números de dos cifras",
+  "descripcion": "Restar números de dos cifras sin llevar.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes restar hasta diez. Hoy vamos a restar números más grandes, de dos cifras, como treinta y ocho menos catorce.",
+      "visual": "<div class='rotulo'>Restamos números grandes</div><h1 class='chico'>Números de dos cifras</h1><div class='fila'><div class='num'>38</div><div class='signo'>−</div><div class='num'>14</div></div>"
+    },
+    {
+      "narracion": "El truco es el mismo que para sumar: primero restas las unidades, y después restas las decenas.",
+      "visual": "<h1>El truco</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Restas las unidades</li><li><span class='bolita'>2️⃣</span> Restas las decenas</li></ol>"
+    },
+    {
+      "narracion": "Treinta y ocho tiene 3 decenas y 8 unidades. Catorce tiene 1 decena y 4 unidades. Primero restamos las unidades: 8 menos 4 son 4.",
+      "visual": "<h1>Restamos unidades</h1><div class='fila'><div class='num'>8</div><div class='signo'>−</div><div class='num'>4</div><div class='signo'>=</div><div class='num verde'>4</div></div>"
+    },
+    {
+      "narracion": "Después restamos las decenas: 3 menos 1 son 2 decenas, o sea veinte.",
+      "visual": "<h1>Restamos decenas</h1><div class='fila'><div class='num'>30</div><div class='signo'>−</div><div class='num'>10</div><div class='signo'>=</div><div class='num verde'>20</div></div>"
+    },
+    {
+      "narracion": "Juntamos las dos partes: 20 más 4 son 24. Entonces treinta y ocho menos catorce son veinticuatro.",
+      "visual": "<h1>Resultado final</h1><div class='fila'><div class='num'>38</div><div class='signo'>−</div><div class='num'>14</div><div class='signo'>=</div><div class='num verde'>24</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Resta cuarenta y siete menos veintitrés. Unidades: 7 menos 3 son 4. Decenas: 4 menos 2 son 2. El resultado es veinticuatro.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>47</div><div class='signo'>−</div><div class='num'>23</div><div class='signo'>=</div><div class='num verde'>24</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Cuánto es veintiséis menos doce.",
+      "visual": "<div class='pregunta'>26 − 12 = ?</div><div class='opciones'><div class='opcion'><div class='num'>14</div></div><div class='opcion'><div class='num'>38</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Cuánto es cincuenta menos veinte.",
+      "visual": "<div class='pregunta'>50 − 20 = ?</div><div class='opciones'><div class='opcion'><div class='num'>70</div></div><div class='opcion'><div class='num'>30</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Para restar números de dos cifras, ¿qué restas primero? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué restas primero?</div><div class='opciones'><div class='opcion'><div class='palabra'>Las decenas</div></div><div class='opcion'><div class='palabra'>Las unidades</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuánto es veintiséis menos doce?",
+      "opciones": [
+        { "texto": "38", "visual": "<div class='num'>38</div>" },
+        { "texto": "14", "visual": "<div class='num'>14</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuánto es cincuenta menos veinte?",
+      "opciones": [
+        { "texto": "70", "visual": "<div class='num'>70</div>" },
+        { "texto": "30", "visual": "<div class='num'>30</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Para restar números de dos cifras, ¿qué restas primero?",
+      "opciones": [
+        { "texto": "Las decenas", "visual": "<div class='detalle'>decenas</div>" },
+        { "texto": "Las unidades", "visual": "<div class='detalle'>unidades</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

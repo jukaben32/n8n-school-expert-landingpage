@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u08-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U8. Formas a mi alrededor",
+  "titulo": "Cubo, esfera, cono y cilindro",
+  "descripcion": "Reconocer cuerpos geométricos en objetos reales.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya conoces las figuras planas, que son chatas. Hoy vamos a conocer cuerpos geométricos, que tienen volumen: puedes agarrarlos con las manos.",
+      "visual": "<div class='rotulo'>Los cuerpos</div><h1 class='chico'>Figuras que puedes agarrar</h1><div class='fila apretada'><div class='dib mini'>🎲</div><div class='dib mini'>⚽</div><div class='dib mini'>🥤</div></div>"
+    },
+    {
+      "narracion": "El cubo tiene seis caras cuadradas, todas iguales. Un dado o una caja de regalo cuadrada tienen forma de cubo.",
+      "visual": "<h1>El cubo</h1><div class='dib max'>🎲</div><div class='pie'>6 caras cuadradas</div>"
+    },
+    {
+      "narracion": "La esfera es completamente redonda, como una pelota. No tiene esquinas ni caras planas.",
+      "visual": "<h1>La esfera</h1><div class='dib max'>⚽</div><div class='pie'>Redonda, sin esquinas</div>"
+    },
+    {
+      "narracion": "El cono tiene una base redonda y termina en punta arriba, como un sombrero de fiesta o un barquillo de helado.",
+      "visual": "<h1>El cono</h1><div class='dib max'>🍦</div><div class='pie'>Base redonda, punta arriba</div>"
+    },
+    {
+      "narracion": "El cilindro tiene dos bases redondas y un lado curvo en el medio, como una lata de refresco o un tubo de cartón.",
+      "visual": "<h1>El cilindro</h1><div class='dib max'>🥫</div><div class='pie'>Como una lata</div>"
+    },
+    {
+      "narracion": "Practiquemos. Una pelota de fútbol, ¿qué cuerpo geométrico es? Una esfera, porque es completamente redonda.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>⚽</div><div class='signo'>➜</div><div class='detalle'>Esfera</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un dado, ¿qué cuerpo geométrico es?",
+      "visual": "<div class='pregunta'>Un dado, ¿qué cuerpo es?</div><div class='opciones'><div class='opcion'><div class='dib'>🎲</div></div><div class='opcion'><div class='dib'>⚽</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál cuerpo geométrico es completamente redondo, sin esquinas?",
+      "visual": "<div class='pregunta'>¿Cuál es completamente redondo?</div><div class='opciones'><div class='opcion'><div class='dib'>🎲</div></div><div class='opcion'><div class='dib'>⚽</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Una lata de refresco, ¿qué cuerpo geométrico es? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Una lata, ¿qué cuerpo es?</div><div class='opciones'><div class='opcion'><div class='dib'>🥫</div></div><div class='opcion'><div class='dib'>🍦</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un dado, ¿qué cuerpo geométrico es?",
+      "opciones": [
+        { "texto": "Esfera", "visual": "<div class='dib'>⚽</div>" },
+        { "texto": "Cubo", "visual": "<div class='dib'>🎲</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál cuerpo geométrico es completamente redondo, sin esquinas?",
+      "opciones": [
+        { "texto": "Cubo", "visual": "<div class='dib'>🎲</div>" },
+        { "texto": "Esfera", "visual": "<div class='dib'>⚽</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Una lata de refresco, ¿qué cuerpo geométrico es?",
+      "opciones": [
+        { "texto": "Cono", "visual": "<div class='dib'>🍦</div>" },
+        { "texto": "Cilindro", "visual": "<div class='dib'>🥫</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

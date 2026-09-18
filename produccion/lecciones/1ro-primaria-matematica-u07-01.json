@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u07-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U7. Divertirnos en familia",
+  "titulo": "Sumamos números de dos cifras",
+  "descripcion": "Sumar números de dos cifras sin llevar.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes sumar hasta diez. Hoy vamos a sumar números más grandes, de dos cifras, como veintitrés más quince.",
+      "visual": "<div class='rotulo'>Sumamos números grandes</div><h1 class='chico'>Números de dos cifras</h1><div class='fila'><div class='num'>23</div><div class='signo'>+</div><div class='num'>15</div></div>"
+    },
+    {
+      "narracion": "El truco es sumar por separado: primero las unidades, y después las decenas.",
+      "visual": "<h1>El truco</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Sumas las unidades</li><li><span class='bolita'>2️⃣</span> Sumas las decenas</li></ol>"
+    },
+    {
+      "narracion": "Veintitrés tiene 2 decenas y 3 unidades. Quince tiene 1 decena y 5 unidades. Primero sumamos las unidades: 3 más 5 son 8.",
+      "visual": "<h1>Sumamos unidades</h1><div class='fila'><div class='num'>3</div><div class='signo'>+</div><div class='num'>5</div><div class='signo'>=</div><div class='num verde'>8</div></div>"
+    },
+    {
+      "narracion": "Después sumamos las decenas: 2 más 1 son 3 decenas, o sea treinta.",
+      "visual": "<h1>Sumamos decenas</h1><div class='fila'><div class='num'>20</div><div class='signo'>+</div><div class='num'>10</div><div class='signo'>=</div><div class='num verde'>30</div></div>"
+    },
+    {
+      "narracion": "Juntamos las dos partes: 30 más 8 son 38. Entonces veintitrés más quince son treinta y ocho.",
+      "visual": "<h1>Resultado final</h1><div class='fila'><div class='num'>23</div><div class='signo'>+</div><div class='num'>15</div><div class='signo'>=</div><div class='num verde'>38</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Suma treinta y dos más dieciséis. Unidades: 2 más 6 son 8. Decenas: 3 más 1 son 4. El resultado es cuarenta y ocho.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>32</div><div class='signo'>+</div><div class='num'>16</div><div class='signo'>=</div><div class='num verde'>48</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Cuánto es catorce más doce.",
+      "visual": "<div class='pregunta'>14 + 12 = ?</div><div class='opciones'><div class='opcion'><div class='num'>26</div></div><div class='opcion'><div class='num'>16</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Cuánto es veinte más treinta.",
+      "visual": "<div class='pregunta'>20 + 30 = ?</div><div class='opciones'><div class='opcion'><div class='num'>50</div></div><div class='opcion'><div class='num'>60</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Para sumar números de dos cifras, ¿qué sumas primero? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué sumas primero?</div><div class='opciones'><div class='opcion'><div class='palabra'>Las unidades</div></div><div class='opcion'><div class='palabra'>Las decenas</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuánto es catorce más doce?",
+      "opciones": [
+        { "texto": "16", "visual": "<div class='num'>16</div>" },
+        { "texto": "26", "visual": "<div class='num'>26</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuánto es veinte más treinta?",
+      "opciones": [
+        { "texto": "60", "visual": "<div class='num'>60</div>" },
+        { "texto": "50", "visual": "<div class='num'>50</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Para sumar números de dos cifras, ¿qué sumas primero?",
+      "opciones": [
+        { "texto": "Las decenas", "visual": "<div class='detalle'>decenas</div>" },
+        { "texto": "Las unidades", "visual": "<div class='detalle'>unidades</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

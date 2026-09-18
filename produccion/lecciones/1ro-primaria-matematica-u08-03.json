@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u08-03",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U8. Formas a mi alrededor",
+  "titulo": "Arriba, abajo, dentro, fuera",
+  "descripcion": "Posición: izquierda y derecha, arriba y abajo, dentro y fuera.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hoy vamos a aprender palabras que dicen dónde está algo: arriba, abajo, dentro y fuera.",
+      "visual": "<div class='rotulo'>Dónde está</div><h1 class='chico'>Palabras de posición</h1><div class='dib max'>🧭</div>"
+    },
+    {
+      "narracion": "Arriba es en la parte de más alto, y abajo es en la parte de más bajo. El techo está arriba, el piso está abajo.",
+      "visual": "<h1>Arriba y abajo</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>⬆️</div><div class='detalle'>Arriba</div></div><div class='tarjeta'><div class='dib mini'>⬇️</div><div class='detalle'>Abajo</div></div></div>"
+    },
+    {
+      "narracion": "Dentro es cuando algo está adentro de otra cosa, y fuera es cuando está afuera. Un juguete dentro de la caja, o fuera de la caja.",
+      "visual": "<h1>Dentro y fuera</h1><div class='fila'><div class='tarjeta'><div class='dib mini'>📦</div><div class='detalle'>Dentro</div></div><div class='tarjeta'><div class='dib mini'>🧸</div><div class='detalle'>Fuera</div></div></div>"
+    },
+    {
+      "narracion": "También hay izquierda y derecha. Tu mano izquierda y tu mano derecha son distintas, y sirven para saber hacia dónde queda algo.",
+      "visual": "<h1>Izquierda y derecha</h1><div class='fila'><div class='tarjeta'><div class='detalle'>Izquierda</div></div><div class='tarjeta'><div class='detalle'>Derecha</div></div></div>"
+    },
+    {
+      "narracion": "Estas palabras nos ayudan a explicar dónde está algo sin tener que señalar con el dedo.",
+      "visual": "<h1 class='chico'>Nos ayudan a explicar</h1><div class='dib max'>🗣️</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si un pájaro está volando sobre el techo de tu casa, ¿está arriba o abajo? Arriba.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🐦</div><div class='signo'>➜</div><div class='dib mini'>⬆️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un pez que nada en una pecera, ¿está dentro o fuera de la pecera?",
+      "visual": "<div class='pregunta'>¿El pez está dentro o fuera?</div><div class='opciones'><div class='opcion'><div class='palabra'>Dentro</div></div><div class='opcion'><div class='palabra'>Fuera</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Las nubes en el cielo, ¿están arriba o abajo?",
+      "visual": "<div class='pregunta'>¿Las nubes están arriba o abajo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Abajo</div></div><div class='opcion'><div class='palabra'>Arriba</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. El piso donde caminas, ¿está arriba o abajo? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿El piso está arriba o abajo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Arriba</div></div><div class='opcion'><div class='palabra'>Abajo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un pez que nada en una pecera, ¿está dentro o fuera de la pecera?",
+      "opciones": [
+        { "texto": "Fuera", "visual": "<div class='palabra'>Fuera</div>" },
+        { "texto": "Dentro", "visual": "<div class='palabra'>Dentro</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Las nubes en el cielo, ¿están arriba o abajo?",
+      "opciones": [
+        { "texto": "Arriba", "visual": "<div class='dib'>⬆️</div>" },
+        { "texto": "Abajo", "visual": "<div class='dib'>⬇️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "El piso donde caminas, ¿está arriba o abajo?",
+      "opciones": [
+        { "texto": "Arriba", "visual": "<div class='dib'>⬆️</div>" },
+        { "texto": "Abajo", "visual": "<div class='dib'>⬇️</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

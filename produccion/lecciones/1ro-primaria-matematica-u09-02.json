@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u09-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U9. En el súper",
+  "titulo": "Los billetes",
+  "descripcion": "Reconocer los billetes de 20, 50 y 100 pesos y sus equivalencias.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Además de monedas, en la República Dominicana usamos billetes para comprar cosas más caras. Hoy vamos a conocer algunos.",
+      "visual": "<div class='rotulo'>Los billetes</div><h1 class='chico'>Para cosas más caras</h1><div class='dib max'>💵</div>"
+    },
+    {
+      "narracion": "El billete de veinte pesos vale como dos monedas de diez pesos juntas.",
+      "visual": "<h1>Veinte pesos</h1><div class='tarjeta destaca'><div class='num'>$20</div></div>"
+    },
+    {
+      "narracion": "El billete de cincuenta pesos vale como cinco billetes de diez pesos, o dos monedas de veinticinco pesos.",
+      "visual": "<h1>Cincuenta pesos</h1><div class='tarjeta destaca'><div class='num'>$50</div></div>"
+    },
+    {
+      "narracion": "El billete de cien pesos vale como dos billetes de cincuenta pesos juntos. Es el más grande de los tres.",
+      "visual": "<h1>Cien pesos</h1><div class='tarjeta destaca'><div class='num'>$100</div></div>"
+    },
+    {
+      "narracion": "Fíjate en la equivalencia: un billete de cien pesos vale lo mismo que diez billetes de diez pesos.",
+      "visual": "<h1>Equivalencia</h1><div class='fila'><div class='num'>$100</div><div class='signo'>=</div><div class='num'>10</div><div class='detalle'>billetes de $10</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tienes dos billetes de cincuenta pesos, ¿cuánto dinero tienes en total? Cien pesos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>50</div><div class='signo'>+</div><div class='num'>50</div><div class='signo'>=</div><div class='num verde'>100</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál billete vale más, el de veinte o el de cien pesos?",
+      "visual": "<div class='pregunta'>¿Cuál vale más?</div><div class='opciones'><div class='opcion'><div class='num'>$20</div></div><div class='opcion'><div class='num'>$100</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Dos billetes de veinte pesos, ¿cuánto valen juntos?",
+      "visual": "<div class='pregunta'>$20 + $20 = ?</div><div class='opciones'><div class='opcion'><div class='num'>$40</div></div><div class='opcion'><div class='num'>$60</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Un billete de cien pesos, ¿es igual a dos billetes de cuánto? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>$100 = 2 billetes de $?</div><div class='opciones'><div class='opcion'><div class='num'>$20</div></div><div class='opcion'><div class='num'>$50</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál billete vale más, el de veinte o el de cien pesos?",
+      "opciones": [
+        { "texto": "$20", "visual": "<div class='num'>$20</div>" },
+        { "texto": "$100", "visual": "<div class='num'>$100</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Dos billetes de veinte pesos, ¿cuánto valen juntos?",
+      "opciones": [
+        { "texto": "$60", "visual": "<div class='num'>$60</div>" },
+        { "texto": "$40", "visual": "<div class='num'>$40</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Un billete de cien pesos, ¿es igual a dos billetes de cuánto?",
+      "opciones": [
+        { "texto": "$20", "visual": "<div class='num'>$20</div>" },
+        { "texto": "$50", "visual": "<div class='num'>$50</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

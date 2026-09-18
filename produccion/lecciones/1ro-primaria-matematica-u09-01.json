@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u09-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U9. En el súper",
+  "titulo": "Nuestras monedas",
+  "descripcion": "Reconocer las monedas de 1, 5, 10 y 25 pesos.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "En la República Dominicana usamos monedas de pesos para comprar cosas pequeñas. Hoy vamos a conocerlas.",
+      "visual": "<div class='rotulo'>Las monedas</div><h1 class='chico'>Dinero dominicano</h1><div class='dib max'>🪙</div>"
+    },
+    {
+      "narracion": "La moneda de un peso es la más pequeña en valor. Necesitas muchas monedas de un peso para comprar algo.",
+      "visual": "<h1>Un peso</h1><div class='tarjeta'><div class='num'>$1</div></div>"
+    },
+    {
+      "narracion": "La moneda de cinco pesos vale como cinco monedas de un peso juntas.",
+      "visual": "<h1>Cinco pesos</h1><div class='tarjeta destaca'><div class='num'>$5</div></div>"
+    },
+    {
+      "narracion": "La moneda de diez pesos vale como diez monedas de un peso, o dos monedas de cinco pesos.",
+      "visual": "<h1>Diez pesos</h1><div class='tarjeta destaca'><div class='num'>$10</div></div>"
+    },
+    {
+      "narracion": "Y la moneda de veinticinco pesos vale como veinticinco monedas de un peso. Es la moneda de mayor valor de las cuatro.",
+      "visual": "<h1>Veinticinco pesos</h1><div class='tarjeta destaca'><div class='num'>$25</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tienes dos monedas de diez pesos, ¿cuánto dinero tienes en total? Veinte pesos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='num'>10</div><div class='signo'>+</div><div class='num'>10</div><div class='signo'>=</div><div class='num verde'>20</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál moneda vale más, la de cinco o la de veinticinco pesos?",
+      "visual": "<div class='pregunta'>¿Cuál vale más?</div><div class='opciones'><div class='opcion'><div class='num'>$5</div></div><div class='opcion'><div class='num'>$25</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Dos monedas de cinco pesos, ¿cuánto valen juntas?",
+      "visual": "<div class='pregunta'>$5 + $5 = ?</div><div class='opciones'><div class='opcion'><div class='num'>$10</div></div><div class='opcion'><div class='num'>$15</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál moneda es la de menor valor de las que aprendimos? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál vale menos?</div><div class='opciones'><div class='opcion'><div class='num'>$1</div></div><div class='opcion'><div class='num'>$10</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál moneda vale más, la de cinco o la de veinticinco pesos?",
+      "opciones": [
+        { "texto": "$5", "visual": "<div class='num'>$5</div>" },
+        { "texto": "$25", "visual": "<div class='num'>$25</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Dos monedas de cinco pesos, ¿cuánto valen juntas?",
+      "opciones": [
+        { "texto": "$15", "visual": "<div class='num'>$15</div>" },
+        { "texto": "$10", "visual": "<div class='num'>$10</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál moneda es la de menor valor de las que aprendimos?",
+      "opciones": [
+        { "texto": "$10", "visual": "<div class='num'>$10</div>" },
+        { "texto": "$1", "visual": "<div class='num'>$1</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -3439,6 +3439,75 @@ las 4 materias) -- de los 76 que faltan del plan total de 93.
 Coherente con la decisión del usuario de esperar la revisión de la maestra
 antes de comprometer más video.
 
+### Continuación sin pausa de revisión: Lengua y Matemática completas hasta U6, cargado hasta U3 (2026-09-18)
+
+Mismo día que la sección anterior, el usuario reafirmó explícitamente **no esperar la
+revisión de la maestra** ("vamos a suponer que todo esta bien... si puedes ir repitiendo
+el proceso hasta el final") y además avisó a mitad de tanda que **llegó al límite diario
+de subidas de YouTube** -- la producción de guiones/video siguió igual, solo las subidas
+quedaron en cola para el usuario.
+
+**Cargado a producción en esta continuación**: el lote 4 (12 lecciones: Lengua U2+U3
+completas, Matemática U2+U3 completas) llegó con sus 12 enlaces de YouTube, identificados
+por título real con `anotar-enlace.mjs` (los 12 calzaron 1:1, sin ambigüedad). **Misma
+trampa del `sort_order` de siempre**: se consultó el máximo real en producción antes de
+generar el SQL (`110`, con 11 lecciones ya cargadas) y se generó el SQL filtrando
+`enlaces.json` a solo esas 12 (si no, `cargar-sql.mjs` recorre TODAS las lecciones con
+enlace y recalcula el orden de golpe, con riesgo de mover las ya cargadas) -- offset de
++110 aplicado con una sustitución de regex sobre el JSON del SQL generado antes de
+aplicarlo. Verificado tras cargar: **23 lecciones de 1ro, `sort_order` 10..230 sin huecos
+ni colisión**, las 12 nuevas con 3 preguntas/6 opciones con dibujo cada una, publicadas.
+
+**Con esto, Lengua Española y Matemática quedan COMPLETAS hasta Unidad 3** (fin del primer
+trimestre) **cargadas y publicadas** en Academia -- ya no solo producidas.
+
+**Producidas en esta continuación, esperando enlace** (dos lotes nuevos, 18 lecciones):
+- **Lote 5** (9): Lengua U4 (*Un mensaje para alguien*, *Junto sílabas y formo palabras*,
+  *Le escribo un recado a mi mamá*), U5 (*¿Qué es una noticia?*, *El titular dice mucho en
+  poco*, *Cuento una noticia de mi escuela*), U6 (*Todo cuento tiene tres partes*, *Los
+  personajes del cuento*, *Invento el final*) -- **Lengua Española queda con sus 21
+  guiones ESCRITOS Y PRODUCIDOS (voz+MP4), el plan completo**, aunque solo 12/21 están
+  cargados en Academia (hasta U3).
+- **Lote 6** (9): Matemática U4 (*Contamos de 10 en 10 hasta 99*, *Decenas y unidades*,
+  *Mayor, menor o igual*), U5 (*Círculo, cuadrado, triángulo y rectángulo*, *Líneas
+  rectas, curvas y mixtas*, *Mosaicos y patrones*), U6 (*Los días de la semana*, *El
+  reloj: la hora en punto*, *Antes, ahora y después*).
+
+**Guiones nuevos escritos, sin producir** (Matemática U7-U9, 9 lecciones -- video/MP4 no
+generado todavía): U7 (*Sumamos números de dos cifras*, *Restamos números de dos cifras*,
+*Patrones de números*), U8 (*Cubo, esfera, cono y cilindro*, *Caras, bordes y esquinas*,
+*Arriba, abajo, dentro, fuera*), U9 (*Nuestras monedas*, *Los billetes*, *Largo y corto,
+pesado y liviano* -- falta aún U9-04 *La taza, el litro y el galón*, y U10 completa, para
+terminar Matemática en 32/32).
+
+**Verificado tras cada micro-lote**: `revisar-guiones.mjs 1ro` corrido después de cada
+tanda de escritura -- 53 lecciones en total al cierre, 0 problemas, sesgo de posición de
+respuesta correcta en 50% (justo en el límite de aviso, no lo supera). Varias preguntas
+recién escritas salían con las 3 correctas en la misma posición; se corrigieron
+invirtiendo el orden de opciones antes de producir, mismo método que sesiones previas.
+
+**Estado consolidado de Matemática al cierre de esta continuación**:
+
+| Unidad | Escrita | Producida (voz+MP4) | Cargada en Academia |
+|---|---|---|---|
+| U0-U3 (11) | ✅ | ✅ | ✅ |
+| U4-U6 (9) | ✅ | ✅ | esperando enlace |
+| U7-U9 parcial (9, falta U9-04) | ✅ | no | no |
+| U9-04, U10 (3) | no | no | no |
+
+**Pendiente real para continuar**:
+1. Enlaces de YouTube del lote 3 (6, de la sesión anterior -- Naturales/Sociales U2-U3) y
+   de los lotes 5+6 (18, esta continuación) -- 24 enlaces en total, todos con MP4 ya
+   producido esperando solo la subida y el link.
+2. Aplicar cada lote con `anotar-enlace.mjs` + `cargar-sql.mjs` (filtrado a los ids nuevos)
+   + verificar el `sort_order` máximo real contra producción antes de generar el SQL --
+   la misma comprobación manual de siempre, el script no la hace solo.
+3. Terminar de escribir Matemática (U9-04 + U10, 3 lecciones) para completarla en 32/32.
+4. Escribir Naturales U4-U9 (14) y Sociales U4-U10 (13) -- siguen sin tocar desde que
+   se completó su primer trimestre (U1-U3) en la sesión anterior.
+5. La maestra de 1ro sigue sin haber visto nada de esto en vivo -- decisión consciente y
+   repetida del usuario, no un olvido.
+
 ### La primera lección de 1ro ya está en Academia (2026-09-09)
 
 Ciclo completo cerrado de punta a punta para **`1ro-primaria-naturales-u01-01`**
