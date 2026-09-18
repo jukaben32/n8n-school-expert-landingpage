@@ -3517,10 +3517,12 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
 2. Aplicar cada lote con `anotar-enlace.mjs` + `cargar-sql.mjs` (filtrado a los ids
    nuevos) + verificar el `sort_order` máximo real contra producción antes de generar
    el SQL -- la misma comprobación manual de siempre, el script no la hace solo.
-3. Escribir Naturales U4-U9 (14) y Sociales U4-U10 (13) -- siguen sin tocar desde que
-   se completó su primer trimestre (U1-U3) en la sesión anterior. Con esto se cierran
-   los 93 guiones del plan completo (quedan 27: 14+13, Lengua y Matemática ya están
-   en 100%).
+3. Escribir Sociales U4-U10 (13) -- es lo único que falta para cerrar los 93 guiones
+   del plan completo. Ciencias Naturales ya quedó con sus 21 guiones ESCRITOS,
+   VALIDADOS Y PRODUCIDOS (voz+MP4, lote 8, 14 lecciones: U4-U9 + el ABP de huracán,
+   que sí lleva video por ser información de seguridad), sumadas a Lengua (21/21) y
+   Matemática (32/32) ya completas. Solo Sociales queda con su primer trimestre
+   (U1-U3, 5 lecciones) sin el resto.
 4. La maestra de 1ro sigue sin haber visto nada de esto en vivo -- decisión consciente y
    repetida del usuario, no un olvido.
 
