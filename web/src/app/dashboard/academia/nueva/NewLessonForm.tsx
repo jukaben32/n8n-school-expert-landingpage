@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { extractQuizFromDocumentsAction, uploadQuestionImageAction } from './actions'
@@ -13,6 +13,15 @@ interface NewLessonFormProps {
   subjects: Catalog[]
   /** Cursos reales del colegio (texto libre de students.grade_level). */
   courses: string[]
+}
+
+/** Archivo elegido para escanear + su miniatura (solo imágenes). */
+interface ScanFile { file: File; previewUrl: string | null }
+
+function formatSize(bytes: number): string {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`
 }
 
 interface DraftOption { key: string; label: string; isCorrect: boolean }
@@ -70,10 +79,48 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
 
   // Cargar cuestionario desde imagen/PDF del libro (OCR con Claude visión)
   const [scanMode, setScanMode] = useState<'files' | 'multiPagePdf'>('files')
-  const [scanFiles, setScanFiles] = useState<File[]>([])
+  const [scanFiles, setScanFiles] = useState<ScanFile[]>([])
   const [scanning, setScanning] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
   const [scanWarnings, setScanWarnings] = useState<string[]>([])
+  // Las URLs de vista previa son object URLs del navegador: se liberan al
+  // quitarlas y, por si acaso, todas juntas al desmontar el formulario.
+  const scanPreviewUrls = useRef<string[]>([])
+  useEffect(() => () => { for (const url of scanPreviewUrls.current) URL.revokeObjectURL(url) }, [])
+
+  function toScanFile(file: File): ScanFile {
+    // Solo las imágenes tienen miniatura; un PDF se muestra como ficha con
+    // su nombre (renderizar su primera página pediría una librería nueva).
+    const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+    if (previewUrl) scanPreviewUrls.current.push(previewUrl)
+    return { file, previewUrl }
+  }
+
+  function pickScanFiles(picked: File[]) {
+    // Fotos sueltas: se ACUMULAN (el caso real es fotografiar varias páginas
+    // del libro de corrido). PDF multi-página: uno solo, reemplaza.
+    if (scanMode === 'multiPagePdf') {
+      releaseScanFiles(scanFiles)
+      setScanFiles(picked.slice(0, 1).map(toScanFile))
+      return
+    }
+    setScanFiles((prev) => [...prev, ...picked.map(toScanFile)])
+  }
+
+  function releaseScanFiles(items: ScanFile[]) {
+    for (const item of items) if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+  }
+
+  function removeScanFile(index: number) {
+    const target = scanFiles[index]
+    if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+    setScanFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function clearScanFiles() {
+    releaseScanFiles(scanFiles)
+    setScanFiles([])
+  }
 
   // Catálogo rápido: crear materia/grado sin salir del formulario
   const [newSubjectName, setNewSubjectName] = useState('')
@@ -150,13 +197,21 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
     setQuestions((prev) => prev.map((q) => (q.key !== qKey ? q : { ...q, imageUploading: true })))
     const formData = new FormData()
     formData.set('image', file)
-    const result = await uploadQuestionImageAction(formData)
-    setQuestions((prev) => prev.map((q) => {
-      if (q.key !== qKey) return q
-      if (!result.ok) return { ...q, imageUploading: false }
-      return { ...q, imageUploading: false, imagePath: result.imagePath, imagePreviewUrl: result.previewUrl }
-    }))
-    if (!result.ok) setError(result.error)
+    try {
+      const result = await uploadQuestionImageAction(formData)
+      setQuestions((prev) => prev.map((q) => {
+        if (q.key !== qKey) return q
+        if (!result.ok) return { ...q, imageUploading: false }
+        return { ...q, imageUploading: false, imagePath: result.imagePath, imagePreviewUrl: result.previewUrl }
+      }))
+      if (!result.ok) setError(result.error)
+    } catch {
+      // Mismo motivo que en handleExtractQuiz: sin esto la pregunta se
+      // quedaba en "Subiendo imagen..." para siempre, y "Guardar lección"
+      // quedaba bloqueado por la validación de imageUploading.
+      setQuestions((prev) => prev.map((q) => (q.key !== qKey ? q : { ...q, imageUploading: false })))
+      setError('No se pudo subir la imagen. Recarga la página y vuelve a intentarlo.')
+    }
   }
 
   /**
@@ -175,37 +230,48 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
 
     const formData = new FormData()
     formData.set('mode', scanMode)
-    for (const f of scanFiles) formData.append('file', f)
+    for (const f of scanFiles) formData.append('file', f.file)
 
-    const result = await extractQuizFromDocumentsAction(formData)
-    setScanning(false)
+    try {
+      const result = await extractQuizFromDocumentsAction(formData)
 
-    if (!result.ok) {
-      setScanError(result.error)
-      return
-    }
+      if (!result.ok) {
+        setScanError(result.error)
+        return
+      }
 
-    const extracted: DraftQuestion[] = result.questions.map((q) => ({
-      key: crypto.randomUUID(),
-      prompt: q.prompt,
-      points: 10,
-      options: q.options.map((label, idx) => ({
+      const extracted: DraftQuestion[] = result.questions.map((q) => ({
         key: crypto.randomUUID(),
-        label,
-        isCorrect: q.correctOptionIndex === idx,
-      })),
-      imagePath: null,
-      imagePreviewUrl: null,
-      imageUploading: false,
-    }))
+        prompt: q.prompt,
+        points: 10,
+        options: q.options.map((label, idx) => ({
+          key: crypto.randomUUID(),
+          label,
+          isCorrect: q.correctOptionIndex === idx,
+        })),
+        imagePath: null,
+        imagePreviewUrl: null,
+        imageUploading: false,
+      }))
 
-    setQuestions((prev) => {
-      const isPristineDefault =
-        prev.length === 1 && !prev[0].prompt.trim() && prev[0].options.every((o) => !o.label.trim())
-      return isPristineDefault ? extracted : [...prev, ...extracted]
-    })
-    setScanWarnings(result.warnings)
-    setScanFiles([])
+      setQuestions((prev) => {
+        const isPristineDefault =
+          prev.length === 1 && !prev[0].prompt.trim() && prev[0].options.every((o) => !o.label.trim())
+        return isPristineDefault ? extracted : [...prev, ...extracted]
+      })
+      setScanWarnings(result.warnings)
+      clearScanFiles()
+    } catch {
+      // Sin este catch, una promesa rechazada (sesión vencida, red caída, o
+      // un despliegue nuevo que cambió el id de la Server Action) dejaba el
+      // botón en "Extrayendo preguntas..." para siempre y sin ningún mensaje
+      // -- el mismo defecto que ya se corrigió en NewStudentForm.
+      setScanError(
+        'No se pudo completar la extracción. Recarga la página y vuelve a intentarlo: no se guardó nada, así que no se duplica nada.'
+      )
+    } finally {
+      setScanning(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -354,14 +420,14 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => { setScanMode('files'); setScanFiles([]) }}
+              onClick={() => { setScanMode('files'); clearScanFiles() }}
               className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${scanMode === 'files' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
             >
               Fotos sueltas
             </button>
             <button
               type="button"
-              onClick={() => { setScanMode('multiPagePdf'); setScanFiles([]) }}
+              onClick={() => { setScanMode('multiPagePdf'); clearScanFiles() }}
               className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${scanMode === 'multiPagePdf' ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
             >
               PDF multi-página
@@ -371,9 +437,61 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
             type="file"
             accept={scanMode === 'multiPagePdf' ? 'application/pdf' : 'image/png,image/jpeg,image/webp'}
             multiple={scanMode === 'files'}
-            onChange={(e) => setScanFiles(Array.from(e.target.files ?? []))}
+            onChange={(e) => {
+              pickScanFiles(Array.from(e.target.files ?? []))
+              // Se limpia el input para que la lista de abajo sea la única
+              // fuente de verdad -- y para poder volver a elegir el mismo
+              // archivo después de quitarlo (si no, no dispara onChange).
+              e.target.value = ''
+            }}
             className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
           />
+
+          {scanFiles.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {scanFiles.length === 1 ? '1 archivo listo' : `${scanFiles.length} archivos listos`}
+                  {scanMode === 'files' && ' (puedes agregar más)'}
+                </p>
+                <button type="button" onClick={clearScanFiles} className="text-xs font-semibold text-slate-500 hover:text-red-500">
+                  Quitar todos
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {scanFiles.map((sf, i) => (
+                  <div key={`${sf.file.name}-${sf.file.size}-${i}`} className="relative w-24">
+                    {sf.previewUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={sf.previewUrl}
+                        alt={`Vista previa de ${sf.file.name}`}
+                        className="h-28 w-24 rounded-lg border border-slate-200 dark:border-slate-700 bg-white object-contain"
+                      />
+                    ) : (
+                      <div className="h-28 w-24 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col items-center justify-center gap-1">
+                        <span className="text-2xl" aria-hidden="true">📄</span>
+                        <span className="text-[10px] font-semibold text-slate-500">PDF</span>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeScanFile(i)}
+                      className="absolute -top-2 -right-2 rounded-full bg-slate-900/80 hover:bg-red-600 text-white w-6 h-6 flex items-center justify-center text-xs"
+                      aria-label={`Quitar ${sf.file.name}`}
+                    >
+                      ✕
+                    </button>
+                    <p className="mt-1 truncate text-[10px] text-slate-500 dark:text-slate-400" title={sf.file.name}>
+                      {sf.file.name}
+                    </p>
+                    <p className="text-[10px] text-slate-400">{formatSize(sf.file.size)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={handleExtractQuiz}

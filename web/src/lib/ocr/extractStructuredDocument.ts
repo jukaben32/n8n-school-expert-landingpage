@@ -180,6 +180,20 @@ async function extractOne(
       return { index, ok: false, data: null, error: 'El modelo rechazó procesar este documento.' }
     }
 
+    // Sin esto, un documento con demasiado contenido corta el JSON a medias y
+    // el error que veía la persona era "no fue JSON válido" -- que suena a
+    // falla del sistema en vez de decir qué hacer. Medido el 2026-09-18: una
+    // página de 15 preguntas gasta ~995 de los 2048 tokens, así que esto solo
+    // salta en páginas mucho más densas.
+    if (responseData.stop_reason === 'max_tokens') {
+      return {
+        index,
+        ok: false,
+        data: null,
+        error: 'El documento traía demasiado contenido para una sola lectura. Divídelo en fotos o páginas más cortas.',
+      }
+    }
+
     const text = responseData.content?.find((block) => block.type === 'text')?.text
     if (!text) {
       return { index, ok: false, data: null, error: 'La respuesta del modelo no tuvo contenido de texto.' }

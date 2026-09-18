@@ -962,10 +962,15 @@ columnas nuevas (`students.birth_place`/`grade_level`,
 
 **Pendiente para cerrar esta tarea por completo**, en orden:
 1. ~~Aplicar la migración a producción~~ -- hecho y verificado (ver arriba).
-2. Verificación real de extracción con Claude: subir una ficha y una
-   factura de prueba (ficticias) en cuanto haya `ANTHROPIC_API_KEY` con
-   saldo, confirmar que el JSON extraído valida, crear un estudiante de
-   prueba de punta a punta y borrarlo.
+2. ~~Verificación real de extracción con Claude~~ -- **el NÚCLEO ya está
+   probado en vivo (2026-09-18)**: `extractStructuredDocument()` funciona
+   contra la API real con la `ANTHROPIC_API_KEY` de producción, incluidos
+   los campos nulos y la división de PDF multi-página. Ver la sección
+   "Academia: la extracción de cuestionarios SÍ funciona" más abajo.
+   **Lo que sigue sin ejercitarse** es cada schema por separado:
+   `enrollmentFormSchema` y `vendorInvoiceSchema` no se han corrido contra
+   un documento real (usan exactamente el mismo constructo que el schema ya
+   probado, así que el riesgo es bajo, pero bajo no es cero).
 3. Definir con el usuario el mapeo RNC→contacto y categoría→cuenta contable
    de Alegra para completar `web/src/lib/accounting/alegra.ts`.
 
@@ -2428,16 +2433,11 @@ tocan Storage y la API de Anthropic -- mismo patrón ya establecido en el
 resto del proyecto para esos dos casos, no una inconsistencia nueva.
 
 **Verificado**: `npx tsc --noEmit`, `npm run lint` y `npm run build`
-limpios. **No verificado en producción** -- la migración no se pudo aplicar
-desde esta sesión (sin acceso a Supabase) y el usuario mencionó que
-"pronto" resuelve el bloqueo de `ANTHROPIC_API_KEY` con saldo (ver bloqueo
-ya documentado varias veces en este archivo para OCR/asistente de IA).
-**Pendiente real**: aplicar `20260826010000_academia_quiz_images.sql` a
-producción, y probar en vivo -- subir una foto o PDF real de un cuestionario
-de libro de texto y confirmar que las preguntas/opciones extraídas son
-correctas, que la imagen de apoyo se ve tanto en el formulario del profesor
-como en `LessonPlayer.tsx` para un estudiante real, y borrar los datos de
-prueba al terminar.
+limpios. ~~**No verificado en producción**~~ -- **cerrado el 2026-09-18**:
+la migración `20260826010000_academia_quiz_images.sql` está aplicada (bucket
+`academia-imagenes` privado y columna `quiz_questions.image_path`
+confirmados en producción) y la extracción se probó contra la API real. Ver
+"Academia: la extracción de cuestionarios SÍ funciona" más abajo.
 
 ## Flujo de Cobranza del Panel: alineado al año escolar real (2026-08-27)
 
@@ -3717,6 +3717,110 @@ sistémico. **No es explotable** en la práctica: estas funciones dependen de
 Queda anotado por si alguna vez se audita el patrón de permisos de funciones
 de este proyecto a fondo -- la forma correcta sería `revoke execute on
 function ... from anon` explícito, no solo `from public`.
+
+## Academia: la extracción de cuestionarios SÍ funciona -- lo que fallaba era la vista previa (2026-09-18)
+
+Reporte del usuario: *"cuando intento subir una foto no se me revela,
+debería aparecer la imagen y no la veo, por tanto no puedo probar la
+funcionalidad"*. Auditoría completa del módulo + primera prueba real contra
+la API de Anthropic en la historia de este proyecto.
+
+### Lo que estaba mal (y ya está corregido)
+
+1. **La subida de escaneo no tenía NINGUNA vista previa.** El bloque
+   "Cargar cuestionario desde foto o PDF del libro" era un
+   `<input type="file">` pelado: lo único que se veía era el texto nativo
+   del navegador con el nombre del archivo. Y en la MISMA pantalla, la otra
+   subida ("Agregar imagen de apoyo" por pregunta) sí muestra miniatura --
+   así que la expectativa del usuario era del todo razonable. Ahora hay
+   miniatura real (object URL), nombre, tamaño, ✕ por archivo y "Quitar
+   todos"; las fotos sueltas se ACUMULAN (el caso real es fotografiar varias
+   páginas de corrido) y el PDF reemplaza. El `input` se limpia
+   (`e.target.value = ''`) para que la lista de la pantalla sea la única
+   fuente de verdad y se pueda volver a elegir el mismo archivo tras
+   quitarlo.
+2. **`handleExtractQuiz` y `handleQuestionImageChange` no tenían
+   `try/catch`** -- el defecto sistémico que este archivo ya documenta
+   ("⚠️ Lo mismo pasa en otros 10 formularios"). Con la promesa rechazada
+   (sesión vencida, red, o despliegue nuevo que cambia el id de la Server
+   Action) el botón se quedaba en "Extrayendo preguntas..." para siempre,
+   sin mensaje. Eran el 11º y 12º caso de la lista; ahora liberan el botón y
+   dicen qué hacer (recargar; no se guardó nada, no se duplica nada).
+   **Ojo con el `grep` que armó aquella lista de 10** (`xargs grep -L
+   "try {"`): descarta el archivo completo si tiene UN solo `try`, así que
+   `NewLessonForm.tsx` quedó fuera aunque tenía dos handlers desprotegidos
+   -- su `try` estaba en `handleSubmit`. Al retomar los que faltan, revisar
+   handler por handler, no archivo por archivo.
+3. **`extractStructuredDocument` no distinguía `stop_reason: 'max_tokens'`**
+   de un JSON corrupto: una página densísima daba "La respuesta del modelo
+   no fue JSON válido", que suena a falla del sistema en vez de decir qué
+   hacer. Ahora dice que divida el documento. Medición real: una página de
+   **15 preguntas gasta 995 de los 2048** tokens de salida, así que el tope
+   actual aguanta ~30 preguntas por página -- no hacía falta subirlo.
+
+### La prueba real (primera vez, con la key de producción)
+
+Se leyó `ANTHROPIC_API_KEY` de Vercel (valor nunca impreso) y se ejecutó **el
+código del repo tal cual** (`npx tsx` importando `extractStructuredDocument`
+y `quizPageSchema` reales) contra páginas de cuestionario sintéticas:
+
+| Caso | Resultado |
+|---|---|
+| Foto con clave de respuestas (4 preguntas) | 4/4 preguntas, opciones limpias (quita "a)", "b)"), y las 4 `indice_correcta` coinciden con la clave. `confianza` 0.99, 4.4s |
+| Foto SIN clave de respuestas | `indice_correcta: null` en todas -- **no adivina**, tal como manda el prompt |
+| PDF de 2 páginas | `pdf-lib` lo parte bien: 2 documentos independientes, 1 y 2 preguntas |
+| Página densa (15 preguntas) | 15/15, `stop_reason: end_turn`, 995 tokens de salida |
+
+**Corrección a este mismo archivo**: la sección de OCR afirmaba que *"cada
+schema usa `anyOf: [{type:'string'},{type:'null'}]` en vez de
+`type: ['string','null']`... el array de tipos no se pudo confirmar"*. Eso
+era **doblemente falso**: (a) los tres schemas del proyecto usan el array de
+tipos, no `anyOf` -- `grep anyOf src/lib/ocr/` no devuelve nada; y (b) el
+array de tipos **funciona perfectamente** con structured outputs, ya
+comprobado en vivo con valores enteros y con `null`. Que nadie "arregle" esto
+a `anyOf`: no está roto.
+
+### Respuesta a "¿al estudiante le aparece automáticamente?" -- SÍ, verificado
+
+Con las 2 cuentas de estudiante reales, simulando su sesión igual que
+PostgREST: **Daury (6to. Secundaria) ve exactamente las 2 lecciones
+publicadas de su curso, con sus 2 preguntas y 4 opciones** -- ni una de otro
+curso. No hay paso de aprobación intermedio: al guardar con "Publicar de
+inmediato" marcado, la lección ya está en su Academia.
+
+La cadena de RLS que lo permite, confirmada leyendo `pg_policies`:
+`lessons_student_read_curso` → `student_can_see_lesson(school_id,
+grade_level, is_published)`; y las preguntas/opciones cuelgan de forma
+transitiva (`quiz_questions_via_lesson` filtra por `lesson_id in (select id
+from lessons)`, que ya viene filtrado por RLS para esa persona). La imagen
+de apoyo de cada pregunta también le llega, por signed URL desde
+`academia/[id]/page.tsx`.
+
+**La única condición frágil** (ya conocida, no nueva): el `grade_level` de
+la lección tiene que coincidir **carácter por carácter** con el
+`students.grade_level`. Por eso el desplegable "Curso" del formulario se
+arma desde los cursos reales de los estudiantes inscritos -- elegirlo de la
+lista garantiza la coincidencia. El riesgo vive solo en el campo libre
+"Otro curso": ahí un "6to Primaria" sin punto deja la lección invisible para
+todo el mundo, sin ningún error.
+
+### Cómo repetir la prueba de OCR en el futuro
+
+No hace falta tocar producción ni iniciar sesión como nadie:
+`ANTHROPIC_API_KEY` se lee del proyecto de Vercel
+(`GET /v9/projects/{id}/env/{envId}?decrypt=true`, requiere token de
+equipo), y con `npx tsx` se importa directamente el módulo real del repo. La
+extracción **no escribe nada** en la base, así que es segura de correr. Cada
+prueba cuesta centavos.
+
+Para verificar la INTERFAZ (y no solo que compile -- este archivo ya
+documenta tres bugs de runtime que `tsc`/`lint`/`build` no detectaron), se
+levantó `next dev` y se manejó Chromium con Playwright
+(`/opt/pw-browsers/chromium-1194/chrome-linux/chrome`), con una página
+temporal bajo un prefijo público del middleware (`/terminos-*`, si no
+`proxy.ts` redirige a `/login` con 307) que se borró antes de commitear. Los
+6 escenarios (elegir 2 fotos, acumular una 3ra, quitar una, cambiar a PDF,
+ficha de PDF, "Quitar todos") pasaron sin un solo error de consola.
 
 ## Convenciones de trabajo
 
