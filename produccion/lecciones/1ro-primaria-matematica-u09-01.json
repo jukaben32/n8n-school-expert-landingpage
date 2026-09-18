@@ -55,10 +55,10 @@
     {
       "pregunta": "¿Cuál moneda vale más, la de cinco o la de veinticinco pesos?",
       "opciones": [
-        { "texto": "$5", "visual": "<div class='num'>$5</div>" },
-        { "texto": "$25", "visual": "<div class='num'>$25</div>" }
+        { "texto": "$25", "visual": "<div class='num'>$25</div>" },
+        { "texto": "$5", "visual": "<div class='num'>$5</div>" }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "Dos monedas de cinco pesos, ¿cuánto valen juntas?",

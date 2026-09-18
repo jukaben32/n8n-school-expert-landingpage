@@ -55,10 +55,10 @@
     {
       "pregunta": "¿Cuánto es catorce más doce?",
       "opciones": [
-        { "texto": "16", "visual": "<div class='num'>16</div>" },
-        { "texto": "26", "visual": "<div class='num'>26</div>" }
+        { "texto": "26", "visual": "<div class='num'>26</div>" },
+        { "texto": "16", "visual": "<div class='num'>16</div>" }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "¿Cuánto es veinte más treinta?",

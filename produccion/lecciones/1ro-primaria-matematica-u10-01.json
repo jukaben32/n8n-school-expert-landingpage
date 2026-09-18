@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u10-01",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U10. ¡Llegan las vacaciones!",
+  "titulo": "Tablas de conteo",
+  "descripcion": "Recolectar y organizar datos en una tabla.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hoy vamos a aprender a organizar información en una tabla de conteo, para saber cuántas cosas hay de cada tipo.",
+      "visual": "<div class='rotulo'>Tabla de conteo</div><h1 class='chico'>Organizamos información</h1><div class='dib max'>📊</div>"
+    },
+    {
+      "narracion": "Imagina que preguntas a tus compañeros cuál es su fruta favorita. Cada vez que alguien dice una fruta, pones una marca al lado de esa fruta.",
+      "visual": "<h1>Contamos respuestas</h1><div class='fila'><div class='dib mini'>🍎</div><div class='dib mini'>🍌</div><div class='dib mini'>🍇</div></div>"
+    },
+    {
+      "narracion": "Al final, cuentas las marcas de cada fruta. Si manzana tiene 5 marcas, eso significa que 5 compañeros escogieron manzana.",
+      "visual": "<h1>Contamos las marcas</h1><div class='tarjeta destaca'><div class='dib mini'>🍎</div><div class='num'>5</div></div>"
+    },
+    {
+      "narracion": "La tabla de conteo tiene dos columnas: en una va el nombre de cada cosa, y en la otra el número de veces que se repitió.",
+      "visual": "<h1>Dos columnas</h1><div class='fila'><div class='tarjeta'><div class='detalle'>Fruta</div></div><div class='tarjeta'><div class='detalle'>Cuántos</div></div></div>"
+    },
+    {
+      "narracion": "Las tablas nos ayudan a ver rápido cuál cosa es la más popular, sin tener que contar todo de nuevo cada vez.",
+      "visual": "<h1 class='chico'>Nos ayudan a ver rápido</h1><div class='dib max'>👀</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si contaste que 3 compañeros prefieren perros y 6 prefieren gatos, ¿cuál mascota fue más votada? Los gatos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib mini'>🐶</div><div class='num'>3</div><div class='dib mini'>🐱</div><div class='num verde'>6</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Para qué sirve una tabla de conteo?",
+      "visual": "<div class='pregunta'>¿Para qué sirve una tabla de conteo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para organizar datos</div></div><div class='opcion'><div class='palabra'>Para dibujar</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Si 3 compañeros prefieren perros y 6 prefieren gatos, ¿cuál fue más votada?",
+      "visual": "<div class='pregunta'>¿Cuál mascota fue más votada?</div><div class='opciones'><div class='opcion'><div class='dib'>🐶</div></div><div class='opcion'><div class='dib'>🐱</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuántas columnas tiene una tabla de conteo? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuántas columnas tiene?</div><div class='opciones'><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Para qué sirve una tabla de conteo?",
+      "opciones": [
+        { "texto": "Para dibujar", "visual": "<div class='dib'>🎨</div>" },
+        { "texto": "Para organizar datos", "visual": "<div class='dib'>📊</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si 3 compañeros prefieren perros y 6 prefieren gatos, ¿cuál fue más votada?",
+      "opciones": [
+        { "texto": "Los gatos", "visual": "<div class='dib'>🐱</div>" },
+        { "texto": "Los perros", "visual": "<div class='dib'>🐶</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuántas columnas tiene una tabla de conteo?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

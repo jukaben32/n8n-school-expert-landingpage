@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u10-02",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U10. ¡Llegan las vacaciones!",
+  "titulo": "Pictogramas y gráficas de barras",
+  "descripcion": "Leer e interpretar pictogramas y gráficas de barras.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes hacer una tabla de conteo. Hoy vamos a aprender a mostrar esa información con dibujos y con barras.",
+      "visual": "<div class='rotulo'>Pictogramas y barras</div><h1 class='chico'>Mostramos los datos</h1><div class='dib max'>📈</div>"
+    },
+    {
+      "narracion": "Un pictograma usa dibujos repetidos para mostrar cantidades. Cada dibujo representa una respuesta.",
+      "visual": "<h1>El pictograma</h1><div class='fila apretada'><div class='dib mini'>🍎</div><div class='dib mini'>🍎</div><div class='dib mini'>🍎</div></div><div class='pie'>3 dibujos = 3 personas</div>"
+    },
+    {
+      "narracion": "Mientras más dibujos hay en una fila, más votos tuvo esa opción. La fila con más dibujos es la más popular.",
+      "visual": "<h1>Más dibujos, más votos</h1><div class='fila apretada'><div class='dib mini'>🍇</div><div class='dib mini'>🍇</div><div class='dib mini'>🍇</div><div class='dib mini'>🍇</div><div class='dib mini'>🍇</div></div>"
+    },
+    {
+      "narracion": "Una gráfica de barras usa barras de distinto tamaño en vez de dibujos. Mientras más alta la barra, más cantidad representa.",
+      "visual": "<h1>La gráfica de barras</h1><div class='dib max'>📊</div><div class='pie'>Barras más altas = más cantidad</div>"
+    },
+    {
+      "narracion": "Para leer una gráfica, buscas la barra más alta: esa es la respuesta que más se repitió entre todos.",
+      "visual": "<h1 class='chico'>La barra más alta gana</h1><div class='dib max'>🏆</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si la barra de perros llega hasta el número 4, y la de gatos llega hasta el número 7, ¿cuál mascota ganó? Los gatos, porque su barra es más alta.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib mini'>🐶</div><div class='num'>4</div><div class='dib mini'>🐱</div><div class='num verde'>7</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. En un pictograma, ¿qué representa cada dibujo?",
+      "visual": "<div class='pregunta'>¿Qué representa cada dibujo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Una respuesta</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. En una gráfica de barras, ¿qué significa una barra más alta?",
+      "visual": "<div class='pregunta'>¿Qué significa una barra más alta?</div><div class='opciones'><div class='opcion'><div class='palabra'>Más cantidad</div></div><div class='opcion'><div class='palabra'>Menos cantidad</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si la barra de perros llega a 4 y la de gatos llega a 7, ¿cuál ganó? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál mascota ganó?</div><div class='opciones'><div class='opcion'><div class='dib'>🐶</div></div><div class='opcion'><div class='dib'>🐱</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "En un pictograma, ¿qué representa cada dibujo?",
+      "opciones": [
+        { "texto": "Una respuesta", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Nada", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "En una gráfica de barras, ¿qué significa una barra más alta?",
+      "opciones": [
+        { "texto": "Menos cantidad", "visual": "<div class='dib'>⬇️</div>" },
+        { "texto": "Más cantidad", "visual": "<div class='dib'>⬆️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si la barra de perros llega a 4 y la de gatos llega a 7, ¿cuál ganó?",
+      "opciones": [
+        { "texto": "Los perros", "visual": "<div class='dib'>🐶</div>" },
+        { "texto": "Los gatos", "visual": "<div class='dib'>🐱</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

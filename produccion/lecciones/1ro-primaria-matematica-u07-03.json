@@ -55,10 +55,10 @@
     {
       "pregunta": "Contando de dos en dos: dos, cuatro, seis... ¿qué número sigue?",
       "opciones": [
-        { "texto": "7", "visual": "<div class='num'>7</div>" },
-        { "texto": "8", "visual": "<div class='num'>8</div>" }
+        { "texto": "8", "visual": "<div class='num'>8</div>" },
+        { "texto": "7", "visual": "<div class='num'>7</div>" }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "Contando de cinco en cinco: cinco, diez, quince... ¿qué número sigue?",

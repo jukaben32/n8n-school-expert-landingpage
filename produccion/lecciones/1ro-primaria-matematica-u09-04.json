@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-matematica-u09-04",
+  "curso": "1ro. Primaria",
+  "materia": "Matemática",
+  "unidad": "U9. En el súper",
+  "titulo": "La taza, el litro y el galón",
+  "descripcion": "Capacidad con unidades arbitrarias.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Hoy vamos a hablar de capacidad, que es cuánto líquido le cabe a un envase. Usamos tazas, litros y galones para medirla.",
+      "visual": "<div class='rotulo'>La capacidad</div><h1 class='chico'>Cuánto le cabe a un envase</h1><div class='dib max'>🥤</div>"
+    },
+    {
+      "narracion": "La taza es un envase pequeño. Le cabe poco líquido, como el jugo de una comida.",
+      "visual": "<h1>La taza</h1><div class='dib max'>☕</div><div class='pie'>Le cabe poco</div>"
+    },
+    {
+      "narracion": "El litro es más grande que una taza. Una botella de refresco grande suele medir un litro o más.",
+      "visual": "<h1>El litro</h1><div class='dib max'>🧃</div><div class='pie'>Más que una taza</div>"
+    },
+    {
+      "narracion": "El galón es el más grande de los tres. Le cabe mucho más líquido, como el agua que se compra para la casa.",
+      "visual": "<h1>El galón</h1><div class='dib max'>🛢️</div><div class='pie'>El más grande</div>"
+    },
+    {
+      "narracion": "Fíjate en el orden: la taza es la más pequeña, el litro es mediano, y el galón es el más grande de los tres.",
+      "visual": "<h1 class='chico'>De menor a mayor</h1><div class='fila'><div class='dib mini'>☕</div><div class='signo'>&lt;</div><div class='dib mini'>🧃</div><div class='signo'>&lt;</div><div class='dib mini'>🛢️</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si vas a llenar una piscina inflable, ¿usarías una taza o un galón? Un galón, porque cabe mucho más de una vez.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🏊</div><div class='signo'>➜</div><div class='dib mini'>🛢️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál envase es el más pequeño de los tres?",
+      "visual": "<div class='pregunta'>¿Cuál es el más pequeño?</div><div class='opciones'><div class='opcion'><div class='dib'>☕</div></div><div class='opcion'><div class='dib'>🛢️</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál envase es el más grande de los tres?",
+      "visual": "<div class='pregunta'>¿Cuál es el más grande?</div><div class='opciones'><div class='opcion'><div class='dib'>☕</div></div><div class='opcion'><div class='dib'>🛢️</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Para llenar un vaso de jugo pequeño, ¿usarías una taza o un galón? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>Para un vaso pequeño, ¿qué usas?</div><div class='opciones'><div class='opcion'><div class='dib'>☕</div></div><div class='opcion'><div class='dib'>🛢️</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál envase es el más pequeño de los tres?",
+      "opciones": [
+        { "texto": "La taza", "visual": "<div class='dib'>☕</div>" },
+        { "texto": "El galón", "visual": "<div class='dib'>🛢️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál envase es el más grande de los tres?",
+      "opciones": [
+        { "texto": "La taza", "visual": "<div class='dib'>☕</div>" },
+        { "texto": "El galón", "visual": "<div class='dib'>🛢️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Para llenar un vaso de jugo pequeño, ¿usarías una taza o un galón?",
+      "opciones": [
+        { "texto": "Un galón", "visual": "<div class='dib'>🛢️</div>" },
+        { "texto": "Una taza", "visual": "<div class='dib'>☕</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

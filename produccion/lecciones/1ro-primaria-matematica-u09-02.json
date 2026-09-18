@@ -55,10 +55,10 @@
     {
       "pregunta": "¿Cuál billete vale más, el de veinte o el de cien pesos?",
       "opciones": [
-        { "texto": "$20", "visual": "<div class='num'>$20</div>" },
-        { "texto": "$100", "visual": "<div class='num'>$100</div>" }
+        { "texto": "$100", "visual": "<div class='num'>$100</div>" },
+        { "texto": "$20", "visual": "<div class='num'>$20</div>" }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "Dos billetes de veinte pesos, ¿cuánto valen juntos?",

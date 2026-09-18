@@ -55,10 +55,10 @@
     {
       "pregunta": "Un dado, ¿qué cuerpo geométrico es?",
       "opciones": [
-        { "texto": "Esfera", "visual": "<div class='dib'>⚽</div>" },
-        { "texto": "Cubo", "visual": "<div class='dib'>🎲</div>" }
+        { "texto": "Cubo", "visual": "<div class='dib'>🎲</div>" },
+        { "texto": "Esfera", "visual": "<div class='dib'>⚽</div>" }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "¿Cuál cuerpo geométrico es completamente redondo, sin esquinas?",
