@@ -3495,10 +3495,20 @@ invirtiendo el orden de opciones antes de producir, mismo método que sesiones p
 | U7-U9 parcial (9, falta U9-04) | ✅ | no | no |
 | U9-04, U10 (3) | no | no | no |
 
+**Bug real de proceso, encontrado y corregido el mismo día**: los lotes 3, 5 y 6 se
+enviaron con la hoja de títulos/descripciones (`para-youtube.mjs`) pero **nunca con los
+archivos `.mp4` en sí** -- el usuario no tenía forma de bajarlos para subirlos a YouTube,
+solo veía el texto. `produccion/salida/` vive dentro del entorno de esta sesión; el
+usuario no tiene acceso a ese directorio salvo que se le mande cada archivo con
+`SendUserFile`. **Corregido reenviando los 24 MP4** (lote 3 + 5 + 6) de una vez. **Regla
+para cualquier lote futuro**: el paso "enviar al usuario" del ciclo son SIEMPRE dos
+entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales vía
+`SendUserFile` -- nunca solo la hoja.
+
 **Pendiente real para continuar**:
 1. Enlaces de YouTube del lote 3 (6, de la sesión anterior -- Naturales/Sociales U2-U3) y
    de los lotes 5+6 (18, esta continuación) -- 24 enlaces en total, todos con MP4 ya
-   producido esperando solo la subida y el link.
+   producido y ya entregado como archivo, esperando solo la subida y el link.
 2. Aplicar cada lote con `anotar-enlace.mjs` + `cargar-sql.mjs` (filtrado a los ids nuevos)
    + verificar el `sort_order` máximo real contra producción antes de generar el SQL --
    la misma comprobación manual de siempre, el script no la hace solo.
