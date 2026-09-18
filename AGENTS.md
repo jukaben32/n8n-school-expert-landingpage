@@ -3491,31 +3491,37 @@ invirtiendo el orden de opciones antes de producir, mismo método que sesiones p
 | Unidad | Escrita | Producida (voz+MP4) | Cargada en Academia |
 |---|---|---|---|
 | U0-U3 (11) | ✅ | ✅ | ✅ |
-| U4-U6 (9) | ✅ | ✅ | esperando enlace |
-| U7-U9 parcial (9, falta U9-04) | ✅ | no | no |
-| U9-04, U10 (3) | no | no | no |
+| U4-U10 (21) | ✅ | ✅ | esperando enlace |
+
+**Matemática queda con sus 32 guiones ESCRITOS, VALIDADOS Y PRODUCIDOS (voz+MP4) --
+el plan completo de esa materia**, aunque solo 11/32 están cargados en Academia (hasta
+U3). Lengua Española también tiene sus 21 guiones producidos completos (ver sección
+anterior). Naturales y Sociales siguen en su primer trimestre (U1-U3).
 
 **Bug real de proceso, encontrado y corregido el mismo día**: los lotes 3, 5 y 6 se
 enviaron con la hoja de títulos/descripciones (`para-youtube.mjs`) pero **nunca con los
 archivos `.mp4` en sí** -- el usuario no tenía forma de bajarlos para subirlos a YouTube,
 solo veía el texto. `produccion/salida/` vive dentro del entorno de esta sesión; el
 usuario no tiene acceso a ese directorio salvo que se le mande cada archivo con
-`SendUserFile`. **Corregido reenviando los 24 MP4** (lote 3 + 5 + 6) de una vez. **Regla
-para cualquier lote futuro**: el paso "enviar al usuario" del ciclo son SIEMPRE dos
-entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales vía
+`SendUserFile`. **Corregido reenviando los 24 MP4** (lote 3 + 5 + 6) de una vez, y el
+lote 7 (12, Matemática U7-U10) ya se mandó desde el principio con hoja + archivos juntos.
+**Regla para cualquier lote futuro**: el paso "enviar al usuario" del ciclo son SIEMPRE
+dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales vía
 `SendUserFile` -- nunca solo la hoja.
 
 **Pendiente real para continuar**:
-1. Enlaces de YouTube del lote 3 (6, de la sesión anterior -- Naturales/Sociales U2-U3) y
-   de los lotes 5+6 (18, esta continuación) -- 24 enlaces en total, todos con MP4 ya
-   producido y ya entregado como archivo, esperando solo la subida y el link.
-2. Aplicar cada lote con `anotar-enlace.mjs` + `cargar-sql.mjs` (filtrado a los ids nuevos)
-   + verificar el `sort_order` máximo real contra producción antes de generar el SQL --
-   la misma comprobación manual de siempre, el script no la hace solo.
-3. Terminar de escribir Matemática (U9-04 + U10, 3 lecciones) para completarla en 32/32.
-4. Escribir Naturales U4-U9 (14) y Sociales U4-U10 (13) -- siguen sin tocar desde que
-   se completó su primer trimestre (U1-U3) en la sesión anterior.
-5. La maestra de 1ro sigue sin haber visto nada de esto en vivo -- decisión consciente y
+1. Enlaces de YouTube de los lotes 3 (6), 5 (9), 6 (9) y 7 (12) -- **36 enlaces en
+   total**, todos con MP4 ya producido y ya entregado como archivo descargable,
+   esperando solo que el usuario los suba (limitado por la cuota diaria de YouTube,
+   avisada por el usuario) y devuelva los links.
+2. Aplicar cada lote con `anotar-enlace.mjs` + `cargar-sql.mjs` (filtrado a los ids
+   nuevos) + verificar el `sort_order` máximo real contra producción antes de generar
+   el SQL -- la misma comprobación manual de siempre, el script no la hace solo.
+3. Escribir Naturales U4-U9 (14) y Sociales U4-U10 (13) -- siguen sin tocar desde que
+   se completó su primer trimestre (U1-U3) en la sesión anterior. Con esto se cierran
+   los 93 guiones del plan completo (quedan 27: 14+13, Lengua y Matemática ya están
+   en 100%).
+4. La maestra de 1ro sigue sin haber visto nada de esto en vivo -- decisión consciente y
    repetida del usuario, no un olvido.
 
 ### La primera lección de 1ro ya está en Academia (2026-09-09)
