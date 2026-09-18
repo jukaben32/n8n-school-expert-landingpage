@@ -3822,6 +3822,72 @@ temporal bajo un prefijo público del middleware (`/terminos-*`, si no
 6 escenarios (elegir 2 fotos, acumular una 3ra, quitar una, cambiar a PDF,
 ficha de PDF, "Quitar todos") pasaron sin un solo error de consola.
 
+## Admitido/retirado colados en las listas activas de curso (2026-09-18)
+
+**Regla de negocio confirmada con el usuario**: `admitido` son estudiantes que
+estuvieron el año pasado, dejaron de pagar, y por normativa sus papeles siguen
+en el colegio -- sin ellos no pueden asistir ni inscribirse en ningún otro
+colegio. A veces regresan y se reinscriben. Hasta que eso pase, **no deben
+aparecer en ninguna lista activa de curso** (pasar lista, calificar, roster
+imprimible de una autorización, selector de a quién dirigir un aviso), pero
+**sí deben seguir existiendo como registro** (Estudiantes los sigue mostrando
+con su insignia de estado) **y seguir contando en estadísticas y métricas**
+(Panel, Reportes, Plataforma -- que YA desglosan por `enrollment_status`,
+tal como estaba).
+
+**10 estudiantes admitidos en producción**, todos con `grade_level` puesto
+-- por eso aparecían mezclados con los inscritos en cada pantalla que arma
+su lista de curso sin filtrar por estado: Sarah Camille Bello Berroa (1ro.
+Primaria), Keysha Paola Albizu Polanco (1ro. Secundaria), Dioskailler Taysha
+Carrion (3ro. Primaria), Abraham Isai Bello Berroa y Edrik David Caraballo
+Peña (5to. Primaria), Arianny Fernandez Rijo (5to. Secundaria), y Dashly
+Saray Carrion Polanco / Eliette Antonio Escarfuller Frias / Dorca Darliannys
+Rosa / Eliam Sobet Leal (Kinder, los 4).
+
+**Alcance mapeado con `grep` antes de tocar nada** (protocolo de este
+archivo): de los 41 archivos que consultan `students`, dos patrones ya
+filtraban correctamente por `enrollment_status = 'inscrito'`
+(`academia/nueva`, `encuestas`, `estudiantes/accesos`,
+`encuestas/[pollId]`) -- el resto de las pantallas que arman "lista de
+curso" no filtraba nada, solo `deleted_at is null`. Se agregó el mismo
+`.eq('enrollment_status', 'inscrito')` en los 11 archivos que faltaban:
+
+- `asistencia/registrar/page.tsx` -- el roster para pasar lista (el más
+  crítico: un admitido no debería poder marcarse presente/ausente).
+- `notas/page.tsx` -- opciones de curso y el roster para calificar.
+- `autorizaciones/[id]/page.tsx` -- el roster IMPRIMIBLE de una
+  autorización (permiso de excursión). Importa más aquí que en ningún
+  otro lado: un admitido no tiene papeles vigentes, no puede subir a un
+  vehículo del colegio.
+- `autorizaciones/page.tsx` -- el conteo de autorizados/pendientes por
+  solicitud (si no, las estadísticas de esa pantalla quedaban infladas).
+- `actualizaciones/page.tsx` -- el selector de curso/estudiante al
+  publicar una foto del día.
+- `agenda/nuevo/page.tsx`, `comunicados/nuevo/page.tsx`,
+  `autorizaciones/nuevo/page.tsx`, `estudiantes/nuevo/page.tsx` -- los
+  chips de curso al dirigir un evento/comunicado/autorización o al elegir
+  el curso de un estudiante nuevo.
+- `horarios/page.tsx` (rama de staff), `personal/page.tsx` -- el
+  desplegable de curso para ver el horario y los chips de asignación de
+  profesor por grado.
+
+**A propósito NO se tocó**: `estudiantes/page.tsx` (la ficha maestra --
+ahí un admitido debe seguir viendose, con su insignia de estado visible,
+es "el dato de que existe"); `secretaria/page.tsx`, `reportes/page.tsx`,
+`plataforma/page.tsx` (ya desglosan por `enrollment_status`, es
+exactamente la métrica que se quiere conservar); `familias/*` (ficha de
+familia, el padre debe seguir viendo a su hijo ahí); la rama de
+`horarios/page.tsx` para guardian/student (es el horario de SU propio
+hijo/de sí mismo, no un roster de curso).
+
+**Verificado con datos reales antes y después**: para 1ro. Primaria, la
+consulta vieja de Asistencia devolvía 27 estudiantes; con el filtro, 24 --
+y de paso **sacó también a 2 `retirado`** que estaban colados por el mismo
+motivo (nadie pidió específicamente por los retirados, pero es exactamente
+la misma regla: solo `inscrito` es un curso activo). `npx tsc --noEmit`,
+`npm run lint` y `npm run build` limpios; `npm run smoke`: 46/46, sin
+regresión en ningún rol.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

@@ -71,7 +71,7 @@ export default async function NotasPage({
       .map((r) => ({ subject_id: r.subject_id, subject_name: r.subjects?.name ?? '—', grade_level: r.grade_level }))
   } else {
     const [{ data: studentsWithGrade }, { data: subjectsRaw }] = await Promise.all([
-      supabase.from('students').select('grade_level').eq('school_id', schoolId).not('grade_level', 'is', null).is('deleted_at', null),
+      supabase.from('students').select('grade_level').eq('school_id', schoolId).eq('enrollment_status', 'inscrito').not('grade_level', 'is', null).is('deleted_at', null),
       supabase.from('subjects').select('id, name').eq('school_id', schoolId).order('name'),
     ])
     const grades = Array.from(new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))).sort()
@@ -97,6 +97,7 @@ export default async function NotasPage({
       .select('id, first_name, last_name')
       .eq('school_id', schoolId)
       .eq('grade_level', selectedGrade)
+      .eq('enrollment_status', 'inscrito')
       .is('deleted_at', null)
       .order('last_name')
     students = studentsRaw ?? []

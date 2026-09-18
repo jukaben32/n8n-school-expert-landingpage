@@ -142,7 +142,7 @@ export default async function AutorizacionesPage() {
 
   const counts = await Promise.all(
     requests.map(async (r) => {
-      const studentsQuery = admin.from('students').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).is('deleted_at', null)
+      const studentsQuery = admin.from('students').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).eq('enrollment_status', 'inscrito').is('deleted_at', null)
       const { count: total } = r.grade_level ? await studentsQuery.eq('grade_level', r.grade_level) : await studentsQuery
       const { data: decisions } = await admin.from('authorization_responses').select('decision').eq('authorization_request_id', r.id)
       const autorizados = (decisions ?? []).filter((d) => d.decision === 'autorizado').length

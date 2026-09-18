@@ -48,6 +48,7 @@ export default async function RegistrarAsistenciaPage() {
       .from('students')
       .select('id, first_name, last_name, grade_level')
       .eq('school_id', schoolId)
+      .eq('enrollment_status', 'inscrito')
       .is('deleted_at', null)
       .order('last_name', { ascending: true }),
     supabase

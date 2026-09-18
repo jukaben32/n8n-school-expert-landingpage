@@ -31,6 +31,7 @@ export default async function NuevaAutorizacionPage() {
     .from('students')
     .select('grade_level')
     .eq('school_id', schoolId)
+    .eq('enrollment_status', 'inscrito')
     .not('grade_level', 'is', null)
     .is('deleted_at', null)
 

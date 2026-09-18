@@ -238,6 +238,7 @@ export default async function HorariosPage({ searchParams }: { searchParams: Pro
     .from('students')
     .select('grade_level')
     .eq('school_id', schoolId)
+    .eq('enrollment_status', 'inscrito')
     .not('grade_level', 'is', null)
     .is('deleted_at', null)
   const gradeOptions = Array.from(new Set((studentsWithGrade ?? []).map((s) => s.grade_level as string).filter(Boolean))).sort()

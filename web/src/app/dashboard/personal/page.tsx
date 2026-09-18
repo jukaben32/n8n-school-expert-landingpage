@@ -95,7 +95,7 @@ export default async function PersonalPage({
 
   const [{ data: assignments }, { data: studentsWithGrade }] = await Promise.all([
     supabase.from('teacher_assignments').select('staff_id, grade_level, category').eq('school_id', schoolId),
-    supabase.from('students').select('grade_level').eq('school_id', schoolId).not('grade_level', 'is', null).is('deleted_at', null),
+    supabase.from('students').select('grade_level').eq('school_id', schoolId).eq('enrollment_status', 'inscrito').not('grade_level', 'is', null).is('deleted_at', null),
   ])
   const assignmentsByStaff = new Map<string, { category: MessageCategory; gradeLevel: string | null }[]>()
   for (const a of assignments ?? []) {

@@ -48,6 +48,7 @@ export default async function AutorizacionDetallePage({ params }: { params: Prom
     .from('students')
     .select('id, first_name, last_name, family_id')
     .eq('school_id', schoolId)
+    .eq('enrollment_status', 'inscrito')
     .is('deleted_at', null)
     .order('last_name')
   const { data: studentsRaw } = request.grade_level ? await studentsQuery.eq('grade_level', request.grade_level) : await studentsQuery
