@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u04-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U4. Historia de mi familia y mi entorno",
+  "titulo": "Antes y ahora",
+  "descripcion": "Cómo cambian las personas y los lugares con el tiempo.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las personas y los lugares cambian con el tiempo. Hoy vamos a comparar cómo eran las cosas antes y cómo son ahora.",
+      "visual": "<div class='rotulo'>Antes y ahora</div><h1 class='chico'>Todo cambia con el tiempo</h1><div class='dib max'>⏳</div>"
+    },
+    {
+      "narracion": "Mira una foto de tu abuela cuando era niña: seguro se ve distinta a como es ahora. Las personas crecen y envejecen con el tiempo.",
+      "visual": "<h1>Las personas cambian</h1><div class='fila'><div class='dib mini'>👧</div><div class='signo'>➜</div><div class='dib mini'>👵</div></div>"
+    },
+    {
+      "narracion": "Los lugares también cambian. Donde antes había un terreno vacío, ahora puede haber una casa o un edificio nuevo.",
+      "visual": "<h1>Los lugares cambian</h1><div class='fila'><div class='dib mini'>🌳</div><div class='signo'>➜</div><div class='dib mini'>🏢</div></div>"
+    },
+    {
+      "narracion": "Antes, la gente no tenía celulares: se escribían cartas o usaban teléfonos con cable. Ahora todo es más rápido, con mensajes al instante.",
+      "visual": "<h1>La tecnología cambia</h1><div class='fila'><div class='dib mini'>✉️</div><div class='signo'>➜</div><div class='dib mini'>📱</div></div>"
+    },
+    {
+      "narracion": "Preguntarle a tus abuelos cómo era su vida cuando eran niños es una buena forma de aprender cómo han cambiado las cosas.",
+      "visual": "<h1 class='chico'>Pregúntale a tus abuelos</h1><div class='dib max'>👴</div>"
+    },
+    {
+      "narracion": "Practiquemos. Una foto vieja de tu escuela cuando era más pequeña, ¿muestra el antes o el ahora? Muestra el antes.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>📷</div><div class='signo'>➜</div><div class='dib mini'>⏮️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Las personas y los lugares cambian con el tiempo?",
+      "visual": "<div class='pregunta'>¿Cambian con el tiempo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí, cambian</div></div><div class='opcion'><div class='palabra'>No, siempre igual</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿A quién le puedes preguntar cómo era la vida antes?",
+      "visual": "<div class='pregunta'>¿A quién le preguntas?</div><div class='opciones'><div class='opcion'><div class='palabra'>A un bebé</div></div><div class='opcion'><div class='palabra'>A tus abuelos</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Antes de los celulares, ¿cómo se comunicaba la gente de lejos? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cómo se comunicaban antes?</div><div class='opciones'><div class='opcion'><div class='palabra'>Con cartas</div></div><div class='opcion'><div class='palabra'>Con mensajes al instante</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Las personas y los lugares cambian con el tiempo?",
+      "opciones": [
+        { "texto": "No, siempre igual", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Sí, cambian", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿A quién le puedes preguntar cómo era la vida antes?",
+      "opciones": [
+        { "texto": "A tus abuelos", "visual": "<div class='dib'>👴</div>" },
+        { "texto": "A un bebé", "visual": "<div class='dib'>👶</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Antes de los celulares, ¿cómo se comunicaba la gente de lejos?",
+      "opciones": [
+        { "texto": "Con mensajes al instante", "visual": "<div class='dib'>📱</div>" },
+        { "texto": "Con cartas", "visual": "<div class='dib'>✉️</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u10-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U10. El entorno natural y social",
+  "titulo": "Espacios naturales y espacios sociales",
+  "descripcion": "El río y el parque.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "A tu alrededor hay dos tipos de espacios: los naturales, que hizo la naturaleza, y los sociales, que hicieron las personas.",
+      "visual": "<div class='rotulo'>Dos tipos de espacios</div><h1 class='chico'>Naturales y sociales</h1><div class='fila'><div class='dib mini'>🏞️</div><div class='dib mini'>🏙️</div></div>"
+    },
+    {
+      "narracion": "Un espacio natural existe sin que las personas lo construyan, como un río, una montaña, o una playa.",
+      "visual": "<h1>Espacio natural</h1><div class='tarjeta destaca'><div class='dib medio'>🏞️</div><div class='pie'>Lo hizo la naturaleza</div></div>"
+    },
+    {
+      "narracion": "Un espacio social lo construyen las personas para vivir o divertirse, como un parque, una escuela, o una calle.",
+      "visual": "<h1>Espacio social</h1><div class='tarjeta destaca'><div class='dib medio'>🏫</div><div class='pie'>Lo construyen las personas</div></div>"
+    },
+    {
+      "narracion": "A veces las personas construyen dentro de un espacio natural, como cuando ponen bancos y juegos en un parque con árboles.",
+      "visual": "<h1 class='chico'>A veces se mezclan</h1><div class='dib max'>🌳</div>"
+    },
+    {
+      "narracion": "Los dos tipos de espacios son importantes: la naturaleza nos da agua y aire limpio, y los espacios sociales nos ayudan a vivir juntos.",
+      "visual": "<h1>Ambos importan</h1><div class='fila'><div class='dib mini'>💧</div><div class='dib mini'>🤝</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Un río donde nadie construyó nada, ¿es un espacio natural o social? Es un espacio natural.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🏞️</div><div class='signo'>➜</div><div class='dib mini'>🌿</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un río, ¿es un espacio natural o social?",
+      "visual": "<div class='pregunta'>¿El río es natural o social?</div><div class='opciones'><div class='opcion'><div class='palabra'>Natural</div></div><div class='opcion'><div class='palabra'>Social</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Una escuela, ¿es un espacio natural o social?",
+      "visual": "<div class='pregunta'>¿La escuela es natural o social?</div><div class='opciones'><div class='opcion'><div class='palabra'>Natural</div></div><div class='opcion'><div class='palabra'>Social</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Quién construye los espacios sociales? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién construye los espacios sociales?</div><div class='opciones'><div class='opcion'><div class='palabra'>Las personas</div></div><div class='opcion'><div class='palabra'>La naturaleza</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un río, ¿es un espacio natural o social?",
+      "opciones": [
+        { "texto": "Social", "visual": "<div class='dib'>🏙️</div>" },
+        { "texto": "Natural", "visual": "<div class='dib'>🏞️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Una escuela, ¿es un espacio natural o social?",
+      "opciones": [
+        { "texto": "Social", "visual": "<div class='dib'>🏫</div>" },
+        { "texto": "Natural", "visual": "<div class='dib'>🏞️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Quién construye los espacios sociales?",
+      "opciones": [
+        { "texto": "La naturaleza", "visual": "<div class='dib'>🌳</div>" },
+        { "texto": "Las personas", "visual": "<div class='dib'>👪</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

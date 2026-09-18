@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u10-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U10. El entorno natural y social",
+  "titulo": "Cuido mi ambiente",
+  "descripcion": "Acciones que ayudan y acciones que dañan.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cuidar el ambiente significa cuidar la naturaleza que nos rodea: el aire, el agua, las plantas y los animales.",
+      "visual": "<div class='rotulo'>Cuido mi ambiente</div><h1 class='chico'>Cuidar la naturaleza</h1><div class='dib max'>🌍</div>"
+    },
+    {
+      "narracion": "Botar la basura en su lugar, y no en la calle o el río, ayuda a mantener limpio el ambiente.",
+      "visual": "<h1>Acciones que ayudan</h1><div class='tarjeta destaca'><div class='dib medio'>🗑️</div><div class='pie'>Botar la basura en su lugar</div></div>"
+    },
+    {
+      "narracion": "Cerrar el grifo mientras te cepillas los dientes ayuda a no desperdiciar agua, que es un recurso muy importante.",
+      "visual": "<h1>Ahorrar agua</h1><div class='tarjeta destaca'><div class='dib medio'>🚰</div><div class='pie'>No desperdiciarla</div></div>"
+    },
+    {
+      "narracion": "Tirar basura en la calle o en el río, en cambio, daña el ambiente y puede hacerle daño a los animales que viven ahí.",
+      "visual": "<h1>Acciones que dañan</h1><div class='tarjeta destaca'><div class='dib medio'>🚯</div><div class='pie'>Tirar basura donde no debe</div></div>"
+    },
+    {
+      "narracion": "Cada persona, incluido tú, puede ayudar a cuidar el ambiente con pequeñas acciones todos los días.",
+      "visual": "<h1 class='chico'>Cada uno ayuda</h1><div class='dib max'>💚</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si terminas de tomar jugo y botas el envase en el zafacón, ¿estás ayudando o dañando el ambiente? Estás ayudando.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🧃</div><div class='signo'>➜</div><div class='dib mini'>🗑️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Dónde debes botar la basura?",
+      "visual": "<div class='pregunta'>¿Dónde botas la basura?</div><div class='opciones'><div class='opcion'><div class='palabra'>En su lugar</div></div><div class='opcion'><div class='palabra'>En el río</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué haces con el grifo mientras te cepillas los dientes?",
+      "visual": "<div class='pregunta'>¿Qué haces con el grifo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Lo cierras</div></div><div class='opcion'><div class='palabra'>Lo dejas abierto</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Tirar basura en la calle, ¿ayuda o daña el ambiente? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Tirar basura ayuda o daña?</div><div class='opciones'><div class='opcion'><div class='palabra'>Daña</div></div><div class='opcion'><div class='palabra'>Ayuda</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Dónde debes botar la basura?",
+      "opciones": [
+        { "texto": "En el río", "visual": "<div class='dib'>🏞️</div>" },
+        { "texto": "En su lugar", "visual": "<div class='dib'>🗑️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué haces con el grifo mientras te cepillas los dientes?",
+      "opciones": [
+        { "texto": "Lo cierras", "visual": "<div class='dib'>🚰</div>" },
+        { "texto": "Lo dejas abierto", "visual": "<div class='dib'>💧</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Tirar basura en la calle, ¿ayuda o daña el ambiente?",
+      "opciones": [
+        { "texto": "Ayuda", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Daña", "visual": "<div class='dib'>🚯</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

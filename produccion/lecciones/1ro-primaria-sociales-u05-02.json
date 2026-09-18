@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u05-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U5. Orientación espacial",
+  "titulo": "Un mapa sencillo de mi escuela",
+  "descripcion": "Leer y dibujar un mapa.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un mapa es un dibujo que muestra cómo están ubicados los lugares desde arriba, como si volaras encima de ellos.",
+      "visual": "<div class='rotulo'>El mapa</div><h1 class='chico'>Un dibujo visto desde arriba</h1><div class='dib max'>🗺️</div>"
+    },
+    {
+      "narracion": "En un mapa de tu escuela, verías el salón, el patio, el baño y la cocina, cada uno en su lugar, pero dibujados desde arriba.",
+      "visual": "<h1>Mapa de la escuela</h1><div class='fila apretada'><div class='dib mini'>🏫</div><div class='dib mini'>🏞️</div><div class='dib mini'>🚻</div></div>"
+    },
+    {
+      "narracion": "Los mapas usan dibujos simples o símbolos para representar cada lugar, en vez de escribir mucho texto.",
+      "visual": "<h1>Usa símbolos</h1><div class='dib max'>🔲</div><div class='pie'>Representan lugares</div>"
+    },
+    {
+      "narracion": "Para leer un mapa, buscas el símbolo del lugar que quieres encontrar, y ves dónde está en relación a los demás.",
+      "visual": "<h1 class='chico'>Cómo leerlo</h1><div class='dib max'>🔍</div>"
+    },
+    {
+      "narracion": "Tú también puedes dibujar un mapa sencillo: dibuja tu salón como un cuadrado, y a su lado el patio y el pasillo.",
+      "visual": "<h1>Dibuja tu propio mapa</h1><div class='dib max'>✏️</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si en el mapa ves el símbolo de una pelota, ¿qué lugar podría representar? El patio, donde juegas.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>⚽</div><div class='signo'>➜</div><div class='dib mini'>🏞️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Desde dónde se dibuja un mapa?",
+      "visual": "<div class='pregunta'>¿Desde dónde se dibuja?</div><div class='opciones'><div class='opcion'><div class='palabra'>Desde arriba</div></div><div class='opcion'><div class='palabra'>Desde adentro</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué usa un mapa para representar los lugares?",
+      "visual": "<div class='pregunta'>¿Qué usa un mapa?</div><div class='opciones'><div class='opcion'><div class='palabra'>Mucho texto</div></div><div class='opcion'><div class='palabra'>Símbolos</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Puedes dibujar tu propio mapa de la escuela? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Puedes dibujar tu propio mapa?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí</div></div><div class='opcion'><div class='palabra'>No</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Desde dónde se dibuja un mapa?",
+      "opciones": [
+        { "texto": "Desde adentro", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Desde arriba", "visual": "<div class='dib'>🗺️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué usa un mapa para representar los lugares?",
+      "opciones": [
+        { "texto": "Símbolos", "visual": "<div class='dib'>🔲</div>" },
+        { "texto": "Mucho texto", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Puedes dibujar tu propio mapa de la escuela?",
+      "opciones": [
+        { "texto": "No", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Sí", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u08-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U8. Valores y deberes",
+  "titulo": "Mis deberes en la casa y en la escuela",
+  "descripcion": "Responsabilidades.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un deber es algo que te toca hacer, una responsabilidad. Tienes deberes tanto en tu casa como en la escuela.",
+      "visual": "<div class='rotulo'>Mis deberes</div><h1 class='chico'>Responsabilidades</h1><div class='dib max'>✅</div>"
+    },
+    {
+      "narracion": "En casa, tus deberes pueden ser recoger tus juguetes, tender tu cama, o ayudar a poner la mesa.",
+      "visual": "<h1>Deberes en casa</h1><div class='fila apretada'><div class='dib mini'>🧸</div><div class='dib mini'>🛏️</div><div class='dib mini'>🍽️</div></div>"
+    },
+    {
+      "narracion": "En la escuela, tus deberes son escuchar a tu maestra, cuidar tus útiles, y respetar a tus compañeros.",
+      "visual": "<h1>Deberes en la escuela</h1><div class='fila apretada'><div class='dib mini'>👂</div><div class='dib mini'>✏️</div><div class='dib mini'>🤝</div></div>"
+    },
+    {
+      "narracion": "Cumplir tus deberes ayuda a que todo funcione mejor, tanto en tu casa como en tu salón de clase.",
+      "visual": "<h1 class='chico'>Ayuda a todos</h1><div class='dib max'>💪</div>"
+    },
+    {
+      "narracion": "Hacer tus deberes también te enseña a ser responsable, una cualidad que te va a servir toda la vida.",
+      "visual": "<h1>Te hace responsable</h1><div class='dib max'>⭐</div>"
+    },
+    {
+      "narracion": "Practiquemos. Después de jugar con tus juguetes, ¿qué deber tienes? Recogerlos.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🧸</div><div class='signo'>➜</div><div class='dib mini'>✅</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Después de jugar, ¿qué deber tienes en casa?",
+      "visual": "<div class='pregunta'>¿Qué deber tienes después de jugar?</div><div class='opciones'><div class='opcion'><div class='palabra'>Recoger los juguetes</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál es un deber en la escuela?",
+      "visual": "<div class='pregunta'>¿Cuál es un deber en la escuela?</div><div class='opciones'><div class='opcion'><div class='palabra'>Respetar a tus compañeros</div></div><div class='opcion'><div class='palabra'>Gritar en clase</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué te enseña cumplir tus deberes? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué te enseña?</div><div class='opciones'><div class='opcion'><div class='palabra'>A ser responsable</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Después de jugar, ¿qué deber tienes en casa?",
+      "opciones": [
+        { "texto": "Nada", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Recoger los juguetes", "visual": "<div class='dib'>🧸</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál es un deber en la escuela?",
+      "opciones": [
+        { "texto": "Respetar a tus compañeros", "visual": "<div class='dib'>🤝</div>" },
+        { "texto": "Gritar en clase", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué te enseña cumplir tus deberes?",
+      "opciones": [
+        { "texto": "Nada", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "A ser responsable", "visual": "<div class='dib'>⭐</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

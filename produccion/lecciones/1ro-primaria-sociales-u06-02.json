@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u06-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U6. La isla de Santo Domingo",
+  "titulo": "Mi pueblo en el mapa",
+  "descripcion": "Ubicar su comunidad.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes que vives en la República Dominicana. Hoy vamos a aprender a ubicar tu pueblo o ciudad en el mapa del país.",
+      "visual": "<div class='rotulo'>Mi pueblo</div><h1 class='chico'>Ubicado en el mapa</h1><div class='dib max'>📍</div>"
+    },
+    {
+      "narracion": "El mapa de la República Dominicana muestra las provincias, que son como pedazos grandes del país. Cada provincia tiene ciudades y pueblos.",
+      "visual": "<h1>Las provincias</h1><div class='dib max'>🗺️</div><div class='pie'>Pedazos grandes del país</div>"
+    },
+    {
+      "narracion": "Santo Domingo es la capital del país, y está marcada en el mapa con un símbolo especial, porque ahí vive el gobierno.",
+      "visual": "<h1>La capital</h1><div class='tarjeta destaca'><div class='dib medio'>⭐</div><div class='pie'>Santo Domingo</div></div>"
+    },
+    {
+      "narracion": "Tu pueblo o ciudad también está en algún lugar del mapa, dentro de su provincia. Preguntarle a un adulto te ayuda a encontrarlo.",
+      "visual": "<h1 class='chico'>Búscalo con un adulto</h1><div class='dib max'>🤝</div>"
+    },
+    {
+      "narracion": "Saber dónde está tu comunidad en el mapa te ayuda a entender qué tan cerca o lejos está de otros lugares del país.",
+      "visual": "<h1>Para qué sirve</h1><div class='dib max'>🧭</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si buscas la capital del país en el mapa, ¿qué nombre buscas? Santo Domingo.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🔍</div><div class='signo'>➜</div><div class='dib mini'>⭐</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cómo se llama la capital de tu país?",
+      "visual": "<div class='pregunta'>¿Cómo se llama la capital?</div><div class='opciones'><div class='opcion'><div class='palabra'>Santo Domingo</div></div><div class='opcion'><div class='palabra'>Puerto Príncipe</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué son las provincias?",
+      "visual": "<div class='pregunta'>¿Qué son las provincias?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un tipo de comida</div></div><div class='opcion'><div class='palabra'>Pedazos grandes del país</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Quién te puede ayudar a encontrar tu pueblo en el mapa? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién te ayuda a buscarlo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un adulto</div></div><div class='opcion'><div class='palabra'>Nadie</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cómo se llama la capital de tu país?",
+      "opciones": [
+        { "texto": "Puerto Príncipe", "visual": "<div class='dib'>🇭🇹</div>" },
+        { "texto": "Santo Domingo", "visual": "<div class='dib'>⭐</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué son las provincias?",
+      "opciones": [
+        { "texto": "Pedazos grandes del país", "visual": "<div class='dib'>🗺️</div>" },
+        { "texto": "Un tipo de comida", "visual": "<div class='dib'>🍽️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Quién te puede ayudar a encontrar tu pueblo en el mapa?",
+      "opciones": [
+        { "texto": "Nadie", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Un adulto", "visual": "<div class='dib'>🤝</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

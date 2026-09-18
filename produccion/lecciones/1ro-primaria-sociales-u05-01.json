@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u05-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U5. Orientación espacial",
+  "titulo": "Cerca, lejos, izquierda y derecha",
+  "descripcion": "Orientarse con referencias.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Para explicar dónde está algo, usamos palabras de orientación. Hoy vamos a aprender cerca, lejos, izquierda y derecha.",
+      "visual": "<div class='rotulo'>Orientación</div><h1 class='chico'>Cerca, lejos, izquierda, derecha</h1><div class='dib max'>🧭</div>"
+    },
+    {
+      "narracion": "Algo está cerca cuando lo puedes alcanzar caminando poco. La escuela puede estar cerca o lejos de tu casa.",
+      "visual": "<h1>Cerca y lejos</h1><div class='fila'><div class='dib mini'>🏠</div><div class='signo'>➜</div><div class='dib mini'>🏫</div></div>"
+    },
+    {
+      "narracion": "Tu mano izquierda y tu mano derecha son distintas. Levanta la mano con la que escribes: para la mayoría, esa es la derecha.",
+      "visual": "<h1>Izquierda y derecha</h1><div class='fila'><div class='tarjeta'><div class='detalle'>Izquierda</div></div><div class='tarjeta'><div class='detalle'>Derecha</div></div></div>"
+    },
+    {
+      "narracion": "Estas palabras te ayudan a dar indicaciones: dobla a la derecha, o camina hacia la izquierda, para explicar un camino.",
+      "visual": "<h1 class='chico'>Sirven para dar indicaciones</h1><div class='dib max'>🚶</div>"
+    },
+    {
+      "narracion": "Practicar con tu cuerpo ayuda: levanta la mano derecha, después la izquierda. Así aprendes cuál es cuál.",
+      "visual": "<h1>Practica con tu cuerpo</h1><div class='fila'><div class='dib mini'>🙋</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si el parque está a la vuelta de tu casa, ¿está cerca o lejos? Está cerca.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🏞️</div><div class='signo'>➜</div><div class='dib mini'>🏠</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Si algo lo alcanzas caminando poco, ¿está cerca o lejos?",
+      "visual": "<div class='pregunta'>¿Está cerca o lejos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Cerca</div></div><div class='opcion'><div class='palabra'>Lejos</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuántas manos tienes, una izquierda y una derecha?",
+      "visual": "<div class='pregunta'>¿Cuántas manos tienes?</div><div class='opciones'><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>1</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si un lugar está muy retirado de tu casa, ¿está cerca o lejos? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Está cerca o lejos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Lejos</div></div><div class='opcion'><div class='palabra'>Cerca</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Si algo lo alcanzas caminando poco, ¿está cerca o lejos?",
+      "opciones": [
+        { "texto": "Cerca", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Lejos", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuántas manos tienes, una izquierda y una derecha?",
+      "opciones": [
+        { "texto": "1", "visual": "<div class='num'>1</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si un lugar está muy retirado de tu casa, ¿está cerca o lejos?",
+      "opciones": [
+        { "texto": "Cerca", "visual": "<div class='dib'>✅</div>" },
+        { "texto": "Lejos", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

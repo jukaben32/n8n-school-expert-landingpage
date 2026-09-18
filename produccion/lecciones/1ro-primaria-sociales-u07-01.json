@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u07-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U7. Orientación temporal",
+  "titulo": "Ayer, hoy y mañana",
+  "descripcion": "Pasado, presente y futuro.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "El tiempo tiene tres momentos: ayer, hoy y mañana. Vamos a aprender qué significa cada uno.",
+      "visual": "<div class='rotulo'>El tiempo</div><h1 class='chico'>Ayer, hoy y mañana</h1><div class='fila'><div class='dib mini'>⏮️</div><div class='dib mini'>📍</div><div class='dib mini'>⏭️</div></div>"
+    },
+    {
+      "narracion": "Ayer es el día que ya pasó, antes de hoy. Lo que hiciste ayer ya no lo puedes cambiar, solo recordarlo.",
+      "visual": "<h1>Ayer</h1><div class='tarjeta destaca'><div class='dib medio'>⏮️</div><div class='pie'>El día que ya pasó</div></div>"
+    },
+    {
+      "narracion": "Hoy es el día en el que estás ahora mismo, mientras ves esta lección. Es el presente.",
+      "visual": "<h1>Hoy</h1><div class='tarjeta destaca'><div class='dib medio'>📍</div><div class='pie'>El día de ahora</div></div>"
+    },
+    {
+      "narracion": "Mañana es el día que todavía no ha llegado, el que viene después de hoy. Es el futuro.",
+      "visual": "<h1>Mañana</h1><div class='tarjeta destaca'><div class='dib medio'>⏭️</div><div class='pie'>El día que viene</div></div>"
+    },
+    {
+      "narracion": "Van siempre en ese orden: primero ayer, después hoy, y después mañana. Nunca al revés.",
+      "visual": "<h1 class='chico'>Siempre en orden</h1><div class='fila'><div class='dib mini'>⏮️</div><div class='signo'>➜</div><div class='dib mini'>📍</div><div class='signo'>➜</div><div class='dib mini'>⏭️</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si hoy es martes, ¿qué día fue ayer? Lunes, porque va justo antes.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='detalle'>Lunes</div><div class='signo'>➜</div><div class='detalle'>Martes</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál es el día que ya pasó?",
+      "visual": "<div class='pregunta'>¿Cuál es el día que ya pasó?</div><div class='opciones'><div class='opcion'><div class='palabra'>Ayer</div></div><div class='opcion'><div class='palabra'>Mañana</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál es el día de hoy mismo?",
+      "visual": "<div class='pregunta'>¿Cuál es el día de ahora?</div><div class='opciones'><div class='opcion'><div class='palabra'>Mañana</div></div><div class='opcion'><div class='palabra'>Hoy</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál es el día que todavía no ha llegado? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál día no ha llegado?</div><div class='opciones'><div class='opcion'><div class='palabra'>Mañana</div></div><div class='opcion'><div class='palabra'>Ayer</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál es el día que ya pasó?",
+      "opciones": [
+        { "texto": "Ayer", "visual": "<div class='dib'>⏮️</div>" },
+        { "texto": "Mañana", "visual": "<div class='dib'>⏭️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál es el día de hoy mismo?",
+      "opciones": [
+        { "texto": "Mañana", "visual": "<div class='dib'>⏭️</div>" },
+        { "texto": "Hoy", "visual": "<div class='dib'>📍</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cuál es el día que todavía no ha llegado?",
+      "opciones": [
+        { "texto": "Mañana", "visual": "<div class='dib'>⏭️</div>" },
+        { "texto": "Ayer", "visual": "<div class='dib'>⏮️</div>" }
+      ],
+      "correcta": 0
+    }
+  ]
+}

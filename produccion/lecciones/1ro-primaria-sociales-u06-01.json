@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u06-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U6. La isla de Santo Domingo",
+  "titulo": "La isla donde vivo",
+  "descripcion": "República Dominicana y Haití.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Vives en una isla que se llama La Española, o isla de Santo Domingo. En esta isla hay dos países. Vamos a conocerlos.",
+      "visual": "<div class='rotulo'>Mi isla</div><h1 class='chico'>La isla de Santo Domingo</h1><div class='dib max'>🏝️</div>"
+    },
+    {
+      "narracion": "Tú vives en la República Dominicana, que ocupa la parte este de la isla. Su capital es Santo Domingo.",
+      "visual": "<h1>República Dominicana</h1><div class='tarjeta destaca'><div class='dib medio'>🇩🇴</div><div class='pie'>Tu país</div></div>"
+    },
+    {
+      "narracion": "El otro país de la isla se llama Haití, y ocupa la parte oeste. Los dos países comparten la misma isla, pero son distintos.",
+      "visual": "<h1>Haití</h1><div class='tarjeta destaca'><div class='dib medio'>🇭🇹</div><div class='pie'>El otro país de la isla</div></div>"
+    },
+    {
+      "narracion": "Aunque están en la misma isla, cada país tiene su propia bandera, su propio idioma principal, y su propio gobierno.",
+      "visual": "<h1 class='chico'>Cada uno es distinto</h1><div class='fila'><div class='dib mini'>🇩🇴</div><div class='dib mini'>🇭🇹</div></div>"
+    },
+    {
+      "narracion": "En la República Dominicana se habla español, mientras que en Haití se habla creole y francés.",
+      "visual": "<h1>El idioma</h1><div class='fila'><div class='detalle'>Español</div><div class='detalle'>Creole y francés</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. ¿Cuál es el nombre de tu país? La República Dominicana.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🇩🇴</div><div class='pie'>República Dominicana</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuántos países hay en la isla de Santo Domingo?",
+      "visual": "<div class='pregunta'>¿Cuántos países hay?</div><div class='opciones'><div class='opcion'><div class='num'>2</div></div><div class='opcion'><div class='num'>5</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cómo se llama el país donde vives?",
+      "visual": "<div class='pregunta'>¿Cómo se llama tu país?</div><div class='opciones'><div class='opcion'><div class='palabra'>Haití</div></div><div class='opcion'><div class='palabra'>República Dominicana</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué idioma se habla en la República Dominicana? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué idioma se habla aquí?</div><div class='opciones'><div class='opcion'><div class='palabra'>Español</div></div><div class='opcion'><div class='palabra'>Creole</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuántos países hay en la isla de Santo Domingo?",
+      "opciones": [
+        { "texto": "5", "visual": "<div class='num'>5</div>" },
+        { "texto": "2", "visual": "<div class='num'>2</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cómo se llama el país donde vives?",
+      "opciones": [
+        { "texto": "República Dominicana", "visual": "<div class='dib'>🇩🇴</div>" },
+        { "texto": "Haití", "visual": "<div class='dib'>🇭🇹</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Qué idioma se habla en la República Dominicana?",
+      "opciones": [
+        { "texto": "Creole", "visual": "<div class='dib'>🇭🇹</div>" },
+        { "texto": "Español", "visual": "<div class='dib'>🇩🇴</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

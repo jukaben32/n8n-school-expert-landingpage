@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u08-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U8. Valores y deberes",
+  "titulo": "Los símbolos patrios",
+  "descripcion": "La Bandera y el Himno Nacional.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Los símbolos patrios representan a tu país. Hoy vamos a conocer dos de los más importantes: la Bandera y el Himno Nacional.",
+      "visual": "<div class='rotulo'>Símbolos patrios</div><h1 class='chico'>Representan a mi país</h1><div class='dib max'>🇩🇴</div>"
+    },
+    {
+      "narracion": "La Bandera de la República Dominicana tiene una cruz blanca, con cuadros azules y rojos. Se iza en la escuela y en muchos lugares públicos.",
+      "visual": "<h1>La Bandera</h1><div class='tarjeta destaca'><div class='dib medio'>🇩🇴</div><div class='pie'>Cruz blanca, azul y rojo</div></div>"
+    },
+    {
+      "narracion": "El Himno Nacional es una canción especial que se canta para honrar al país, en actos importantes de la escuela y del gobierno.",
+      "visual": "<h1>El Himno Nacional</h1><div class='tarjeta destaca'><div class='dib medio'>🎵</div><div class='pie'>Se canta con respeto</div></div>"
+    },
+    {
+      "narracion": "Cuando cantas el Himno o ves la Bandera, es correcto mantenerte de pie, en silencio y con respeto.",
+      "visual": "<h1 class='chico'>Con respeto</h1><div class='dib max'>🧍</div>"
+    },
+    {
+      "narracion": "Estos símbolos nos recuerdan que todos formamos parte del mismo país, aunque vivamos en lugares distintos.",
+      "visual": "<h1>Nos unen</h1><div class='dib max'>🤝</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si estás en la escuela y empiezan a cantar el Himno Nacional, ¿qué debes hacer? Ponerte de pie con respeto.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🎵</div><div class='signo'>➜</div><div class='dib mini'>🧍</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuáles son los colores de la Bandera Dominicana?",
+      "visual": "<div class='pregunta'>¿De qué colores es la Bandera?</div><div class='opciones'><div class='opcion'><div class='palabra'>Blanco, azul y rojo</div></div><div class='opcion'><div class='palabra'>Verde y amarillo</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Qué es el Himno Nacional?",
+      "visual": "<div class='pregunta'>¿Qué es el Himno Nacional?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un juego</div></div><div class='opcion'><div class='palabra'>Una canción especial</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cómo debes comportarte cuando cantan el Himno? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cómo te comportas?</div><div class='opciones'><div class='opcion'><div class='palabra'>De pie y con respeto</div></div><div class='opcion'><div class='palabra'>Corriendo</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuáles son los colores de la Bandera Dominicana?",
+      "opciones": [
+        { "texto": "Verde y amarillo", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Blanco, azul y rojo", "visual": "<div class='dib'>🇩🇴</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué es el Himno Nacional?",
+      "opciones": [
+        { "texto": "Una canción especial", "visual": "<div class='dib'>🎵</div>" },
+        { "texto": "Un juego", "visual": "<div class='dib'>⚽</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cómo debes comportarte cuando cantan el Himno?",
+      "opciones": [
+        { "texto": "Corriendo", "visual": "<div class='dib'>🏃</div>" },
+        { "texto": "De pie y con respeto", "visual": "<div class='dib'>🧍</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

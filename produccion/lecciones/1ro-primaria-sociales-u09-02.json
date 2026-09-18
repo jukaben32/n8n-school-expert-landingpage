@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u09-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U9. Mis derechos y mis necesidades",
+  "titulo": "Mis derechos",
+  "descripcion": "Y el respeto a los de los demás.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un derecho es algo que todo niño merece tener, sin importar quién sea. Hoy vamos a conocer algunos de tus derechos.",
+      "visual": "<div class='rotulo'>Mis derechos</div><h1 class='chico'>Lo que todo niño merece</h1><div class='dib max'>⚖️</div>"
+    },
+    {
+      "narracion": "Tienes derecho a un nombre, a una familia que te cuide, y a jugar. También tienes derecho a ir a la escuela y a estar sano.",
+      "visual": "<h1>Algunos derechos</h1><div class='fila apretada'><div class='dib mini'>👪</div><div class='dib mini'>🎮</div><div class='dib mini'>🎓</div></div>"
+    },
+    {
+      "narracion": "Tienes derecho a que nadie te trate mal, ni te haga daño, ni con palabras ni con golpes.",
+      "visual": "<h1>Derecho a estar seguro</h1><div class='dib max'>🛡️</div><div class='pie'>Nadie debe hacerte daño</div>"
+    },
+    {
+      "narracion": "Pero también tienes la responsabilidad de respetar los derechos de los demás: de tus compañeros, tus hermanos, y todas las personas.",
+      "visual": "<h1 class='chico'>Y respetar a los demás</h1><div class='dib max'>🤝</div>"
+    },
+    {
+      "narracion": "Si tú tienes derecho a jugar sin que te molesten, tus compañeros también lo tienen. Los derechos son para todos por igual.",
+      "visual": "<h1>Para todos por igual</h1><div class='fila'><div class='dib mini'>🧒</div><div class='dib mini'>🧒</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si un compañero te empuja sin querer jugar contigo, ¿está respetando tu derecho a que no te hagan daño? No lo está respetando.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🙅</div><div class='signo'>➜</div><div class='dib mini'>❌</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Tienes derecho a que nadie te haga daño?",
+      "visual": "<div class='pregunta'>¿Tienes derecho a estar seguro?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí</div></div><div class='opcion'><div class='palabra'>No</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Debes respetar los derechos de los demás también?",
+      "visual": "<div class='pregunta'>¿Debes respetar a los demás?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí</div></div><div class='opcion'><div class='palabra'>Solo a mí mismo</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Los derechos son solo para algunos niños, o para todos por igual? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para quiénes son los derechos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para todos por igual</div></div><div class='opcion'><div class='palabra'>Solo para algunos</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Tienes derecho a que nadie te haga daño?",
+      "opciones": [
+        { "texto": "No", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Sí", "visual": "<div class='dib'>🛡️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Debes respetar los derechos de los demás también?",
+      "opciones": [
+        { "texto": "Sí", "visual": "<div class='dib'>🤝</div>" },
+        { "texto": "Solo a mí mismo", "visual": "<div class='dib'>❌</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Los derechos son solo para algunos niños, o para todos por igual?",
+      "opciones": [
+        { "texto": "Solo para algunos", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Para todos por igual", "visual": "<div class='dib'>✅</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

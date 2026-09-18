@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u09-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U9. Mis derechos y mis necesidades",
+  "titulo": "Lo que todo niño necesita",
+  "descripcion": "Alimentación, salud, vivienda, educación.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todo niño necesita ciertas cosas para crecer sano y feliz. Hoy vamos a conocer cuatro necesidades muy importantes.",
+      "visual": "<div class='rotulo'>Lo que necesito</div><h1 class='chico'>Para crecer sano</h1><div class='dib max'>👶</div>"
+    },
+    {
+      "narracion": "La alimentación es necesitar comer suficiente y comida que te haga bien, para que tu cuerpo crezca fuerte.",
+      "visual": "<h1>Alimentación</h1><div class='tarjeta destaca'><div class='dib medio'>🍽️</div><div class='pie'>Comer bien</div></div>"
+    },
+    {
+      "narracion": "La salud es necesitar ir al médico cuando estás enfermo, y recibir tus vacunas para prevenir enfermedades.",
+      "visual": "<h1>Salud</h1><div class='tarjeta destaca'><div class='dib medio'>🩺</div><div class='pie'>Ir al médico</div></div>"
+    },
+    {
+      "narracion": "La vivienda es necesitar un lugar seguro donde vivir, que te proteja del sol, la lluvia, y te dé un lugar para dormir.",
+      "visual": "<h1>Vivienda</h1><div class='tarjeta destaca'><div class='dib medio'>🏠</div><div class='pie'>Un lugar seguro</div></div>"
+    },
+    {
+      "narracion": "Y la educación es necesitar ir a la escuela para aprender, como haces tú ahora mismo con esta lección.",
+      "visual": "<h1>Educación</h1><div class='tarjeta destaca'><div class='dib medio'>🎓</div><div class='pie'>Ir a la escuela</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si un niño necesita un lugar seguro donde dormir, ¿de qué necesidad estamos hablando? De la vivienda.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🛏️</div><div class='signo'>➜</div><div class='dib mini'>🏠</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué necesitas para que tu cuerpo crezca fuerte?",
+      "visual": "<div class='pregunta'>¿Qué necesitas para crecer fuerte?</div><div class='opciones'><div class='opcion'><div class='palabra'>Comer bien</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿A dónde vas cuando estás enfermo?",
+      "visual": "<div class='pregunta'>¿A dónde vas si estás enfermo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Al médico</div></div><div class='opcion'><div class='palabra'>Al parque</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué vas a la escuela? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué vas a la escuela?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para aprender</div></div><div class='opcion'><div class='palabra'>Para dormir</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué necesitas para que tu cuerpo crezca fuerte?",
+      "opciones": [
+        { "texto": "Nada", "visual": "<div class='dib'>❌</div>" },
+        { "texto": "Comer bien", "visual": "<div class='dib'>🍽️</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿A dónde vas cuando estás enfermo?",
+      "opciones": [
+        { "texto": "Al médico", "visual": "<div class='dib'>🩺</div>" },
+        { "texto": "Al parque", "visual": "<div class='dib'>🏞️</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Para qué vas a la escuela?",
+      "opciones": [
+        { "texto": "Para dormir", "visual": "<div class='dib'>😴</div>" },
+        { "texto": "Para aprender", "visual": "<div class='dib'>🎓</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}

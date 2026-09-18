@@ -1,0 +1,80 @@
+{
+  "id": "1ro-primaria-sociales-u07-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Sociales",
+  "unidad": "U7. Orientación temporal",
+  "titulo": "La línea del tiempo de mi día",
+  "descripcion": "Mañana, tarde y noche.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Tu día también se divide en tres partes: la mañana, la tarde y la noche. Vamos a ver qué haces en cada una.",
+      "visual": "<div class='rotulo'>Mi día</div><h1 class='chico'>Mañana, tarde y noche</h1><div class='fila'><div class='dib mini'>🌅</div><div class='dib mini'>☀️</div><div class='dib mini'>🌙</div></div>"
+    },
+    {
+      "narracion": "En la mañana te despiertas, desayunas, y vas a la escuela. Es la primera parte del día.",
+      "visual": "<h1>La mañana</h1><div class='tarjeta destaca'><div class='dib medio'>🌅</div><div class='pie'>Te despiertas y desayunas</div></div>"
+    },
+    {
+      "narracion": "En la tarde, sales de la escuela, almuerzas, y quizás haces tareas o juegas un rato.",
+      "visual": "<h1>La tarde</h1><div class='tarjeta destaca'><div class='dib medio'>☀️</div><div class='pie'>Sales de la escuela</div></div>"
+    },
+    {
+      "narracion": "En la noche cenas, te bañas, y te preparas para dormir. Es la última parte del día.",
+      "visual": "<h1>La noche</h1><div class='tarjeta destaca'><div class='dib medio'>🌙</div><div class='pie'>Te preparas para dormir</div></div>"
+    },
+    {
+      "narracion": "Estas tres partes siempre van en el mismo orden: primero la mañana, luego la tarde, y por último la noche.",
+      "visual": "<h1 class='chico'>Siempre en orden</h1><div class='fila'><div class='dib mini'>🌅</div><div class='signo'>➜</div><div class='dib mini'>☀️</div><div class='signo'>➜</div><div class='dib mini'>🌙</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si acabas de despertarte y estás desayunando, ¿en qué parte del día estás? En la mañana.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🍳</div><div class='signo'>➜</div><div class='dib mini'>🌅</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿En qué parte del día te despiertas y desayunas?",
+      "visual": "<div class='pregunta'>¿Cuándo te despiertas y desayunas?</div><div class='opciones'><div class='opcion'><div class='palabra'>En la mañana</div></div><div class='opcion'><div class='palabra'>En la noche</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿En qué parte del día te preparas para dormir?",
+      "visual": "<div class='pregunta'>¿Cuándo te preparas para dormir?</div><div class='opciones'><div class='opcion'><div class='palabra'>En la mañana</div></div><div class='opcion'><div class='palabra'>En la noche</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cuál parte del día viene en el medio, entre la mañana y la noche? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál va en el medio?</div><div class='opciones'><div class='opcion'><div class='palabra'>La tarde</div></div><div class='opcion'><div class='palabra'>La mañana</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿En qué parte del día te despiertas y desayunas?",
+      "opciones": [
+        { "texto": "En la noche", "visual": "<div class='dib'>🌙</div>" },
+        { "texto": "En la mañana", "visual": "<div class='dib'>🌅</div>" }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿En qué parte del día te preparas para dormir?",
+      "opciones": [
+        { "texto": "En la noche", "visual": "<div class='dib'>🌙</div>" },
+        { "texto": "En la mañana", "visual": "<div class='dib'>🌅</div>" }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál parte del día viene en el medio, entre la mañana y la noche?",
+      "opciones": [
+        { "texto": "La mañana", "visual": "<div class='dib'>🌅</div>" },
+        { "texto": "La tarde", "visual": "<div class='dib'>☀️</div>" }
+      ],
+      "correcta": 1
+    }
+  ]
+}
