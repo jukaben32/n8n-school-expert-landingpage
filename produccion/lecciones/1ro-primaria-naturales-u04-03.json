@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u04-03",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U4. Cuidemos nuestra salud",
+  "titulo": "Cuando me enfermo y las vacunas",
+  "descripcion": "Gripe, dengue, y por qué vacunarse.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "A veces, aunque nos cuidemos, nos enfermamos. Hoy vamos a hablar de dos enfermedades comunes y de las vacunas.",
+      "visual": "<div class='rotulo'>Cuando me enfermo</div><h1 class='chico'>Enfermedades y vacunas</h1><div class='dib max'>🤒</div>"
+    },
+    {
+      "narracion": "La gripe te da tos, fiebre y dolor de cabeza. Se contagia fácil, así que si tienes gripe es mejor quedarte en casa y descansar.",
+      "visual": "<h1>La gripe</h1><div class='tarjeta destaca'><div class='dib medio'>🤧</div><div class='pie'>Tos, fiebre, dolor de cabeza</div></div>"
+    },
+    {
+      "narracion": "El dengue lo transmite el mosquito Aedes aegypti. Para evitarlo, hay que eliminar el agua estancada donde ponen sus huevos.",
+      "visual": "<h1>El dengue</h1><div class='tarjeta destaca'><div class='dib medio'>🦟</div><div class='pie'>Lo transmite un mosquito</div></div>"
+    },
+    {
+      "narracion": "Las vacunas son inyecciones que ayudan a tu cuerpo a defenderse de enfermedades graves, antes de que te den.",
+      "visual": "<h1>Las vacunas</h1><div class='dib max'>💉</div><div class='pie'>Te protegen antes</div>"
+    },
+    {
+      "narracion": "Vacunarte no solo te protege a ti: también protege a las personas a tu alrededor, sobre todo a los más pequeños y a los abuelos.",
+      "visual": "<h1 class='chico'>Protegen a todos</h1><div class='fila'><div class='dib mini'>👶</div><div class='dib mini'>👵</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si ves agua estancada en un envase del patio, ¿qué deberías hacer? Vaciarla, para que no críe mosquitos de dengue.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib medio'>🪣</div><div class='signo'>➜</div><div class='dib medio'>🚫🦟</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué te da la gripe?",
+      "visual": "<div class='pregunta'>¿Qué síntomas da la gripe?</div><div class='opciones'><div class='opcion'><div class='palabra'>Tos y fiebre</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Quién transmite el dengue?",
+      "visual": "<div class='pregunta'>¿Quién transmite el dengue?</div><div class='opciones'><div class='opcion'><div class='palabra'>Un mosquito</div></div><div class='opcion'><div class='palabra'>Un perro</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué sirven las vacunas? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué sirven las vacunas?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para defenderte de enfermedades</div></div><div class='opcion'><div class='palabra'>Para jugar</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué síntomas te da la gripe?",
+      "opciones": [
+        {
+          "texto": "Tos y fiebre",
+          "visual": "<div class='dib'>🤧</div>"
+        },
+        {
+          "texto": "Nada",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Quién transmite el dengue?",
+      "opciones": [
+        {
+          "texto": "Un mosquito",
+          "visual": "<div class='dib'>🦟</div>"
+        },
+        {
+          "texto": "Un perro",
+          "visual": "<div class='dib'>🐕</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Para qué sirven las vacunas?",
+      "opciones": [
+        {
+          "texto": "Para jugar",
+          "visual": "<div class='dib'>⚽</div>"
+        },
+        {
+          "texto": "Para defenderte de enfermedades",
+          "visual": "<div class='dib'>💉</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u07-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U7. El sonido",
+  "titulo": "Sonidos fuertes y suaves",
+  "descripcion": "La intensidad del sonido.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todos los días escuchas muchos sonidos, y no todos suenan igual de fuerte. Hoy vamos a hablar de la intensidad del sonido.",
+      "visual": "<div class='rotulo'>El sonido</div><h1 class='chico'>Fuerte y suave</h1><div class='dib max'>🔊</div>"
+    },
+    {
+      "narracion": "Un sonido fuerte se escucha con mucha intensidad, como un trueno o una moto pasando cerca. A veces hasta molesta un poco.",
+      "visual": "<h1>Sonido fuerte</h1><div class='tarjeta destaca'><div class='dib medio'>⛈️</div><div class='pie'>Mucha intensidad</div></div>"
+    },
+    {
+      "narracion": "Un sonido suave se escucha bajito, como un susurro o una hoja cayendo. Tienes que poner atención para escucharlo.",
+      "visual": "<h1>Sonido suave</h1><div class='tarjeta destaca'><div class='dib medio'>🍃</div><div class='pie'>Poca intensidad</div></div>"
+    },
+    {
+      "narracion": "Hay que cuidar los oídos de sonidos muy fuertes por mucho tiempo, como música a todo volumen, porque puede hacer daño.",
+      "visual": "<h1 class='chico'>Cuida tus oídos</h1><div class='dib max'>👂</div>"
+    },
+    {
+      "narracion": "En un lugar como una biblioteca, se pide hablar suave, para no molestar a los demás con sonidos fuertes.",
+      "visual": "<h1>En lugares silenciosos</h1><div class='dib max'>🤫</div>"
+    },
+    {
+      "narracion": "Practiquemos. Un cohete de fuegos artificiales, ¿es un sonido fuerte o suave? Fuerte.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🎆</div><div class='signo'>➜</div><div class='dib mini'>🔊</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un trueno, ¿es un sonido fuerte o suave?",
+      "visual": "<div class='pregunta'>¿El trueno es fuerte o suave?</div><div class='opciones'><div class='opcion'><div class='palabra'>Fuerte</div></div><div class='opcion'><div class='palabra'>Suave</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Un susurro, ¿es un sonido fuerte o suave?",
+      "visual": "<div class='pregunta'>¿El susurro es fuerte o suave?</div><div class='opciones'><div class='opcion'><div class='palabra'>Suave</div></div><div class='opcion'><div class='palabra'>Fuerte</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Debes cuidar tus oídos de sonidos muy fuertes por mucho tiempo? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Hay que cuidar los oídos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí</div></div><div class='opcion'><div class='palabra'>No</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un trueno, ¿es un sonido fuerte o suave?",
+      "opciones": [
+        {
+          "texto": "Fuerte",
+          "visual": "<div class='dib'>⛈️</div>"
+        },
+        {
+          "texto": "Suave",
+          "visual": "<div class='dib'>🍃</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Un susurro, ¿es un sonido fuerte o suave?",
+      "opciones": [
+        {
+          "texto": "Fuerte",
+          "visual": "<div class='dib'>⛈️</div>"
+        },
+        {
+          "texto": "Suave",
+          "visual": "<div class='dib'>🍃</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Hay que cuidar los oídos de sonidos muy fuertes por mucho tiempo?",
+      "opciones": [
+        {
+          "texto": "No",
+          "visual": "<div class='dib'>❌</div>"
+        },
+        {
+          "texto": "Sí",
+          "visual": "<div class='dib'>✅</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

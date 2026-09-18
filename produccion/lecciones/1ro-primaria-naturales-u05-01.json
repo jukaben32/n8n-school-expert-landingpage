@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u05-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U5. La materia",
+  "titulo": "Sólido, líquido y gas",
+  "descripcion": "Los tres estados de la materia, con agua, hielo y vapor.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todo lo que tocas está hecho de materia, y la materia puede estar en tres estados: sólido, líquido y gas. Vamos a conocerlos con el agua.",
+      "visual": "<div class='rotulo'>Los tres estados</div><h1 class='chico'>Sólido, líquido y gas</h1><div class='fila apretada'><div class='dib mini'>🧊</div><div class='dib mini'>💧</div><div class='dib mini'>💨</div></div>"
+    },
+    {
+      "narracion": "El sólido tiene forma fija y no se puede aplastar fácil. El hielo es agua en estado sólido.",
+      "visual": "<h1>El sólido</h1><div class='tarjeta destaca'><div class='dib medio'>🧊</div><div class='pie'>Tiene forma fija</div></div>"
+    },
+    {
+      "narracion": "El líquido no tiene forma fija: toma la forma del envase donde lo pongas. El agua normal es un líquido.",
+      "visual": "<h1>El líquido</h1><div class='tarjeta destaca'><div class='dib medio'>💧</div><div class='pie'>Toma la forma del envase</div></div>"
+    },
+    {
+      "narracion": "El gas no tiene forma fija ni la puedes ver casi siempre. El vapor que sale de una olla hirviendo es agua en estado gaseoso.",
+      "visual": "<h1>El gas</h1><div class='tarjeta destaca'><div class='dib medio'>💨</div><div class='pie'>No se ve casi siempre</div></div>"
+    },
+    {
+      "narracion": "El agua puede cambiar de estado: si el hielo se calienta, se vuelve líquido; si el agua hierve, se vuelve vapor.",
+      "visual": "<h1 class='chico'>El agua cambia</h1><div class='fila'><div class='dib mini'>🧊</div><div class='signo'>➜</div><div class='dib mini'>💧</div><div class='signo'>➜</div><div class='dib mini'>💨</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Una piedra, ¿es sólida, líquida o gaseosa? Sólida, porque tiene forma fija.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🪨</div><div class='signo'>➜</div><div class='dib mini'>🧊</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. El hielo, ¿en qué estado está?",
+      "visual": "<div class='pregunta'>¿En qué estado está el hielo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sólido</div></div><div class='opcion'><div class='palabra'>Gas</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Cuál estado no tiene forma fija y toma la forma del envase?",
+      "visual": "<div class='pregunta'>¿Cuál toma la forma del envase?</div><div class='opciones'><div class='opcion'><div class='palabra'>El líquido</div></div><div class='opcion'><div class='palabra'>El sólido</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. El vapor de una olla hirviendo, ¿en qué estado está? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿En qué estado está el vapor?</div><div class='opciones'><div class='opcion'><div class='palabra'>Gas</div></div><div class='opcion'><div class='palabra'>Sólido</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "El hielo, ¿en qué estado está?",
+      "opciones": [
+        {
+          "texto": "Sólido",
+          "visual": "<div class='dib'>🧊</div>"
+        },
+        {
+          "texto": "Gas",
+          "visual": "<div class='dib'>💨</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Cuál estado no tiene forma fija y toma la forma del envase?",
+      "opciones": [
+        {
+          "texto": "El sólido",
+          "visual": "<div class='dib'>🧊</div>"
+        },
+        {
+          "texto": "El líquido",
+          "visual": "<div class='dib'>💧</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "El vapor de una olla hirviendo, ¿en qué estado está?",
+      "opciones": [
+        {
+          "texto": "Sólido",
+          "visual": "<div class='dib'>🧊</div>"
+        },
+        {
+          "texto": "Gas",
+          "visual": "<div class='dib'>💨</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

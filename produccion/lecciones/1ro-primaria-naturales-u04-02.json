@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u04-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U4. Cuidemos nuestra salud",
+  "titulo": "Alimentos que me hacen bien",
+  "descripcion": "Elegir bien qué comer.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Lo que comes cada día afecta cómo crece tu cuerpo y cuánta energía tienes. Hoy vamos a aprender a elegir bien qué comer.",
+      "visual": "<div class='rotulo'>Comer bien</div><h1 class='chico'>Cuido lo que como</h1><div class='dib max'>🍽️</div>"
+    },
+    {
+      "narracion": "Las frutas y los vegetales te dan vitaminas que fortalecen tu cuerpo, como el mango, la guineo, la lechuga y la zanahoria.",
+      "visual": "<h1>Frutas y vegetales</h1><div class='fila apretada'><div class='dib mini'>🥭</div><div class='dib mini'>🥦</div><div class='dib mini'>🥕</div></div>"
+    },
+    {
+      "narracion": "Los alimentos que te dan proteína te ayudan a crecer fuerte, como el pollo, el huevo, el pescado y las habichuelas.",
+      "visual": "<h1>Proteínas</h1><div class='fila apretada'><div class='dib mini'>🍗</div><div class='dib mini'>🥚</div><div class='dib mini'>🐟</div></div>"
+    },
+    {
+      "narracion": "Comer mucho dulce, refresco y comida frita puede hacerte daño si lo comes todos los días. Está bien de vez en cuando, no siempre.",
+      "visual": "<h1>Con moderación</h1><div class='fila apretada'><div class='dib mini'>🍭</div><div class='dib mini'>🥤</div><div class='dib mini'>🍟</div></div>"
+    },
+    {
+      "narracion": "También es muy importante tomar suficiente agua durante el día para que tu cuerpo funcione bien.",
+      "visual": "<h1 class='chico'>Toma agua</h1><div class='dib max'>💧</div>"
+    },
+    {
+      "narracion": "Practiquemos. Entre una manzana y una funda de dulces, ¿cuál te ayuda más a crecer sano? La manzana.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib medio'>🍎</div><div class='signo'>&gt;</div><div class='dib medio'>🍬</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué te dan las frutas y los vegetales?",
+      "visual": "<div class='pregunta'>¿Qué te dan las frutas y vegetales?</div><div class='opciones'><div class='opcion'><div class='palabra'>Vitaminas</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Debes comer dulces y frituras todos los días?",
+      "visual": "<div class='pregunta'>¿Comes dulces y frituras todos los días?</div><div class='opciones'><div class='opcion'><div class='palabra'>No, con moderación</div></div><div class='opcion'><div class='palabra'>Sí, siempre</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Entre una manzana y una funda de dulces, ¿cuál te ayuda más a crecer sano? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál te ayuda más a crecer sano?</div><div class='opciones'><div class='opcion'><div class='dib'>🍎</div></div><div class='opcion'><div class='dib'>🍬</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué te dan las frutas y los vegetales?",
+      "opciones": [
+        {
+          "texto": "Vitaminas",
+          "visual": "<div class='dib'>🥦</div>"
+        },
+        {
+          "texto": "Nada",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Debes comer dulces y frituras todos los días?",
+      "opciones": [
+        {
+          "texto": "No, con moderación",
+          "visual": "<div class='dib'>✅</div>"
+        },
+        {
+          "texto": "Sí, siempre",
+          "visual": "<div class='dib'>🍬</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Entre una manzana y una funda de dulces, ¿cuál te ayuda más a crecer sano?",
+      "opciones": [
+        {
+          "texto": "La funda de dulces",
+          "visual": "<div class='dib'>🍬</div>"
+        },
+        {
+          "texto": "La manzana",
+          "visual": "<div class='dib'>🍎</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

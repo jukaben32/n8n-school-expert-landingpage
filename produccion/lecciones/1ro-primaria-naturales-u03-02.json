@@ -59,24 +59,42 @@
     {
       "pregunta": "¿Con qué sentido escuchas la música?",
       "opciones": [
-        { "texto": "El oído", "visual": "<div class='dib'>👂</div>" },
-        { "texto": "El olfato", "visual": "<div class='dib'>👃</div>" }
+        {
+          "texto": "El oído",
+          "visual": "<div class='dib'>👂</div>"
+        },
+        {
+          "texto": "El olfato",
+          "visual": "<div class='dib'>👃</div>"
+        }
       ],
       "correcta": 0
     },
     {
       "pregunta": "¿Con qué sentido sabes que el mango está dulce?",
       "opciones": [
-        { "texto": "La vista", "visual": "<div class='dib'>👀</div>" },
-        { "texto": "El gusto", "visual": "<div class='dib'>👅</div>" }
+        {
+          "texto": "La vista",
+          "visual": "<div class='dib'>👀</div>"
+        },
+        {
+          "texto": "El gusto",
+          "visual": "<div class='dib'>👅</div>"
+        }
       ],
       "correcta": 1
     },
     {
       "pregunta": "¿Con qué sentido sientes si algo está frío?",
       "opciones": [
-        { "texto": "El tacto", "visual": "<div class='dib'>✋</div>" },
-        { "texto": "El gusto", "visual": "<div class='dib'>👅</div>" }
+        {
+          "texto": "El tacto",
+          "visual": "<div class='dib'>✋</div>"
+        },
+        {
+          "texto": "El gusto",
+          "visual": "<div class='dib'>👅</div>"
+        }
       ],
       "correcta": 0
     }

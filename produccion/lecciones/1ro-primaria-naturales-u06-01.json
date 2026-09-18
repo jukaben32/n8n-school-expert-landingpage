@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u06-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U6. Las máquinas",
+  "titulo": "Máquinas simples que uso todos los días",
+  "descripcion": "La rampa, la palanca y la rueda.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Una máquina simple es algo que nos ayuda a hacer un trabajo con menos esfuerzo. Hoy vamos a conocer tres que usas todos los días.",
+      "visual": "<div class='rotulo'>Máquinas simples</div><h1 class='chico'>Nos ayudan a trabajar</h1><div class='dib max'>⚙️</div>"
+    },
+    {
+      "narracion": "La rampa es una superficie inclinada que ayuda a subir cosas sin tener que levantarlas. Una silla de ruedas sube por una rampa en vez de escaleras.",
+      "visual": "<h1>La rampa</h1><div class='tarjeta destaca'><div class='dib medio'>🛹</div><div class='pie'>Ayuda a subir</div></div>"
+    },
+    {
+      "narracion": "La palanca es una barra que ayuda a levantar algo pesado con menos fuerza. Un columpio de subibaja es una palanca.",
+      "visual": "<h1>La palanca</h1><div class='tarjeta destaca'><div class='dib medio'>⚖️</div><div class='pie'>Ayuda a levantar</div></div>"
+    },
+    {
+      "narracion": "La rueda ayuda a que las cosas se muevan más fácil, en vez de arrastrarlas. Las bicicletas y los carritos tienen ruedas.",
+      "visual": "<h1>La rueda</h1><div class='tarjeta destaca'><div class='dib medio'>⚙️</div><div class='pie'>Ayuda a moverse</div></div>"
+    },
+    {
+      "narracion": "Estas tres máquinas están en muchos lugares que ya conoces: el parque, tu casa, y la calle.",
+      "visual": "<h1 class='chico'>Están por todos lados</h1><div class='fila'><div class='dib mini'>🏠</div><div class='dib mini'>🏞️</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Un carrito de supermercado que rueda fácil, ¿qué máquina simple usa? La rueda.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🛒</div><div class='signo'>➜</div><div class='dib mini'>⚙️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuál máquina simple ayuda a subir sin escaleras?",
+      "visual": "<div class='pregunta'>¿Cuál ayuda a subir sin escaleras?</div><div class='opciones'><div class='opcion'><div class='palabra'>La rampa</div></div><div class='opcion'><div class='palabra'>La rueda</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Un subibaja del parque, ¿qué máquina simple es?",
+      "visual": "<div class='pregunta'>¿Qué máquina es un subibaja?</div><div class='opciones'><div class='opcion'><div class='palabra'>Una palanca</div></div><div class='opcion'><div class='palabra'>Una rueda</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Para qué sirve la rueda? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Para qué sirve la rueda?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para moverse más fácil</div></div><div class='opcion'><div class='palabra'>Para subir</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuál máquina simple ayuda a subir sin escaleras?",
+      "opciones": [
+        {
+          "texto": "La rampa",
+          "visual": "<div class='dib'>🛹</div>"
+        },
+        {
+          "texto": "La rueda",
+          "visual": "<div class='dib'>⚙️</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Un subibaja del parque, ¿qué máquina simple es?",
+      "opciones": [
+        {
+          "texto": "Una rueda",
+          "visual": "<div class='dib'>⚙️</div>"
+        },
+        {
+          "texto": "Una palanca",
+          "visual": "<div class='dib'>⚖️</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Para qué sirve la rueda?",
+      "opciones": [
+        {
+          "texto": "Para subir",
+          "visual": "<div class='dib'>🛹</div>"
+        },
+        {
+          "texto": "Para moverse más fácil",
+          "visual": "<div class='dib'>⚙️</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

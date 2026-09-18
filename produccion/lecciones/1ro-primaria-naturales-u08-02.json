@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u08-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U8. Me ubico en el espacio",
+  "titulo": "¿Cómo llego?",
+  "descripcion": "Trayectoria: dar y seguir indicaciones.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes decir dónde está algo. Hoy vamos a aprender a explicar el camino para llegar a un lugar, paso por paso.",
+      "visual": "<div class='rotulo'>¿Cómo llego?</div><h1 class='chico'>El camino a un lugar</h1><div class='dib max'>🗺️</div>"
+    },
+    {
+      "narracion": "Cuando explicas un camino, das indicaciones en orden: primero esto, después esto otro. Se llama una trayectoria.",
+      "visual": "<h1>Indicaciones en orden</h1><ol class='lista'><li><span class='bolita'>1️⃣</span> Sigue derecho</li><li><span class='bolita'>2️⃣</span> Dobla a la derecha</li></ol>"
+    },
+    {
+      "narracion": "Usamos palabras como derecho, a la derecha, a la izquierda, y da la vuelta, para explicar por dónde ir.",
+      "visual": "<h1>Las palabras que usamos</h1><div class='fila apretada'><div class='dib mini'>⬆️</div><div class='dib mini'>➡️</div><div class='dib mini'>⬅️</div></div>"
+    },
+    {
+      "narracion": "Por ejemplo: para llegar del salón al baño, caminas derecho por el pasillo, y doblas a la izquierda en la puerta verde.",
+      "visual": "<h1>Un ejemplo</h1><div class='tarjeta destaca'><div class='detalle'>Derecho por el pasillo,</div><div class='detalle'>dobla a la izquierda</div></div>"
+    },
+    {
+      "narracion": "Dar buenas indicaciones ayuda a que la otra persona no se pierda, así que es importante decirlas en el orden correcto.",
+      "visual": "<h1 class='chico'>El orden importa</h1><div class='dib max'>✅</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si quieres explicarle a un amigo cómo llegar de tu salón al patio, ¿qué dirías primero? El primer paso del camino.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🏫</div><div class='signo'>➜</div><div class='dib mini'>🏞️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cómo se llama el camino que sigues para llegar a un lugar?",
+      "visual": "<div class='pregunta'>¿Cómo se llama el camino?</div><div class='opciones'><div class='opcion'><div class='palabra'>Trayectoria</div></div><div class='opcion'><div class='palabra'>Vitamina</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿En qué orden das las indicaciones?",
+      "visual": "<div class='pregunta'>¿En qué orden das las indicaciones?</div><div class='opciones'><div class='opcion'><div class='palabra'>En el orden correcto</div></div><div class='opcion'><div class='palabra'>Al azar</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Qué pasa si das las indicaciones en desorden? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Qué pasa si van en desorden?</div><div class='opciones'><div class='opcion'><div class='palabra'>La persona se pierde</div></div><div class='opcion'><div class='palabra'>No pasa nada</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cómo se llama el camino que sigues para llegar a un lugar?",
+      "opciones": [
+        {
+          "texto": "Trayectoria",
+          "visual": "<div class='dib'>🗺️</div>"
+        },
+        {
+          "texto": "Vitamina",
+          "visual": "<div class='dib'>🥦</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿En qué orden das las indicaciones?",
+      "opciones": [
+        {
+          "texto": "Al azar",
+          "visual": "<div class='dib'>❌</div>"
+        },
+        {
+          "texto": "En el orden correcto",
+          "visual": "<div class='dib'>✅</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Qué pasa si das las indicaciones en desorden?",
+      "opciones": [
+        {
+          "texto": "No pasa nada",
+          "visual": "<div class='dib'>🤷</div>"
+        },
+        {
+          "texto": "La persona se pierde",
+          "visual": "<div class='dib'>❓</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

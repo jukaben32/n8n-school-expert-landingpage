@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u07-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U7. El sonido",
+  "titulo": "Sonidos graves y agudos",
+  "descripcion": "El tono del sonido.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Ya sabes que un sonido puede ser fuerte o suave. Hoy vamos a aprender otra cosa distinta: si es grave o agudo.",
+      "visual": "<div class='rotulo'>Grave y agudo</div><h1 class='chico'>El tono del sonido</h1><div class='dib max'>🎵</div>"
+    },
+    {
+      "narracion": "Un sonido grave suena bajito de tono, como un tambor grande o la voz de un señor adulto.",
+      "visual": "<h1>Sonido grave</h1><div class='tarjeta destaca'><div class='dib medio'>🥁</div><div class='pie'>Tono bajo</div></div>"
+    },
+    {
+      "narracion": "Un sonido agudo suena alto de tono, como un silbato o la voz de un bebé llorando.",
+      "visual": "<h1>Sonido agudo</h1><div class='tarjeta destaca'><div class='dib medio'>📯</div><div class='pie'>Tono alto</div></div>"
+    },
+    {
+      "narracion": "Fíjate que grave/agudo no es lo mismo que fuerte/suave: un sonido puede ser agudo y suave a la vez, como un pajarito cantando bajito.",
+      "visual": "<h1 class='chico'>No es lo mismo</h1><div class='dib max'>🐦</div><div class='pie'>Agudo y suave a la vez</div>"
+    },
+    {
+      "narracion": "Un elefante hace un sonido grave y fuerte. Un ratoncito hace un sonido agudo y suave.",
+      "visual": "<h1>Ejemplos</h1><div class='fila'><div class='dib mini'>🐘</div><div class='dib mini'>🐭</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Un tambor grande, ¿hace un sonido grave o agudo? Grave.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🥁</div><div class='signo'>➜</div><div class='dib mini'>⬇️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Un silbato, ¿hace un sonido grave o agudo?",
+      "visual": "<div class='pregunta'>¿El silbato es grave o agudo?</div><div class='opciones'><div class='opcion'><div class='palabra'>Agudo</div></div><div class='opcion'><div class='palabra'>Grave</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. La voz de un señor adulto, ¿es grave o aguda?",
+      "visual": "<div class='pregunta'>¿La voz de un adulto es grave o aguda?</div><div class='opciones'><div class='opcion'><div class='palabra'>Grave</div></div><div class='opcion'><div class='palabra'>Aguda</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Es lo mismo grave que suave? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Grave es lo mismo que suave?</div><div class='opciones'><div class='opcion'><div class='palabra'>No, son distintos</div></div><div class='opcion'><div class='palabra'>Sí, son iguales</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Un silbato, ¿hace un sonido grave o agudo?",
+      "opciones": [
+        {
+          "texto": "Agudo",
+          "visual": "<div class='dib'>📯</div>"
+        },
+        {
+          "texto": "Grave",
+          "visual": "<div class='dib'>🥁</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "La voz de un señor adulto, ¿es grave o aguda?",
+      "opciones": [
+        {
+          "texto": "Aguda",
+          "visual": "<div class='dib'>📯</div>"
+        },
+        {
+          "texto": "Grave",
+          "visual": "<div class='dib'>🥁</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Es lo mismo grave que suave?",
+      "opciones": [
+        {
+          "texto": "Sí, son iguales",
+          "visual": "<div class='dib'>❌</div>"
+        },
+        {
+          "texto": "No, son distintos",
+          "visual": "<div class='dib'>✅</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u09-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U9. La Tierra, el Sol y la Luna",
+  "titulo": "El día y la noche",
+  "descripcion": "Por qué se hace de noche.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Todos los días vemos que sale el sol, y luego se hace de noche. Hoy vamos a aprender por qué pasa eso.",
+      "visual": "<div class='rotulo'>Día y noche</div><h1 class='chico'>¿Por qué pasan?</h1><div class='fila'><div class='dib mini'>☀️</div><div class='dib mini'>🌙</div></div>"
+    },
+    {
+      "narracion": "La Tierra siempre está girando, como un trompo, aunque nosotros no lo sintamos. Le toma un día completo dar una vuelta entera.",
+      "visual": "<h1>La Tierra gira</h1><div class='dib max'>🌍</div><div class='pie'>Como un trompo</div>"
+    },
+    {
+      "narracion": "Cuando la parte de la Tierra donde vives mira hacia el Sol, es de día: hay luz y calor.",
+      "visual": "<h1>Es de día</h1><div class='tarjeta destaca'><div class='dib medio'>☀️</div><div class='pie'>Miras hacia el Sol</div></div>"
+    },
+    {
+      "narracion": "Cuando la parte de la Tierra donde vives se aleja del Sol, girando hacia el otro lado, es de noche: no hay luz del Sol.",
+      "visual": "<h1>Es de noche</h1><div class='tarjeta destaca'><div class='dib medio'>🌙</div><div class='pie'>Te alejas del Sol</div></div>"
+    },
+    {
+      "narracion": "No es que el Sol se mueva y se esconda: es la Tierra la que gira, y por eso a veces le toca el sol y a veces no.",
+      "visual": "<h1 class='chico'>La Tierra es la que gira</h1><div class='dib max'>🔄</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si donde vives mira hacia el Sol, ¿es de día o de noche? Es de día.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>☀️</div><div class='signo'>➜</div><div class='dib mini'>🏠</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué hace la Tierra todo el tiempo?",
+      "visual": "<div class='pregunta'>¿Qué hace la Tierra?</div><div class='opciones'><div class='opcion'><div class='palabra'>Gira</div></div><div class='opcion'><div class='palabra'>Se queda quieta</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Cuando tu parte de la Tierra mira hacia el Sol, ¿es de día o de noche?",
+      "visual": "<div class='pregunta'>¿Es de día o de noche mirando al Sol?</div><div class='opciones'><div class='opcion'><div class='palabra'>De día</div></div><div class='opcion'><div class='palabra'>De noche</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Es el Sol el que se mueve, o es la Tierra? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Quién se mueve?</div><div class='opciones'><div class='opcion'><div class='palabra'>La Tierra</div></div><div class='opcion'><div class='palabra'>El Sol</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué hace la Tierra todo el tiempo?",
+      "opciones": [
+        {
+          "texto": "Gira",
+          "visual": "<div class='dib'>🔄</div>"
+        },
+        {
+          "texto": "Se queda quieta",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Cuando tu parte de la Tierra mira hacia el Sol, ¿es de día o de noche?",
+      "opciones": [
+        {
+          "texto": "De noche",
+          "visual": "<div class='dib'>🌙</div>"
+        },
+        {
+          "texto": "De día",
+          "visual": "<div class='dib'>☀️</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Es el Sol el que se mueve, o es la Tierra?",
+      "opciones": [
+        {
+          "texto": "El Sol",
+          "visual": "<div class='dib'>☀️</div>"
+        },
+        {
+          "texto": "La Tierra",
+          "visual": "<div class='dib'>🌍</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

@@ -59,24 +59,42 @@
     {
       "pregunta": "¿Dónde están tus ojos y tu boca?",
       "opciones": [
-        { "texto": "En la cabeza", "visual": "<div class='dib'>😊</div>" },
-        { "texto": "En las piernas", "visual": "<div class='dib'>🦵</div>" }
+        {
+          "texto": "En la cabeza",
+          "visual": "<div class='dib'>😊</div>"
+        },
+        {
+          "texto": "En las piernas",
+          "visual": "<div class='dib'>🦵</div>"
+        }
       ],
       "correcta": 0
     },
     {
       "pregunta": "¿Cuántos brazos tiene una persona?",
       "opciones": [
-        { "texto": "4", "visual": "<div class='num'>4</div>" },
-        { "texto": "2", "visual": "<div class='num'>2</div>" }
+        {
+          "texto": "2",
+          "visual": "<div class='num'>2</div>"
+        },
+        {
+          "texto": "4",
+          "visual": "<div class='num'>4</div>"
+        }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "¿Para qué sirven las piernas?",
       "opciones": [
-        { "texto": "Para ver", "visual": "<div class='dib'>👀</div>" },
-        { "texto": "Para caminar", "visual": "<div class='dib'>🏃</div>" }
+        {
+          "texto": "Para ver",
+          "visual": "<div class='dib'>👀</div>"
+        },
+        {
+          "texto": "Para caminar",
+          "visual": "<div class='dib'>🏃</div>"
+        }
       ],
       "correcta": 1
     }

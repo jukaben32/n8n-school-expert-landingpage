@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u06-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U6. Las máquinas",
+  "titulo": "Casas, edificios y cómo nos comunicamos",
+  "descripcion": "Teléfono, radio, televisión.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Las personas construyen casas y edificios para vivir y trabajar. Y usan máquinas para comunicarse con otras personas lejos.",
+      "visual": "<div class='rotulo'>Casas y comunicación</div><h1 class='chico'>Construir y comunicarnos</h1><div class='fila'><div class='dib mini'>🏠</div><div class='dib mini'>📱</div></div>"
+    },
+    {
+      "narracion": "Las casas y los edificios se construyen con materiales como bloques, cemento y madera, para proteger a las personas del sol y la lluvia.",
+      "visual": "<h1>Las casas</h1><div class='dib max'>🏗️</div><div class='pie'>Nos protegen del sol y la lluvia</div>"
+    },
+    {
+      "narracion": "El teléfono nos deja hablar con alguien que está lejos, escuchando su voz al momento, aunque esté en otra ciudad.",
+      "visual": "<h1>El teléfono</h1><div class='tarjeta destaca'><div class='dib medio'>📱</div><div class='pie'>Hablamos de lejos</div></div>"
+    },
+    {
+      "narracion": "La radio nos deja escuchar noticias, música y programas, transmitidos desde un lugar lejano hasta tu casa.",
+      "visual": "<h1>La radio</h1><div class='tarjeta destaca'><div class='dib medio'>📻</div><div class='pie'>Escuchamos de lejos</div></div>"
+    },
+    {
+      "narracion": "La televisión nos deja ver programas, con imagen y sonido, transmitidos también desde lejos hasta tu casa.",
+      "visual": "<h1>La televisión</h1><div class='tarjeta destaca'><div class='dib medio'>📺</div><div class='pie'>Vemos y escuchamos de lejos</div></div>"
+    },
+    {
+      "narracion": "Practiquemos. Si quieres hablar con tu abuela que vive en otra ciudad, ¿qué usas? El teléfono.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>👵</div><div class='signo'>➜</div><div class='dib mini'>📱</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Para qué usamos el teléfono?",
+      "visual": "<div class='pregunta'>¿Para qué usamos el teléfono?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para hablar de lejos</div></div><div class='opcion'><div class='palabra'>Para construir</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Con qué escuchamos música y noticias desde lejos?",
+      "visual": "<div class='pregunta'>¿Con qué escuchamos desde lejos?</div><div class='opciones'><div class='opcion'><div class='palabra'>La radio</div></div><div class='opcion'><div class='palabra'>La rampa</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Con qué vemos programas con imagen y sonido? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Con qué vemos programas?</div><div class='opciones'><div class='opcion'><div class='palabra'>La televisión</div></div><div class='opcion'><div class='palabra'>El jabón</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Para qué usamos el teléfono?",
+      "opciones": [
+        {
+          "texto": "Para hablar de lejos",
+          "visual": "<div class='dib'>📱</div>"
+        },
+        {
+          "texto": "Para construir",
+          "visual": "<div class='dib'>🏗️</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué escuchamos música y noticias desde lejos?",
+      "opciones": [
+        {
+          "texto": "La rampa",
+          "visual": "<div class='dib'>🛹</div>"
+        },
+        {
+          "texto": "La radio",
+          "visual": "<div class='dib'>📻</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Con qué vemos programas con imagen y sonido?",
+      "opciones": [
+        {
+          "texto": "El jabón",
+          "visual": "<div class='dib'>🧼</div>"
+        },
+        {
+          "texto": "La televisión",
+          "visual": "<div class='dib'>📺</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

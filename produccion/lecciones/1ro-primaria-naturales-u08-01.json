@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u08-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U8. Me ubico en el espacio",
+  "titulo": "¿Dónde está?",
+  "descripcion": "Posición con un punto de referencia.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Para decir dónde está algo, usamos un punto de referencia: otra cosa que ya conocemos y que nos ayuda a ubicarnos.",
+      "visual": "<div class='rotulo'>¿Dónde está?</div><h1 class='chico'>Con un punto de referencia</h1><div class='dib max'>📍</div>"
+    },
+    {
+      "narracion": "Por ejemplo: el gato está ARRIBA de la mesa. La mesa es el punto de referencia que nos ayuda a saber dónde está el gato.",
+      "visual": "<h1>Un ejemplo</h1><div class='tarjeta destaca'><div class='dib mini'>🐱</div><div class='detalle'>arriba de la mesa</div></div>"
+    },
+    {
+      "narracion": "También usamos dentro y fuera: la pelota está DENTRO de la caja, o FUERA de la caja.",
+      "visual": "<h1>Dentro y fuera</h1><div class='fila'><div class='dib mini'>⚽</div><div class='dib mini'>📦</div></div>"
+    },
+    {
+      "narracion": "Y usamos cerca y lejos: la escuela está CERCA de tu casa, o LEJOS, dependiendo de dónde vivas.",
+      "visual": "<h1>Cerca y lejos</h1><div class='fila'><div class='dib mini'>🏫</div><div class='dib mini'>🏠</div></div>"
+    },
+    {
+      "narracion": "Sin un punto de referencia, es difícil explicar dónde está algo. Siempre ayuda decir 'cerca de' o 'arriba de' algo conocido.",
+      "visual": "<h1 class='chico'>Siempre hace falta un punto</h1><div class='dib max'>🤔</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si tu mochila está debajo de tu cama, ¿cuál es el punto de referencia? La cama.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🎒</div><div class='signo'>➜</div><div class='dib mini'>🛏️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Para qué sirve un punto de referencia?",
+      "visual": "<div class='pregunta'>¿Para qué sirve un punto de referencia?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para ubicar algo</div></div><div class='opcion'><div class='palabra'>Para comer</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Si la pelota está adentro de la caja, ¿dónde está?",
+      "visual": "<div class='pregunta'>¿Dónde está la pelota?</div><div class='opciones'><div class='opcion'><div class='palabra'>Dentro</div></div><div class='opcion'><div class='palabra'>Fuera</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Si tu mochila está debajo de la cama, ¿cuál es el punto de referencia? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cuál es el punto de referencia?</div><div class='opciones'><div class='opcion'><div class='dib'>🛏️</div></div><div class='opcion'><div class='dib'>🎒</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Para qué sirve un punto de referencia?",
+      "opciones": [
+        {
+          "texto": "Para ubicar algo",
+          "visual": "<div class='dib'>📍</div>"
+        },
+        {
+          "texto": "Para comer",
+          "visual": "<div class='dib'>🍽️</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Si la pelota está adentro de la caja, ¿dónde está?",
+      "opciones": [
+        {
+          "texto": "Fuera",
+          "visual": "<div class='dib'>⚽</div>"
+        },
+        {
+          "texto": "Dentro",
+          "visual": "<div class='dib'>📦</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Si tu mochila está debajo de la cama, ¿cuál es el punto de referencia?",
+      "opciones": [
+        {
+          "texto": "La mochila",
+          "visual": "<div class='dib'>🎒</div>"
+        },
+        {
+          "texto": "La cama",
+          "visual": "<div class='dib'>🛏️</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

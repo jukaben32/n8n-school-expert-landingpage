@@ -59,24 +59,42 @@
     {
       "pregunta": "¿Dónde vive el pez?",
       "opciones": [
-        { "texto": "En el agua", "visual": "<div class='dib'>💧</div>" },
-        { "texto": "En la tierra", "visual": "<div class='dib'>🌳</div>" }
+        {
+          "texto": "En el agua",
+          "visual": "<div class='dib'>💧</div>"
+        },
+        {
+          "texto": "En la tierra",
+          "visual": "<div class='dib'>🌳</div>"
+        }
       ],
       "correcta": 0
     },
     {
       "pregunta": "¿Con qué se mueve el pajarito por el aire?",
       "opciones": [
-        { "texto": "Sus patas", "visual": "<div class='dib'>🦵</div>" },
-        { "texto": "Sus alas", "visual": "<div class='dib'>🕊️</div>" }
+        {
+          "texto": "Sus alas",
+          "visual": "<div class='dib'>🕊️</div>"
+        },
+        {
+          "texto": "Sus patas",
+          "visual": "<div class='dib'>🦵</div>"
+        }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "¿Cómo se mueve el perro?",
       "opciones": [
-        { "texto": "Nadando", "visual": "<div class='dib'>💧</div>" },
-        { "texto": "Caminando", "visual": "<div class='dib'>🐾</div>" }
+        {
+          "texto": "Nadando",
+          "visual": "<div class='dib'>💧</div>"
+        },
+        {
+          "texto": "Caminando",
+          "visual": "<div class='dib'>🐾</div>"
+        }
       ],
       "correcta": 1
     }

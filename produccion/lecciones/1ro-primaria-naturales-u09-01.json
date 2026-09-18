@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u09-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U9. La Tierra, el Sol y la Luna",
+  "titulo": "El agua, el aire y el suelo",
+  "descripcion": "De qué está hecho nuestro planeta.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Nuestro planeta, la Tierra, tiene tres partes muy importantes que necesitamos para vivir: el agua, el aire y el suelo.",
+      "visual": "<div class='rotulo'>Nuestro planeta</div><h1 class='chico'>Agua, aire y suelo</h1><div class='dib max'>🌍</div>"
+    },
+    {
+      "narracion": "El agua está en los ríos, el mar, la lluvia y los lagos. La necesitamos para tomar, bañarnos, y para que crezcan las plantas.",
+      "visual": "<h1>El agua</h1><div class='tarjeta destaca'><div class='dib medio'>🌊</div><div class='pie'>La necesitamos para vivir</div></div>"
+    },
+    {
+      "narracion": "El aire está a nuestro alrededor, aunque no lo veamos. Lo respiramos para vivir, y también hace que se muevan las hojas y las nubes.",
+      "visual": "<h1>El aire</h1><div class='tarjeta destaca'><div class='dib medio'>💨</div><div class='pie'>Lo respiramos</div></div>"
+    },
+    {
+      "narracion": "El suelo es la tierra donde caminamos, donde se construyen las casas, y donde crecen las plantas con sus raíces.",
+      "visual": "<h1>El suelo</h1><div class='tarjeta destaca'><div class='dib medio'>🟫</div><div class='pie'>Donde crecen las plantas</div></div>"
+    },
+    {
+      "narracion": "Debemos cuidar estos tres recursos, porque sin ellos no podríamos vivir en la Tierra.",
+      "visual": "<h1 class='chico'>Hay que cuidarlos</h1><div class='dib max'>💚</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si una planta necesita raíces para crecer, ¿en qué la mete el jardinero? En el suelo.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🌱</div><div class='signo'>➜</div><div class='dib mini'>🟫</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Qué respiramos para vivir?",
+      "visual": "<div class='pregunta'>¿Qué respiramos?</div><div class='opciones'><div class='opcion'><div class='palabra'>El aire</div></div><div class='opcion'><div class='palabra'>El suelo</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Dónde crecen las plantas con sus raíces?",
+      "visual": "<div class='pregunta'>¿Dónde crecen las raíces?</div><div class='opciones'><div class='opcion'><div class='palabra'>En el suelo</div></div><div class='opcion'><div class='palabra'>En el aire</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Dónde está el agua en la naturaleza? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Dónde está el agua?</div><div class='opciones'><div class='opcion'><div class='palabra'>Ríos, mar y lluvia</div></div><div class='opcion'><div class='palabra'>Dentro de las piedras</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Qué respiramos para vivir?",
+      "opciones": [
+        {
+          "texto": "El aire",
+          "visual": "<div class='dib'>💨</div>"
+        },
+        {
+          "texto": "El suelo",
+          "visual": "<div class='dib'>🟫</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Dónde crecen las plantas con sus raíces?",
+      "opciones": [
+        {
+          "texto": "En el aire",
+          "visual": "<div class='dib'>💨</div>"
+        },
+        {
+          "texto": "En el suelo",
+          "visual": "<div class='dib'>🟫</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Dónde está el agua en la naturaleza?",
+      "opciones": [
+        {
+          "texto": "Dentro de las piedras",
+          "visual": "<div class='dib'>🪨</div>"
+        },
+        {
+          "texto": "Ríos, mar y lluvia",
+          "visual": "<div class='dib'>🌊</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

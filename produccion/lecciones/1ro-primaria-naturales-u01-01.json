@@ -86,15 +86,15 @@
       "pregunta": "La mata de flores, ¿está viva?",
       "opciones": [
         {
-          "texto": "No está viva",
-          "visual": "<div class='dib'>🚫</div>"
-        },
-        {
           "texto": "Sí, está viva",
           "visual": "<div class='dib'>🌻</div>"
+        },
+        {
+          "texto": "No está viva",
+          "visual": "<div class='dib'>🚫</div>"
         }
       ],
-      "correcta": 1
+      "correcta": 0
     },
     {
       "pregunta": "¿Qué necesita un ser vivo para crecer?",

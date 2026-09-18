@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u04-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U4. Cuidemos nuestra salud",
+  "titulo": "Lavarse las manos y cepillarse los dientes",
+  "descripcion": "Higiene diaria para mantenernos sanos.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cuidar tu salud empieza con la higiene: mantener tu cuerpo limpio para no enfermarte. Hoy vamos a hablar de dos hábitos muy importantes.",
+      "visual": "<div class='rotulo'>La higiene</div><h1 class='chico'>Cuidar mi cuerpo</h1><div class='fila'><div class='dib mini'>🧼</div><div class='dib mini'>🪥</div></div>"
+    },
+    {
+      "narracion": "Lavarte las manos quita los gérmenes que no puedes ver. Debes lavarte antes de comer, después de ir al baño, y después de jugar afuera.",
+      "visual": "<h1>Lávate las manos</h1><div class='tarjeta destaca'><div class='dib medio'>🧼</div><div class='pie'>Antes de comer</div></div>"
+    },
+    {
+      "narracion": "Con agua y jabón, frota tus manos bien, entre los dedos y las palmas, durante unos segundos, antes de enjuagarlas.",
+      "visual": "<h1>Con agua y jabón</h1><div class='dib max'>🧽</div>"
+    },
+    {
+      "narracion": "Cepillarte los dientes quita los restos de comida y evita las caries. Debes cepillarte después de cada comida, sobre todo antes de dormir.",
+      "visual": "<h1>Cepíllate los dientes</h1><div class='tarjeta destaca'><div class='dib medio'>🪥</div><div class='pie'>Después de comer</div></div>"
+    },
+    {
+      "narracion": "Estos dos hábitos, hacerlos siempre y no solo a veces, es lo que de verdad te protege de enfermarte.",
+      "visual": "<h1 class='chico'>Hacerlo siempre</h1><div class='dib max'>✅</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si acabas de jugar en el patio con tierra, ¿qué debes hacer antes de comer? Lavarte las manos.",
+      "visual": "<h1>Practiquemos</h1><div class='fila'><div class='dib medio'>🏃</div><div class='signo'>➜</div><div class='dib medio'>🧼</div></div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. ¿Cuándo debes lavarte las manos?",
+      "visual": "<div class='pregunta'>¿Cuándo te lavas las manos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Antes de comer</div></div><div class='opcion'><div class='palabra'>Nunca</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. ¿Para qué te cepillas los dientes?",
+      "visual": "<div class='pregunta'>¿Para qué te cepillas los dientes?</div><div class='opciones'><div class='opcion'><div class='palabra'>Para evitar caries</div></div><div class='opcion'><div class='palabra'>Para jugar</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Con qué te lavas las manos? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Con qué te lavas las manos?</div><div class='opciones'><div class='opcion'><div class='palabra'>Agua y jabón</div></div><div class='opcion'><div class='palabra'>Arena</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "¿Cuándo debes lavarte las manos?",
+      "opciones": [
+        {
+          "texto": "Antes de comer",
+          "visual": "<div class='dib'>🧼</div>"
+        },
+        {
+          "texto": "Nunca",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Para qué te cepillas los dientes?",
+      "opciones": [
+        {
+          "texto": "Para evitar caries",
+          "visual": "<div class='dib'>🪥</div>"
+        },
+        {
+          "texto": "Para jugar",
+          "visual": "<div class='dib'>⚽</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "¿Con qué te lavas las manos?",
+      "opciones": [
+        {
+          "texto": "Arena",
+          "visual": "<div class='dib'>🏖️</div>"
+        },
+        {
+          "texto": "Agua y jabón",
+          "visual": "<div class='dib'>🧼</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

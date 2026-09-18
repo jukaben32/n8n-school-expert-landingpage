@@ -59,24 +59,42 @@
     {
       "pregunta": "La vaca solo come plantas. ¿Cómo se le llama a ese tipo de animal?",
       "opciones": [
-        { "texto": "Herbívoro", "visual": "<div class='dib'>🌿</div>" },
-        { "texto": "Carnívoro", "visual": "<div class='dib'>🥩</div>" }
+        {
+          "texto": "Herbívoro",
+          "visual": "<div class='dib'>🌿</div>"
+        },
+        {
+          "texto": "Carnívoro",
+          "visual": "<div class='dib'>🥩</div>"
+        }
       ],
       "correcta": 0
     },
     {
       "pregunta": "¿Qué come el león?",
       "opciones": [
-        { "texto": "Plantas", "visual": "<div class='dib'>🌿</div>" },
-        { "texto": "Carne", "visual": "<div class='dib'>🥩</div>" }
+        {
+          "texto": "Plantas",
+          "visual": "<div class='dib'>🌿</div>"
+        },
+        {
+          "texto": "Carne",
+          "visual": "<div class='dib'>🥩</div>"
+        }
       ],
       "correcta": 1
     },
     {
       "pregunta": "Un animal que come plantas Y carne, ¿cómo se llama?",
       "opciones": [
-        { "texto": "Omnívoro", "visual": "<div class='dib'>🍽️</div>" },
-        { "texto": "Herbívoro", "visual": "<div class='dib'>🌿</div>" }
+        {
+          "texto": "Omnívoro",
+          "visual": "<div class='dib'>🍽️</div>"
+        },
+        {
+          "texto": "Herbívoro",
+          "visual": "<div class='dib'>🌿</div>"
+        }
       ],
       "correcta": 0
     }

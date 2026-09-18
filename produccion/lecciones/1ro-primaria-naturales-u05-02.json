@@ -1,0 +1,98 @@
+{
+  "id": "1ro-primaria-naturales-u05-02",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "U5. La materia",
+  "titulo": "¿Se disuelve o no se disuelve?",
+  "descripcion": "Mezclas en agua: sal, azúcar y arena.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Cuando mezclas algo con agua, a veces desaparece por dentro del agua, y a veces se queda entero. Hoy vamos a ver por qué.",
+      "visual": "<div class='rotulo'>Se disuelve o no</div><h1 class='chico'>Mezclas con agua</h1><div class='dib max'>🥛</div>"
+    },
+    {
+      "narracion": "Cuando algo desaparece dentro del agua y ya no lo ves, decimos que SE DISUELVE. La sal se disuelve en el agua.",
+      "visual": "<h1>Se disuelve</h1><div class='tarjeta destaca'><div class='dib medio'>🧂</div><div class='pie'>Desaparece en el agua</div></div>"
+    },
+    {
+      "narracion": "El azúcar también se disuelve en el agua. Si le pones azúcar a un jugo y lo revuelves, ya no ves los granitos, pero sigue ahí, endulzando.",
+      "visual": "<h1>El azúcar también</h1><div class='tarjeta destaca'><div class='dib medio'>🍬</div><div class='pie'>Se disuelve igual que la sal</div></div>"
+    },
+    {
+      "narracion": "Cuando algo se queda entero y lo sigues viendo en el agua, decimos que NO SE DISUELVE. La arena no se disuelve: se hunde y sigue ahí, entera.",
+      "visual": "<h1>No se disuelve</h1><div class='tarjeta destaca'><div class='dib medio'>🏖️</div><div class='pie'>Se queda entera, no desaparece</div></div>"
+    },
+    {
+      "narracion": "Un truco para saber: si lo revuelves y ya no lo ves, se disolvió. Si lo revuelves y sigues viendo pedacitos, no se disolvió.",
+      "visual": "<h1 class='chico'>El truco</h1><div class='dib max'>🥄</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si le pones piedritas a un vaso de agua y las revuelves, ¿se disuelven o se quedan enteras? Se quedan enteras, no se disuelven.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🪨</div><div class='signo'>➜</div><div class='dib mini'>👁️</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. La sal en el agua, ¿se disuelve o no?",
+      "visual": "<div class='pregunta'>¿La sal se disuelve?</div><div class='opciones'><div class='opcion'><div class='palabra'>Sí, se disuelve</div></div><div class='opcion'><div class='palabra'>No se disuelve</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. La arena en el agua, ¿se disuelve o no?",
+      "visual": "<div class='pregunta'>¿La arena se disuelve?</div><div class='opciones'><div class='opcion'><div class='palabra'>No se disuelve</div></div><div class='opcion'><div class='palabra'>Sí, se disuelve</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. ¿Cómo sabes si algo se disolvió en el agua? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿Cómo sabes si algo se disolvió?</div><div class='opciones'><div class='opcion'><div class='palabra'>Ya no lo ves</div></div><div class='opcion'><div class='palabra'>Cambia de color el vaso</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "La sal en el agua, ¿se disuelve o no?",
+      "opciones": [
+        {
+          "texto": "Sí, se disuelve",
+          "visual": "<div class='dib'>🧂</div>"
+        },
+        {
+          "texto": "No se disuelve",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "La arena en el agua, ¿se disuelve o no?",
+      "opciones": [
+        {
+          "texto": "Sí, se disuelve",
+          "visual": "<div class='dib'>❌</div>"
+        },
+        {
+          "texto": "No se disuelve",
+          "visual": "<div class='dib'>🏖️</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "¿Cómo sabes si algo se disolvió en el agua?",
+      "opciones": [
+        {
+          "texto": "Cambia de color el vaso",
+          "visual": "<div class='dib'>🎨</div>"
+        },
+        {
+          "texto": "Ya no lo ves",
+          "visual": "<div class='dib'>👁️</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}

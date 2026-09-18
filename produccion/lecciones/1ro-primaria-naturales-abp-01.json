@@ -1,0 +1,102 @@
+{
+  "id": "1ro-primaria-naturales-abp-01",
+  "curso": "1ro. Primaria",
+  "materia": "Ciencias Naturales",
+  "unidad": "ABP. Nos preparamos para un huracán",
+  "titulo": "Antes, durante y después de un huracán",
+  "descripcion": "Qué hace mi familia para estar seguros.",
+  "voz": "marin",
+  "estilo": "estilo-inicial.css",
+  "ritmo": 0.76,
+  "edad": 6,
+  "escenas": [
+    {
+      "narracion": "Un huracán es una tormenta muy fuerte, con mucho viento y mucha lluvia. Hoy vamos a aprender qué hacer antes, durante y después de uno, para estar seguros.",
+      "visual": "<div class='rotulo'>El huracán</div><h1 class='chico'>Antes, durante y después</h1><div class='dib max'>🌀</div>"
+    },
+    {
+      "narracion": "Antes del huracán, tu familia prepara una mochila con agua, comida que no se dañe, linterna y radio, por si se va la luz.",
+      "visual": "<h1>Antes</h1><div class='tarjeta destaca'><div class='dib medio'>🎒</div><div class='pie'>Agua, comida, linterna</div></div>"
+    },
+    {
+      "narracion": "También antes, se guardan objetos sueltos del patio, y se busca un lugar seguro donde quedarse en casa.",
+      "visual": "<h1>Guardar objetos</h1><div class='dib max'>📦</div><div class='pie'>Del patio hacia adentro</div>"
+    },
+    {
+      "narracion": "Durante el huracán, hay que quedarse adentro de la casa, lejos de ventanas, y escuchar las noticias en la radio o el teléfono.",
+      "visual": "<h1>Durante</h1><div class='tarjeta destaca'><div class='dib medio'>🏠</div><div class='pie'>Adentro, lejos de ventanas</div></div>"
+    },
+    {
+      "narracion": "Después del huracán, hay que esperar a que un adulto diga que ya es seguro salir, y tener cuidado con cables caídos o agua sucia.",
+      "visual": "<h1>Después</h1><div class='tarjeta destaca'><div class='dib medio'>✅</div><div class='pie'>Esperar a que sea seguro</div></div>"
+    },
+    {
+      "narracion": "Lo más importante es siempre hacer caso a lo que digan tus papás y las autoridades, porque ellos saben cuándo es seguro.",
+      "visual": "<h1 class='chico'>Haz caso a los adultos</h1><div class='dib max'>👪</div>"
+    },
+    {
+      "narracion": "Practiquemos. Si están anunciando un huracán para esta semana, ¿qué debe preparar tu familia? Una mochila con agua, comida y linterna.",
+      "visual": "<h1>Practiquemos</h1><div class='dib max'>🌀</div><div class='signo'>➜</div><div class='dib mini'>🎒</div>"
+    },
+    {
+      "narracion": "Ya casi terminamos. Vamos a contestar tres preguntitas.",
+      "visual": "<h1>¡Ahora tú!</h1><div class='dib max'>🙋</div><div class='pie'>3 preguntas</div>"
+    },
+    {
+      "narracion": "Primera pregunta. Antes de un huracán, ¿qué prepara tu familia?",
+      "visual": "<div class='pregunta'>¿Qué se prepara antes?</div><div class='opciones'><div class='opcion'><div class='palabra'>Una mochila con agua y comida</div></div><div class='opcion'><div class='palabra'>Nada</div></div></div>"
+    },
+    {
+      "narracion": "Segunda pregunta. Durante el huracán, ¿dónde debes estar?",
+      "visual": "<div class='pregunta'>¿Dónde debes estar durante el huracán?</div><div class='opciones'><div class='opcion'><div class='palabra'>Adentro de la casa</div></div><div class='opcion'><div class='palabra'>Jugando afuera</div></div></div>"
+    },
+    {
+      "narracion": "Y la última. Después del huracán, ¿a quién debes hacer caso para saber si es seguro salir? Muy bien. Terminaste. ¡Nos vemos!",
+      "visual": "<div class='pregunta'>¿A quién haces caso?</div><div class='opciones'><div class='opcion'><div class='palabra'>A los adultos</div></div><div class='opcion'><div class='palabra'>A nadie</div></div></div>"
+    }
+  ],
+  "cuestionario": [
+    {
+      "pregunta": "Antes de un huracán, ¿qué prepara tu familia?",
+      "opciones": [
+        {
+          "texto": "Una mochila con agua y comida",
+          "visual": "<div class='dib'>🎒</div>"
+        },
+        {
+          "texto": "Nada",
+          "visual": "<div class='dib'>❌</div>"
+        }
+      ],
+      "correcta": 0
+    },
+    {
+      "pregunta": "Durante el huracán, ¿dónde debes estar?",
+      "opciones": [
+        {
+          "texto": "Jugando afuera",
+          "visual": "<div class='dib'>⚽</div>"
+        },
+        {
+          "texto": "Adentro de la casa",
+          "visual": "<div class='dib'>🏠</div>"
+        }
+      ],
+      "correcta": 1
+    },
+    {
+      "pregunta": "Después del huracán, ¿a quién debes hacer caso para saber si es seguro salir?",
+      "opciones": [
+        {
+          "texto": "A nadie",
+          "visual": "<div class='dib'>❌</div>"
+        },
+        {
+          "texto": "A los adultos",
+          "visual": "<div class='dib'>👪</div>"
+        }
+      ],
+      "correcta": 1
+    }
+  ]
+}
