@@ -3544,6 +3544,30 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
    enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
    que alcanzó a mitad de esta sesión.
 
+### Lote 5 cargado: 38 lecciones de 1ro en Academia (2026-09-19)
+
+Mismo día, continuación inmediata. El usuario pegó 9 enlaces más, sin decir a qué
+lote correspondían -- identificados por título real (los 9 calzaron 1:1): son el
+**lote 5** completo (Lengua Española U4/U5/U6 -- *Un mensaje para alguien*, *Junto
+sílabas y formo palabras*, *Le escribo un recado a mi mamá*, *¿Qué es una noticia?*,
+*El titular dice mucho en poco*, *Cuento una noticia de mi escuela*, *Todo cuento
+tiene tres partes*, *Los personajes del cuento*, *Invento el final*).
+
+Mismo método: `sort_order` máximo real verificado en producción (290, con 29
+lecciones ya cargadas) antes de generar el SQL filtrado a estos 9 ids, offset +290.
+
+**Verificado tras cargar**: **38 lecciones de 1ro. Primaria, sort_order 10..380, 38
+valores distintos (0 colisiones)**, las 9 nuevas con sus 3 preguntas y 6 opciones con
+dibujo cada una, publicadas. `enlaces.json` queda con 47 entradas. Lengua Española
+tiene ahora **19 de sus 21 lecciones cargadas** -- faltan solo u00-01 y u00-02, que
+son parte del lote 10 (las 6 lecciones "huérfanas"), todavía sin enlace.
+
+**Pendientes restantes**: lote 6 (Matemática U4-U6, 9), lote 7 (Matemática U7-U10,
+12), lote 8 (Naturales U4-U9+ABP, 14), lote 9 (Sociales U4-U10, 13) y lote 10 (las 6
+huérfanas) -- **54 lecciones** de las 92 producidas, todas ya entregadas al usuario
+como archivo descargable, esperando solo que las suba a YouTube y devuelva los
+enlaces.
+
 ### Lote 3 cargado: 29 lecciones de 1ro en Academia (2026-09-19)
 
 Nueva sesión (contenedor reiniciado, misma rama `claude/continuar-videos-1ro` con todos los
