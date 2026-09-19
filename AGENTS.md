@@ -3544,6 +3544,33 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
    enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
    que alcanzó a mitad de esta sesión.
 
+### Lote 3 cargado: 29 lecciones de 1ro en Academia (2026-09-19)
+
+Nueva sesión (contenedor reiniciado, misma rama `claude/continuar-videos-1ro` con todos los
+commits previos intactos). El usuario pegó 6 enlaces de YouTube sin decir a qué lote
+correspondían -- identificados por título real con `lib/anotar-enlace.mjs` (los 6 calzaron
+1:1, sin ambigüedad): son el **lote 3** completo (Ciencias Naturales U2-02/U2-03/U3-01/U3-02,
+Ciencias Sociales U2-02/U3-02), pendiente desde el 2026-09-18.
+
+**Misma comprobación de siempre antes de cargar**: se consultó el `sort_order` máximo real en
+producción (230, con 23 lecciones ya cargadas) en vez de confiar en cualquier cifra recordada de
+la sesión anterior -- coincidía. Se generó el SQL filtrando `enlaces.json` a solo estos 6 ids
+(para que `cargar-sql.mjs` no recalculara el orden de las 23 ya cargadas) y se desplazó `orden`
++230 con una sustitución de regex antes de aplicar.
+
+**Verificado tras cargar**: **29 lecciones de 1ro. Primaria, sort_order 10..290, 29 valores
+distintos (0 colisiones)**, las 6 nuevas con sus 3 preguntas y 6 opciones con dibujo cada una,
+publicadas. `enlaces.json` queda con 38 entradas.
+
+**Con esto, Ciencias Naturales y Ciencias Sociales avanzan un poco más en su carga** (aunque
+siguen incompletas frente a sus 21/21 y 18/18 producidos). Siguen esperando enlace los lotes 5
+(Lengua U4-U6, 9), 6 (Matemática U4-U6, 9), 7 (Matemática U7-U10, 12), 8 (Naturales U4-U9+ABP,
+14), 9 (Sociales U4-U10, 13) y 10 (las 6 lecciones "huérfanas" encontradas al cierre de la
+sesión anterior: lengua-u00-01/02, matematica-u00-01, naturales-u02-01, sociales-u02-01/u03-01)
+-- **63 lecciones en total** (92 producidas − 29 ya cargadas), todas ya producidas (voz+MP4) y ya
+entregadas al usuario como archivo descargable en la sesión anterior, esperando solo que las
+suba a YouTube (limitado por la cuota diaria) y devuelva los enlaces.
+
 ### La primera lección de 1ro ya está en Academia (2026-09-09)
 
 Ciclo completo cerrado de punta a punta para **`1ro-primaria-naturales-u01-01`**
