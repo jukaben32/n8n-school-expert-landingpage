@@ -7,6 +7,27 @@ import { normalizeLoginIdentifier } from '@/lib/auth/studentAccess'
 import PasswordInput from '@/components/PasswordInput'
 
 /**
+ * Traduce el error de Supabase Auth a un mensaje en español que ayude a
+ * saber qué pasó realmente -- antes, cualquier error que no fuera
+ * "credenciales inválidas" caía en un genérico "Ocurrió un error", lo que
+ * hacía imposible distinguir (por ejemplo) un correo sin confirmar de
+ * demasiados intentos seguidos con solo ver la pantalla.
+ */
+function mensajeDeErrorAuth(authError: { message: string; status?: number }): string {
+  const msg = authError.message.toLowerCase()
+  if (msg.includes('invalid login')) {
+    return 'Correo/código o contraseña incorrectos. Intenta de nuevo.'
+  }
+  if (msg.includes('email not confirmed')) {
+    return 'Tu correo todavía no fue confirmado. Pide a la secretaría que reenvíe la invitación.'
+  }
+  if (authError.status === 429 || msg.includes('rate limit') || msg.includes('too many')) {
+    return 'Demasiados intentos seguidos. Espera unos minutos y vuelve a intentar.'
+  }
+  return 'Ocurrió un error. Por favor intenta más tarde.'
+}
+
+/**
  * Formulario de Login — Client Component
  * Maneja el estado del formulario y la llamada a Supabase Auth.
  */
@@ -24,43 +45,52 @@ export default function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    // El personal y los tutores escriben su correo; los estudiantes solo
-    // su código de acceso (no tienen correo), y aquí se le agrega el
-    // dominio interno para convertirlo en la identidad de Auth.
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: normalizeLoginIdentifier(email),
-      password,
-    })
+    try {
+      const supabase = createClient()
+      // El personal y los tutores escriben su correo; los estudiantes solo
+      // su código de acceso (no tienen correo), y aquí se le agrega el
+      // dominio interno para convertirlo en la identidad de Auth.
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: normalizeLoginIdentifier(email),
+        password,
+      })
 
-    if (authError) {
-      // Mensaje amigable en español
-      if (authError.message.includes('Invalid login')) {
-        setError('Correo/código o contraseña incorrectos. Intenta de nuevo.')
-      } else {
-        setError('Ocurrió un error. Por favor intenta más tarde.')
+      if (authError) {
+        setError(mensajeDeErrorAuth(authError))
+        if (process.env.NODE_ENV === 'development') {
+          // Log de diagnóstico en desarrollo para ver el error exacto de Supabase
+          // (No se muestra al usuario final)
+          console.error('Supabase signIn error:', authError)
+        }
+        setLoading(false)
+        return
       }
+
+      // El middleware manda aquí con ?redirect=/lo-que-sea cuando una sesión
+      // vencida interrumpió la visita a una página protegida (ej. Configuración).
+      // Antes esto se ignoraba por completo y SIEMPRE mandaba a /dashboard, que
+      // para super_admin redirige a Plataforma -- así que un simple "se venció
+      // la sesión mientras estaba en Configuración" se sentía como "Configuración
+      // no funciona", sin relación real con la página que se quería ver.
+      // Se valida que empiece con "/" y no con "//" para no reenviar a un
+      // dominio externo si alguien arma el parámetro a mano (open redirect).
+      const redirectTo = searchParams.get('redirect')
+      const isSafeRedirect = !!redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      router.push(isSafeRedirect ? redirectTo : '/dashboard')
+      router.refresh()
+    } catch (unexpectedError) {
+      // signInWithPassword en teoría siempre atrapa sus propios errores de red
+      // y los devuelve como `authError` arriba -- pero con señal inestable
+      // (datos móviles, cambio de wifi a datos a medio login) el fetch interno
+      // puede rechazar en vez de resolver. Sin este catch, eso dejaba el botón
+      // trabado en "Verificando..." para siempre, sin ningún mensaje: exactamente
+      // lo que se reportó desde un teléfono y nunca desde una PC con wifi estable.
+      setError('No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.')
       if (process.env.NODE_ENV === 'development') {
-        // Log de diagnóstico en desarrollo para ver el error exacto de Supabase
-        // (No se muestra al usuario final)
-        console.error('Supabase signIn error:', authError)
+        console.error('Fallo inesperado al iniciar sesión:', unexpectedError)
       }
       setLoading(false)
-      return
     }
-
-    // El middleware manda aquí con ?redirect=/lo-que-sea cuando una sesión
-    // vencida interrumpió la visita a una página protegida (ej. Configuración).
-    // Antes esto se ignoraba por completo y SIEMPRE mandaba a /dashboard, que
-    // para super_admin redirige a Plataforma -- así que un simple "se venció
-    // la sesión mientras estaba en Configuración" se sentía como "Configuración
-    // no funciona", sin relación real con la página que se quería ver.
-    // Se valida que empiece con "/" y no con "//" para no reenviar a un
-    // dominio externo si alguien arma el parámetro a mano (open redirect).
-    const redirectTo = searchParams.get('redirect')
-    const isSafeRedirect = !!redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
-    router.push(isSafeRedirect ? redirectTo : '/dashboard')
-    router.refresh()
   }
 
   return (
