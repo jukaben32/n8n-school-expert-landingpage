@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { sendOverdueReminder, generateLateFeeCharge, recordExternalPayment } from './actions'
 import { EXTERNAL_PAYMENT_SOURCES } from '@/lib/receivables/externalPaymentSources'
+import ExportReceivablesButton from './ExportReceivablesButton'
 
 export interface ReceivableRow {
   student_id: string
@@ -127,6 +128,18 @@ export default function ReceivablesTable({
   const totalCurrent = currentRows.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
   const familiesCount = new Set(overdueRows.map((r) => r.family_id)).size
 
+  // Mismas filas que ve el usuario en la tabla (respeta búsqueda + filtros de
+  // nivel/curso), formateadas con los mismos helpers que usa la tabla.
+  const filasExport = filtered.map((r) => ({
+    estudiante: `${r.first_name} ${r.last_name}`,
+    curso: r.grade_level ?? '—',
+    familia: r.family_name ?? 'Familia N/A',
+    saldo: formatDOP.format(r.overdue_amount ?? 0),
+    recargo: (r.late_fee_amount ?? 0) > 0 ? formatDOP.format(r.late_fee_amount ?? 0) : '—',
+    referencia: r.oldest_overdue_reference ?? '',
+    tramo: formatBucketLabel(r.aging_bucket, graceDays),
+  }))
+
   async function handleReminder(studentId: string) {
     setBusyId(studentId)
     setFeedback((prev) => ({ ...prev, [studentId]: '' }))
@@ -190,7 +203,7 @@ export default function ReceivablesTable({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <input
           type="text"
           value={nameQuery}
@@ -214,6 +227,9 @@ export default function ReceivablesTable({
           <option value="todos">Todos los cursos</option>
           {gradesForLevel.map((g) => <option key={g} value={g}>{g}</option>)}
         </select>
+        <div className="ml-auto">
+          <ExportReceivablesButton filas={filasExport} nivel={levelFilter} />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
