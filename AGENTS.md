@@ -3544,6 +3544,38 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
    enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
    que alcanzó a mitad de esta sesión.
 
+### Lote 6 cargado: 47 lecciones de 1ro en Academia (2026-09-21)
+
+Nueva sesión (contenedor reiniciado, misma rama con todos los commits previos intactos).
+El usuario pegó 9 enlaces de YouTube -- 8 calzaron 1:1 por título real con
+`lib/anotar-enlace.mjs`: son el **lote 6** (Matemática U4/U5/U6 -- *Contamos de 10 en 10
+hasta 99*, *Decenas y unidades*, *Círculo, cuadrado, triángulo y rectángulo*, *Líneas
+rectas, curvas y mixtas*, *Mosaicos y patrones*, *Los días de la semana*, *El reloj: la
+hora en punto*, *Antes, ahora y después*).
+
+**El 9no enlace no calzó por título** (`https://youtu.be/Jom0VPPLwME`, título real en
+YouTube: *"1ro primaria matematica u04 03"*) -- el usuario subió ese video con el título
+por defecto (el nombre del archivo) en vez del título real de la hoja. Se verificó
+manualmente: el slug del nombre de archivo (`matematica u04 03`) apunta sin ambigüedad a
+`1ro-primaria-matematica-u04-03` (*"Mayor, menor o igual"*), la única lección de lote 6
+que quedaba sin enlace tras el emparejamiento automático -- confirmado también por
+descarte (era la única faltante de esa unidad). Se agregó a `enlaces.json` a mano, no por
+`anotar-enlace.mjs`. **Si el usuario sigue subiendo con el título de archivo en vez del
+real, revisar cada caso así antes de cargar -- no asumir por posición.**
+
+Mismo método de siempre: `sort_order` máximo real verificado en producción (380, con 38
+lecciones ya cargadas) antes de generar el SQL filtrado a estos 9 ids, offset +380.
+
+**Verificado tras cargar**: **47 lecciones de 1ro. Primaria, sort_order 10..470, 47
+valores distintos (0 colisiones)**, las 9 nuevas con sus 3 preguntas y 6 opciones con
+dibujo cada una, publicadas -- incluida "Mayor, menor o igual". `enlaces.json` queda con
+56 entradas. Matemática tiene ahora **19 de sus 32 lecciones cargadas**.
+
+**Pendientes restantes**: lote 7 (Matemática U7-U10, 12), lote 8 (Naturales U4-U9+ABP,
+14), lote 9 (Sociales U4-U10, 13) y lote 10 (las 6 huérfanas) -- **45 lecciones** de las
+92 producidas, todas ya entregadas al usuario como archivo descargable, esperando solo
+que las suba a YouTube y devuelva los enlaces.
+
 ### Lote 5 cargado: 38 lecciones de 1ro en Academia (2026-09-19)
 
 Mismo día, continuación inmediata. El usuario pegó 9 enlaces más, sin decir a qué
