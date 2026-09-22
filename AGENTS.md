@@ -5369,4 +5369,4 @@ Si algún día se quiere "entró a Academia" literal, hace falta registrar visit
 **Academia solo con el total (2026-09-22, pedido del usuario)**: la lista de nombres sin
 lecciones (20 de 21) era muy larga para el grupo. `20260922010000_teacher_daily_report_academia_total.sql`
 reemplaza la función para mostrar solo "Aún sin ninguna lección: N de M docentes".
-**Pendiente: aplicarla a producción** (el token de la sesión anterior se borró).
+**Aplicada y verificada en producción el 2026-09-22** (PAT de un solo uso, borrado).
