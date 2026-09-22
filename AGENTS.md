@@ -5324,3 +5324,30 @@ porque cada factura nace pagada. El gráfico cuota-por-cuota del Panel
 
 **Para revertir**: un solo commit, un solo archivo
 (`web/src/app/dashboard/reportes/page.tsx`), sin nada que deshacer en la base.
+
+## Informe diario de seguimiento docente (2026-09-22)
+
+Pedido del usuario para la fase inicial: cada día, qué docentes no pasaron lista y
+cuáles no tienen actividad en Academia, en texto listo para el grupo de WhatsApp.
+Migración `20260922000000_teacher_daily_report.sql` -- 100% en la base, sin código
+de la app ni variables nuevas en Vercel:
+
+- `private.teacher_daily_report(school_id, fecha)` arma el texto. Solo lectura.
+  **Asistencia**: se espera lista de quien tiene clase ese día en `class_schedules`
+  (por `day_of_week`); "pasó lista" = alguna fila de `attendance` con `recorded_by`
+  = su perfil ese día. Quien tiene clase pero no tiene perfil sale aparte como
+  "sin acceso a la plataforma". Domingo y feriados de la Agenda (`calendar_events`
+  categoría `feriado`, todo el colegio) no se evalúan.
+  **Academia** (opción A, confirmada con el usuario): la app NO registra visitas a
+  Academia, así que actividad = crear/editar una lección (`lessons.created_by`). Se
+  lista a quien aún no tiene ninguna lección.
+- `private.send_teacher_daily_report()` lo manda por Resend (pg_net, body jsonb) a
+  `private.app_settings.teacher_report_emails` (default `Cegmas@outlook.com`).
+- pg_cron `informe-docente-diario`: `0 19 * * 1-5` = 3:00 pm hora RD, lunes a viernes.
+- Probado en Postgres local con esquema espejo (aplicada 2 veces, idempotente).
+
+Para sacar el informe de un día puntual a mano:
+`select private.teacher_daily_report('<school_id>', '2026-09-21');`
+
+**Pendiente**: aplicar la migración a producción (esta sesión no tuvo credenciales).
+Si algún día se quiere "entró a Academia" literal, hace falta registrar visitas (opción B).
