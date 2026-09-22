@@ -10,6 +10,7 @@ import DonutChart from '@/components/charts/DonutChart'
 import SimpleBarChart from '@/components/charts/SimpleBarChart'
 import StackedBarChart from '@/components/charts/StackedBarChart'
 import { CHART_SEMANTIC, CHART_PALETTE } from '@/lib/chartColors'
+import { schoolDateString } from '@/lib/schoolDate'
 
 export const metadata: Metadata = {
   title: 'Plataforma — MentorIApp',
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 type SchoolRow = { id: string; name: string; subdomain: string; created_at: string }
 
 function daysAgoDate(days: number): string {
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  return schoolDateString(new Date(Date.now() - days * 24 * 60 * 60 * 1000))
 }
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()

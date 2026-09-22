@@ -9,6 +9,7 @@ import DonutChart from '@/components/charts/DonutChart'
 import SimpleBarChart from '@/components/charts/SimpleBarChart'
 import TrendChart from '@/components/charts/TrendChart'
 import { CHART_SEMANTIC } from '@/lib/chartColors'
+import { schoolDateString } from '@/lib/schoolDate'
 
 export const metadata: Metadata = {
   title: 'Analíticas — MentorIApp',
@@ -21,7 +22,7 @@ const enrollmentLabels: Record<string, string> = {
 }
 
 function daysAgoStr(days: number): string {
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  return schoolDateString(new Date(Date.now() - days * 24 * 60 * 60 * 1000))
 }
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()

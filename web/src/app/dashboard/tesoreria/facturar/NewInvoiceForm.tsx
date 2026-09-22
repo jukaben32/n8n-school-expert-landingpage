@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import DateInputES from '@/components/DateInputES'
+import { schoolDateString } from '@/lib/schoolDate'
 
 interface Student { id: string; first_name: string; last_name: string }
 interface Family { id: string; name: string; students: Student[] }
@@ -30,7 +31,7 @@ const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300
 function defaultDueDate() {
   const d = new Date()
   d.setDate(d.getDate() + 15)
-  return d.toISOString().split('T')[0]
+  return schoolDateString(d)
 }
 
 export default function NewInvoiceForm({ schoolId, authorProfileId, families, concepts }: NewInvoiceFormProps) {

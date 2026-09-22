@@ -9,6 +9,7 @@ import GradeLevelInput from './GradeLevelInput'
 import EditStudentButton from './EditStudentButton'
 import DeleteStudentButton from './DeleteStudentButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import { schoolDateString } from '@/lib/schoolDate'
 
 export const metadata: Metadata = {
   title: 'Ficha del estudiante — MentorIApp',
@@ -64,7 +65,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
     { data: points, error: pointsError },
   ] = await Promise.all([
     supabase.from('enrollments').select('id, status, enrollment_date, withdrawal_date, grade_levels(name)').eq('student_id', id).order('enrollment_date', { ascending: false }),
-    supabase.from('attendance').select('status').eq('student_id', id).gte('date', thirtyDaysAgo.toISOString().split('T')[0]),
+    supabase.from('attendance').select('status').eq('student_id', id).gte('date', schoolDateString(thirtyDaysAgo)),
     supabase.from('quiz_attempts').select('id, score, max_score, completed_at, lessons(title, subjects(name))').eq('student_id', id).not('completed_at', 'is', null).order('completed_at', { ascending: false }).limit(10),
     supabase.from('student_points').select('total_points, current_streak_days, longest_streak_days').eq('student_id', id).maybeSingle(),
   ])

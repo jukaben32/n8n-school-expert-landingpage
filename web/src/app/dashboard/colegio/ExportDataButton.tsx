@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { exportSchoolData } from './exportActions'
+import { schoolDateString } from '@/lib/schoolDate'
 
 export default function ExportDataButton({ schoolSubdomain }: { schoolSubdomain: string }) {
   const [status, setStatus] = useState<'idle' | 'exporting' | 'error'>('idle')
@@ -18,7 +19,7 @@ export default function ExportDataButton({ schoolSubdomain }: { schoolSubdomain:
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `mentoriapp-${schoolSubdomain}-${new Date().toISOString().split('T')[0]}.json`
+    a.download = `mentoriapp-${schoolSubdomain}-${schoolDateString(new Date())}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

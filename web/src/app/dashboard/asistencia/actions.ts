@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveGuardianIdentity } from '@/lib/auth/resolveGuardianIdentity'
+import { schoolDateString } from '@/lib/schoolDate'
 import {
   ALLOWED_JUSTIFICATION_TYPES,
   JUSTIFIABLE_ATTENDANCE_STATUSES,
@@ -63,7 +64,7 @@ export async function listMyAbsences(): Promise<JustifiableAbsence[]> {
     .eq('school_id', identity.schoolId)
     .in('student_id', studentIds)
     .in('status', JUSTIFIABLE_ATTENDANCE_STATUSES)
-    .gte('date', desde.toISOString().split('T')[0])
+    .gte('date', schoolDateString(desde))
     .order('date', { ascending: false })
 
   type RecordShape = {

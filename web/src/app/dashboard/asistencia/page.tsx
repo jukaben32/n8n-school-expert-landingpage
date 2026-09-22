@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
-import { todaySchoolDate } from '@/lib/schoolDate'
+import { todaySchoolDate, schoolDateString } from '@/lib/schoolDate'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import AbsenceJustifications from './AbsenceJustifications'
@@ -87,7 +87,7 @@ export default async function AsistenciaPage() {
       .from('attendance')
       .select('id, date, status, notified_at, student:students(first_name, last_name), subject:subjects(name)')
       .in('student_id', studentIdsData?.map((r: { student_id: string }) => r.student_id) ?? [])
-      .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+      .gte('date', schoolDateString(thirtyDaysAgo))
       .order('date', { ascending: false })
 
     records = ((data as unknown) as typeof records) ?? []
