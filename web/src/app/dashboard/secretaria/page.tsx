@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
+import { schoolDateString } from '@/lib/schoolDate'
 import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
@@ -30,8 +31,14 @@ function resolveRange(range: RangeOption) {
   return { start, spanMs: now.getTime() - start.getTime(), label: 'este mes' }
 }
 
+/**
+ * Fecha de calendario para comparar contra columnas `date` (asistencia,
+ * etc.) -- delega en `schoolDateString`, en zona horaria del colegio, para
+ * no repetir el bug de `toISOString()` corriendo el día entre las 8pm y
+ * medianoche hora de RD (ver comentario en `lib/schoolDate.ts`).
+ */
 function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0]
+  return schoolDateString(d)
 }
 
 function addDaysToIsoDate(dateIso: string, days: number): Date {
