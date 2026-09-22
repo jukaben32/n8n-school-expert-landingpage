@@ -32,6 +32,19 @@ insert into private.app_settings (key, value)
 values ('teacher_report_emails', 'Cegmas@outlook.com')
 on conflict (key) do nothing;
 
+-- "Isabel La Fontain" -> no "Isabel La": si el primer apellido es una
+-- partícula, se lleva también la palabra siguiente.
+create or replace function private.teacher_short_name(p_first text, p_last text)
+returns text
+language sql
+immutable
+as $$
+  select initcap(split_part(trim(p_first), ' ', 1) || ' ' ||
+    case when lower(split_part(trim(p_last), ' ', 1)) in ('de','del','la','las','los','san','santa','van','von')
+         then split_part(trim(p_last), ' ', 1) || ' ' || split_part(trim(p_last), ' ', 2)
+         else split_part(trim(p_last), ' ', 1) end)
+$$;
+
 create or replace function private.teacher_daily_report(
   p_school_id uuid,
   p_date date
@@ -73,10 +86,24 @@ begin
   -- Docentes con clase ese día, y si pasaron lista.
   with esperados as (
     select distinct s.id as staff_id,
-           initcap(split_part(trim(s.first_name), ' ', 1) || ' ' || split_part(trim(s.last_name), ' ', 1)) as nombre
+           private.teacher_short_name(s.first_name, s.last_name) as nombre
     from class_schedules cs
     join staff s on s.id = cs.staff_id and s.deleted_at is null
     where cs.school_id = p_school_id and cs.day_of_week = v_dow
+    union
+    -- Docentes SIN ninguna franja en el horario pero con un curso asignado
+    -- (Inicial y titulares cuyo horario no está cargado): pasan lista todos
+    -- los días de lunes a viernes. Sin esto, nunca se les esperaría y un día
+    -- sin lista pasaría inadvertido (verificado contra producción el
+    -- 2026-09-22: Kinder, Pre Kinder, Párvulo, Pre Primario y 6to. Primaria
+    -- pasan lista a diario y ninguno tiene horario cargado).
+    select distinct s.id,
+           private.teacher_short_name(s.first_name, s.last_name)
+    from teacher_assignments ta
+    join staff s on s.id = ta.staff_id and s.deleted_at is null
+    where ta.school_id = p_school_id and ta.grade_level is not null
+      and v_dow between 1 and 5
+      and not exists (select 1 from class_schedules cs2 where cs2.staff_id = s.id)
   ),
   estado as (
     select e.nombre,
@@ -98,7 +125,7 @@ begin
   -- Academia: docentes con acceso (perfil de rol teacher, ficha activa).
   with docentes as (
     select up.id as profile_id,
-           initcap(split_part(trim(s.first_name), ' ', 1) || ' ' || split_part(trim(s.last_name), ' ', 1)) as nombre
+           private.teacher_short_name(s.first_name, s.last_name) as nombre
     from users_profiles up
     join staff s on s.id = up.staff_id and s.deleted_at is null
     where up.school_id = p_school_id and up.role = 'teacher'

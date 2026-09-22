@@ -5349,5 +5349,19 @@ de la app ni variables nuevas en Vercel:
 Para sacar el informe de un día puntual a mano:
 `select private.teacher_daily_report('<school_id>', '2026-09-21');`
 
-**Pendiente**: aplicar la migración a producción (esta sesión no tuvo credenciales).
+**Corregido antes de aplicar, cruzando contra la asistencia real**: la primera versión
+solo esperaba lista de quien tiene franjas en `class_schedules`, pero Inicial (Párvulo,
+Pre Kinder, Kinder, Pre Primario) y 6to. Primaria pasan lista a diario SIN horario
+cargado -- nunca se les habría marcado un día sin lista. Ahora también se espera
+(lunes a viernes) a todo docente sin ninguna franja que tenga un curso concreto en
+`teacher_assignments`. Con eso cuadra exacto con los datos: 14 docentes pasaron lista
+el 21/09 y 12 el 22/09. `private.teacher_short_name()` evita "Isabel La" (partículas).
+
+**Aplicada en producción el 2026-09-22** (PAT de un solo uso): job `informe-docente-diario`
+activo, `anon` sin EXECUTE, y primer correo enviado a mano a las 7:16 pm (Resend 200).
+
+**A confirmar con el colegio** (el informe los marca a diario, puede ser injusto):
+Ana Calderon (asignada a 1ro. Primaria, donde la lista la pasa Vianela Santana -- ¿es
+auxiliar?), Orlando Natera (Inglés secundaria, sin horario vinculado y correo marcador),
+y los docentes de materia (Ed. Física, Inglés) si el colegio no les exige lista por clase.
 Si algún día se quiere "entró a Academia" literal, hace falta registrar visitas (opción B).
