@@ -5324,3 +5324,49 @@ porque cada factura nace pagada. El gráfico cuota-por-cuota del Panel
 
 **Para revertir**: un solo commit, un solo archivo
 (`web/src/app/dashboard/reportes/page.tsx`), sin nada que deshacer en la base.
+
+## Informe diario de seguimiento docente (2026-09-22)
+
+Pedido del usuario para la fase inicial: cada día, qué docentes no pasaron lista y
+cuáles no tienen actividad en Academia, en texto listo para el grupo de WhatsApp.
+Migración `20260922000000_teacher_daily_report.sql` -- 100% en la base, sin código
+de la app ni variables nuevas en Vercel:
+
+- `private.teacher_daily_report(school_id, fecha)` arma el texto. Solo lectura.
+  **Asistencia**: se espera lista de quien tiene clase ese día en `class_schedules`
+  (por `day_of_week`); "pasó lista" = alguna fila de `attendance` con `recorded_by`
+  = su perfil ese día. Quien tiene clase pero no tiene perfil sale aparte como
+  "sin acceso a la plataforma". Domingo y feriados de la Agenda (`calendar_events`
+  categoría `feriado`, todo el colegio) no se evalúan.
+  **Academia** (opción A, confirmada con el usuario): la app NO registra visitas a
+  Academia, así que actividad = crear/editar una lección (`lessons.created_by`). Se
+  lista a quien aún no tiene ninguna lección.
+- `private.send_teacher_daily_report()` lo manda por Resend (pg_net, body jsonb) a
+  `private.app_settings.teacher_report_emails` (default `Cegmas@outlook.com`).
+- pg_cron `informe-docente-diario`: `0 19 * * 1-5` = 3:00 pm hora RD, lunes a viernes.
+- Probado en Postgres local con esquema espejo (aplicada 2 veces, idempotente).
+
+Para sacar el informe de un día puntual a mano:
+`select private.teacher_daily_report('<school_id>', '2026-09-21');`
+
+**Corregido antes de aplicar, cruzando contra la asistencia real**: la primera versión
+solo esperaba lista de quien tiene franjas en `class_schedules`, pero Inicial (Párvulo,
+Pre Kinder, Kinder, Pre Primario) y 6to. Primaria pasan lista a diario SIN horario
+cargado -- nunca se les habría marcado un día sin lista. Ahora también se espera
+(lunes a viernes) a todo docente sin ninguna franja que tenga un curso concreto en
+`teacher_assignments`. Con eso cuadra exacto con los datos: 14 docentes pasaron lista
+el 21/09 y 12 el 22/09. `private.teacher_short_name()` evita "Isabel La" (partículas).
+
+**Aplicada en producción el 2026-09-22** (PAT de un solo uso): job `informe-docente-diario`
+activo, `anon` sin EXECUTE, y primer correo enviado a mano a las 7:16 pm (Resend 200).
+
+**A confirmar con el colegio** (el informe los marca a diario, puede ser injusto):
+Ana Calderon (asignada a 1ro. Primaria, donde la lista la pasa Vianela Santana -- ¿es
+auxiliar?), Orlando Natera (Inglés secundaria, sin horario vinculado y correo marcador),
+y los docentes de materia (Ed. Física, Inglés) si el colegio no les exige lista por clase.
+Si algún día se quiere "entró a Academia" literal, hace falta registrar visitas (opción B).
+
+**Academia solo con el total (2026-09-22, pedido del usuario)**: la lista de nombres sin
+lecciones (20 de 21) era muy larga para el grupo. `20260922010000_teacher_daily_report_academia_total.sql`
+reemplaza la función para mostrar solo "Aún sin ninguna lección: N de M docentes".
+**Aplicada y verificada en producción el 2026-09-22** (PAT de un solo uso, borrado).
