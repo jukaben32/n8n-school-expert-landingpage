@@ -109,6 +109,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
     </svg>
   ),
+  incidencias: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    </svg>
+  ),
   website: (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25A8.25 8.25 0 1012 3.75a8.25 8.25 0 000 16.5z" />
@@ -179,6 +184,7 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/horarios',        label: 'Horario', icon: 'horarios' },
     { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
     { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
+    { href: '/dashboard/incidencias',     label: 'Incidencias', icon: 'incidencias' },
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
     { href: '/dashboard/encuestas',       label: 'Encuestas', icon: 'encuestas' },
     { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
@@ -221,6 +227,7 @@ const navByRole: Record<string, NavGroup[]> = {
       { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
       { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
       { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
+      { href: '/dashboard/incidencias',     label: 'Incidencias', icon: 'incidencias' },
       { href: '/dashboard/horarios',        label: 'Horarios', icon: 'horarios' },
       { href: '/dashboard/planificacion',   label: 'Planificación', icon: 'planificacion' },
     ] },

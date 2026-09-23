@@ -3932,6 +3932,47 @@ sesión): falta correr la migración + el seed y `npm run smoke`.
 desde el botón de subir no queda en la galería, pero si el docente la toma
 antes con la app de cámara y la elige de la galería, sí queda en el teléfono.
 
+## Registro de incidencias en el aula (2026-09-23)
+
+Reemplaza la ficha en papel "Registro de Incidencia y Seguimiento Conductual"
+del colegio. `/dashboard/incidencias` (lista con filtros por estado y
+gravedad), `/nueva` (el formulario con las mismas 4 secciones de la ficha) y
+`/[id]` (detalle imprimible con las 3 líneas de firma solo al imprimir, y el
+seguimiento de Orientación/Gestión).
+
+- Migración `20260923010000_student_incidents.sql`: tabla `student_incidents`
+  (curso congelado al reportar, gravedad leve/grave/muy_grave, lugar, medidas
+  como `text[]` con `check` contra la lista, `student_heard` = "He sido
+  escuchado", estado abierto/en_seguimiento/cerrado + notas de seguimiento).
+  Sin policy de delete.
+- **Quién ve qué (lo impone la RLS, las pantallas usan el cliente de sesión)**:
+  dirección (super_admin/school_admin/director) todo su colegio y es la ÚNICA
+  que registra seguimiento; el docente ve lo que reportó y los casos de sus
+  cursos (`teacher_is_assigned_to_grade(..., 'regular')`, 3 argumentos), así
+  que Orientación (asignada a "todo el colegio") ve todo. **Tutores y
+  estudiantes: ninguna policy** (expediente interno).
+- Insert: solo en nombre propio, estado inicial `abierto`, y el curso tiene
+  que ser el REAL del estudiante (`incident_student_grade()`, security
+  definer, nombre nuevo -- sin sobrecargas). El docente solo para sus cursos.
+- **La Regla del 3** de la ficha (3 leves en 30 días = grave por
+  reincidencia): la lista la marca en rojo y el formulario avisa al guardar.
+  Constantes en `web/src/lib/incidents/labels.ts` (módulo plano).
+- Módulos `incidencias` (teacher + FULL_ACCESS) e `incidencias_gestionar`
+  (FULL_ACCESS); enlace en `Sidebar.tsx` para teacher y default (Académico).
+- `npm run smoke`: 5 comprobaciones nuevas (docente ve y registra en su
+  curso, director ve todo, tutor y estudiante no ven nada).
+
+**Verificado**: Postgres local con esquema espejo, migración aplicada 2
+veces, 8 escenarios con sesión simulada (reporta en su curso OK; curso ajeno,
+curso falseado, en nombre de otro y "ya cerrado" bloqueados; docente no puede
+cerrar; directora ve todo y da seguimiento; otro colegio y tutor ven 0).
+`tsc`/`eslint`/`next build` limpios. **NO aplicado a producción.**
+
+**Abierto, a decidir con el colegio**: Orientación (Génesis) tiene rol
+`teacher`, así que VE todos los casos pero NO puede registrar el seguimiento
+(solo dirección). Si el seguimiento debe hacerlo Orientación, hay que darle
+ese permiso explícitamente.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

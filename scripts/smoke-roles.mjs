@@ -87,6 +87,8 @@ const CHECKS = {
     ['Políticas: ver las de su colegio', `select count(*) from staff_policies;`],
     ['Políticas: FIRMAR la suya (insert)', 'POLITICA_FIRMAR_PROPIA'],
     ['Políticas: NO puede firmar por otro empleado', 'POLITICA_NO_FIRMAR_AJENA'],
+    ['Incidencias: ver las de sus cursos', `select count(*) from student_incidents;`],
+    ['Incidencias: REGISTRAR en su curso (insert)', 'INCIDENCIA_REGISTRAR'],
   ],
   guardian: [
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
@@ -98,6 +100,7 @@ const CHECKS = {
     ['Portal: justificaciones de ausencia de sus hijos', `select count(*) from attendance_justifications;`],
     ['Horario: solo el curso de sus hijos', 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS'],
     ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
+    ['Incidencias: NO las ve (expediente interno)', 'INCIDENCIAS_INVISIBLES'],
   ],
   reception: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -119,6 +122,7 @@ const CHECKS = {
     ['Buscador: personal por nombre completo', 'BUSCADOR_PERSONAL'],
     ['Buscador: tutores por nombre completo', 'BUSCADOR_TUTORES'],
     ['Políticas: ver firmas de todo el personal', `select count(*) from staff_policy_signatures;`],
+    ['Incidencias: ver todos los casos', `select count(*) from student_incidents;`],
   ],
   school_admin: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -134,6 +138,7 @@ const CHECKS = {
     ['Encuestas: las de su curso', `select count(*) from polls;`],
     ['Horario: solo el de su propio curso', 'STUDENT_HORARIO_SOLO_SU_CURSO'],
     ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
+    ['Incidencias: NO las ve (expediente interno)', 'INCIDENCIAS_INVISIBLES'],
   ],
 }
 
@@ -394,6 +399,41 @@ function politicasInvisiblesSql() {
   `
 }
 
+/**
+ * Incidencias (2026-09-23): el docente registra una incidencia de un
+ * estudiante de SU curso, igual que createIncidentAction (cliente de sesión).
+ * Si no tiene ningún estudiante a su alcance, se omite sin fallar.
+ */
+function incidenciaRegistrarSql() {
+  return `
+    do $$
+    declare v_prof record; v_st record;
+    begin
+      select id, school_id into v_prof from users_profiles where auth_id = auth.uid();
+      select s.id, s.grade_level into v_st from students s
+      where s.school_id = v_prof.school_id and s.deleted_at is null and s.grade_level is not null
+        and teacher_is_assigned_to_grade(v_prof.school_id, s.grade_level, 'regular')
+      limit 1;
+      if v_st.id is null then return; end if;
+      insert into student_incidents (school_id, student_id, grade_level, incident_date, location, severity,
+        description, reported_by, reporter_name)
+      values (v_prof.school_id, v_st.id, v_st.grade_level, current_date, 'aula', 'leve', 'SMOKE', v_prof.id, 'SMOKE');
+    end $$;
+  `
+}
+
+/** Tutores y estudiantes no ven ninguna incidencia. */
+function incidenciasInvisiblesSql() {
+  return `
+    do $$
+    begin
+      if (select count(*) from student_incidents) > 0 then
+        raise exception 'HUECO: un rol que no es personal puede leer incidencias';
+      end if;
+    end $$;
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -436,6 +476,8 @@ async function main() {
         : consulta === 'POLITICA_FIRMAR_PROPIA' ? politicaFirmarPropiaSql()
         : consulta === 'POLITICA_NO_FIRMAR_AJENA' ? politicaNoFirmarAjenaSql()
         : consulta === 'POLITICAS_INVISIBLES' ? politicasInvisiblesSql()
+        : consulta === 'INCIDENCIA_REGISTRAR' ? incidenciaRegistrarSql()
+        : consulta === 'INCIDENCIAS_INVISIBLES' ? incidenciasInvisiblesSql()
         : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {
