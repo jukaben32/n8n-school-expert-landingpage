@@ -4032,6 +4032,14 @@ consola. **Migración aplicada en producción el 2026-09-23; pantallas sin despl
 - Familias que ya entraron: **94 de 242 inscritas (38.8%)**. Las normas se
   envían al llegar al 90% o el 2026-10-23, lo primero que ocurra.
 
+**Código publicado el 2026-09-23 a medianoche hora RD** (PR #33 fusionado a `main`,
+autorizado por la usuaria, fuera de horario de clases). La vista previa de Vercel
+del mismo commit desplegó sin errores; el despliegue de producción no se pudo
+comprobar desde la sesión (el `curl` a producción lo bloqueó el clasificador).
+Pendiente con un PAT nuevo: aplicar `20260923030000` (último viernes del mes en el
+informe docente, el primero es el 2026-09-25) y `supabase/seeds/20260923_faq_horario.sql`
+(horario real en Preguntas frecuentes).
+
 **Al desplegar (con permiso del usuario, fuera del horario de clases):**
 1. Agregar al final de la sección de normas del `faq_document` la línea
    "Presentación completa de las Normas de Convivencia (PDF): si la familia
