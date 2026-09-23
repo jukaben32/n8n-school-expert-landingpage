@@ -82,17 +82,30 @@ Al firmar este documento, el padre/madre o tutor declara, en su nombre y en el d
 Nota: en papel firmaba también el estudiante. En la plataforma firma el tutor por cada
 hijo; el texto dice que lo hace "en su nombre y en el del estudiante".
 
-## 4. Cuándo enviar: "cuando entren 100 familias"
+## 4. Cuándo enviar: cuando el 100% de las familias haya entrado
 
-Consulta de solo lectura para saber cuántas familias y estudiantes ya han entrado alguna vez:
+Aclarado por el usuario el 2026-09-23: la condición es el **100% de las familias**
+(con al menos un estudiante inscrito) con al menos un tutor que ya entró a la
+plataforma. Consulta de solo lectura:
 
 ```sql
+with fam as (
+  select distinct s.family_id
+  from students s
+  join schools sc on sc.id = s.school_id
+  where sc.name = 'Centro Educativo Gran Manantial de Sabiduría'
+    and s.enrollment_status = 'inscrito' and s.deleted_at is null
+),
+entraron as (
+  select distinct g.family_id
+  from users_profiles up
+  join auth.users au on au.id = up.auth_id
+  join guardians g on g.id = up.guardian_id
+  where au.last_sign_in_at is not null
+)
 select
-  count(distinct up.guardian_id) filter (where up.guardian_id is not null) as tutores_que_entraron,
-  count(distinct g.family_id)  filter (where up.guardian_id is not null) as familias_que_entraron,
-  count(*) filter (where up.role = 'student') as estudiantes_que_entraron
-from users_profiles up
-join auth.users au on au.id = up.auth_id
-left join guardians g on g.id = up.guardian_id
-where au.last_sign_in_at is not null;
+  (select count(*) from fam) as familias_inscritas,
+  (select count(*) from fam where family_id in (select family_id from entraron)) as familias_que_entraron,
+  round(100.0 * (select count(*) from fam where family_id in (select family_id from entraron))
+        / nullif((select count(*) from fam), 0), 1) as porcentaje;
 ```
