@@ -98,7 +98,7 @@ export default async function LeccionPage({ params }: { params: Promise<{ id: st
         description={lesson.description}
         subjectName={(lesson.subjects as unknown as { name: string } | null)?.name ?? null}
         videoUrl={lesson.video_url}
-        videoProvider={lesson.video_provider as 'youtube' | 'vimeo'}
+        videoProvider={lesson.video_provider as 'youtube' | 'vimeo' | null}
         questions={questionsWithImages}
         studentId={profile.student_id}
         existingAttempt={existingAttempt}

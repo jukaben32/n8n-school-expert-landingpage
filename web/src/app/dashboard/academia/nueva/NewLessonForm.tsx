@@ -278,8 +278,8 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
     e.preventDefault()
     setError(null)
 
-    if (!title.trim() || !videoUrl.trim() || !subjectId || !gradeLevel.trim()) {
-      setError('Completa el título, el video, la materia y el curso.')
+    if (!title.trim() || !subjectId || !gradeLevel.trim()) {
+      setError('Completa el título, la materia y el curso.')
       return
     }
     for (const q of questions) {
@@ -301,8 +301,8 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
           grade_level: gradeLevel.trim(),
           title: title.trim(),
           description: description.trim() || null,
-          video_url: videoUrl.trim(),
-          video_provider: videoProvider,
+          video_url: videoUrl.trim() || null,
+          video_provider: videoUrl.trim() ? videoProvider : null,
           is_published: isPublished,
           created_by: authorProfileId,
         })
@@ -386,12 +386,18 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
 
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
-            <label htmlFor="videoUrl" className={labelClass}>Link del video</label>
-            <input id="videoUrl" required value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+            <label htmlFor="videoUrl" className={labelClass}>Link del video (opcional)</label>
+            <input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=... (déjalo vacío para una tarea sin video)" className={inputClass} />
           </div>
           <div>
             <label htmlFor="provider" className={labelClass}>Proveedor</label>
-            <select id="provider" value={videoProvider} onChange={(e) => setVideoProvider(e.target.value as 'youtube' | 'vimeo')} className={inputClass}>
+            <select
+              id="provider"
+              value={videoProvider}
+              onChange={(e) => setVideoProvider(e.target.value as 'youtube' | 'vimeo')}
+              disabled={!videoUrl.trim()}
+              className={`${inputClass} disabled:opacity-50`}
+            >
               <option value="youtube">YouTube</option>
               <option value="vimeo">Vimeo</option>
             </select>

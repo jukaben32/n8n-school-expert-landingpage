@@ -15,6 +15,7 @@ type LessonRow = {
   title: string
   description: string | null
   subject_id: string
+  video_url: string | null
   subjects: { name: string } | null
 }
 
@@ -82,7 +83,7 @@ export default async function AcademiaPage() {
     student?.grade_level
       ? supabase
           .from('lessons')
-          .select('id, title, description, subject_id, subjects(name)')
+          .select('id, title, description, subject_id, video_url, subjects(name)')
           .eq('grade_level', student.grade_level)
           .eq('is_published', true)
           .is('deleted_at', null)
@@ -177,7 +178,7 @@ export default async function AcademiaPage() {
             <p className="text-sm mt-1" style={{ color: 'var(--dash-text-muted)' }}>{nextLesson.description}</p>
           )}
           <span className="inline-flex items-center gap-2 mt-4 rounded-full bg-primary text-white text-sm font-bold px-5 py-2.5 shadow-glow">
-            ▶ Ver el video
+            {nextLesson.video_url ? '▶ Ver el video' : '📝 Hacer la tarea'}
           </span>
         </Link>
       )}

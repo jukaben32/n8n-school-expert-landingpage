@@ -13,8 +13,8 @@ interface LessonPlayerProps {
   title: string
   description: string | null
   subjectName: string | null
-  videoUrl: string
-  videoProvider: 'youtube' | 'vimeo'
+  videoUrl: string | null
+  videoProvider: 'youtube' | 'vimeo' | null
   questions: Question[]
   studentId: string
   existingAttempt: { id: string; score: number; max_score: number; completed_at: string | null } | null
@@ -30,7 +30,8 @@ interface LessonPlayerProps {
  * al estudiante cualquier cosa que YouTube decida -- inaceptable en una
  * pantalla que usan 286 menores dentro del portal del colegio.
  */
-function getEmbedUrl(url: string, provider: 'youtube' | 'vimeo'): string | null {
+function getEmbedUrl(url: string | null, provider: 'youtube' | 'vimeo' | null): string | null {
+  if (!url || !provider) return null
   try {
     if (provider === 'youtube') {
       const u = new URL(url)
@@ -55,7 +56,9 @@ export default function LessonPlayer(props: LessonPlayerProps) {
   const { lessonId, schoolId, title, description, subjectName, videoUrl, videoProvider, questions, studentId, existingAttempt } = props
   const router = useRouter()
 
-  const [stage, setStage] = useState<Stage>(existingAttempt ? 'result' : 'video')
+  // Una tarea sin video (ver AGENTS.md, 2026-09-23) va directo al
+  // cuestionario -- no hay pantalla de video que mostrar.
+  const [stage, setStage] = useState<Stage>(existingAttempt ? 'result' : videoUrl ? 'video' : 'quiz')
   const [current, setCurrent] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)

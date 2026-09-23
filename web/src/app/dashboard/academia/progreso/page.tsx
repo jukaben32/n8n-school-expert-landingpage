@@ -23,7 +23,7 @@ type LessonRow = {
   id: string
   title: string
   grade_level: string | null
-  video_url: string
+  video_url: string | null
   is_published: boolean
   subjects: { name: string } | null
 }
@@ -209,15 +209,17 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
                               que tumbó esta pantalla el 2026-09-07 (ver
                               AGENTS.md). El enlace abre en pestaña nueva; que
                               además despliegue el acordeón es inofensivo. */}
-                          <a
-                            href={l.video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold underline"
-                            style={{ color: 'var(--dash-accent)' }}
-                          >
-                            Ver video
-                          </a>
+                          {l.video_url && (
+                            <a
+                              href={l.video_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-semibold underline"
+                              style={{ color: 'var(--dash-accent)' }}
+                            >
+                              Ver video
+                            </a>
+                          )}
                         </div>
                       </summary>
 
