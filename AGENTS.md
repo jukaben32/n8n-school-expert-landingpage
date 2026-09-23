@@ -3925,8 +3925,9 @@ Decisión del usuario: opción "firma digital para todo el personal".
 espejo + 9 escenarios de RLS con la sesión simulada (firma propia OK; firmar
 por otro, crear política siendo docente, editar/borrar firma, firmar una
 retirada: todo bloqueado; otro colegio y tutor ven 0). `tsc`, `eslint` y
-`next build` limpios. **NO aplicado a producción** (sin credenciales en la
-sesión): falta correr la migración + el seed y `npm run smoke`.
+`next build` limpios. **Base aplicada en producción el 2026-09-23** (migración +
+seed de la política, ver "Aplicado a producción el 2026-09-23" más abajo); el
+código de las pantallas todavía NO está desplegado.
 
 **Matiz de la excepción de Actualizaciones**: una foto tomada con la cámara
 desde el botón de subir no queda en la galería, pero si el docente la toma
@@ -3966,7 +3967,7 @@ seguimiento de Orientación/Gestión).
 veces, 8 escenarios con sesión simulada (reporta en su curso OK; curso ajeno,
 curso falseado, en nombre de otro y "ya cerrado" bloqueados; docente no puede
 cerrar; directora ve todo y da seguimiento; otro colegio y tutor ven 0).
-`tsc`/`eslint`/`next build` limpios. **NO aplicado a producción.**
+`tsc`/`eslint`/`next build` limpios. **Migración aplicada en producción el 2026-09-23; pantallas sin desplegar.**
 
 **Abierto, a decidir con el colegio**: Orientación (Génesis) tiene rol
 `teacher`, así que VE todos los casos pero NO puede registrar el seguimiento
@@ -4007,7 +4008,38 @@ directora ve y actualiza; docente, tutor y otro colegio ven 0), `tsc`/
 `eslint`/`next build` limpios, y los 3 formularios nuevos del día (empleo,
 incidencia, firma de política) abiertos en Chromium con Playwright: campos
 condicionales, filtro de curso y botón de firma funcionan, cero errores de
-consola. **NO aplicado a producción.**
+consola. **Migración aplicada en producción el 2026-09-23; pantallas sin desplegar.**
+
+### Aplicado a producción el 2026-09-23 (PAT de un solo uso, borrado al terminar)
+
+- Migraciones `20260923000000` (políticas), `20260923010000` (incidencias) y
+  `20260923020000` (solicitudes de empleo): tablas, 15 policies, bucket
+  `solicitudes-empleo` privado; `anon` sin EXECUTE en `incident_student_grade`
+  ni INSERT en `job_applications`. Como las demás aplicadas por API desde el
+  2026-09-08, **no quedaron registradas en `supabase_migrations.schema_migrations`**
+  (son idempotentes, volver a correrlas es inofensivo).
+- Seed de la Política de Confidencialidad: 1 política activa, con las dos líneas
+  agregadas (excepción de Actualizaciones y la tablet del colegio).
+- `schools.faq_document` (4,660 → 8,347 caracteres): se agregaron Niveles,
+  Inscripción y libros de Amco (`docs/UTILES_2026_2027.md`), y la sección vieja
+  de normas se REEMPLAZÓ por la nueva (`docs/NORMAS_CONVIVENCIA_2026-2027.md`),
+  conservando sus 4 reglas del día a día (puntualidad, celulares, pelo, salidas).
+  **Se dejó fuera a propósito la línea del enlace al PDF de la presentación**:
+  el PDF vive en `web/public/documentos/` y no existe hasta desplegar; el
+  asistente habría ofrecido un enlace roto.
+- `npm run smoke`: **57 de 57 OK** (las 10 comprobaciones nuevas incluidas), y 0
+  firmas / 0 incidencias / 0 solicitudes después: la prueba no dejó nada.
+- Familias que ya entraron: **94 de 242 inscritas (38.8%)**. Las normas se
+  envían al llegar al 90% o el 2026-10-23, lo primero que ocurra.
+
+**Al desplegar (con permiso del usuario, fuera del horario de clases):**
+1. Agregar al final de la sección de normas del `faq_document` la línea
+   "Presentación completa de las Normas de Convivencia (PDF): si la familia
+   quiere verla, ofrecerle este enlace:
+   https://www.educacionmanantial.com/documentos/normas-de-convivencia-2026-2027.pdf"
+   y comprobar primero que el enlace abre con sesión iniciada.
+2. Las listas de útiles por curso siguen solo en el documento: falta el código
+   que le pase al asistente únicamente la lista del curso de cada hijo.
 
 ## Convenciones de trabajo
 
