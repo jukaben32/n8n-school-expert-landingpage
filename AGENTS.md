@@ -3973,6 +3973,42 @@ cerrar; directora ve todo y da seguimiento; otro colegio y tutor ven 0).
 (solo dirección). Si el seguimiento debe hacerlo Orientación, hay que darle
 ese permiso explícitamente.
 
+## Solicitud de empleo en la página web del colegio (2026-09-23)
+
+Reemplaza la "Solicitud de Empleo - Personal Docente y Administrativo" en
+papel. Sección nueva "Trabaja con nosotros" en `/colegio/[subdomain]` (antes
+de Contacto) que lleva a `/colegio/[subdomain]/empleo`, un formulario público
+con las 7 secciones del documento + CV y certificaciones. Dirección lo revisa
+en `/dashboard/personal/solicitudes` (botón "Solicitudes de empleo" en
+Personal; mismo permiso `personal`, sin módulo nuevo ni cambio en Sidebar).
+
+- Migración `20260923020000_job_applications.sql`: tabla `job_applications`
+  **sin ninguna policy para anon** (y `revoke all ... from anon`): el envío
+  pasa por una Server Action con service_role que valida colegio, campos y
+  archivos. Lectura/actualización solo dirección. Bucket privado
+  `solicitudes-empleo`; lectura por signed URL de 5 min.
+- **Archivos con enlace firmado de subida** (`createSignedUploadUrl` +
+  `uploadToSignedUrl` desde el navegador), NO dentro de la Server Action.
+  Motivo, y es un hallazgo que afecta a TODO el proyecto: **las Server
+  Actions de Next tienen un límite de 1 MB de cuerpo por defecto** y
+  `next.config.ts` no configura `serverActions.bodySizeLimit`. Las subidas
+  existentes que dicen aceptar hasta 10 MB (justificantes de ausencia,
+  comprobantes de pago, fichas escaneadas, imagen de comunicados) mandan el
+  archivo por Server Action, así que **un archivo de más de ~1 MB
+  probablemente falla** (una foto de iPhone pesa 2-4 MB). NO se corrigió en
+  esta tarea: sin verificar en producción y con impacto en varias pantallas.
+  Además Vercel corta a ~4.5 MB por petición aunque se suba el límite.
+- Antispam mínimo: campo trampa oculto (`website`). No hay límite de envíos
+  por IP.
+- Nada de esto crea personal: si se contrata a alguien, se agrega en Personal.
+
+**Verificado**: Postgres local (declaración obligatoria; anon no inserta;
+directora ve y actualiza; docente, tutor y otro colegio ven 0), `tsc`/
+`eslint`/`next build` limpios, y los 3 formularios nuevos del día (empleo,
+incidencia, firma de política) abiertos en Chromium con Playwright: campos
+condicionales, filtro de curso y botón de firma funcionan, cero errores de
+consola. **NO aplicado a producción.**
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

@@ -378,6 +378,25 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
         </section>
       )}
 
+      {/* Trabaja con nosotros -- solicitud de empleo en línea (reemplaza la de papel) */}
+      <section id="empleo" className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] mb-2" style={{ color: primaryColor }}>
+          Trabaja con nosotros
+        </p>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">¿Quieres formar parte de nuestro equipo?</h2>
+        <p className="text-sm text-slate-600 mt-3">
+          Buscamos personal docente, auxiliares de aula y personal administrativo. Completa la solicitud de empleo en
+          línea y adjunta tu currículum; la dirección revisa cada solicitud.
+        </p>
+        <Link
+          href={`/colegio/${subdomain}/empleo`}
+          className="inline-flex items-center gap-2 rounded-full text-white text-sm font-semibold px-6 py-3 mt-6 transition hover:opacity-90"
+          style={{ backgroundColor: primaryColor }}
+        >
+          Llenar solicitud de empleo
+        </Link>
+      </section>
+
       {/* Contacto */}
       <section id="contacto" className="bg-slate-50 py-16 px-4">
         <div className="max-w-5xl mx-auto">
