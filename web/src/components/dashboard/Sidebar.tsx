@@ -104,6 +104,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75c.16 1.095.59 2.126 1.248 2.99.71.94 1.664 1.695 2.764 2.186.454.202.972.15 1.377-.144l.78-.57a.75.75 0 01.846-.024l1.031.62a.75.75 0 01.309.909c-.365 1.016-1.406 1.662-2.483 1.472-1.682-.299-3.245-1.203-4.44-2.428-1.196-1.226-2.06-2.808-2.44-4.542-.244-1.116.42-2.26 1.5-2.65l1.107-.4a.75.75 0 01.903.314l.564.942a.75.75 0 01-.11.92l-.74.74z" />
     </svg>
   ),
+  politicas: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+    </svg>
+  ),
   website: (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25A8.25 8.25 0 1012 3.75a8.25 8.25 0 000 16.5z" />
@@ -176,6 +181,7 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
     { href: '/dashboard/encuestas',       label: 'Encuestas', icon: 'encuestas' },
+    { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
   ] }],
   super_admin: [{ items: [
     { href: '/dashboard/plataforma',      label: 'Plataforma', icon: 'plataforma' },
@@ -193,12 +199,14 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
+    { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
   ] }],
   finance: [{ items: [
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
     { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
+    { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
   ] }],
   default: [
     { title: 'Operación', items: [
@@ -206,6 +214,7 @@ const navByRole: Record<string, NavGroup[]> = {
       { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
       { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
       { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
+      { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
       { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     ] },
     { title: 'Académico', items: [

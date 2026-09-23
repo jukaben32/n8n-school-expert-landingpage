@@ -84,6 +84,9 @@ const CHECKS = {
     ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
     ['Academia: crear lección en SU curso asignado', 'ACADEMIA_CREAR_EN_CURSO'],
     ['Academia: NO puede crear en curso ajeno', 'ACADEMIA_NO_CREAR_EN_AJENO'],
+    ['Políticas: ver las de su colegio', `select count(*) from staff_policies;`],
+    ['Políticas: FIRMAR la suya (insert)', 'POLITICA_FIRMAR_PROPIA'],
+    ['Políticas: NO puede firmar por otro empleado', 'POLITICA_NO_FIRMAR_AJENA'],
   ],
   guardian: [
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
@@ -94,6 +97,7 @@ const CHECKS = {
     ['Portal: comunicados', `select count(*) from messages;`],
     ['Portal: justificaciones de ausencia de sus hijos', `select count(*) from attendance_justifications;`],
     ['Horario: solo el curso de sus hijos', 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS'],
+    ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
   ],
   reception: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -114,6 +118,7 @@ const CHECKS = {
     ['Justificaciones de ausencia', `select count(*) from attendance_justifications;`],
     ['Buscador: personal por nombre completo', 'BUSCADOR_PERSONAL'],
     ['Buscador: tutores por nombre completo', 'BUSCADOR_TUTORES'],
+    ['Políticas: ver firmas de todo el personal', `select count(*) from staff_policy_signatures;`],
   ],
   school_admin: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -128,6 +133,7 @@ const CHECKS = {
     ['Academia: sus lecciones', `select count(*) from lessons;`],
     ['Encuestas: las de su curso', `select count(*) from polls;`],
     ['Horario: solo el de su propio curso', 'STUDENT_HORARIO_SOLO_SU_CURSO'],
+    ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
   ],
 }
 
@@ -327,6 +333,67 @@ function studentHorarioSoloSuCursoSql() {
   `
 }
 
+/**
+ * Políticas internas (2026-09-23): el empleado firma SU propia política
+ * vigente (misma escritura que signStaffPolicyAction, con el cliente de
+ * sesión). Si no hay ninguna vigente, o ya la firmó, se omite sin fallar.
+ */
+function politicaFirmarPropiaSql() {
+  return `
+    do $$
+    declare v_prof record; v_pol record;
+    begin
+      select id, school_id, staff_id into v_prof from users_profiles where auth_id = auth.uid();
+      if v_prof.staff_id is null then return; end if;
+      select id, title, body into v_pol from staff_policies
+      where school_id = v_prof.school_id and is_active
+        and id not in (select policy_id from staff_policy_signatures where staff_id = v_prof.staff_id)
+      limit 1;
+      if v_pol.id is null then return; end if;
+      insert into staff_policy_signatures (policy_id, school_id, staff_id, profile_id, signer_full_name,
+        signer_national_id, signer_position, policy_title_snapshot, policy_body_snapshot)
+      values (v_pol.id, v_prof.school_id, v_prof.staff_id, v_prof.id, 'SMOKE', '000-0000000-0', 'SMOKE', v_pol.title, v_pol.body);
+    end $$;
+  `
+}
+
+/** Prueba negativa: firmar con la ficha de OTRO empleado tiene que fallar. */
+function politicaNoFirmarAjenaSql() {
+  return `
+    do $$
+    declare v_prof record; v_pol uuid; v_otro uuid;
+    begin
+      select id, school_id, staff_id into v_prof from users_profiles where auth_id = auth.uid();
+      select id into v_pol from staff_policies where school_id = v_prof.school_id and is_active limit 1;
+      if v_pol is null then return; end if;
+      -- security definer no hace falta: staff se lee con esta sesión o no;
+      -- si no se ve ningún otro empleado, no hay nada que probar.
+      select id into v_otro from staff where school_id = v_prof.school_id and id <> coalesce(v_prof.staff_id, gen_random_uuid()) limit 1;
+      if v_otro is null then return; end if;
+      begin
+        insert into staff_policy_signatures (policy_id, school_id, staff_id, profile_id, signer_full_name,
+          signer_national_id, signer_position, policy_title_snapshot, policy_body_snapshot)
+        values (v_pol, v_prof.school_id, v_otro, v_prof.id, 'SMOKE', '0', 'SMOKE', 'x', 'x');
+      exception when insufficient_privilege then
+        return; -- bloqueado por RLS: es lo esperado
+      end;
+      raise exception 'HUECO: pudo firmar la política en nombre de otro empleado';
+    end $$;
+  `
+}
+
+/** Tutores y estudiantes no deben ver ni una política interna del personal. */
+function politicasInvisiblesSql() {
+  return `
+    do $$
+    begin
+      if (select count(*) from staff_policies) > 0 or (select count(*) from staff_policy_signatures) > 0 then
+        raise exception 'HUECO: un rol que no es personal puede leer políticas internas';
+      end if;
+    end $$;
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -366,6 +433,9 @@ async function main() {
         : consulta === 'ACADEMIA_NO_CREAR_EN_AJENO' ? academiaNoCrearEnAjenoSql()
         : consulta === 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS' ? guardianHorarioSoloSusHijosSql()
         : consulta === 'STUDENT_HORARIO_SOLO_SU_CURSO' ? studentHorarioSoloSuCursoSql()
+        : consulta === 'POLITICA_FIRMAR_PROPIA' ? politicaFirmarPropiaSql()
+        : consulta === 'POLITICA_NO_FIRMAR_AJENA' ? politicaNoFirmarAjenaSql()
+        : consulta === 'POLITICAS_INVISIBLES' ? politicasInvisiblesSql()
         : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {

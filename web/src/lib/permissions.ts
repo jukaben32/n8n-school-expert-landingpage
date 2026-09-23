@@ -47,6 +47,8 @@ export type Module =
   | 'asistente_ia' // ver conversaciones del asistente de IA con las familias
   | 'encuestas' // ver encuestas/votaciones y operar la urna del propio curso (profesor)
   | 'encuestas_gestionar' // crear encuestas/votaciones, abrirlas y cerrarlas
+  | 'politicas' // leer y firmar las políticas internas del colegio (todo el personal)
+  | 'politicas_gestionar' // publicar políticas internas y ver quién firmó
 
 const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'estudiantes_accesos', 'familias', 'personal',
@@ -56,6 +58,7 @@ const FULL_ACCESS: Module[] = [
   'horarios', 'horarios_gestionar', 'planificacion', 'notas', 'notas_gestionar',
   'autorizaciones', 'autorizaciones_nuevo',
   'encuestas', 'encuestas_gestionar',
+  'politicas', 'politicas_gestionar',
   'whatsapp',
   'website',
   'configuracion_colegio', 'asistente_ia',
@@ -72,7 +75,7 @@ const ROLE_MODULES: Record<Role, Module[]> = {
   // 'encuestas' (sin '_gestionar'): el profesor carga los candidatos y
   // opera la urna de SU curso -- crear/abrir/cerrar la votación es de
   // dirección. El alcance por curso lo impone la RLS (can_run_poll).
-  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion', 'notas', 'notas_gestionar', 'autorizaciones', 'autorizaciones_nuevo', 'encuestas'],
+  teacher: ['asistencia', 'asistencia_registrar', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'academia_gestionar', 'actualizaciones', 'horarios', 'planificacion', 'notas', 'notas_gestionar', 'autorizaciones', 'autorizaciones_nuevo', 'encuestas', 'politicas'],
 
   // Recepción/Secretaría: la puerta de entrada -- estudiantes (ingresos y
   // salidas), familias, avisos, agenda, asistencia, horarios, notas,
@@ -81,12 +84,12 @@ const ROLE_MODULES: Record<Role, Module[]> = {
   // comprobantes de transferencia). No incluye 'tesoreria_proveedores'
   // (facturas de proveedores/Alegra -- eso es gestión contable, se queda en
   // Finanzas) ni contenido de Academia.
-  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'estudiantes_accesos', 'familias', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'horarios', 'notas', 'autorizaciones', 'autorizaciones_nuevo', 'tesoreria', 'pagos'],
+  reception: ['estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'estudiantes_accesos', 'familias', 'comunicados', 'comunicados_nuevo', 'agenda', 'agenda_nuevo', 'mensajes_directos', 'asistencia', 'asistencia_registrar', 'horarios', 'notas', 'autorizaciones', 'autorizaciones_nuevo', 'tesoreria', 'pagos', 'politicas'],
 
   // Finanzas: dinero y a quién cobrarle -- tesorería, pagos, facturas de
   // proveedores/Alegra, reportes, y solo lectura de familias para
   // facturar. No toca estudiantes, asistencia, comunicados ni Academia.
-  finance: ['tesoreria', 'pagos', 'tesoreria_proveedores', 'reportes', 'familias'],
+  finance: ['tesoreria', 'pagos', 'tesoreria_proveedores', 'reportes', 'familias', 'politicas'],
 
   // El tutor no usa este mapa: tiene su propia página dedicada
   // (portal-familiar). Se lista por completitud de tipos.

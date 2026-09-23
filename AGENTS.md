@@ -3888,6 +3888,50 @@ la misma regla: solo `inscrito` es un curso activo). `npx tsc --noEmit`,
 `npm run lint` y `npm run build` limpios; `npm run smoke`: 46/46, sin
 regresión en ningún rol.
 
+## Políticas internas firmadas por el personal (2026-09-23)
+
+Pedido del colegio: la "Política de Confidencialidad, Protección del Menor y
+Ética Laboral" (alcance: TODO el personal) se firmaba en papel. Ahora cada
+empleado la lee y la firma en `/dashboard/politicas`, y dirección ve el
+roster (firmó / pendiente / sin acceso a la plataforma), imprimible.
+
+**Por qué NO fue al asistente de IA**: el único asistente que existe es el de
+las familias (Portal Familiar), y `faq_document` le llega completo en cada
+pregunta. Meter ahí una política interna se la mostraría a cualquier padre.
+Decisión del usuario: opción "firma digital para todo el personal".
+
+- Migración `20260923000000_staff_policies.sql`: `staff_policies` (texto;
+  dirección publica y retira) y `staff_policy_signatures` (nombre, cédula,
+  cargo y el texto CONGELADOS en la firma, `unique(policy_id, staff_id)`, sin
+  policy de update/delete: una firma no se edita). Tutores y estudiantes no
+  tienen NINGUNA policy de lectura. Una política publicada no se edita: si
+  cambia el texto se publica otra y se retira la vieja.
+- Firmar = mismo patrón que Autorizaciones: reautenticación con contraseña +
+  nombre escrito; el texto se lee en el servidor, nunca del navegador. Solo
+  puede firmar un perfil con `staff_id` (el roster sale de `staff`).
+- Módulos `politicas` (todo el personal: teacher/reception/finance + los de
+  FULL_ACCESS) y `politicas_gestionar` (dirección). **Enlace agregado en
+  `Sidebar.tsx` para teacher, reception, finance y default** -- los dos
+  archivos revisados juntos.
+- Carga del texto: `supabase/seeds/20260923_politica_confidencialidad.sql`
+  (idempotente), con las dos líneas agregadas en 4.1 a pedido del colegio:
+  la excepción de MentorIApp → Actualizaciones y "puede solicitar la tablet
+  del colegio". Versión .docx actualizada en `docs/`.
+- `npm run smoke`: 5 comprobaciones nuevas (docente ve y firma la suya, NO
+  puede firmar por otro, dirección ve las firmas, tutor y estudiante NO ven
+  nada).
+
+**Verificado**: migración aplicada dos veces en Postgres local con esquema
+espejo + 9 escenarios de RLS con la sesión simulada (firma propia OK; firmar
+por otro, crear política siendo docente, editar/borrar firma, firmar una
+retirada: todo bloqueado; otro colegio y tutor ven 0). `tsc`, `eslint` y
+`next build` limpios. **NO aplicado a producción** (sin credenciales en la
+sesión): falta correr la migración + el seed y `npm run smoke`.
+
+**Matiz de la excepción de Actualizaciones**: una foto tomada con la cámara
+desde el botón de subir no queda en la galería, pero si el docente la toma
+antes con la app de cámara y la elige de la galería, sí queda en el teléfono.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
