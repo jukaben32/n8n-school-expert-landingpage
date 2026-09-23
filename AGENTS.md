@@ -3985,6 +3985,11 @@ Verificado en Postgres local (aplicada 2 veces): docente normal 0/0; psicóloga 
 y registra 1/1; psicóloga de otro colegio 0/0; dada de baja 0/0; `anon` sin EXECUTE.
 `scripts/smoke-roles.mjs` tiene una comprobación nueva (se omite si nadie tiene el
 puesto).
+**Código publicado el 2026-09-23 de madrugada** (PR #34, vista previa de Vercel OK
+antes de fusionar). **Pendiente con un PAT**: aplicar `20260923040000` en
+producción, confirmar que la ficha de Génesis tiene `staff.role = 'psychologist'`
+y correr `npm run smoke` una sola vez. Hasta entonces solo Dirección escribe el
+seguimiento (la RPC falla y la pantalla lo trata como "no").
 
 ## Solicitud de empleo en la página web del colegio (2026-09-23)
 
