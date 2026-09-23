@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
+import { canRecordIncidentFollowUp } from '@/lib/incidents/followUpAccess'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { roleLabels } from '@/lib/staff/roleLabels'
 import { MEASURES, LOCATIONS, SEVERITIES, STATUSES, RECIDIVISM_DAYS, RECIDIVISM_LEVES } from '@/lib/incidents/labels'
@@ -122,7 +123,7 @@ interface FollowUpInput {
   notes: string
 }
 
-/** Seguimiento de Orientación / Gestión: solo dirección (lo impone la RLS). */
+/** Seguimiento de Orientación / Gestión: Dirección o la psicóloga (lo impone la RLS). */
 export async function updateIncidentFollowUpAction(input: FollowUpInput): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -130,11 +131,11 @@ export async function updateIncidentFollowUpAction(input: FollowUpInput): Promis
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('id, role')
+    .select('id, role, school_id')
     .eq('auth_id', user.id)
     .single()
-  if (!profile || !canAccess(profile.role, 'incidencias_gestionar')) {
-    return { ok: false, error: 'Solo Dirección puede registrar el seguimiento.' }
+  if (!profile || !(await canRecordIncidentFollowUp(supabase, profile.role, profile.school_id))) {
+    return { ok: false, error: 'Solo Dirección o la psicóloga pueden registrar el seguimiento.' }
   }
   if (!STATUSES.some((s) => s.value === input.status)) return { ok: false, error: 'Estado no válido.' }
 

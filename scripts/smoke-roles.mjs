@@ -489,6 +489,59 @@ async function main() {
     }
   }
 
+  // Psicóloga (2026-09-23): entra con rol 'teacher', pero por su PUESTO en
+  // Personal (staff.role = 'psychologist') registra el seguimiento de las
+  // incidencias junto con Dirección. Se prueba de verdad: registra un caso de
+  // prueba y le escribe el seguimiento, todo revertido. Si el colegio no
+  // tiene a nadie con ese puesto y acceso, se omite sin fallar.
+  const psico = await sql(`
+    select up.auth_id, st.first_name || ' ' || st.last_name as quien
+    from users_profiles up
+    join staff st on st.id = up.staff_id
+    join auth.users au on au.id = up.auth_id
+    where st.role = 'psychologist' and st.deleted_at is null
+    order by au.last_sign_in_at desc nulls last
+    limit 1;
+  `)
+  console.log(`\nPSICÓLOGA (puesto)${psico.ok && psico.rows[0] ? ` — ${psico.rows[0].quien}` : ''}`)
+  if (!psico.ok) {
+    total++
+    fallos++
+    console.log(`  FALLA No se pudo buscar\n        → ${psico.error}`)
+  } else if (!psico.rows[0]) {
+    console.log('  (omitido: nadie tiene el puesto Psicóloga con acceso al sistema)')
+  } else {
+    total++
+    const r = await asUser(psico.rows[0].auth_id, `
+      do $$
+      declare v_prof record; v_st record; v_id uuid; v_n int;
+      begin
+        select id, school_id into v_prof from users_profiles where auth_id = auth.uid();
+        if not incident_is_counselor(v_prof.school_id) then
+          raise exception 'incident_is_counselor devolvió false para la psicóloga';
+        end if;
+        select s.id, s.grade_level into v_st from students s
+        where s.school_id = v_prof.school_id and s.deleted_at is null and s.grade_level is not null
+        limit 1;
+        -- Caso creado por otra vía (como si lo hubiera reportado un maestro).
+        insert into student_incidents (school_id, student_id, grade_level, incident_date, location, severity,
+          description, reported_by, reporter_name)
+        values (v_prof.school_id, v_st.id, v_st.grade_level, current_date, 'aula', 'leve', 'SMOKE', v_prof.id, 'SMOKE')
+        returning id into v_id;
+        update student_incidents set status = 'en_seguimiento', follow_up_notes = 'SMOKE',
+          reviewed_by = v_prof.id, reviewed_at = now()
+        where id = v_id;
+        get diagnostics v_n = row_count;
+        if v_n <> 1 then raise exception 'la psicóloga no pudo registrar el seguimiento'; end if;
+      end $$;
+    `)
+    if (r.ok) console.log('  OK    Incidencias: registrar seguimiento')
+    else {
+      fallos++
+      console.log(`  FALLA Incidencias: registrar seguimiento\n        → ${r.error}`)
+    }
+  }
+
   // Comprobación global, no por rol: una cuenta de Auth que ya inició
   // sesión pero no tiene fila en `users_profiles` entra al sistema SIN rol.
   // Hasta el 2026-09-15 eso la mandaba en silencio al Portal Familiar como

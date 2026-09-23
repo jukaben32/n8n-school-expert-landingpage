@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
+import { canRecordIncidentFollowUp } from '@/lib/incidents/followUpAccess'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { SEVERITIES, STATUSES, labelOf, RECIDIVISM_DAYS, RECIDIVISM_LEVES } from '@/lib/incidents/labels'
 import { todaySchoolDate } from '@/lib/schoolDate'
@@ -45,11 +46,11 @@ export default async function IncidenciasPage({ searchParams }: { searchParams: 
   const role = profile?.role ?? ''
   if (!profile || !canAccess(role, 'incidencias')) redirect('/dashboard')
 
-  const isManager = canAccess(role, 'incidencias_gestionar')
+  const isManager = await canRecordIncidentFollowUp(supabase, role, profile.school_id)
   const { schoolId } = await getActiveSchool(role, profile.school_id)
 
   // Cliente de sesión: la RLS decide qué casos ve cada quien (docente: los
-  // suyos y los de sus cursos; dirección: todo el colegio).
+  // suyos y los de sus cursos; dirección y psicóloga: todo el colegio).
   let query = supabase
     .from('student_incidents')
     .select('id, student_id, grade_level, incident_date, severity, status, reporter_name, students(first_name, last_name)')

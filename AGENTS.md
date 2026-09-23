@@ -3969,10 +3969,22 @@ curso falseado, en nombre de otro y "ya cerrado" bloqueados; docente no puede
 cerrar; directora ve todo y da seguimiento; otro colegio y tutor ven 0).
 `tsc`/`eslint`/`next build` limpios. **Migración aplicada en producción el 2026-09-23; pantallas sin desplegar.**
 
-**Abierto, a decidir con el colegio**: Orientación (Génesis) tiene rol
-`teacher`, así que VE todos los casos pero NO puede registrar el seguimiento
-(solo dirección). Si el seguimiento debe hacerlo Orientación, hay que darle
-ese permiso explícitamente.
+**Decidido por el colegio (2026-09-23)**: la incidencia la completa el maestro
+del curso en el momento; el **seguimiento lo hace la psicóloga (Génesis) en
+coordinación con Dirección**. Migración `20260923040000_incident_counselor_follow_up.sql`:
+función `incident_is_counselor(school_id)` (security definer, nombre nuevo) que
+reconoce a la psicóloga por su **puesto** en Personal (`staff.role = 'psychologist'`,
+activo, mismo colegio) -- NO por su rol de acceso, que sigue siendo `teacher`, así
+que ningún otro docente gana nada y `permissions.ts`/`Sidebar.tsx` no cambian. Dos
+policies nuevas (select y update) que se suman a las de Dirección. Las pantallas
+usan `canRecordIncidentFollowUp()` (`web/src/lib/incidents/followUpAccess.ts`),
+que llama a la misma función por RPC: pantalla y base no pueden discrepar.
+**Si Génesis no tiene el puesto "Psicóloga" en su ficha de Personal, no le
+funciona**: se corrige desde Personal → Editar, sin código.
+Verificado en Postgres local (aplicada 2 veces): docente normal 0/0; psicóloga ve
+y registra 1/1; psicóloga de otro colegio 0/0; dada de baja 0/0; `anon` sin EXECUTE.
+`scripts/smoke-roles.mjs` tiene una comprobación nueva (se omite si nadie tiene el
+puesto).
 
 ## Solicitud de empleo en la página web del colegio (2026-09-23)
 
@@ -4031,6 +4043,25 @@ consola. **Migración aplicada en producción el 2026-09-23; pantallas sin despl
   firmas / 0 incidencias / 0 solicitudes después: la prueba no dejó nada.
 - Familias que ya entraron: **94 de 242 inscritas (38.8%)**. Las normas se
   envían al llegar al 90% o el 2026-10-23, lo primero que ocurra.
+
+**Código publicado el 2026-09-23 a medianoche hora RD** (PR #33 fusionado a `main`,
+autorizado por la usuaria, fuera de horario de clases). La vista previa de Vercel
+del mismo commit desplegó sin errores; el despliegue de producción no se pudo
+comprobar desde la sesión (el `curl` a producción lo bloqueó el clasificador).
+**Aplicado en la base la misma madrugada** (2026-09-23, mismo PAT):
+`20260923030000` (el informe del 25/09 dice "último viernes del mes: no se evalúa";
+un día normal sigue igual, 12 de 20 el 22/09), `20260923_faq_horario.sql` (horario
+real; ya no queda "9:00 a.m.") y la línea del PDF de Normas en `faq_document` (una
+sola vez, antes de "Reglas del día a día"). La usuaria confirmó con sesión
+iniciada que el PDF abre bien en producción, lo que confirma también que el
+despliegue del PR #33 quedó en línea.
+
+**Smoke tras estos cambios**: una corrida dio 56/57 ("Familias" falló, el mensaje no
+se capturó), la siguiente 57/57 sin ningún cambio de por medio. Las corridas
+posteriores chocaron con `ThrottlerException: Too Many Requests` de la Management
+API por correrlas seguidas: **no correr `npm run smoke` varias veces en fila**,
+esperar unos minutos entre corridas. Conviene repetirlo una vez para cerrar la duda
+de "Familias" (nada de lo aplicado toca `families` ni su RLS).
 
 **Al desplegar (con permiso del usuario, fuera del horario de clases):**
 1. Agregar al final de la sección de normas del `faq_document` la línea
