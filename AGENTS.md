@@ -3986,10 +3986,12 @@ y registra 1/1; psicóloga de otro colegio 0/0; dada de baja 0/0; `anon` sin EXE
 `scripts/smoke-roles.mjs` tiene una comprobación nueva (se omite si nadie tiene el
 puesto).
 **Código publicado el 2026-09-23 de madrugada** (PR #34, vista previa de Vercel OK
-antes de fusionar). **Pendiente con un PAT**: aplicar `20260923040000` en
-producción, confirmar que la ficha de Génesis tiene `staff.role = 'psychologist'`
-y correr `npm run smoke` una sola vez. Hasta entonces solo Dirección escribe el
-seguimiento (la RPC falla y la pantalla lo trata como "no").
+antes de fusionar). **Migración aplicada en producción el mismo día**: 2 policies,
+`anon` sin EXECUTE; la ficha de Génesis Rodríguez ya tenía `staff.role =
+'psychologist'` y cuenta de acceso (rol `teacher`, asignación a todo el colegio).
+`npm run smoke`: **58 de 58**, incluida la nueva ("PSICÓLOGA — Genesis Rodríguez:
+registrar seguimiento") y "Familias", que cierra la duda de la corrida de 56/57.
+0 incidencias en producción después: la prueba no dejó nada.
 
 ## Solicitud de empleo en la página web del colegio (2026-09-23)
 
