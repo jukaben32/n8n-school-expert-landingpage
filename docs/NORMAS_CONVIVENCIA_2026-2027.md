@@ -1,6 +1,6 @@
 # Normas de Convivencia 2026-2027 — borrador listo para enviar
 
-Fuente: `Presentacion_Normas_de_Convivencia_inicio_escolar.docx` (entregado el 2026-09-23).
+Fuentes: `Presentacion_Normas_de_Convivencia_inicio_escolar.docx` y `Normas_de_Convivencia.pptx` (entregados el 2026-09-23).
 **Nada de esto está cargado ni enviado todavía.** Pedido del colegio: alimentar al
 asistente de IA con estas normas, y guardar la carta y el acta para ENVIARLAS cuando
 hayan entrado a la plataforma ~100 familias y estudiantes.
@@ -17,8 +17,20 @@ El colegio aplica las Normas de Convivencia del Ministerio de Educación (MINERD
 - Debido proceso: todo estudiante es escuchado y tratado con dignidad; ninguna medida afecta su derecho a la educación ni su integridad física o emocional.
 - Los deberes, derechos y consecuencias según el nivel educativo están en los murales informativos del centro y de cada aula.
 - Al inicio del año, estudiante y familia firman un Acta de Compromiso para la Convivencia Armoniosa.
+
+Tipos de faltas y medidas disciplinarias (Sección IV):
+- Faltas leves (ej.: interrupciones en clase, falta de higiene, uso de lenguaje inadecuado): diálogo reflexivo, amonestación verbal privada y compromiso escrito de mejora. Las maneja el docente con diálogo inmediato.
+- Faltas graves (ej.: reincidencia en faltas leves, acoso escolar o bullying, daños a la propiedad, plagio): comunicación a los padres, trabajos de servicio comunitario escolar y reporte en el expediente. Apoya la Unidad de Orientación para identificar las causas de fondo.
+- Faltas muy graves (ej.: violencia física, posesión de sustancias prohibidas, acciones que pongan en riesgo la vida): suspensión temporal (máximo 5 días), intervención de Orientación y Psicología, y plan de seguimiento conductual. Decide el Equipo de Gestión / Comité de Convivencia, siempre notificando a la familia.
+Criterios: proporcionalidad (la medida acorde a la gravedad), contextualización (edad, etapa de desarrollo y circunstancias del estudiante) y no exclusión (nunca se priva al estudiante del derecho a la educación ni a la alimentación). Todo proceso respeta el interés superior del niño y el debido proceso (Art. 15-18).
+Pasos antes de aplicar una medida: escuchar al estudiante (su versión), documentar los hechos de forma objetiva, notificar formalmente a los padres o tutores, y dar seguimiento para evaluar si la medida logró el cambio de conducta.
+Presentación completa de las Normas de Convivencia (PDF): si la familia quiere verla, ofrecerle este enlace: https://www.educacionmanantial.com/documentos/normas-de-convivencia-2026-2027.pdf
 Para un caso concreto de disciplina de un estudiante, la familia debe comunicarse con el docente o con el Departamento de Orientación del colegio (809-246-3587).
 ```
+
+Nota: el PDF vive en `web/public/documentos/` y el enlace solo abre con sesión iniciada
+(el middleware redirige a /login a quien no la tenga) -- a propósito, es para las
+familias del colegio. Funciona solo después de desplegar este cambio.
 
 ## 2. Carta a las familias → Comunicado (a todo el colegio)
 
