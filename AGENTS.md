@@ -3888,6 +3888,159 @@ la misma regla: solo `inscrito` es un curso activo). `npx tsc --noEmit`,
 `npm run lint` y `npm run build` limpios; `npm run smoke`: 46/46, sin
 regresión en ningún rol.
 
+## Políticas internas firmadas por el personal (2026-09-23)
+
+Pedido del colegio: la "Política de Confidencialidad, Protección del Menor y
+Ética Laboral" (alcance: TODO el personal) se firmaba en papel. Ahora cada
+empleado la lee y la firma en `/dashboard/politicas`, y dirección ve el
+roster (firmó / pendiente / sin acceso a la plataforma), imprimible.
+
+**Por qué NO fue al asistente de IA**: el único asistente que existe es el de
+las familias (Portal Familiar), y `faq_document` le llega completo en cada
+pregunta. Meter ahí una política interna se la mostraría a cualquier padre.
+Decisión del usuario: opción "firma digital para todo el personal".
+
+- Migración `20260923000000_staff_policies.sql`: `staff_policies` (texto;
+  dirección publica y retira) y `staff_policy_signatures` (nombre, cédula,
+  cargo y el texto CONGELADOS en la firma, `unique(policy_id, staff_id)`, sin
+  policy de update/delete: una firma no se edita). Tutores y estudiantes no
+  tienen NINGUNA policy de lectura. Una política publicada no se edita: si
+  cambia el texto se publica otra y se retira la vieja.
+- Firmar = mismo patrón que Autorizaciones: reautenticación con contraseña +
+  nombre escrito; el texto se lee en el servidor, nunca del navegador. Solo
+  puede firmar un perfil con `staff_id` (el roster sale de `staff`).
+- Módulos `politicas` (todo el personal: teacher/reception/finance + los de
+  FULL_ACCESS) y `politicas_gestionar` (dirección). **Enlace agregado en
+  `Sidebar.tsx` para teacher, reception, finance y default** -- los dos
+  archivos revisados juntos.
+- Carga del texto: `supabase/seeds/20260923_politica_confidencialidad.sql`
+  (idempotente), con las dos líneas agregadas en 4.1 a pedido del colegio:
+  la excepción de MentorIApp → Actualizaciones y "puede solicitar la tablet
+  del colegio". Versión .docx actualizada en `docs/`.
+- `npm run smoke`: 5 comprobaciones nuevas (docente ve y firma la suya, NO
+  puede firmar por otro, dirección ve las firmas, tutor y estudiante NO ven
+  nada).
+
+**Verificado**: migración aplicada dos veces en Postgres local con esquema
+espejo + 9 escenarios de RLS con la sesión simulada (firma propia OK; firmar
+por otro, crear política siendo docente, editar/borrar firma, firmar una
+retirada: todo bloqueado; otro colegio y tutor ven 0). `tsc`, `eslint` y
+`next build` limpios. **Base aplicada en producción el 2026-09-23** (migración +
+seed de la política, ver "Aplicado a producción el 2026-09-23" más abajo); el
+código de las pantallas todavía NO está desplegado.
+
+**Matiz de la excepción de Actualizaciones**: una foto tomada con la cámara
+desde el botón de subir no queda en la galería, pero si el docente la toma
+antes con la app de cámara y la elige de la galería, sí queda en el teléfono.
+
+## Registro de incidencias en el aula (2026-09-23)
+
+Reemplaza la ficha en papel "Registro de Incidencia y Seguimiento Conductual"
+del colegio. `/dashboard/incidencias` (lista con filtros por estado y
+gravedad), `/nueva` (el formulario con las mismas 4 secciones de la ficha) y
+`/[id]` (detalle imprimible con las 3 líneas de firma solo al imprimir, y el
+seguimiento de Orientación/Gestión).
+
+- Migración `20260923010000_student_incidents.sql`: tabla `student_incidents`
+  (curso congelado al reportar, gravedad leve/grave/muy_grave, lugar, medidas
+  como `text[]` con `check` contra la lista, `student_heard` = "He sido
+  escuchado", estado abierto/en_seguimiento/cerrado + notas de seguimiento).
+  Sin policy de delete.
+- **Quién ve qué (lo impone la RLS, las pantallas usan el cliente de sesión)**:
+  dirección (super_admin/school_admin/director) todo su colegio y es la ÚNICA
+  que registra seguimiento; el docente ve lo que reportó y los casos de sus
+  cursos (`teacher_is_assigned_to_grade(..., 'regular')`, 3 argumentos), así
+  que Orientación (asignada a "todo el colegio") ve todo. **Tutores y
+  estudiantes: ninguna policy** (expediente interno).
+- Insert: solo en nombre propio, estado inicial `abierto`, y el curso tiene
+  que ser el REAL del estudiante (`incident_student_grade()`, security
+  definer, nombre nuevo -- sin sobrecargas). El docente solo para sus cursos.
+- **La Regla del 3** de la ficha (3 leves en 30 días = grave por
+  reincidencia): la lista la marca en rojo y el formulario avisa al guardar.
+  Constantes en `web/src/lib/incidents/labels.ts` (módulo plano).
+- Módulos `incidencias` (teacher + FULL_ACCESS) e `incidencias_gestionar`
+  (FULL_ACCESS); enlace en `Sidebar.tsx` para teacher y default (Académico).
+- `npm run smoke`: 5 comprobaciones nuevas (docente ve y registra en su
+  curso, director ve todo, tutor y estudiante no ven nada).
+
+**Verificado**: Postgres local con esquema espejo, migración aplicada 2
+veces, 8 escenarios con sesión simulada (reporta en su curso OK; curso ajeno,
+curso falseado, en nombre de otro y "ya cerrado" bloqueados; docente no puede
+cerrar; directora ve todo y da seguimiento; otro colegio y tutor ven 0).
+`tsc`/`eslint`/`next build` limpios. **Migración aplicada en producción el 2026-09-23; pantallas sin desplegar.**
+
+**Abierto, a decidir con el colegio**: Orientación (Génesis) tiene rol
+`teacher`, así que VE todos los casos pero NO puede registrar el seguimiento
+(solo dirección). Si el seguimiento debe hacerlo Orientación, hay que darle
+ese permiso explícitamente.
+
+## Solicitud de empleo en la página web del colegio (2026-09-23)
+
+Reemplaza la "Solicitud de Empleo - Personal Docente y Administrativo" en
+papel. Sección nueva "Trabaja con nosotros" en `/colegio/[subdomain]` (antes
+de Contacto) que lleva a `/colegio/[subdomain]/empleo`, un formulario público
+con las 7 secciones del documento + CV y certificaciones. Dirección lo revisa
+en `/dashboard/personal/solicitudes` (botón "Solicitudes de empleo" en
+Personal; mismo permiso `personal`, sin módulo nuevo ni cambio en Sidebar).
+
+- Migración `20260923020000_job_applications.sql`: tabla `job_applications`
+  **sin ninguna policy para anon** (y `revoke all ... from anon`): el envío
+  pasa por una Server Action con service_role que valida colegio, campos y
+  archivos. Lectura/actualización solo dirección. Bucket privado
+  `solicitudes-empleo`; lectura por signed URL de 5 min.
+- **Archivos con enlace firmado de subida** (`createSignedUploadUrl` +
+  `uploadToSignedUrl` desde el navegador), NO dentro de la Server Action.
+  Motivo, y es un hallazgo que afecta a TODO el proyecto: **las Server
+  Actions de Next tienen un límite de 1 MB de cuerpo por defecto** y
+  `next.config.ts` no configura `serverActions.bodySizeLimit`. Las subidas
+  existentes que dicen aceptar hasta 10 MB (justificantes de ausencia,
+  comprobantes de pago, fichas escaneadas, imagen de comunicados) mandan el
+  archivo por Server Action, así que **un archivo de más de ~1 MB
+  probablemente falla** (una foto de iPhone pesa 2-4 MB). NO se corrigió en
+  esta tarea: sin verificar en producción y con impacto en varias pantallas.
+  Además Vercel corta a ~4.5 MB por petición aunque se suba el límite.
+- Antispam mínimo: campo trampa oculto (`website`). No hay límite de envíos
+  por IP.
+- Nada de esto crea personal: si se contrata a alguien, se agrega en Personal.
+
+**Verificado**: Postgres local (declaración obligatoria; anon no inserta;
+directora ve y actualiza; docente, tutor y otro colegio ven 0), `tsc`/
+`eslint`/`next build` limpios, y los 3 formularios nuevos del día (empleo,
+incidencia, firma de política) abiertos en Chromium con Playwright: campos
+condicionales, filtro de curso y botón de firma funcionan, cero errores de
+consola. **Migración aplicada en producción el 2026-09-23; pantallas sin desplegar.**
+
+### Aplicado a producción el 2026-09-23 (PAT de un solo uso, borrado al terminar)
+
+- Migraciones `20260923000000` (políticas), `20260923010000` (incidencias) y
+  `20260923020000` (solicitudes de empleo): tablas, 15 policies, bucket
+  `solicitudes-empleo` privado; `anon` sin EXECUTE en `incident_student_grade`
+  ni INSERT en `job_applications`. Como las demás aplicadas por API desde el
+  2026-09-08, **no quedaron registradas en `supabase_migrations.schema_migrations`**
+  (son idempotentes, volver a correrlas es inofensivo).
+- Seed de la Política de Confidencialidad: 1 política activa, con las dos líneas
+  agregadas (excepción de Actualizaciones y la tablet del colegio).
+- `schools.faq_document` (4,660 → 8,347 caracteres): se agregaron Niveles,
+  Inscripción y libros de Amco (`docs/UTILES_2026_2027.md`), y la sección vieja
+  de normas se REEMPLAZÓ por la nueva (`docs/NORMAS_CONVIVENCIA_2026-2027.md`),
+  conservando sus 4 reglas del día a día (puntualidad, celulares, pelo, salidas).
+  **Se dejó fuera a propósito la línea del enlace al PDF de la presentación**:
+  el PDF vive en `web/public/documentos/` y no existe hasta desplegar; el
+  asistente habría ofrecido un enlace roto.
+- `npm run smoke`: **57 de 57 OK** (las 10 comprobaciones nuevas incluidas), y 0
+  firmas / 0 incidencias / 0 solicitudes después: la prueba no dejó nada.
+- Familias que ya entraron: **94 de 242 inscritas (38.8%)**. Las normas se
+  envían al llegar al 90% o el 2026-10-23, lo primero que ocurra.
+
+**Al desplegar (con permiso del usuario, fuera del horario de clases):**
+1. Agregar al final de la sección de normas del `faq_document` la línea
+   "Presentación completa de las Normas de Convivencia (PDF): si la familia
+   quiere verla, ofrecerle este enlace:
+   https://www.educacionmanantial.com/documentos/normas-de-convivencia-2026-2027.pdf"
+   y comprobar primero que el enlace abre con sesión iniciada.
+2. Las listas de útiles por curso siguen solo en el documento: falta el código
+   que le pase al asistente únicamente la lista del curso de cada hijo.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

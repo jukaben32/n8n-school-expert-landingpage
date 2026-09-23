@@ -153,6 +153,12 @@ export default async function PersonalPage({
             )}
           </Link>
           <Link
+            href="/dashboard/personal/solicitudes"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 hover:bg-slate-50 transition"
+          >
+            Solicitudes de empleo
+          </Link>
+          <Link
             href="/dashboard/personal/nuevo"
             className="dash-btn-primary inline-flex items-center gap-2 text-sm px-5 py-2.5"
           >
