@@ -50,9 +50,10 @@ Contamos con su apoyo para que, desde casa, refuercen la importancia del respeto
 En la sección Autorizaciones de la plataforma encontrarán el Acta de Compromiso para la Convivencia Armoniosa, que les pedimos firmar por cada uno de sus hijos.
 
 Atentamente,
-[NOMBRE DEL DIRECTOR/A — PENDIENTE]
+Gladys Esther Vargas
+Directora
 Centro Educativo Gran Manantial de Sabiduría
-Distrito Educativo [NÚMERO — PENDIENTE]
+Distrito Educativo 05
 ```
 
 ## 3. Acta de Compromiso → Autorización (a todo el colegio, una firma por estudiante)
@@ -82,11 +83,17 @@ Al firmar este documento, el padre/madre o tutor declara, en su nombre y en el d
 Nota: en papel firmaba también el estudiante. En la plataforma firma el tutor por cada
 hijo; el texto dice que lo hace "en su nombre y en el del estudiante".
 
-## 4. Cuándo enviar: cuando el 100% de las familias haya entrado
+## 4. Cuándo enviar
 
-Aclarado por el usuario el 2026-09-23: la condición es el **100% de las familias**
-(con al menos un estudiante inscrito) con al menos un tutor que ya entró a la
-plataforma. Consulta de solo lectura:
+**Regla confirmada por el usuario (2026-09-23): lo que ocurra primero entre**
+- el **90%** de las familias inscritas con al menos un tutor que ya entró a la plataforma, o
+- el **2026-10-23** (un mes desde el 2026-09-23).
+
+Antes de publicar, confirmar con el usuario (le llega a todas las familias).
+Las familias que no firmen el acta en la plataforma se completan en papel.
+
+
+Consulta de solo lectura para medir el porcentaje:
 
 ```sql
 with fam as (
