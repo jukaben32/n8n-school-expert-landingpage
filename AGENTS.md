@@ -4036,9 +4036,19 @@ consola. **Migración aplicada en producción el 2026-09-23; pantallas sin despl
 autorizado por la usuaria, fuera de horario de clases). La vista previa de Vercel
 del mismo commit desplegó sin errores; el despliegue de producción no se pudo
 comprobar desde la sesión (el `curl` a producción lo bloqueó el clasificador).
-Pendiente con un PAT nuevo: aplicar `20260923030000` (último viernes del mes en el
-informe docente, el primero es el 2026-09-25) y `supabase/seeds/20260923_faq_horario.sql`
-(horario real en Preguntas frecuentes).
+**Aplicado en la base la misma madrugada** (2026-09-23, mismo PAT):
+`20260923030000` (el informe del 25/09 dice "último viernes del mes: no se evalúa";
+un día normal sigue igual, 12 de 20 el 22/09), `20260923_faq_horario.sql` (horario
+real; ya no queda "9:00 a.m.") y la línea del PDF de Normas en `faq_document` (una
+sola vez, antes de "Reglas del día a día"). El PDF no se pudo abrir desde la sesión:
+confirmarlo con sesión iniciada.
+
+**Smoke tras estos cambios**: una corrida dio 56/57 ("Familias" falló, el mensaje no
+se capturó), la siguiente 57/57 sin ningún cambio de por medio. Las corridas
+posteriores chocaron con `ThrottlerException: Too Many Requests` de la Management
+API por correrlas seguidas: **no correr `npm run smoke` varias veces en fila**,
+esperar unos minutos entre corridas. Conviene repetirlo una vez para cerrar la duda
+de "Familias" (nada de lo aplicado toca `families` ni su RLS).
 
 **Al desplegar (con permiso del usuario, fuera del horario de clases):**
 1. Agregar al final de la sección de normas del `faq_document` la línea
