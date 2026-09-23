@@ -4040,8 +4040,9 @@ comprobar desde la sesión (el `curl` a producción lo bloqueó el clasificador)
 `20260923030000` (el informe del 25/09 dice "último viernes del mes: no se evalúa";
 un día normal sigue igual, 12 de 20 el 22/09), `20260923_faq_horario.sql` (horario
 real; ya no queda "9:00 a.m.") y la línea del PDF de Normas en `faq_document` (una
-sola vez, antes de "Reglas del día a día"). El PDF no se pudo abrir desde la sesión:
-confirmarlo con sesión iniciada.
+sola vez, antes de "Reglas del día a día"). La usuaria confirmó con sesión
+iniciada que el PDF abre bien en producción, lo que confirma también que el
+despliegue del PR #33 quedó en línea.
 
 **Smoke tras estos cambios**: una corrida dio 56/57 ("Familias" falló, el mensaje no
 se capturó), la siguiente 57/57 sin ningún cambio de por medio. Las corridas
