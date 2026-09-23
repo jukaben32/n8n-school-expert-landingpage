@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
+import { canRecordIncidentFollowUp } from '@/lib/incidents/followUpAccess'
 import { SEVERITIES, LOCATIONS, MEASURES, STATUSES, labelOf } from '@/lib/incidents/labels'
 import PrintButton from '../../politicas/PrintButton'
 import FollowUpForm from './FollowUpForm'
@@ -20,12 +21,12 @@ export default async function IncidenciaDetallePage({ params }: { params: Promis
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('role')
+    .select('role, school_id')
     .eq('auth_id', user.id)
     .single()
   const role = profile?.role ?? ''
   if (!profile || !canAccess(role, 'incidencias')) redirect('/dashboard')
-  const isManager = canAccess(role, 'incidencias_gestionar')
+  const isManager = await canRecordIncidentFollowUp(supabase, role, profile.school_id)
 
   // Cliente de sesión: si la RLS no le deja ver este caso, es un 404.
   const { data: inc } = await supabase

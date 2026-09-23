@@ -3969,10 +3969,22 @@ curso falseado, en nombre de otro y "ya cerrado" bloqueados; docente no puede
 cerrar; directora ve todo y da seguimiento; otro colegio y tutor ven 0).
 `tsc`/`eslint`/`next build` limpios. **Migración aplicada en producción el 2026-09-23; pantallas sin desplegar.**
 
-**Abierto, a decidir con el colegio**: Orientación (Génesis) tiene rol
-`teacher`, así que VE todos los casos pero NO puede registrar el seguimiento
-(solo dirección). Si el seguimiento debe hacerlo Orientación, hay que darle
-ese permiso explícitamente.
+**Decidido por el colegio (2026-09-23)**: la incidencia la completa el maestro
+del curso en el momento; el **seguimiento lo hace la psicóloga (Génesis) en
+coordinación con Dirección**. Migración `20260923040000_incident_counselor_follow_up.sql`:
+función `incident_is_counselor(school_id)` (security definer, nombre nuevo) que
+reconoce a la psicóloga por su **puesto** en Personal (`staff.role = 'psychologist'`,
+activo, mismo colegio) -- NO por su rol de acceso, que sigue siendo `teacher`, así
+que ningún otro docente gana nada y `permissions.ts`/`Sidebar.tsx` no cambian. Dos
+policies nuevas (select y update) que se suman a las de Dirección. Las pantallas
+usan `canRecordIncidentFollowUp()` (`web/src/lib/incidents/followUpAccess.ts`),
+que llama a la misma función por RPC: pantalla y base no pueden discrepar.
+**Si Génesis no tiene el puesto "Psicóloga" en su ficha de Personal, no le
+funciona**: se corrige desde Personal → Editar, sin código.
+Verificado en Postgres local (aplicada 2 veces): docente normal 0/0; psicóloga ve
+y registra 1/1; psicóloga de otro colegio 0/0; dada de baja 0/0; `anon` sin EXECUTE.
+`scripts/smoke-roles.mjs` tiene una comprobación nueva (se omite si nadie tiene el
+puesto).
 
 ## Solicitud de empleo en la página web del colegio (2026-09-23)
 
