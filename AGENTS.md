@@ -3544,6 +3544,41 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
    enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
    que alcanzó a mitad de esta sesión.
 
+### Lote 7 parcial cargado: 57 lecciones de 1ro en Academia, Matemática 29/32 (2026-09-27)
+
+Nueva sesión. El usuario pegó 11 enlaces de YouTube -- dos venían pegados sin espacio en
+el mensaje (`...jlkIAatLPfohttps://youtu.be/9IX01xwHlnc`), separados a mano antes de
+procesar. **Los 11 identificaron 10 lecciones distintas, no 11**: `dhLurFukISk` y
+`yNhzDbJNnNk` resultaron ser **el mismo video subido dos veces** -- confirmado
+consultando el título real de cada uno por separado antes de asumir un bug del script:
+los dos devuelven exactamente *"Sumamos números de dos cifras · Matemática · 1ro de
+Primaria"*. `anotar-enlace.mjs` avisó el reemplazo (`ya tenía otro enlace, se
+reemplaza`) y se quedó con el segundo (`yNhzDbJNnNk`) para `matematica-u07-01`. Es un
+duplicado real de subida del usuario, no un error de emparejamiento -- ambos títulos
+son idénticos carácter por carácter.
+
+Con eso, los 10 restantes son el **lote 7 parcial** (Matemática U7 completa + U8
+completa + U9 completa -- *Sumamos números de dos cifras*, *Restamos números de dos
+cifras*, *Patrones de números*, *Cubo esfera cono y cilindro*, *Caras bordes y
+esquinas*, *Arriba abajo dentro fuera*, *Nuestras monedas*, *Los billetes*, *Largo y
+corto pesado y liviano*, *La taza el litro y el galón*). **Faltan U10-01 y U10-02**
+(*Tablas de conteo*, *Pictogramas y gráficas de barras*) para completar el lote 7 de
+12 -- no llegaron enlaces para esas dos todavía.
+
+Mismo método de siempre: `sort_order` máximo real verificado en producción (470, con
+47 lecciones ya cargadas) antes de generar el SQL filtrado a estos 10 ids, offset +470.
+
+**Verificado tras cargar**: **57 lecciones de 1ro. Primaria, sort_order 10..570, 57
+valores distintos (0 colisiones)**, las 10 nuevas con sus 3 preguntas y 6 opciones con
+dibujo cada una, publicadas. `enlaces.json` queda con 66 entradas. Matemática tiene
+ahora **29 de sus 32 lecciones cargadas** -- faltan u00-01 (lote 10, huérfanas) y
+u10-01/u10-02 (lote 7, sin enlace todavía).
+
+**Pendientes restantes**: u10-01/u10-02 (2, para cerrar lote 7), lote 8 (Naturales
+U4-U9+ABP, 14), lote 9 (Sociales U4-U10, 13) y lote 10 (las 6 huérfanas) -- **35
+lecciones** de las 92 producidas, todas ya entregadas al usuario como archivo
+descargable, esperando solo que las suba a YouTube y devuelva los enlaces.
+
 ### Lote 6 cargado: 47 lecciones de 1ro en Academia (2026-09-21)
 
 Nueva sesión (contenedor reiniciado, misma rama con todos los commits previos intactos).
