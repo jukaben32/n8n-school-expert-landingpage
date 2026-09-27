@@ -5,7 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import { getStaffAvailableCategories } from '@/lib/messaging/categoryAccess'
-import NewMessageForm from './NewMessageForm'
+import MessageForm from '@/components/comunicados/MessageForm'
 
 export const metadata: Metadata = {
   title: 'Nuevo Comunicado — MentorIApp',
@@ -61,7 +61,7 @@ export default async function NuevoComunicadoPage() {
         </p>
       </div>
 
-      <NewMessageForm
+      <MessageForm
         gradeLevelOptions={gradeLevelOptions}
         forceGradeMode={profile.role === 'teacher'}
         availableCategories={availableCategories}

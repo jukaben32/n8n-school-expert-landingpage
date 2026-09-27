@@ -2,16 +2,32 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createMessageAction } from './actions'
+import { createMessageAction, updateMessageAction } from '@/app/dashboard/comunicados/nuevo/actions'
 import DraftAssistant from '@/components/dashboard/DraftAssistant'
 import { MESSAGE_CATEGORY_LABELS, type MessageCategory } from '@/lib/messaging/categoryAccess'
 
-interface NewMessageFormProps {
+interface MessageFormInitialValues {
+  title: string
+  body: string
+  priority: 'normal' | 'urgent'
+  category: MessageCategory
+  audienceMode: 'all' | 'grades'
+  selectedGrades: string[]
+  /** Signed URL de la imagen ya guardada (si tiene). */
+  imageUrl: string | null
+}
+
+interface MessageFormProps {
   gradeLevelOptions: string[]
   /** true para 'teacher': no puede mandar a todo el colegio, solo a sus grados asignados. */
   forceGradeMode?: boolean
   /** Categorías en las que quien publica tiene permiso (ver categoryAccess.ts). Si es solo ['regular'], no se muestra selector. */
   availableCategories: MessageCategory[]
+  mode?: 'create' | 'edit'
+  /** Requerido cuando mode='edit'. */
+  messageId?: string
+  /** Requerido cuando mode='edit': precarga el formulario con el borrador existente. */
+  initialValues?: MessageFormInitialValues
 }
 
 const inputClass =
@@ -20,20 +36,36 @@ const inputClass =
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'
 
 /**
- * NewMessageForm — Crea un comunicado en la tabla `messages`.
+ * MessageForm — Crea o edita un comunicado en la tabla `messages`.
  * "Guardar borrador" deja published_at en null (solo visible para staff).
  * "Publicar ahora" establece published_at = now() (visible para familias).
+ *
+ * En modo 'edit', ambos botones actualizan el MISMO borrador (nunca crean
+ * uno nuevo) -- antes no existía forma de retomar un borrador guardado
+ * para terminar de escribirlo y publicarlo (ver AGENTS.md, 2026-09-23).
  */
-export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = false, availableCategories }: NewMessageFormProps) {
+export default function MessageForm({
+  gradeLevelOptions,
+  forceGradeMode = false,
+  availableCategories,
+  mode = 'create',
+  messageId,
+  initialValues,
+}: MessageFormProps) {
   const router = useRouter()
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
-  const [priority, setPriority] = useState<'normal' | 'urgent'>('normal')
-  const [category, setCategory] = useState<MessageCategory>(availableCategories[0] ?? 'regular')
-  const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>(forceGradeMode ? 'grades' : 'all')
-  const [selectedGrades, setSelectedGrades] = useState<string[]>([])
+  const [title, setTitle] = useState(initialValues?.title ?? '')
+  const [body, setBody] = useState(initialValues?.body ?? '')
+  const [priority, setPriority] = useState<'normal' | 'urgent'>(initialValues?.priority ?? 'normal')
+  const [category, setCategory] = useState<MessageCategory>(initialValues?.category ?? (availableCategories[0] ?? 'regular'))
+  const [audienceMode, setAudienceMode] = useState<'all' | 'grades'>(
+    forceGradeMode ? 'grades' : initialValues?.audienceMode ?? 'all'
+  )
+  const [selectedGrades, setSelectedGrades] = useState<string[]>(initialValues?.selectedGrades ?? [])
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  // La imagen que YA tiene el borrador guardado -- se pierde de vista solo
+  // si el usuario la quita explícitamente o elige un archivo nuevo.
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(initialValues?.imageUrl ?? null)
   const [saving, setSaving] = useState<'draft' | 'publish' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -55,7 +87,7 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
       setError('El título es obligatorio.')
       return
     }
-    if (!body.trim() && !image) {
+    if (!body.trim() && !image && !existingImageUrl) {
       setError('Escribe el contenido o adjunta una imagen.')
       return
     }
@@ -73,8 +105,14 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
     formData.set('gradeLevels', JSON.stringify(audienceMode === 'grades' ? selectedGrades : []))
     formData.set('category', category)
     if (image) formData.set('image', image)
+    if (mode === 'edit') {
+      formData.set('removeImage', String(!image && !existingImageUrl && !!initialValues?.imageUrl))
+    }
 
-    const result = await createMessageAction(formData)
+    const result =
+      mode === 'edit' && messageId
+        ? await updateMessageAction(messageId, formData)
+        : await createMessageAction(formData)
 
     if (!result.ok) {
       setError(result.error ?? 'No se pudo guardar el comunicado. Intenta de nuevo.')
@@ -133,6 +171,19 @@ export default function NewMessageForm({ gradeLevelOptions, forceGradeMode = fal
               <button
                 type="button"
                 onClick={() => handleImageChange(null)}
+                className="absolute -top-2 -right-2 rounded-full bg-slate-900/80 hover:bg-red-600 text-white w-6 h-6 flex items-center justify-center text-xs"
+                aria-label="Quitar imagen"
+              >
+                ✕
+              </button>
+            </div>
+          ) : existingImageUrl ? (
+            <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={existingImageUrl} alt="Imagen del borrador" className="max-h-56 rounded-xl border border-slate-200 dark:border-slate-700 object-contain" />
+              <button
+                type="button"
+                onClick={() => setExistingImageUrl(null)}
                 className="absolute -top-2 -right-2 rounded-full bg-slate-900/80 hover:bg-red-600 text-white w-6 h-6 flex items-center justify-center text-xs"
                 aria-label="Quitar imagen"
               >

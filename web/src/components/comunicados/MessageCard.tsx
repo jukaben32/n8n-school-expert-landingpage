@@ -130,6 +130,18 @@ export default function MessageCard({
             </p>
           )}
 
+          {/* Retomar un borrador (solo staff, solo si no se ha publicado) */}
+          {isStaff && !publishedAt && (
+            <div className="mt-4">
+              <a
+                href={`/dashboard/comunicados/${id}/editar`}
+                className="text-xs font-semibold text-dash-accent hover:underline"
+              >
+                ✏️ Editar borrador
+              </a>
+            </div>
+          )}
+
           {/* Botón "Confirmar lectura" para padres */}
           {!isStaff && (
             <div className="mt-4 flex items-center gap-2">
