@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export type GuardianIdentity =
-  | { ok: true; schoolId: string; familyId: string; guardianId: string }
+  | { ok: true; schoolId: string; familyId: string; guardianId: string; profileId: string }
   | { ok: false; error: string }
 
 /**
@@ -18,6 +18,14 @@ export type GuardianIdentity =
  * es padre/madre en el mismo colegio (ej. un profesor con un hijo
  * inscrito) puede usar su "Vista de Familia" sin necesitar una segunda
  * cuenta. Ver AGENTS.md, sección "Doble rol (staff + tutor)".
+ *
+ * `profileId` es el id de ESTA fila de users_profiles (única por auth_id).
+ * Los llamadores deben usar este id como sender_profile_id/autor en vez de
+ * volver a buscar "el perfil con este guardian_id" -- guardian_id no es
+ * único en users_profiles (dos tutores de la misma familia pueden
+ * compartir guardian_id por un vínculo duplicado), así que esa segunda
+ * búsqueda con .single() podía fallar con "No se encontró tu perfil." aun
+ * con la sesión perfectamente válida. Bug real en producción, 2026-09-28.
  */
 export async function resolveGuardianIdentity(): Promise<GuardianIdentity> {
   const supabase = await createClient()
@@ -26,7 +34,7 @@ export async function resolveGuardianIdentity(): Promise<GuardianIdentity> {
 
   const { data: profile } = await supabase
     .from('users_profiles')
-    .select('role, guardian_id, school_id')
+    .select('id, role, guardian_id, school_id')
     .eq('auth_id', user.id)
     .single()
 
@@ -52,5 +60,6 @@ export async function resolveGuardianIdentity(): Promise<GuardianIdentity> {
     schoolId: profile.school_id as string,
     familyId: guardian.family_id as string,
     guardianId: profile.guardian_id as string,
+    profileId: profile.id as string,
   }
 }

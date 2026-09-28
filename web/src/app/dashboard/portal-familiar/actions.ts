@@ -215,18 +215,11 @@ export async function sendFamilyDirectMessage(body: string, category: MessageCat
     return { ok: false, error: err instanceof Error ? err.message : 'No se pudo abrir la conversación.' }
   }
 
-  const { data: guardianProfile } = await admin
-    .from('users_profiles')
-    .select('id')
-    .eq('guardian_id', identity.guardianId)
-    .single()
-  if (!guardianProfile) return { ok: false, error: 'No se encontró tu perfil.' }
-
   const now = new Date().toISOString()
   const { error: insertError } = await admin.from('direct_messages').insert({
     conversation_id: conversationId,
     sender_type: 'guardian',
-    sender_profile_id: guardianProfile.id,
+    sender_profile_id: identity.profileId,
     body: trimmed,
   })
   if (insertError) return { ok: false, error: 'No se pudo enviar el mensaje.' }
