@@ -5577,6 +5577,45 @@ lo lee (el gráfico usa `pending/overdue`, que ya mostraban la cuota del mes com
 en producción: era idéntica a la de `20260907000000`) y verificada en la pantalla. `npm run smoke`
 no se corrió desde esta sesión (acceso a producción bloqueado por el harness).
 
+## Recargo por mora: cuota por cuota, SIMPLE, máximo 14% (2026-09-29)
+
+**Reporte del colegio**: tras el cambio del día 25, 143 estudiantes aparecían con recargo de
+14.74% sobre TODO su saldo, incluida la cuota de septiembre que todavía es corriente. Recargo
+total mostrado RD$131,171.
+
+**La regla del colegio (dicha por el usuario, NO reinterpretar):**
+- Cada cuota es independiente. Lo que se debe de un mes no se traslada ni afecta al siguiente.
+- La cuota del mes X es corriente del 25 de X al 5 de X+1, sin recargo.
+- Desde el día 6 de X+1, ESA cuota suma 5%, luego +3%, +3% y +3% (etapas de `schools`).
+  **Suma simple, nunca compuesta: máximo 14% por cuota.** Un padre con atrasos nunca paga más
+  que la tarifa de cada mes más 14%.
+
+**Dos errores corregidos** en `20260929000000_late_fee_per_installment.sql`, **aplicada en
+producción el 2026-09-29** por el usuario en el SQL Editor:
+1. El recargo se calculaba sobre el saldo total con los días de atraso de la cuota más vieja.
+   Al entrar septiembre desde el 25 (migración del 28), septiembre heredaba el 14% de agosto.
+   Ahora cada cuota cuenta su atraso desde su propio vencimiento.
+2. Las etapas se multiplicaban (1.05 x 1.03 x 1.03 x 1.03 = 14.74%) desde `20260903020000`.
+   Ahora se suman.
+
+Verificado con datos reales tras aplicar: RD$131,171 → **RD$40,551.54**, recargo máximo exacto
+14.00% sobre la cuota pendiente, y un estudiante con agosto + septiembre pendientes (RD$6,150)
+pasó de RD$906.28 a RD$287.00. **Nunca se generó ninguna factura "Recargo por Mora"**, así que
+el error no llegó a cobrarse. Misma firma y columnas: ningún consumidor cambió. Para revertir,
+volver a aplicar `20260928000000`.
+
+**Tercera corrección, la definitiva** (`20260929010000_late_fee_only_in_its_cycle.sql`,
+**aplicada por el usuario y verificada el 2026-09-29: 0 estudiantes con recargo ese día**):
+el recargo de una cuota solo existe del día 6 al 24 del mes siguiente. **El día 25 empieza el
+ciclo nuevo y el recargo viejo DESAPARECE** ("nada de lo viejo es trasladable"). La deuda de
+la cuota sigue; su recargo no. Ejemplo: debe agosto; el 10-sep lleva 8% de agosto, el 29-sep
+no lleva recargo, el 20-oct lleva 14% solo de septiembre. Las dos correcciones anteriores de
+este mismo día interpretaban mal la regla: no volver a ellas.
+
+**Queda sin cambiar, a propósito**: el tramo de antigüedad y el "saldo" de una familia que
+debe agosto incluyen también septiembre (corriente). Separarlo exige una columna nueva en la
+función y tocar todas las pantallas; no se hizo en la urgencia.
+
 ## Módulo de Nómina: SOLO PLANIFICADO -- terminar la investigación legal es PRIORIDAD (2026-09-29)
 
 Plan completo en `docs/PLAN_MODULO_NOMINA.md` (marco legal RD, cifras 2026, diseño de tablas, motor de
