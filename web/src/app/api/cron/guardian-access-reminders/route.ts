@@ -263,7 +263,12 @@ async function run(request: NextRequest) {
     }
 
     const authEmail = normalizeEmail(authUserData.user.email)
-    if (authUserData.user.last_sign_in_at && authEmail === guardianEmail) {
+    // Si ya entró alguna vez, se deja de insistir, entre con el correo que
+    // entre (real o interno @mentoriapp.local). Antes se exigía además que el
+    // correo de acceso coincidiera con el de la ficha: quien entraba con el
+    // usuario interno nunca quedaba regularizado, seguía recibiendo
+    // recordatorios y el proceso le cambiaba el usuario de acceso.
+    if (authUserData.user.last_sign_in_at) {
       summary.regularized++
       await recordStop(admin, guardian, reminder, 'regularizado', dryRun)
       continue
