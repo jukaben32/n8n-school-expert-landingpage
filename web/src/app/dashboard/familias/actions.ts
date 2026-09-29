@@ -443,13 +443,33 @@ async function createPhoneBasedAccess(
       return { ok: false, message: `No se pudo crear el acceso: ${createError?.message ?? 'error desconocido'}` }
     }
     // Ya existe una cuenta con este teléfono (ej. otro hijo con la misma
-    // madre ya tiene acceso creado así) -- se reusa la cuenta, pero se le
-    // asigna una contraseña nueva para poder mostrarla de nuevo (la
-    // original nunca quedó guardada en ningún lado, ni debía).
+    // madre ya tiene acceso creado así) -- se reusa la cuenta.
     const existingUser = await findAuthUserByEmail(admin, pseudoEmail)
     if (!existingUser) {
       return { ok: false, message: 'Ya existe una cuenta con este teléfono, pero no se pudo vincular. Contacta soporte.' }
     }
+
+    // BUG real: antes se le cambiaba SIEMPRE la contraseña a esa cuenta.
+    // Cada vez que secretaría daba acceso a otro hijo (o confirmaba otra
+    // ficha escaneada) de la misma madre, la contraseña que la madre ya
+    // tenía dejaba de servir y le tocaba pedir otra. Si la cuenta ya entró
+    // alguna vez, NO se toca: solo se vincula y se le dice a secretaría que
+    // use el mismo usuario. Si nunca entró, la contraseña en papel sigue sin
+    // usarse, así que reemplazarla es seguro (y es la única forma de
+    // volver a mostrarla, porque no se guarda en ningún lado).
+    if (existingUser.last_sign_in_at) {
+      const linkExisting = await linkProfileForDualRole(admin, existingUser.id, schoolId, { guardianId: guardian.id })
+      if (!linkExisting.ok) {
+        return { ok: false, message: `La cuenta ya existía, pero no se pudo vincular el perfil: ${linkExisting.message}` }
+      }
+      revalidatePath('/dashboard/familias')
+      revalidatePath('/dashboard/estudiantes/escaneos')
+      return {
+        ok: true,
+        message: `Esta persona ya tenía cuenta y ya ha entrado antes. NO se cambió su contraseña: entra con ${pseudoEmail} y la contraseña que ya usa. Si no la recuerda, usa "Clave temporal" en su ficha.`,
+      }
+    }
+
     const { error: updateError } = await admin.auth.admin.updateUserById(existingUser.id, { password: tempPassword })
     if (updateError) {
       return { ok: false, message: `No se pudo restablecer el acceso existente: ${updateError.message}` }

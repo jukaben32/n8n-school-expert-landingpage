@@ -12,6 +12,14 @@ export default function PasswordInput({ className = '', ...props }: PasswordInpu
   return (
     <div className="relative">
       <input
+        // Al mostrar la contraseña el campo pasa a ser de texto normal y el
+        // iPhone/Android le aplica mayúscula inicial, autocorrección y
+        // espacio final. Eso cambia lo que se guarda sin que la persona lo
+        // note y luego "la contraseña no funciona". Se desactiva siempre;
+        // va ANTES de {...props} por si algún formulario necesita otra cosa.
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         {...props}
         type={showPassword ? 'text' : 'password'}
         className={`${className} pr-11`}
