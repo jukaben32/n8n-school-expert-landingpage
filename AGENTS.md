@@ -3544,6 +3544,35 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
    enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
    que alcanzó a mitad de esta sesión.
 
+### Lote 7 completo, Matemática 32/32: los 92 videos de 1ro quedan todos enlazados y cargados (2026-09-29)
+
+Cierre del lote 7. El usuario pegó los 2 links que faltaban de esa tanda:
+`GDwya7n7D_U` y `XR7SKKKV3Hs` -- identificados por título real (no por posición)
+con `lib/anotar-enlace.mjs`: `1ro-primaria-matematica-u10-01` (*Tablas de
+conteo*) y `1ro-primaria-matematica-u10-02` (*Pictogramas y gráficas de
+barras*). `anotar-enlace.mjs` reportó **68 de 68 con enlace** -- ya no queda
+ninguna de las 92 lecciones producidas sin su link de YouTube.
+
+Mismo método de siempre: `sort_order` máximo real verificado en producción
+(570, con 57 lecciones ya cargadas) antes de generar el SQL filtrado a estos 2
+ids, offset +570.
+
+**Verificado tras cargar**: **59 lecciones de 1ro. Primaria, sort_order
+10..590, 59 valores distintos (0 colisiones)**, las 2 nuevas con sus 3
+preguntas y 6 opciones con dibujo cada una, publicadas.
+
+**Con esto, Matemática queda con sus 32/32 lecciones CARGADAS en Academia --
+el plan completo de esa materia, no solo producido.** Lengua Española sigue en
+19/21 (faltan u00-01/u00-02, parte del lote 10). Naturales y Sociales siguen en
+su primer trimestre cargado (mismo estado que lotes anteriores).
+
+**Pendientes restantes**: lote 8 (Naturales U4-U9+ABP, 14), lote 9 (Sociales
+U4-U10, 13) y lote 10 (las 6 lecciones "huérfanas" encontradas el 2026-09-18:
+lengua-u00-01/02, matematica-u00-01, naturales-u02-01, sociales-u02-01/u03-01)
+-- **33 lecciones** de las 92 producidas, todas ya entregadas al usuario como
+archivo descargable, esperando solo que las suba a YouTube (limitado por la
+cuota diaria) y devuelva los enlaces.
+
 ### Lote 7 parcial cargado: 57 lecciones de 1ro en Academia, Matemática 29/32 (2026-09-27)
 
 Nueva sesión. El usuario pegó 11 enlaces de YouTube -- dos venían pegados sin espacio en
