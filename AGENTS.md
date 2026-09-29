@@ -5554,3 +5554,25 @@ Si algún día se quiere "entró a Academia" literal, hace falta registrar visit
 lecciones (20 de 21) era muy larga para el grupo. `20260922010000_teacher_daily_report_academia_total.sql`
 reemplaza la función para mostrar solo "Aún sin ninguna lección: N de M docentes".
 **Aplicada y verificada en producción el 2026-09-22** (PAT de un solo uso, borrado).
+
+## Cuentas por Cobrar: la cuota del mes es deuda corriente desde el día 25 (2026-09-28)
+
+**Reporte real del colegio**: el 28-sep "Total corriente" mostraba RD$0.00 y un padre que fue a
+pagar aparecía sin deuda. Causa: `calculate_receivable_status()` solo metía una cuota en el cálculo
+cuando llegaba su vencimiento (`due_date <= p_as_of`), y la cuota de septiembre vence el 1-oct.
+
+**Práctica del colegio (confirmada por el usuario, NO revertir)**: la cuota del mes X se cobra del
+**25 de X al 5 de X+1** y durante ese periodo es deuda **corriente**. Desde el día 6 de X+1 pasa a
+mora (tramos y recargo sin cambios).
+
+Migración `20260928000000_receivables_current_from_day_25.sql`: único cambio, la condición de entrada
+pasa a `(period_month + 24) <= p_as_of` (día 25 del mes de la cuota). Misma firma y columnas. Antes
+del vencimiento `days_overdue` queda en 0 (`greatest(...,0)`) => bucket `corriente`, sin recargo.
+Todos los consumidores (Cuentas por Cobrar, Panel, Reportes, Plataforma, bloqueo 61+ del Portal
+Familiar, recargo por mora) pasan por esta función, así que heredan la regla sin más cambios.
+`list_school_monthly_cashflow` NO se tocó: su `is_due` sigue usando `due_date`, pero ninguna pantalla
+lo lee (el gráfico usa `pending/overdue`, que ya mostraban la cuota del mes como pendiente).
+
+**Aplicada por el usuario en producción el 2026-09-28 vía SQL Editor** (antes se comparó la versión
+en producción: era idéntica a la de `20260907000000`) y verificada en la pantalla. `npm run smoke`
+no se corrió desde esta sesión (acceso a producción bloqueado por el harness).
