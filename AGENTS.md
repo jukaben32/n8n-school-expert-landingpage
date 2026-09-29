@@ -3544,6 +3544,31 @@ dos entregas -- la hoja de títulos/descripciones Y los archivos `.mp4` reales v
    enlace** -- limitado por la cuota diaria de subidas de YouTube, que el usuario avisó
    que alcanzó a mitad de esta sesión.
 
+### Lote 8 parcial cargado: 67 lecciones de 1ro en Academia (2026-09-29)
+
+Mismo día, continuación inmediata tras cerrar el lote 7. El usuario pegó 8 enlaces de
+YouTube sin decir a qué lote correspondían -- identificados por título real con
+`lib/anotar-enlace.mjs` (los 8 calzaron 1:1, sin ambigüedad): son el **lote 8 parcial**
+(Ciencias Naturales U4 completa -- *Lavarse las manos y cepillarse los dientes*,
+*Alimentos que me hacen bien*, *Cuando me enfermo y las vacunas* --, U5 completa --
+*Sólido, líquido y gas*, *¿Se disuelve o no se disuelve?* --, U6 completa -- *Máquinas
+simples que uso todos los días*, *Casas, edificios y cómo nos comunicamos* -- y
+U7-01 -- *Sonidos fuertes y suaves*). `anotar-enlace.mjs` reportó **76 de 76 con
+enlace**.
+
+Mismo método de siempre: `sort_order` máximo real verificado en producción (590, con
+59 lecciones ya cargadas) antes de generar el SQL filtrado a estos 8 ids, offset +590.
+
+**Verificado tras cargar**: **67 lecciones de 1ro. Primaria, sort_order 10..670, 67
+valores distintos (0 colisiones)**, las 8 nuevas con sus 3 preguntas y 6 opciones con
+dibujo cada una, publicadas.
+
+**Pendientes restantes del lote 8**: Naturales U7-02, U8 (2), U9 (2) y el ABP (5
+lecciones) -- todavía sin enlace. Más el lote 9 completo (Sociales U4-U10, 13) y el
+lote 10 (las 6 huérfanas) -- **25 lecciones** de las 92 producidas, todas ya
+entregadas al usuario como archivo descargable, esperando solo que las suba a YouTube
+y devuelva los enlaces.
+
 ### Lote 7 completo, Matemática 32/32: los 92 videos de 1ro quedan todos enlazados y cargados (2026-09-29)
 
 Cierre del lote 7. El usuario pegó los 2 links que faltaban de esa tanda:
