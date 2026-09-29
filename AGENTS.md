@@ -5576,3 +5576,28 @@ lo lee (el gráfico usa `pending/overdue`, que ya mostraban la cuota del mes com
 **Aplicada por el usuario en producción el 2026-09-28 vía SQL Editor** (antes se comparó la versión
 en producción: era idéntica a la de `20260907000000`) y verificada en la pantalla. `npm run smoke`
 no se corrió desde esta sesión (acceso a producción bloqueado por el harness).
+
+## Módulo de Nómina: SOLO PLANIFICADO -- terminar la investigación legal es PRIORIDAD (2026-09-29)
+
+Plan completo en `docs/PLAN_MODULO_NOMINA.md` (marco legal RD, cifras 2026, diseño de tablas, motor de
+cálculo, fases). **No hay código.** El usuario pidió explícitamente que, por la importancia de cada
+detalle, **antes de construir nada se termine de verificar en fuentes oficiales** lo que quedó
+pendiente (sección 10 del plan):
+
+- Tope de la regalía pascual en 5 salarios mínimos (art. 219 CT) y cuál salario mínimo aplica.
+- Si la regalía está exenta de aportes TSS (además de ISR, que sí confirma la Ley 30-26 art. 33).
+- Recaudo de INFOTEP vía TSS y el 0.5% sobre bonificación (Ley 116-80).
+- Flujo de subsidios de maternidad/enfermedad (SISALRIL): quién paga y cómo se reembolsa.
+- Plazo exacto del IR-3 y recargos vigentes tras la Ley 30-26.
+- Formularios SIRLA adicionales al DGT-3 que apliquen a un colegio.
+- Si existe salario mínimo sectorial para centros educativos privados.
+- Layout vigente del archivo de autodeterminación TSS (el instructivo oficial daba 404 el 2026-09-29;
+  descargarlo desde SUIRPlus o tss.gob.do).
+- La Guía 11 de la DGII (PDF) no se pudo leer en esta sesión (sin herramienta de PDF): leerla completa.
+
+Hallazgo clave ya confirmado: la **Ley 30-26** (promulgada 18-jun-2026) cambia la escala del ISR de
+asalariados desde el **1-ene-2027** (exento hasta RD$480,000, nuevo tramo de 27%). Por eso ninguna
+cifra legal puede ir en el código: todo en `legal_parameters` con fecha de vigencia.
+
+**Cómo aplicar:** en la próxima sesión que toque Nómina (o en cuanto haya acceso a esas fuentes),
+primero cerrar esta lista contra el texto oficial y actualizar el plan; recién después, Fase 0.
