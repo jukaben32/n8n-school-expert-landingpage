@@ -15,7 +15,7 @@ Lo importante para el colegio:
 - El padre escribe el celular registrado en el colegio.
 - El sistema busca un tutor activo con ese telefono.
 - Si lo encuentra y tiene estudiantes vinculados, envia un codigo temporal por WhatsApp.
-- El codigo vence en 10 minutos.
+- El codigo vence en 24 horas durante la transicion.
 - El codigo permite maximo 5 intentos.
 - Se limitan los envios repetidos al mismo telefono.
 - Si el tutor ya tenia cuenta, se reutiliza esa cuenta.
@@ -102,7 +102,7 @@ Desde ahi ve solo lo que esta vinculado a su `guardian_id`.
 
 Para que sea sencillo sin volverse inseguro:
 
-- El codigo debe expirar rapido, por ejemplo en 10 minutos.
+- El codigo debe expirar. En una operacion completamente automatizada puede ser corto, por ejemplo 10 minutos. Durante la transicion actual se deja en 24 horas para dar margen al personal y a las familias.
 - Limitar intentos por codigo, por ejemplo maximo 5 intentos.
 - Limitar envios por telefono, por ejemplo pocos codigos por hora.
 - No decir "este telefono no existe"; usar un mensaje neutral:

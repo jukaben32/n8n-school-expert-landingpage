@@ -23,7 +23,8 @@ type GuardianMatch = {
   phone: string | null
 }
 
-const CODE_TTL_MINUTES = 10
+const CODE_TTL_HOURS = 24
+const CODE_TTL_LABEL = '24 horas'
 const MAX_ATTEMPTS = 5
 const MAX_CODES_PER_15_MINUTES = 3
 const PHONE_AUTH_DOMAIN = 'familias.mentoriapp.local'
@@ -161,7 +162,7 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
 
   const auth = await ensureAuthForGuardian(guardian, normalizedPhone)
   const code = generateCode()
-  const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000).toISOString()
+  const expiresAt = new Date(Date.now() + CODE_TTL_HOURS * 60 * 60 * 1000).toISOString()
 
   const { data: challenge, error: challengeError } = await admin
     .from('family_phone_access_codes')
@@ -192,7 +193,7 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
   const message = [
     `Tu codigo de acceso al Portal Familiar de ${schoolName} es: ${code}`,
     '',
-    `Vence en ${CODE_TTL_MINUTES} minutos. No lo compartas con nadie.`,
+    `Tiene tiempo limitado: vence en ${CODE_TTL_LABEL}. No lo compartas con nadie.`,
   ].join('\n')
 
   try {
@@ -206,7 +207,7 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
     ok: true,
     challengeId: challenge.id,
     maskedPhone: maskPhone(rawPhone),
-    message: `Enviamos un codigo por WhatsApp al numero ${maskPhone(rawPhone)}.`,
+    message: `Enviamos un codigo por WhatsApp al numero ${maskPhone(rawPhone)}. Tiene tiempo limitado: vence en ${CODE_TTL_LABEL}.`,
   }
 }
 

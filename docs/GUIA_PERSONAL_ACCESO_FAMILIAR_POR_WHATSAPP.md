@@ -100,7 +100,7 @@ El codigo es temporal.
 
 Reglas importantes:
 
-- El codigo dura 10 minutos.
+- El codigo dura 24 horas.
 - Solo sirve una vez.
 - Permite hasta 5 intentos.
 - Si vence, el padre debe pedir otro codigo.
@@ -232,6 +232,12 @@ No. La nueva entrada solo envia codigo cuando el padre lo solicita escribiendo s
 
 Ademas, durante la transicion se desactivo el cron que enviaba recordatorios automaticos cada hora a padres que nunca habian entrado.
 
+### Cuanto tiempo tiene el padre para usar el codigo?
+
+El padre tiene 24 horas para usarlo.
+
+Aunque dure 24 horas, se debe explicar como un codigo de tiempo limitado. No es una clave permanente.
+
 ### Esto depende de WhatsApp?
 
 Para recibir el codigo, si. Por eso el WhatsApp del colegio debe estar conectado.
@@ -274,16 +280,36 @@ Revisar:
 - Si el numero esta repetido en otro tutor.
 - Si el tutor tiene estudiantes vinculados.
 - Si WhatsApp esta conectado.
-- Si el padre esta escribiendo el codigo dentro de los 10 minutos.
+- Si el padre esta escribiendo el codigo dentro de las 24 horas.
 - Si el padre pidio demasiados codigos seguidos.
 
-## 14. Frase clave para el personal
+## 14. Situacion actual: WhatsApp automatico no activo
+
+Si el WhatsApp automatico del colegio todavia no esta activo, no se debe anunciar el acceso de forma masiva.
+
+Durante la transicion, la recomendacion es trabajar con pocas familias por dia:
+
+1. Elegir pocas familias de prueba.
+2. Confirmar que el celular esta correcto.
+3. Confirmar que el tutor tiene estudiante vinculado.
+4. Enviar instrucciones manualmente por WhatsApp Business.
+5. Dar seguimiento para confirmar que lograron entrar.
+
+Mensaje manual sugerido:
+
+> Buen dia. Estamos probando el nuevo acceso al Portal Familiar. Entre aqui: https://n8n-school-expert-landingpage.vercel.app/acceso-familiar Escriba su celular registrado y siga las instrucciones. El codigo de acceso tiene tiempo limitado y vence en 24 horas.
+
+Nota importante:
+
+El sistema actual esta preparado para enviar el codigo automaticamente cuando WhatsApp este conectado. Si el colegio va a enviar codigos manualmente, debe usarse un flujo controlado por secretaria, nunca mostrar codigos en publico ni compartirlos fuera del tutor correspondiente.
+
+## 15. Frase clave para el personal
 
 La forma mas simple de explicarlo es:
 
 > El padre entra con su celular registrado. El sistema le manda un codigo por WhatsApp. Con ese codigo entra al Portal Familiar.
 
-## 15. Nota de seguridad
+## 16. Nota de seguridad
 
 El personal del colegio nunca debe pedir al padre que le envie el codigo.
 
@@ -291,12 +317,13 @@ Si alguien llama diciendo "deme el codigo que le llego", no se debe compartir.
 
 El codigo sirve para entrar al portal de esa familia. Debe manejarse como algo privado.
 
-## 16. Estado actual del sistema
+## 17. Estado actual del sistema
 
 Estado al 2026-09-30:
 
 - Nueva pantalla de acceso familiar creada.
 - Acceso anterior conservado.
 - Codigo automatico por WhatsApp implementado.
+- Codigo con vencimiento de 24 horas durante la transicion.
 - Cron de recordatorios automaticos por correo desactivado durante la transicion.
 - Pendiente operativo: probar con pocas familias antes de anunciarlo masivamente.
