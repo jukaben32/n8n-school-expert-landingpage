@@ -5629,6 +5629,13 @@ función y tocar las pantallas, así que no se hizo el 2026-09-29.
   crea una factura pagada de concepto "Recargo por Mora" separada de la factura pagada de
   "Mensualidad", para no contaminar el FIFO de cuotas futuras.
 
+**Reparación de consumidores del panel (2026-09-30)**: tras verificar la captura del usuario, el
+Centro de control y Reportes seguían usando `list_school_receivables()` y por eso la tarjeta
+"Cartera vencida" incluía también cuotas corrientes de estudiantes con mora. Ahora leen
+`list_school_receivables_breakdown()` y suman solo `overdue_principal_amount + late_fee_amount`.
+Plataforma recibió `20260930010000_network_receivables_breakdown.sql`, que actualiza
+`list_school_receivables_network()` para devolver el mismo desglose en vista multi-colegio.
+
 ## Módulo de Nómina: SOLO PLANIFICADO -- terminar la investigación legal es PRIORIDAD (2026-09-29)
 
 Plan completo en `docs/PLAN_MODULO_NOMINA.md` (marco legal RD, cifras 2026, diseño de tablas, motor de

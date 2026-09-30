@@ -86,7 +86,7 @@ export default async function ReportesPage() {
     supabase.from('direct_conversations').select('id, staff_last_read_at, direct_messages(sender_type, created_at)').eq('school_id', schoolId),
     supabase.from('quiz_attempts').select('score, max_score, lesson_id, lessons(title)').eq('school_id', schoolId).not('completed_at', 'is', null),
     supabase.from('class_updates').select('id', { count: 'exact', head: true }).eq('school_id', schoolId).is('deleted_at', null).gte('created_at', thirtyDaysAgoIso),
-    supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
+    supabase.rpc('list_school_receivables_breakdown', { p_school_id: schoolId }),
   ])
 
   // ── Estudiantes ─────────────────────────────────────────────────────
@@ -137,21 +137,22 @@ export default async function ReportesPage() {
   // colegio crea cada factura ya 'pagado' desde "Registrar pago externo".
   // Con eso, este numero estaba condenado a RD$0 pase lo que pase, mientras
   // el Panel y Cuentas por Cobrar mostraban cientos de miles de pesos de
-  // deuda real. Se lee la MISMA RPC que esas dos pantallas -- un solo motor
-  // de mora para las tres, no una tercera version que pueda divergir.
+  // deuda real. Se lee la MISMA RPC desglosada que esas dos pantallas --
+  // un solo motor de mora para las tres, no una tercera version que pueda
+  // divergir.
   type ReceivableRow = {
     family_id: string
     overdue_amount: number
     late_fee_amount: number | null
+    overdue_principal_amount: number | null
     aging_bucket: string | null
   }
   const receivables = (receivablesRaw ?? []) as ReceivableRow[]
-  // Igual que el Panel: la RPC devuelve `overdue_amount` tambien para la
-  // cuota corriente (ya paso el dia 1, pero la familia puede pagar sin
-  // recargo hasta el dia 5). Esa todavia no es cartera vencida.
-  const enMora = receivables.filter((r) => Number(r.overdue_amount) > 0 && r.aging_bucket !== 'corriente')
+  // El principal vencido viene separado de la cuota corriente, así que la
+  // cartera vencida no se infla con meses aún cobrables sin mora.
+  const enMora = receivables.filter((r) => Number(r.overdue_principal_amount ?? 0) > 0)
   const carteraVencida = enMora.reduce(
-    (sum, r) => sum + Number(r.overdue_amount) + Number(r.late_fee_amount ?? 0), 0)
+    (sum, r) => sum + Number(r.overdue_principal_amount ?? 0) + Number(r.late_fee_amount ?? 0), 0)
   const estudiantesEnMora = enMora.length
   const familiasEnMora = new Set(enMora.map((r) => r.family_id)).size
   const formatDOP = (amount: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount)

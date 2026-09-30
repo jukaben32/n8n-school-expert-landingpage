@@ -123,7 +123,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
     // vencida" mas abajo para por que la vieja consulta a `invoices` no
     // servia). Si la RPC falla, `data` viene null y las tarjetas quedan en
     // cero con el aviso de QueryErrorBanner, sin tumbar el panel.
-    supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
+    supabase.rpc('list_school_receivables_breakdown', { p_school_id: schoolId }),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(prevStart)).lt('date', isoDate(rangeStart)),
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', isoDate(twentyEightDaysAgo)),
@@ -194,23 +194,21 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   // asi que produccion tenia 44 facturas y las 44 pagadas. Resultado: la
   // tarjeta estaba condenada a RD$0 mientras Cuentas por Cobrar mostraba
   // RD$422,540 de deuda real. Ahora las dos pantallas leen la misma
-  // funcion, `list_school_receivables`, que calcula la deuda implicita por
-  // mensualidad (no necesita que exista ninguna factura) y su recargo por
-  // etapas segun el manual de familia.
+  // funcion desglosada, `list_school_receivables_breakdown`, que calcula
+  // la deuda implicita por mensualidad y separa corriente, principal
+  // vencido y recargo.
   type ReceivableRow = {
     student_id: string; first_name: string; last_name: string; family_id: string
     monthly_amount: number | null; expected_to_date: number | null
     overdue_amount: number; late_fee_amount: number; collected_amount: number
+    current_amount: number | null; overdue_principal_amount: number | null
+    total_due_amount: number | null
     oldest_overdue_due_date: string | null; days_overdue: number | null
     aging_bucket: string | null
   }
   const receivables = (receivablesRaw ?? []) as ReceivableRow[]
-  // La RPC devuelve overdue_amount tambien para cuotas corrientes:
-  // ya vencio la fecha nominal (dia 1), pero la familia aun puede pagar
-  // sin mora hasta el dia 5. Para cartera vencida solo cuentan las filas
-  // que salieron de ese periodo de gracia.
-  const conDeuda = receivables.filter((r) => Number(r.overdue_amount) > 0 && r.aging_bucket !== 'corriente')
-  const deudaVencida = conDeuda.reduce((sum, r) => sum + Number(r.overdue_amount), 0)
+  const conDeuda = receivables.filter((r) => Number(r.overdue_principal_amount ?? 0) > 0)
+  const deudaVencida = conDeuda.reduce((sum, r) => sum + Number(r.overdue_principal_amount ?? 0), 0)
   const recargoAcumulado = conDeuda.reduce((sum, r) => sum + Number(r.late_fee_amount ?? 0), 0)
   // Lo que el panel debe reflejar: deuda + mora al dia de hoy, siempre.
   const carteraVencida = deudaVencida + recargoAcumulado
@@ -227,7 +225,7 @@ export default async function SecretariaPage({ searchParams }: { searchParams: P
   const porFamilia = new Map<string, FamiliaMora>()
   for (const r of conDeuda) {
     const row = porFamilia.get(r.family_id) ?? { monto: 0, nombres: [], moraDesde: null, dias: null, diasMora: null }
-    row.monto += Number(r.overdue_amount) + Number(r.late_fee_amount ?? 0)
+    row.monto += Number(r.overdue_principal_amount ?? 0) + Number(r.late_fee_amount ?? 0)
     row.nombres.push(r.first_name)
     if (r.oldest_overdue_due_date) {
       const moraDesdeIso = isoDate(addDaysToIsoDate(r.oldest_overdue_due_date, graceDays))

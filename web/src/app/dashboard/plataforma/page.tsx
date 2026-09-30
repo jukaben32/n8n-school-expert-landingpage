@@ -91,10 +91,15 @@ export default async function PlataformaPage() {
         supabase.from('ai_conversations').select('*', { count: 'exact', head: true }).eq('school_id', school.id).eq('role', 'user').gte('created_at', sevenDaysAgoIso),
       ])
 
-      type NetworkReceivableRow = { expected_to_date: number | null; overdue_amount: number; late_fee_amount: number | null }
+      type NetworkReceivableRow = {
+        expected_to_date: number | null
+        overdue_amount: number
+        late_fee_amount: number | null
+        overdue_principal_amount?: number | null
+      }
       const receivables = (receivableRows ?? []) as NetworkReceivableRow[]
       const expectedSum = receivables.reduce((sum, r) => sum + Number(r.expected_to_date ?? 0), 0)
-      const overdueSum = receivables.reduce((sum, r) => sum + Number(r.overdue_amount ?? 0), 0)
+      const overdueSum = receivables.reduce((sum, r) => sum + Number(r.overdue_principal_amount ?? r.overdue_amount ?? 0), 0)
       const lateFeeSum = receivables.reduce((sum, r) => sum + Number(r.late_fee_amount ?? 0), 0)
       // % de lo que ya debió cobrarse este año (según la mensualidad) que
       // sigue sin cobrar -- mismo criterio que "estudiantes al día" del
