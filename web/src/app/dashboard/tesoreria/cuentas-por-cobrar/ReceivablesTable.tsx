@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { sendOverdueReminder, generateLateFeeCharge, recordExternalPayment } from './actions'
+import { sendOverdueReminder, recordExternalPayment } from './actions'
 import { EXTERNAL_PAYMENT_SOURCES } from '@/lib/receivables/externalPaymentSources'
 import ExportReceivablesButton from './ExportReceivablesButton'
 
@@ -18,6 +18,9 @@ export interface ReceivableRow {
   collected_amount: number | null
   overdue_amount: number | null
   late_fee_amount: number | null
+  current_amount: number | null
+  overdue_principal_amount: number | null
+  total_due_amount: number | null
   oldest_overdue_due_date: string | null
   oldest_overdue_reference: string | null
   days_overdue: number | null
@@ -87,18 +90,17 @@ export default function ReceivablesTable({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Record<string, string>>({})
   const [payingId, setPayingId] = useState<string | null>(null)
-  const [payAmount, setPayAmount] = useState('')
+  const [payPrincipal, setPayPrincipal] = useState('')
+  const [payLateFee, setPayLateFee] = useState('')
   const [paySource, setPaySource] = useState<string>(EXTERNAL_PAYMENT_SOURCES[0].value)
   const [payDate, setPayDate] = useState('')
   const [payNote, setPayNote] = useState('')
 
   const notConfigured = rows.filter((r) => r.aging_bucket === 'sin_configurar')
-  // Todo estudiante con algún saldo pendiente -- incluye "corriente" (ya
-  // vencido su recibo pero todavía dentro de los días de gracia): antes
-  // esos estudiantes no aparecían en ningún lado de esta pantalla, cuando
-  // debían mostrarse en la columna "Corriente" y de ahí ir pasando a los
-  // tramos de antigüedad conforme pasan los días sin pagarse.
-  const pending = rows.filter((r) => r.aging_bucket && BUCKET_ORDER.includes(r.aging_bucket))
+  // Todo estudiante con saldo por cobrar. El RPC nuevo ya separa principal
+  // vencido, corriente y recargo; `overdue_amount` queda como principal total
+  // pendiente para compatibilidad con otros consumidores.
+  const pending = rows.filter((r) => r.aging_bucket && BUCKET_ORDER.includes(r.aging_bucket) && (r.total_due_amount ?? r.overdue_amount ?? 0) > 0)
 
   const levels = useMemo(
     () => Array.from(new Set(pending.map((r) => r.school_level).filter((v): v is string => !!v))),
@@ -122,10 +124,11 @@ export default function ReceivablesTable({
     })
     .sort((a, b) => (b.days_overdue ?? 0) - (a.days_overdue ?? 0))
 
-  const overdueRows = filtered.filter((r) => r.aging_bucket !== 'corriente')
-  const currentRows = filtered.filter((r) => r.aging_bucket === 'corriente')
-  const totalOverdue = overdueRows.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
-  const totalCurrent = currentRows.reduce((sum, r) => sum + (r.overdue_amount ?? 0), 0)
+  const overdueRows = filtered.filter((r) => (r.overdue_principal_amount ?? 0) > 0)
+  const currentRows = filtered.filter((r) => (r.current_amount ?? 0) > 0)
+  const totalOverdue = overdueRows.reduce((sum, r) => sum + (r.overdue_principal_amount ?? 0), 0)
+  const totalCurrent = currentRows.reduce((sum, r) => sum + (r.current_amount ?? 0), 0)
+  const totalLateFees = filtered.reduce((sum, r) => sum + (r.late_fee_amount ?? 0), 0)
   const familiesCount = new Set(overdueRows.map((r) => r.family_id)).size
 
   // Mismas filas que ve el usuario en la tabla (respeta búsqueda + filtros de
@@ -134,8 +137,10 @@ export default function ReceivablesTable({
     estudiante: `${r.first_name} ${r.last_name}`,
     curso: r.grade_level ?? '—',
     familia: r.family_name ?? 'Familia N/A',
-    saldo: formatDOP.format(r.overdue_amount ?? 0),
+    vencido: formatDOP.format(r.overdue_principal_amount ?? 0),
+    corriente: formatDOP.format(r.current_amount ?? 0),
     recargo: (r.late_fee_amount ?? 0) > 0 ? formatDOP.format(r.late_fee_amount ?? 0) : '—',
+    total: formatDOP.format(r.total_due_amount ?? r.overdue_amount ?? 0),
     referencia: r.oldest_overdue_reference ?? '',
     tramo: formatBucketLabel(r.aging_bucket, graceDays),
   }))
@@ -148,18 +153,10 @@ export default function ReceivablesTable({
     setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Aviso enviado.' : (result.error ?? 'No se pudo enviar.') }))
   }
 
-  async function handleLateFee(studentId: string, lateFeeAmount: number) {
-    if (!confirm(`¿Generar el recargo por mora de ${formatDOP.format(lateFeeAmount)} para este estudiante? Esto crea una factura real.`)) return
-    setBusyId(studentId)
-    setFeedback((prev) => ({ ...prev, [studentId]: '' }))
-    const result = await generateLateFeeCharge(studentId)
-    setBusyId(null)
-    setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Recargo generado.' : (result.error ?? 'No se pudo generar.') }))
-  }
-
   function startPayment(r: ReceivableRow) {
     setPayingId(r.student_id)
-    setPayAmount(String(r.overdue_amount ?? ''))
+    setPayPrincipal(String((r.current_amount ?? 0) + (r.overdue_principal_amount ?? 0)))
+    setPayLateFee(String(r.late_fee_amount ?? 0))
     setPaySource(EXTERNAL_PAYMENT_SOURCES[0].value)
     setPayDate(new Date().toISOString().slice(0, 10))
     setPayNote('')
@@ -168,7 +165,7 @@ export default function ReceivablesTable({
 
   async function confirmPayment(studentId: string) {
     setBusyId(studentId)
-    const result = await recordExternalPayment(studentId, Number(payAmount), paySource, payDate, payNote)
+    const result = await recordExternalPayment(studentId, Number(payPrincipal), Number(payLateFee), paySource, payDate, payNote)
     setBusyId(null)
     if (result.ok) setPayingId(null)
     setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Pago registrado.' : (result.error ?? 'No se pudo registrar.') }))
@@ -190,12 +187,12 @@ export default function ReceivablesTable({
           <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-accent)' }}>{formatDOP.format(totalCurrent)}</p>
         </div>
         <div className="dash-card p-5">
-          <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Total vencido</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Principal vencido</p>
           <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-text)' }}>{formatDOP.format(totalOverdue)}</p>
         </div>
         <div className="dash-card p-5">
-          <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Estudiantes vencidos</p>
-          <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-text)' }}>{overdueRows.length}</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Recargos</p>
+          <p className="text-2xl font-bold font-barlow mt-1" style={{ color: 'var(--dash-danger, #dc2626)' }}>{formatDOP.format(totalLateFees)}</p>
         </div>
         <div className="dash-card p-5">
           <p className="text-sm font-semibold" style={{ color: 'var(--dash-text-muted)' }}>Familias afectadas</p>
@@ -249,8 +246,10 @@ export default function ReceivablesTable({
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Estudiante</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Curso</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Familia</th>
-                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Saldo pendiente</th>
+                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Vencido</th>
+                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Corriente</th>
                 <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Recargo</th>
+                <th className={`${thClass} text-right`} style={{ color: 'var(--dash-text-muted)' }}>Total</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Referencia</th>
                 <th className={`${thClass} text-center`} style={{ color: 'var(--dash-text-muted)' }}>Tramo</th>
                 <th className={thClass} style={{ color: 'var(--dash-text-muted)' }}>Acciones</th>
@@ -265,10 +264,16 @@ export default function ReceivablesTable({
                   <td className="px-4 py-3" style={{ color: 'var(--dash-text-muted)' }}>{r.grade_level ?? '—'}</td>
                   <td className="px-4 py-3" style={{ color: 'var(--dash-text-muted)' }}>{r.family_name ?? 'Familia N/A'}</td>
                   <td className="px-4 py-3 text-right font-semibold" style={{ color: 'var(--dash-text)' }}>
-                    {formatDOP.format(r.overdue_amount ?? 0)}
+                    {(r.overdue_principal_amount ?? 0) > 0 ? formatDOP.format(r.overdue_principal_amount ?? 0) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold" style={{ color: 'var(--dash-accent)' }}>
+                    {(r.current_amount ?? 0) > 0 ? formatDOP.format(r.current_amount ?? 0) : '—'}
                   </td>
                   <td className="px-4 py-3 text-right font-semibold" style={{ color: 'var(--dash-danger, #dc2626)' }}>
                     {(r.late_fee_amount ?? 0) > 0 ? formatDOP.format(r.late_fee_amount ?? 0) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right font-bold" style={{ color: 'var(--dash-text)' }}>
+                    {formatDOP.format(r.total_due_amount ?? r.overdue_amount ?? 0)}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--dash-text-faint)' }}>
                     {r.oldest_overdue_reference}
@@ -286,15 +291,21 @@ export default function ReceivablesTable({
                       <div className="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800/50 p-2">
                         <div className="grid grid-cols-2 gap-1.5">
                           <input
-                            type="number" min="0" step="0.01" value={payAmount}
-                            onChange={(e) => setPayAmount(e.target.value)}
-                            placeholder="Monto"
+                            type="number" min="0" step="0.01" value={payPrincipal}
+                            onChange={(e) => setPayPrincipal(e.target.value)}
+                            placeholder="Mensualidad"
+                            className="rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                          />
+                          <input
+                            type="number" min="0" step="0.01" value={payLateFee}
+                            onChange={(e) => setPayLateFee(e.target.value)}
+                            placeholder="Recargo"
                             className="rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
                           />
                           <input
                             type="date" value={payDate}
                             onChange={(e) => setPayDate(e.target.value)}
-                            className="rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                            className="col-span-2 rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
                           />
                         </div>
                         <select
@@ -338,24 +349,14 @@ export default function ReceivablesTable({
                             Registrar pago
                           </button>
                           {r.aging_bucket !== 'corriente' && (
-                            <>
-                              <button
-                                type="button"
-                                disabled={busyId === r.student_id}
-                                onClick={() => handleReminder(r.student_id)}
-                                className="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
-                              >
-                                Enviar aviso
-                              </button>
-                              <button
-                                type="button"
-                                disabled={busyId === r.student_id}
-                                onClick={() => handleLateFee(r.student_id, r.late_fee_amount ?? 0)}
-                                className="rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
-                              >
-                                Generar recargo
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              disabled={busyId === r.student_id}
+                              onClick={() => handleReminder(r.student_id)}
+                              className="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 transition disabled:opacity-50"
+                            >
+                              Enviar aviso
+                            </button>
                           )}
                         </div>
                         {feedback[r.student_id] && (

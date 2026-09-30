@@ -13,7 +13,17 @@ export default function ExportReceivablesButton({
   filas,
   nivel,
 }: {
-  filas: { estudiante: string; curso: string; familia: string; saldo: string; recargo: string; referencia: string; tramo: string }[]
+  filas: {
+    estudiante: string
+    curso: string
+    familia: string
+    vencido: string
+    corriente: string
+    recargo: string
+    total: string
+    referencia: string
+    tramo: string
+  }[]
   nivel?: string
 }) {
   function nombreArchivo(extension: string) {
@@ -29,12 +39,22 @@ export default function ExportReceivablesButton({
   }
 
   function descargarCSV() {
-    const encabezados = ['Estudiante', 'Curso', 'Familia', 'Saldo pendiente', 'Recargo', 'Referencia', 'Tramo']
+    const encabezados = ['Estudiante', 'Curso', 'Familia', 'Vencido', 'Corriente', 'Recargo', 'Total', 'Referencia', 'Tramo']
     // Se escapan las comillas dobles duplicándolas, como manda el formato CSV.
     const escapar = (v: string) => `"${(v ?? '').replace(/"/g, '""')}"`
     const lineas = [
       encabezados.map(escapar).join(','),
-      ...filas.map((f) => [f.estudiante, f.curso, f.familia, f.saldo, f.recargo, f.referencia, f.tramo].map(escapar).join(',')),
+      ...filas.map((f) => [
+        f.estudiante,
+        f.curso,
+        f.familia,
+        f.vencido,
+        f.corriente,
+        f.recargo,
+        f.total,
+        f.referencia,
+        f.tramo,
+      ].map(escapar).join(',')),
     ]
     // El BOM al inicio hace que Excel abra bien los acentos y la ñ.
     const blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8;' })

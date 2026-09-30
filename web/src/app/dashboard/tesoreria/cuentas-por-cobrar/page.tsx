@@ -40,7 +40,7 @@ export default async function CuentasPorCobrarPage() {
   ] = await Promise.all([
       supabase.from('schools').select('tuition_grace_days').eq('id', schoolId).single(),
       supabase.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null),
-      supabase.rpc('list_school_receivables', { p_school_id: schoolId }),
+      supabase.rpc('list_school_receivables_breakdown', { p_school_id: schoolId }),
       // Última conciliación con Alegra -- alimenta la alerta de "última
       // actualización": sin fecha de corte, este reporte invita a cobrarle
       // a una familia que ya pagó en el POS.

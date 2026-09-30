@@ -6,7 +6,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
-import { lateFeeReference } from '@/lib/receivables/monthReference'
 import { EXTERNAL_PAYMENT_SOURCE_LABELS } from '@/lib/receivables/externalPaymentSources'
 
 interface ActionResult {
@@ -53,7 +52,7 @@ export async function sendOverdueReminder(studentId: string): Promise<ActionResu
   if (!student) return { ok: false, error: 'No se encontró el estudiante.' }
 
   const [{ data: receivable }, { data: school }, { data: guardians }] = await Promise.all([
-    admin.rpc('calculate_receivable_status', { p_student_id: studentId }).single(),
+    admin.rpc('calculate_receivable_breakdown', { p_student_id: studentId }).single(),
     admin.from('schools').select('name').eq('id', staff.schoolId).single(),
     admin.from('guardians').select('email, is_primary').eq('family_id', student.family_id).order('is_primary', { ascending: false }),
   ])
@@ -61,11 +60,15 @@ export async function sendOverdueReminder(studentId: string): Promise<ActionResu
   const status = receivable as {
     overdue_amount: number | null
     late_fee_amount: number | null
+    current_amount: number | null
+    overdue_principal_amount: number | null
+    total_due_amount: number | null
     oldest_overdue_due_date: string | null
     aging_bucket: string | null
   } | null
 
-  if (!status || !status.oldest_overdue_due_date || status.aging_bucket === 'corriente' || status.aging_bucket === 'sin_configurar') {
+  if (!status || !status.oldest_overdue_due_date || status.aging_bucket === 'corriente' || status.aging_bucket === 'sin_configurar' ||
+      !status.overdue_principal_amount || status.overdue_principal_amount <= 0) {
     return { ok: false, error: 'Este estudiante no tiene una cuota vencida que avisar.' }
   }
 
@@ -82,99 +85,33 @@ export async function sendOverdueReminder(studentId: string): Promise<ActionResu
   // monto de recargo ya calculado para HOY en vez de un "%" genérico que
   // dejó de representar la política real.
   const lateFeeNote = (status.late_fee_amount ?? 0) > 0
-    ? ` Con la mora actual, el recargo ya acumulado es de ${formatDOP.format(status.late_fee_amount ?? 0)}.`
+    ? ` El recargo de la cuota vencida es ${formatDOP.format(status.late_fee_amount ?? 0)}.`
     : ' Puedes ponerte al día ahora para evitar que se aplique el recargo por mora.'
+  const currentNote = (status.current_amount ?? 0) > 0
+    ? ` Además, tiene ${formatDOP.format(status.current_amount ?? 0)} como saldo corriente.`
+    : ''
 
   await notifyGuardianByEmail({
     schoolName: school?.name ?? null,
     guardianEmail: recipient.email,
     subject: `Aviso de mensualidad pendiente — ${student.first_name} ${student.last_name}`,
     body: `La mensualidad de ${student.first_name} ${student.last_name} vence desde el ${dueDateLabel} ` +
-      `y sigue pendiente (${formatDOP.format(status.overdue_amount ?? 0)}).${lateFeeNote}`,
+      `y sigue pendiente (${formatDOP.format(status.overdue_principal_amount ?? 0)}).${lateFeeNote}${currentNote}`,
   })
 
   return { ok: true }
 }
 
 /**
- * Genera un cargo real por recargo de mora -- única acción de esta pantalla
- * que sí crea una factura. Nunca automático: siempre es el staff quien lo
- * decide, viendo la deuda vencida de ese estudiante en pantalla.
+ * Compatibilidad para clientes viejos: el botón manual se retiró porque el
+ * recargo se calcula por cuota y se registra solo cuando se registra el pago.
  */
 export async function generateLateFeeCharge(studentId: string): Promise<ActionResult> {
-  const staff = await resolveTesoreriaStaff()
-  if (!staff.ok) return { ok: false, error: staff.error }
-
-  const admin = createAdminClient()
-
-  const { data: student } = await admin
-    .from('students')
-    .select('id, family_id, school_id')
-    .eq('id', studentId)
-    .eq('school_id', staff.schoolId)
-    .single()
-  if (!student) return { ok: false, error: 'No se encontró el estudiante.' }
-
-  const { data: receivable } = await admin.rpc('calculate_receivable_status', { p_student_id: studentId }).single()
-
-  // late_fee_amount ya viene calculado por etapas (manual de familia,
-  // sección 9: día 6 +5%, día 10 +3% más, día 15 +3% más, día 20 +3% más,
-  // cada etapa compuesta sobre el saldo ya recargado por la anterior) --
-  // ver calculate_receivable_status en la migración 20260903000000.
-  const status = receivable as { overdue_amount: number | null; late_fee_amount: number | null; aging_bucket: string | null } | null
-  if (!status || !status.overdue_amount || status.overdue_amount <= 0 ||
-      status.aging_bucket === 'corriente' || status.aging_bucket === 'sin_configurar' || !status.aging_bucket) {
-    return { ok: false, error: 'Este estudiante no tiene deuda vencida sobre la cual aplicar recargo.' }
+  void studentId
+  return {
+    ok: false,
+    error: 'El recargo ya se calcula automáticamente por cuota. No hace falta generarlo manualmente.',
   }
-
-  const feeAmount = status.late_fee_amount ?? 0
-  if (feeAmount <= 0) return { ok: false, error: 'No hay recargo configurado para este tramo de atraso.' }
-
-  let { data: concept } = await admin
-    .from('billing_concepts')
-    .select('id')
-    .eq('school_id', staff.schoolId)
-    .eq('recurrence', 'one_time')
-    .ilike('name', '%recargo%mora%')
-    .is('deleted_at', null)
-    .limit(1)
-    .maybeSingle()
-
-  if (!concept) {
-    const { data: newConcept, error: conceptError } = await admin
-      .from('billing_concepts')
-      .insert({ school_id: staff.schoolId, name: 'Recargo por Mora', amount: feeAmount, recurrence: 'one_time', applies_to: 'student' })
-      .select('id')
-      .single()
-    if (conceptError) return { ok: false, error: 'No se pudo preparar el concepto de recargo.' }
-    concept = newConcept
-  }
-
-  const reference = lateFeeReference(new Date())
-
-  const { data: ncf, error: ncfError } = await admin.rpc('generate_ncf', { p_school_id: staff.schoolId, p_ncf_type: '02' })
-  if (ncfError) return { ok: false, error: 'No se pudo generar el comprobante.' }
-
-  const { error: insertError } = await admin.from('invoices').insert({
-    school_id: staff.schoolId,
-    family_id: student.family_id,
-    student_id: studentId,
-    concept_id: concept.id,
-    description: `Recargo por mora — ${reference}`,
-    amount: feeAmount,
-    tax_amount: 0,
-    total_amount: feeAmount,
-    due_date: new Date().toISOString().slice(0, 10),
-    status: 'pendiente',
-    ncf,
-    ncf_type: '02',
-    created_by: staff.staffProfileId,
-  })
-  if (insertError) return { ok: false, error: `No se pudo generar el recargo: ${insertError.message}` }
-
-  revalidatePath('/dashboard/tesoreria/cuentas-por-cobrar')
-  revalidatePath('/dashboard/tesoreria')
-  return { ok: true }
 }
 
 /**
@@ -186,11 +123,13 @@ export async function generateLateFeeCharge(studentId: string): Promise<ActionRe
  * (Alegra u otro) -- generar uno aquí sería un documento fantasma que no
  * corresponde a ningún cobro real ante la DGII. Esto es puramente un
  * registro interno para que la deuda implícita deje de contar ese dinero
- * como pendiente.
+ * como pendiente. La mensualidad y el recargo se guardan por separado para
+ * que un recargo cobrado no se confunda con abono a una cuota futura.
  */
 export async function recordExternalPayment(
   studentId: string,
-  amount: number,
+  principalAmount: number,
+  lateFeeAmount: number,
   source: string,
   paidAt: string,
   note: string
@@ -198,7 +137,11 @@ export async function recordExternalPayment(
   const staff = await resolveTesoreriaStaff()
   if (!staff.ok) return { ok: false, error: staff.error }
 
-  if (!amount || amount <= 0) return { ok: false, error: 'Indica un monto mayor a cero.' }
+  const roundedPrincipal = Math.round((principalAmount || 0) * 100) / 100
+  const roundedLateFee = Math.round((lateFeeAmount || 0) * 100) / 100
+
+  if (roundedPrincipal < 0 || roundedLateFee < 0) return { ok: false, error: 'Los montos no pueden ser negativos.' }
+  if (roundedPrincipal <= 0 && roundedLateFee <= 0) return { ok: false, error: 'Indica un monto mayor a cero.' }
   if (!EXTERNAL_PAYMENT_SOURCE_LABELS[source]) return { ok: false, error: 'Fuente de pago inválida.' }
   if (!paidAt) return { ok: false, error: 'Indica la fecha del pago.' }
 
@@ -211,8 +154,9 @@ export async function recordExternalPayment(
     .eq('school_id', staff.schoolId)
     .single()
   if (!student) return { ok: false, error: 'No se encontró el estudiante.' }
+  const familyId = student.family_id
 
-  let { data: concept } = await admin
+  let { data: monthlyConcept } = await admin
     .from('billing_concepts')
     .select('id')
     .eq('school_id', staff.schoolId)
@@ -222,47 +166,93 @@ export async function recordExternalPayment(
     .limit(1)
     .maybeSingle()
 
-  if (!concept) {
+  if (!monthlyConcept && roundedPrincipal > 0) {
     const { data: newConcept, error: conceptError } = await admin
       .from('billing_concepts')
-      .insert({ school_id: staff.schoolId, name: 'Mensualidad', amount, recurrence: 'monthly', applies_to: 'student' })
+      .insert({ school_id: staff.schoolId, name: 'Mensualidad', amount: roundedPrincipal, recurrence: 'monthly', applies_to: 'student' })
       .select('id')
       .single()
     if (conceptError) return { ok: false, error: 'No se pudo preparar el concepto de mensualidad.' }
-    concept = newConcept
+    monthlyConcept = newConcept
   }
 
-  const roundedAmount = Math.round(amount * 100) / 100
-  const description = `Mensualidad — cobro ya registrado (${EXTERNAL_PAYMENT_SOURCE_LABELS[source]})${note.trim() ? ': ' + note.trim() : ''}`
+  const paidAtIso = new Date(`${paidAt}T00:00:00`).toISOString()
+  const noteSuffix = note.trim() ? ': ' + note.trim() : ''
 
-  const { data: invoice, error: invoiceError } = await admin.from('invoices').insert({
-    school_id: staff.schoolId,
-    family_id: student.family_id,
-    student_id: studentId,
-    concept_id: concept.id,
-    description,
-    amount: roundedAmount,
-    tax_amount: 0,
-    total_amount: roundedAmount,
-    due_date: paidAt,
-    status: 'pagado',
-    paid_at: new Date(`${paidAt}T00:00:00`).toISOString(),
-    ncf: null,
-    ncf_type: null,
-    created_by: staff.staffProfileId,
-  }).select('id').single()
-  if (invoiceError) return { ok: false, error: `No se pudo registrar el pago: ${invoiceError.message}` }
+  async function insertPaidInvoice(options: {
+    conceptId: string
+    description: string
+    amount: number
+  }) {
+    const { data: invoice, error: invoiceError } = await admin.from('invoices').insert({
+      school_id: staff.schoolId,
+      family_id: familyId,
+      student_id: studentId,
+      concept_id: options.conceptId,
+      description: options.description,
+      amount: options.amount,
+      tax_amount: 0,
+      total_amount: options.amount,
+      due_date: paidAt,
+      status: 'pagado',
+      paid_at: paidAtIso,
+      ncf: null,
+      ncf_type: null,
+      created_by: staff.staffProfileId,
+    }).select('id').single()
+    if (invoiceError) return { ok: false as const, error: `No se pudo registrar el pago: ${invoiceError.message}` }
 
-  const { error: paymentError } = await admin.from('payments').insert({
-    school_id: staff.schoolId,
-    invoice_id: invoice.id,
-    amount_paid: roundedAmount,
-    payment_method: source,
-    received_by: staff.staffProfileId,
-    paid_at: new Date(`${paidAt}T00:00:00`).toISOString(),
-    notes: note.trim() || null,
-  })
-  if (paymentError) return { ok: false, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
+    const { error: paymentError } = await admin.from('payments').insert({
+      school_id: staff.schoolId,
+      invoice_id: invoice.id,
+      amount_paid: options.amount,
+      payment_method: source,
+      received_by: staff.staffProfileId,
+      paid_at: paidAtIso,
+      notes: note.trim() || null,
+    })
+    if (paymentError) return { ok: false as const, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
+    return { ok: true as const }
+  }
+
+  if (roundedPrincipal > 0) {
+    if (!monthlyConcept) return { ok: false, error: 'No se pudo preparar el concepto de mensualidad.' }
+    const result = await insertPaidInvoice({
+      conceptId: monthlyConcept.id,
+      description: `Mensualidad — cobro ya registrado (${EXTERNAL_PAYMENT_SOURCE_LABELS[source]})${noteSuffix}`,
+      amount: roundedPrincipal,
+    })
+    if (!result.ok) return result
+  }
+
+  if (roundedLateFee > 0) {
+    let { data: lateFeeConcept } = await admin
+      .from('billing_concepts')
+      .select('id')
+      .eq('school_id', staff.schoolId)
+      .eq('recurrence', 'one_time')
+      .ilike('name', '%recargo%mora%')
+      .is('deleted_at', null)
+      .limit(1)
+      .maybeSingle()
+
+    if (!lateFeeConcept) {
+      const { data: newConcept, error: conceptError } = await admin
+        .from('billing_concepts')
+        .insert({ school_id: staff.schoolId, name: 'Recargo por Mora', amount: roundedLateFee, recurrence: 'one_time', applies_to: 'student' })
+        .select('id')
+        .single()
+      if (conceptError) return { ok: false, error: 'No se pudo preparar el concepto de recargo.' }
+      lateFeeConcept = newConcept
+    }
+
+    const result = await insertPaidInvoice({
+      conceptId: lateFeeConcept.id,
+      description: `Recargo por mora — cobro ya registrado (${EXTERNAL_PAYMENT_SOURCE_LABELS[source]})${noteSuffix}`,
+      amount: roundedLateFee,
+    })
+    if (!result.ok) return result
+  }
 
   revalidatePath('/dashboard/tesoreria/cuentas-por-cobrar')
   revalidatePath('/dashboard/tesoreria')

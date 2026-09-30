@@ -5604,17 +5604,30 @@ pasó de RD$906.28 a RD$287.00. **Nunca se generó ninguna factura "Recargo por 
 el error no llegó a cobrarse. Misma firma y columnas: ningún consumidor cambió. Para revertir,
 volver a aplicar `20260928000000`.
 
-**Tercera corrección, la definitiva** (`20260929010000_late_fee_only_in_its_cycle.sql`,
-**aplicada por el usuario y verificada el 2026-09-29: 0 estudiantes con recargo ese día**):
-el recargo de una cuota solo existe del día 6 al 24 del mes siguiente. **El día 25 empieza el
-ciclo nuevo y el recargo viejo DESAPARECE** ("nada de lo viejo es trasladable"). La deuda de
-la cuota sigue; su recargo no. Ejemplo: debe agosto; el 10-sep lleva 8% de agosto, el 29-sep
-no lleva recargo, el 20-oct lleva 14% solo de septiembre. Las dos correcciones anteriores de
-este mismo día interpretaban mal la regla: no volver a ellas.
+**Tercera corrección aplicada ese día, luego rectificada** (`20260929010000_late_fee_only_in_its_cycle.sql`,
+aplicada por el usuario y verificada el 2026-09-29: 0 estudiantes con recargo ese día):
+esa versión hizo que el recargo de una cuota solo existiera del día 6 al 24 del mes siguiente,
+y que el día 25 el recargo viejo desapareciera. El 2026-09-30 el usuario aclaró con más
+detalle que esa interpretación NO refleja la operación de Tesorería: el recargo no debe
+trasladarse ni componer intereses, pero sí debe quedarse pegado a su cuota hasta que esa cuota
+se pague.
 
-**Queda sin cambiar, a propósito**: el tramo de antigüedad y el "saldo" de una familia que
-debe agosto incluyen también septiembre (corriente). Separarlo exige una columna nueva en la
-función y tocar todas las pantallas; no se hizo en la urgencia.
+**En esa urgencia quedó sin cambiar**: el tramo de antigüedad y el "saldo" de una familia que
+debe agosto incluían también septiembre (corriente). Separarlo exigía columnas nuevas en la
+función y tocar las pantallas, así que no se hizo el 2026-09-29.
+
+**Rectificación implementada el 2026-09-30** (`20260930000000_receivable_breakdown_persistent_late_fee.sql`):
+- `calculate_receivable_status()` mantiene la misma firma para no romper Panel, Reportes,
+  Plataforma ni el bloqueo 61+, pero vuelve a calcular el recargo simple por cuota sin hacerlo
+  desaparecer al entrar el ciclo siguiente.
+- Nueva RPC `list_school_receivables_breakdown()` para Cuentas por Cobrar: separa
+  `overdue_principal_amount` (principal vencido), `current_amount` (corriente),
+  `late_fee_amount` (recargo de las cuotas vencidas) y `total_due_amount`.
+- `/dashboard/tesoreria/cuentas-por-cobrar` usa esa RPC nueva, cambia la tabla a columnas
+  Vencido / Corriente / Recargo / Total, y elimina el botón manual "Generar recargo".
+- `recordExternalPayment()` ahora recibe mensualidad y recargo separados; si se registra recargo,
+  crea una factura pagada de concepto "Recargo por Mora" separada de la factura pagada de
+  "Mensualidad", para no contaminar el FIFO de cuotas futuras.
 
 ## Módulo de Nómina: SOLO PLANIFICADO -- terminar la investigación legal es PRIORIDAD (2026-09-29)
 
