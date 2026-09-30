@@ -170,6 +170,19 @@ async function run(request: NextRequest) {
     return NextResponse.json({ ok: false, error: 'No autorizado.' }, { status: 401 })
   }
 
+  // Transición 2026-09-30: mientras movemos a las familias al acceso por
+  // celular + código de WhatsApp, apagamos los recordatorios automáticos por
+  // correo. Si algún colegio decide reactivarlos, debe hacerlo de forma
+  // explícita con GUARDIAN_ACCESS_REMINDERS_ENABLED=1.
+  if (process.env.GUARDIAN_ACCESS_REMINDERS_ENABLED !== '1') {
+    return NextResponse.json({
+      ok: true,
+      disabled: true,
+      sent: 0,
+      message: 'Recordatorios automáticos de acceso familiar desactivados durante la transición.',
+    })
+  }
+
   const siteUrl = getPublicSiteUrl()
   if (!siteUrl) {
     return NextResponse.json({ ok: false, error: 'Falta configurar NEXT_PUBLIC_SITE_URL en produccion.' }, { status: 503 })
