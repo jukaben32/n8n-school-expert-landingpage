@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import LoginForm from './LoginForm'
 
 export const metadata: Metadata = {
@@ -52,6 +53,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </p>
 
           <LoginForm />
+
+          <div className="mt-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 p-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-2">
+              Familias
+            </p>
+            <Link
+              href="/acceso-familiar"
+              className="inline-flex w-full items-center justify-center rounded-full border border-primary/30 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary hover:text-white dark:border-accent-light/40 dark:text-accent-light dark:hover:bg-accent-light dark:hover:text-slate-950 transition"
+            >
+              Entrar con celular y codigo de WhatsApp
+            </Link>
+          </div>
         </div>
 
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">

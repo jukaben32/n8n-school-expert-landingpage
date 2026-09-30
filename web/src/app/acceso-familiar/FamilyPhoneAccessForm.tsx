@@ -1,0 +1,141 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { requestFamilyAccessCode, verifyFamilyAccessCode } from './actions'
+
+export default function FamilyPhoneAccessForm() {
+  const router = useRouter()
+  const [phone, setPhone] = useState('')
+  const [code, setCode] = useState('')
+  const [challengeId, setChallengeId] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function handleRequestCode(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+
+    const result = await requestFamilyAccessCode(phone)
+    setLoading(false)
+
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
+
+    setChallengeId(result.challengeId)
+    setMessage(result.message)
+  }
+
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault()
+    if (!challengeId) return
+    setLoading(true)
+    setError(null)
+
+    const result = await verifyFamilyAccessCode(challengeId, code)
+    if (!result.ok) {
+      setLoading(false)
+      setError(result.message)
+      return
+    }
+
+    const supabase = createClient()
+    const { error: authError } = await supabase.auth.verifyOtp({
+      token_hash: result.tokenHash,
+      type: 'magiclink',
+    })
+
+    if (authError) {
+      setLoading(false)
+      setError('El codigo fue validado, pero no pudimos abrir tu portal. Intenta pedir otro codigo.')
+      return
+    }
+
+    router.push('/dashboard/portal-familiar')
+    router.refresh()
+  }
+
+  return (
+    <form onSubmit={challengeId ? handleVerifyCode : handleRequestCode} className="space-y-4">
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+          Celular o WhatsApp del tutor
+        </label>
+        <input
+          id="phone"
+          type="tel"
+          required
+          autoComplete="tel"
+          value={phone}
+          disabled={!!challengeId || loading}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="809-000-0000"
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-70"
+        />
+      </div>
+
+      {challengeId && (
+        <div>
+          <label htmlFor="code" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+            Codigo recibido por WhatsApp
+          </label>
+          <input
+            id="code"
+            type="text"
+            inputMode="numeric"
+            required
+            maxLength={6}
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder="000000"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-center text-lg font-semibold tracking-[0.35em] text-slate-900 dark:text-slate-100 placeholder-slate-300 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+        </div>
+      )}
+
+      {message && (
+        <div role="status" className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-300">
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full flex items-center justify-center rounded-full bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 text-sm transition shadow-glow disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Verificando...' : challengeId ? 'Entrar al portal' : 'Enviarme codigo por WhatsApp'}
+      </button>
+
+      {challengeId && (
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            setChallengeId(null)
+            setCode('')
+            setMessage(null)
+            setError(null)
+          }}
+          className="w-full text-center text-xs font-semibold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-accent-light"
+        >
+          Usar otro numero
+        </button>
+      )}
+    </form>
+  )
+}
+
