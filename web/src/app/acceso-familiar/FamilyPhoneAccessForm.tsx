@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { requestFamilyAccessCode, verifyFamilyAccessCode } from './actions'
+import { requestFamilyAccessCode, verifyFamilyAccessCode, verifyFamilyAccessCodeByPhone } from './actions'
 
 export default function FamilyPhoneAccessForm() {
   const router = useRouter()
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [challengeId, setChallengeId] = useState<string | null>(null)
+  const [manualCodeMode, setManualCodeMode] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -34,11 +35,14 @@ export default function FamilyPhoneAccessForm() {
 
   async function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault()
-    if (!challengeId) return
+    if (!challengeId && !manualCodeMode) return
     setLoading(true)
     setError(null)
 
-    const result = await verifyFamilyAccessCode(challengeId, code)
+    const result = challengeId
+      ? await verifyFamilyAccessCode(challengeId, code)
+      : await verifyFamilyAccessCodeByPhone(phone, code)
+
     if (!result.ok) {
       setLoading(false)
       setError(result.message)
@@ -61,8 +65,10 @@ export default function FamilyPhoneAccessForm() {
     router.refresh()
   }
 
+  const isEnteringCode = !!challengeId || manualCodeMode
+
   return (
-    <form onSubmit={challengeId ? handleVerifyCode : handleRequestCode} className="space-y-4">
+    <form onSubmit={isEnteringCode ? handleVerifyCode : handleRequestCode} className="space-y-4">
       <div>
         <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
           Celular o WhatsApp del tutor
@@ -80,10 +86,10 @@ export default function FamilyPhoneAccessForm() {
         />
       </div>
 
-      {challengeId && (
+      {isEnteringCode && (
         <div>
           <label htmlFor="code" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-            Codigo recibido por WhatsApp
+            Codigo recibido
           </label>
           <input
             id="code"
@@ -117,15 +123,31 @@ export default function FamilyPhoneAccessForm() {
         disabled={loading}
         className="w-full flex items-center justify-center rounded-full bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 text-sm transition shadow-glow disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {loading ? 'Verificando...' : challengeId ? 'Entrar al portal' : 'Enviarme codigo por WhatsApp'}
+        {loading ? 'Verificando...' : isEnteringCode ? 'Entrar al portal' : 'Enviarme codigo por WhatsApp'}
       </button>
 
-      {challengeId && (
+      {!isEnteringCode && (
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            setManualCodeMode(true)
+            setMessage('Escribe el codigo que te entrego el colegio. Tiene tiempo limitado.')
+            setError(null)
+          }}
+          className="w-full text-center text-xs font-semibold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-accent-light"
+        >
+          Ya tengo un codigo
+        </button>
+      )}
+
+      {isEnteringCode && (
         <button
           type="button"
           disabled={loading}
           onClick={() => {
             setChallengeId(null)
+            setManualCodeMode(false)
             setCode('')
             setMessage(null)
             setError(null)

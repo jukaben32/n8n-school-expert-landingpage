@@ -196,6 +196,7 @@ const navByRole: Record<string, NavGroup[]> = {
   reception: [{ items: [
     { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
+    { href: '/dashboard/secretaria/acceso-familiar', label: 'Acceso familiar', icon: 'families' },
     { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
@@ -219,6 +220,7 @@ const navByRole: Record<string, NavGroup[]> = {
       { href: '/dashboard/secretaria',      label: 'Panel', icon: 'home' },
       { href: '/dashboard/estudiantes',     label: 'Estudiantes', icon: 'students' },
       { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
+      { href: '/dashboard/secretaria/acceso-familiar', label: 'Acceso familiar', icon: 'families' },
       { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
       { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
       { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
@@ -336,7 +338,7 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
             )}
             <div className="space-y-1">
               {group.items.map((item) => {
-                const isActive = pathname.startsWith(item.href)
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
                 return (
                   <a
                     key={item.href}

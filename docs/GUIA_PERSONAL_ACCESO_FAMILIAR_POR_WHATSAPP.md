@@ -283,17 +283,62 @@ Revisar:
 - Si el padre esta escribiendo el codigo dentro de las 24 horas.
 - Si el padre pidio demasiados codigos seguidos.
 
-## 14. Situacion actual: WhatsApp automatico no activo
+## 14. Modo manual para Secretaria
 
-Si el WhatsApp automatico del colegio todavia no esta activo, no se debe anunciar el acceso de forma masiva.
+Si el WhatsApp automatico del colegio todavia no esta activo, Secretaria puede generar pocos codigos manuales y enviarlos por WhatsApp Business.
+
+La pantalla interna es:
+
+`/dashboard/secretaria/acceso-familiar`
+
+Tambien aparece en el menu del dashboard como:
+
+**Acceso familiar**
+
+### Como usar el modo manual
+
+1. Secretaria entra al dashboard con su usuario.
+2. Abre **Acceso familiar**.
+3. Escribe el celular registrado del tutor.
+4. Pulsa **Generar codigo**.
+5. El sistema valida que el tutor exista, que el telefono no este duplicado y que tenga estudiante vinculado.
+6. El sistema muestra un codigo y un mensaje listo para copiar.
+7. Secretaria pulsa **Copiar mensaje para WhatsApp**.
+8. Secretaria envia ese mensaje manualmente desde WhatsApp Business.
+9. El padre entra al enlace, escribe su celular y pulsa **Ya tengo un codigo**.
+10. El padre escribe el codigo recibido y entra al Portal Familiar.
+
+### Limite de uso manual
+
+Durante la transicion, el sistema permite generar hasta 5 codigos manuales por colegio en 24 horas.
+
+Esto es intencional para evitar que el modo manual se convierta en un envio masivo desordenado.
+
+### Que mensaje se copia
+
+La pantalla prepara un texto parecido a este:
+
+> Buen dia. Su codigo de acceso al Portal Familiar de [nombre del colegio] es: 123456
+>
+> Tiene tiempo limitado: vence en 24 horas. No lo comparta con nadie.
+>
+> Entre aqui:
+> https://n8n-school-expert-landingpage.vercel.app/acceso-familiar
+>
+> Escriba su celular registrado y luego el codigo.
+
+## 15. Situacion actual: WhatsApp automatico no activo
+
+Aunque ya existe modo manual, si el WhatsApp automatico del colegio todavia no esta activo, no se debe anunciar el acceso de forma masiva.
 
 Durante la transicion, la recomendacion es trabajar con pocas familias por dia:
 
 1. Elegir pocas familias de prueba.
 2. Confirmar que el celular esta correcto.
 3. Confirmar que el tutor tiene estudiante vinculado.
-4. Enviar instrucciones manualmente por WhatsApp Business.
-5. Dar seguimiento para confirmar que lograron entrar.
+4. Generar el codigo desde **Acceso familiar**.
+5. Enviar el mensaje copiado por WhatsApp Business.
+6. Dar seguimiento para confirmar que lograron entrar.
 
 Mensaje manual sugerido:
 
@@ -301,15 +346,15 @@ Mensaje manual sugerido:
 
 Nota importante:
 
-El sistema actual esta preparado para enviar el codigo automaticamente cuando WhatsApp este conectado. Si el colegio va a enviar codigos manualmente, debe usarse un flujo controlado por secretaria, nunca mostrar codigos en publico ni compartirlos fuera del tutor correspondiente.
+El sistema actual esta preparado para enviar el codigo automaticamente cuando WhatsApp este conectado. Mientras tanto, el codigo manual debe generarse solo desde la pantalla interna de Secretaria, nunca por SQL ni fuera del sistema.
 
-## 15. Frase clave para el personal
+## 16. Frase clave para el personal
 
 La forma mas simple de explicarlo es:
 
 > El padre entra con su celular registrado. El sistema le manda un codigo por WhatsApp. Con ese codigo entra al Portal Familiar.
 
-## 16. Nota de seguridad
+## 17. Nota de seguridad
 
 El personal del colegio nunca debe pedir al padre que le envie el codigo.
 
@@ -317,13 +362,14 @@ Si alguien llama diciendo "deme el codigo que le llego", no se debe compartir.
 
 El codigo sirve para entrar al portal de esa familia. Debe manejarse como algo privado.
 
-## 17. Estado actual del sistema
+## 18. Estado actual del sistema
 
 Estado al 2026-09-30:
 
 - Nueva pantalla de acceso familiar creada.
 - Acceso anterior conservado.
 - Codigo automatico por WhatsApp implementado.
+- Modo manual para Secretaria implementado.
 - Codigo con vencimiento de 24 horas durante la transicion.
 - Cron de recordatorios automaticos por correo desactivado durante la transicion.
 - Pendiente operativo: probar con pocas familias antes de anunciarlo masivamente.

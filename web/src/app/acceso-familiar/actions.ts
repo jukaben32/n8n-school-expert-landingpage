@@ -1,10 +1,18 @@
 'use server'
 
-import { createHash, randomInt } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { findAuthUserByEmail } from '@/lib/auth/findAuthUserByEmail'
 import { getWhatsappConnection, sendWhatsappMessage } from '@/lib/whatsapp/connection'
 import { maskPhone, normalizePhoneForMatch, phoneDigits, toWhatsAppNumber } from '@/lib/phone'
+import {
+  createFamilyAccessChallenge,
+  FAMILY_ACCESS_CODE_TTL_LABEL,
+  FAMILY_ACCESS_MAX_ATTEMPTS,
+  FAMILY_ACCESS_MAX_CODES_PER_15_MINUTES,
+  findGuardianByPhone,
+  guardianHasLinkedStudents,
+  hashFamilyAccessCode,
+  publicAccessError,
+} from '@/lib/familyAccessCodes'
 
 type RequestCodeResult =
   | { ok: true; challengeId: string; message: string; maskedPhone: string }
@@ -13,113 +21,6 @@ type RequestCodeResult =
 type VerifyCodeResult =
   | { ok: true; tokenHash: string }
   | { ok: false; message: string }
-
-type GuardianMatch = {
-  id: string
-  school_id: string
-  family_id: string
-  first_name: string
-  last_name: string
-  phone: string | null
-}
-
-const CODE_TTL_HOURS = 24
-const CODE_TTL_LABEL = '24 horas'
-const MAX_ATTEMPTS = 5
-const MAX_CODES_PER_15_MINUTES = 3
-const PHONE_AUTH_DOMAIN = 'familias.mentoriapp.local'
-
-function publicAccessError() {
-  return 'No pudimos enviar el codigo. Verifica el numero o contacta a la secretaria del colegio.'
-}
-
-function codeSecret() {
-  return process.env.FAMILY_ACCESS_CODE_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'family-access-code-secret'
-}
-
-function hashCode(challengeId: string, code: string) {
-  return createHash('sha256')
-    .update(`${challengeId}:${code}:${codeSecret()}`)
-    .digest('hex')
-}
-
-function generateCode() {
-  return String(randomInt(0, 1_000_000)).padStart(6, '0')
-}
-
-function phoneLoginEmail(schoolId: string, normalizedPhone: string) {
-  return `${schoolId}-${normalizedPhone}@${PHONE_AUTH_DOMAIN}`.toLowerCase()
-}
-
-async function findGuardianByPhone(normalizedPhone: string): Promise<GuardianMatch | null> {
-  const admin = createAdminClient()
-  const { data: guardians, error } = await admin
-    .from('guardians')
-    .select('id, school_id, family_id, first_name, last_name, phone')
-    .is('deleted_at', null)
-
-  if (error) throw error
-
-  const matches = ((guardians ?? []) as GuardianMatch[]).filter(
-    (guardian) => guardian.phone && normalizePhoneForMatch(guardian.phone) === normalizedPhone
-  )
-
-  // Si el mismo telefono aparece en mas de una ficha, no adivinamos. Es mejor
-  // que secretaria lo confirme antes de entregar acceso.
-  if (matches.length !== 1) return null
-  return matches[0]
-}
-
-async function ensureAuthForGuardian(guardian: GuardianMatch, normalizedPhone: string) {
-  const admin = createAdminClient()
-
-  const { data: profiles, error: profilesError } = await admin
-    .from('users_profiles')
-    .select('auth_id, role, created_at')
-    .eq('guardian_id', guardian.id)
-    .order('role', { ascending: true })
-    .order('created_at', { ascending: true })
-
-  if (profilesError) throw profilesError
-
-  const existingProfile = (profiles ?? []).find((profile) => profile.role === 'guardian') ?? profiles?.[0]
-  if (existingProfile?.auth_id) {
-    const { data: authUser, error: authError } = await admin.auth.admin.getUserById(existingProfile.auth_id)
-    if (authError || !authUser.user?.email) {
-      throw new Error('No se pudo revisar la cuenta de acceso familiar.')
-    }
-    return { authId: existingProfile.auth_id as string, authEmail: authUser.user.email }
-  }
-
-  const authEmail = phoneLoginEmail(guardian.school_id, normalizedPhone)
-  let authUser = await findAuthUserByEmail(admin, authEmail)
-
-  if (!authUser) {
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email: authEmail,
-      email_confirm: true,
-      user_metadata: {
-        full_name: `${guardian.first_name} ${guardian.last_name}`.trim(),
-        phone: guardian.phone,
-        access_channel: 'family_phone_code',
-      },
-    })
-    if (createError || !created.user) {
-      throw new Error(createError?.message ?? 'No se pudo crear la cuenta de acceso por telefono.')
-    }
-    authUser = created.user
-  }
-
-  const { error: profileError } = await admin.from('users_profiles').insert({
-    auth_id: authUser.id,
-    school_id: guardian.school_id,
-    guardian_id: guardian.id,
-    role: 'guardian',
-  })
-
-  if (profileError) throw profileError
-  return { authId: authUser.id, authEmail }
-}
 
 export async function requestFamilyAccessCode(rawPhone: string): Promise<RequestCodeResult> {
   const normalizedPhone = normalizePhoneForMatch(rawPhone)
@@ -135,19 +36,14 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
     .eq('normalized_phone', normalizedPhone)
     .gte('created_at', since)
 
-  if ((count ?? 0) >= MAX_CODES_PER_15_MINUTES) {
+  if ((count ?? 0) >= FAMILY_ACCESS_MAX_CODES_PER_15_MINUTES) {
     return { ok: false, message: 'Se enviaron varios codigos seguidos. Espera unos minutos y vuelve a intentar.' }
   }
 
-  const guardian = await findGuardianByPhone(normalizedPhone)
+  const guardian = await findGuardianByPhone(admin, normalizedPhone)
   if (!guardian) return { ok: false, message: publicAccessError() }
 
-  const { count: linkedStudentsCount } = await admin
-    .from('student_guardians')
-    .select('student_id', { count: 'exact', head: true })
-    .eq('guardian_id', guardian.id)
-
-  if (!linkedStudentsCount) return { ok: false, message: publicAccessError() }
+  if (!(await guardianHasLinkedStudents(admin, guardian.id))) return { ok: false, message: publicAccessError() }
 
   const { data: school } = await admin
     .from('schools')
@@ -160,40 +56,18 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
     return { ok: false, message: 'El WhatsApp del colegio todavia no esta disponible para enviar codigos.' }
   }
 
-  const auth = await ensureAuthForGuardian(guardian, normalizedPhone)
-  const code = generateCode()
-  const expiresAt = new Date(Date.now() + CODE_TTL_HOURS * 60 * 60 * 1000).toISOString()
-
-  const { data: challenge, error: challengeError } = await admin
-    .from('family_phone_access_codes')
-    .insert({
-      school_id: guardian.school_id,
-      guardian_id: guardian.id,
-      auth_id: auth.authId,
-      auth_email: auth.authEmail,
-      normalized_phone: normalizedPhone,
-      code_hash: 'pending',
-      expires_at: expiresAt,
-    })
-    .select('id')
-    .single()
-
-  if (challengeError || !challenge?.id) {
+  let challenge: { challengeId: string; code: string }
+  try {
+    challenge = await createFamilyAccessChallenge(admin, guardian, normalizedPhone)
+  } catch {
     return { ok: false, message: 'No pudimos preparar el codigo. Intenta de nuevo.' }
   }
 
-  const { error: hashError } = await admin
-    .from('family_phone_access_codes')
-    .update({ code_hash: hashCode(challenge.id, code) })
-    .eq('id', challenge.id)
-
-  if (hashError) return { ok: false, message: 'No pudimos preparar el codigo. Intenta de nuevo.' }
-
   const schoolName = school?.name ?? 'tu colegio'
   const message = [
-    `Tu codigo de acceso al Portal Familiar de ${schoolName} es: ${code}`,
+    `Tu codigo de acceso al Portal Familiar de ${schoolName} es: ${challenge.code}`,
     '',
-    `Tiene tiempo limitado: vence en ${CODE_TTL_LABEL}. No lo compartas con nadie.`,
+    `Tiene tiempo limitado: vence en ${FAMILY_ACCESS_CODE_TTL_LABEL}. No lo compartas con nadie.`,
   ].join('\n')
 
   try {
@@ -205,9 +79,9 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
 
   return {
     ok: true,
-    challengeId: challenge.id,
+    challengeId: challenge.challengeId,
     maskedPhone: maskPhone(rawPhone),
-    message: `Enviamos un codigo por WhatsApp al numero ${maskPhone(rawPhone)}. Tiene tiempo limitado: vence en ${CODE_TTL_LABEL}.`,
+    message: `Enviamos un codigo por WhatsApp al numero ${maskPhone(rawPhone)}. Tiene tiempo limitado: vence en ${FAMILY_ACCESS_CODE_TTL_LABEL}.`,
   }
 }
 
@@ -232,11 +106,11 @@ export async function verifyFamilyAccessCode(challengeId: string, code: string):
     return { ok: false, message: 'Ese codigo vencio. Pide uno nuevo.' }
   }
 
-  if ((challenge.attempt_count ?? 0) >= MAX_ATTEMPTS) {
+  if ((challenge.attempt_count ?? 0) >= FAMILY_ACCESS_MAX_ATTEMPTS) {
     return { ok: false, message: 'Ese codigo fue intentado muchas veces. Pide uno nuevo.' }
   }
 
-  const expectedHash = hashCode(challenge.id, cleanCode)
+  const expectedHash = hashFamilyAccessCode(challenge.id, cleanCode)
   if (expectedHash !== challenge.code_hash) {
     await admin
       .from('family_phone_access_codes')
@@ -261,5 +135,43 @@ export async function verifyFamilyAccessCode(challengeId: string, code: string):
   }
 
   return { ok: true, tokenHash }
+}
+
+export async function verifyFamilyAccessCodeByPhone(rawPhone: string, code: string): Promise<VerifyCodeResult> {
+  const normalizedPhone = normalizePhoneForMatch(rawPhone)
+  const cleanCode = code.replace(/\D/g, '')
+  if (normalizedPhone.length !== 10 || cleanCode.length !== 6) {
+    return { ok: false, message: 'Escribe el celular y el codigo de 6 digitos.' }
+  }
+
+  const admin = createAdminClient()
+  const { data: challenges, error } = await admin
+    .from('family_phone_access_codes')
+    .select('id, auth_email, code_hash, attempt_count, expires_at, consumed_at, created_at')
+    .eq('normalized_phone', normalizedPhone)
+    .is('consumed_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  if (error || !challenges || challenges.length === 0) {
+    return { ok: false, message: 'Ese codigo ya no esta disponible. Pide uno nuevo.' }
+  }
+
+  for (const challenge of challenges) {
+    if ((challenge.attempt_count ?? 0) >= FAMILY_ACCESS_MAX_ATTEMPTS) continue
+    const expectedHash = hashFamilyAccessCode(challenge.id, cleanCode)
+    if (expectedHash === challenge.code_hash) {
+      return verifyFamilyAccessCode(challenge.id, cleanCode)
+    }
+  }
+
+  const latest = challenges[0]
+  await admin
+    .from('family_phone_access_codes')
+    .update({ attempt_count: (latest.attempt_count ?? 0) + 1 })
+    .eq('id', latest.id)
+
+  return { ok: false, message: 'Codigo incorrecto. Revisa WhatsApp e intenta de nuevo.' }
 }
 

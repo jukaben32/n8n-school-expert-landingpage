@@ -21,6 +21,7 @@ Lo importante para el colegio:
 - Si el tutor ya tenia cuenta, se reutiliza esa cuenta.
 - Si el tutor no tenia cuenta, se crea una cuenta tecnica interna vinculada a su ficha de tutor.
 - Al validar el codigo, el padre entra al mismo `/dashboard/portal-familiar` que ya existia.
+- Como el WhatsApp automatico del colegio no esta activo todavia, se agrego un modo manual interno en `/dashboard/secretaria/acceso-familiar` para que Secretaria genere hasta 5 codigos por dia y copie el mensaje para enviarlo por WhatsApp Business.
 
 Esto permite una transicion suave: los padres que ya entran por el sistema actual no pierden acceso, y los que no manejan bien correo/contrasena tienen una puerta mas simple.
 
