@@ -69,6 +69,8 @@ export default async function ReportesPage() {
     { data: attendanceRaw, error: attendanceError },
     { data: invoicesMonthRaw, error: invoicesMonthError },
     { data: invoicesTrendRaw, error: invoicesTrendError },
+    { data: paymentsMonthRaw, error: paymentsMonthError },
+    { data: paymentsTrendRaw, error: paymentsTrendError },
     { data: studentsRaw, error: studentsError },
     { data: messagesRaw, error: messagesError },
     { data: aiConversationsRaw, error: aiError },
@@ -80,6 +82,8 @@ export default async function ReportesPage() {
     supabase.from('attendance').select('date, status').eq('school_id', schoolId).gte('date', thirtyDaysAgoStr),
     supabase.from('invoices').select('status, total_amount').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', startOfMonth.toISOString()),
     supabase.from('invoices').select('status, total_amount, issued_at').eq('school_id', schoolId).is('deleted_at', null).gte('issued_at', sixMonthsAgoIso),
+    supabase.from('payments').select('amount_paid, paid_at').eq('school_id', schoolId).gte('paid_at', startOfMonth.toISOString()),
+    supabase.from('payments').select('amount_paid, paid_at').eq('school_id', schoolId).gte('paid_at', sixMonthsAgoIso),
     supabase.from('students').select('enrollment_status, grade_level').eq('school_id', schoolId).is('deleted_at', null),
     supabase.from('messages').select('id, title, published_at, message_reads(user_id)').eq('school_id', schoolId).not('published_at', 'is', null).order('published_at', { ascending: false }).limit(8),
     supabase.from('ai_conversations').select('channel').eq('school_id', schoolId).eq('role', 'user').gte('created_at', thirtyDaysAgoIso),
@@ -130,8 +134,12 @@ export default async function ReportesPage() {
 
   // ── Finanzas ────────────────────────────────────────────────────────
   const invoicesMonth = (invoicesMonthRaw ?? []) as { status: string; total_amount: number }[]
+  const paymentsMonth = (paymentsMonthRaw ?? []) as { amount_paid: number }[]
   const totalInvoiced = invoicesMonth.reduce((sum, i) => sum + Number(i.total_amount), 0)
-  const totalPaid = invoicesMonth.filter((i) => i.status === 'pagado').reduce((sum, i) => sum + Number(i.total_amount), 0)
+  // "Cobrado" debe salir de payments.paid_at, igual que el Panel. Una factura
+  // puede existir como pagada, pero lo que ocurrió en caja este mes vive en
+  // `payments`, no en `invoices.issued_at`.
+  const totalPaid = paymentsMonth.reduce((sum, p) => sum + Number(p.amount_paid), 0)
   // La mora NO puede salir de `invoices.status`: nada en todo el sistema
   // escribe jamas 'vencido' (ni trigger, ni cron -- ver AGENTS.md), y el
   // colegio crea cada factura ya 'pagado' desde "Registrar pago externo".
@@ -158,6 +166,7 @@ export default async function ReportesPage() {
   const formatDOP = (amount: number) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount)
 
   const invoicesTrendRows = (invoicesTrendRaw ?? []) as { status: string; total_amount: number; issued_at: string }[]
+  const paymentsTrendRows = (paymentsTrendRaw ?? []) as { amount_paid: number; paid_at: string }[]
   const monthKeys: string[] = []
   for (let i = 5; i >= 0; i--) {
     const d = new Date()
@@ -172,7 +181,13 @@ export default async function ReportesPage() {
     const row = revenueByMonth.get(key)
     if (!row) continue
     row.facturado += Number(inv.total_amount)
-    if (inv.status === 'pagado') row.cobrado += Number(inv.total_amount)
+  }
+  for (const payment of paymentsTrendRows) {
+    const d = new Date(payment.paid_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const row = revenueByMonth.get(key)
+    if (!row) continue
+    row.cobrado += Number(payment.amount_paid)
   }
   const revenueTrend = monthKeys.map((key) => {
     const [y, m] = key.split('-')
@@ -230,7 +245,7 @@ export default async function ReportesPage() {
     <div className="max-w-5xl mx-auto space-y-8">
       <QueryErrorBanner errors={[
         { label: 'la asistencia', error: attendanceError },
-        { label: 'los cobros', error: invoicesMonthError || invoicesTrendError },
+        { label: 'los cobros', error: invoicesMonthError || invoicesTrendError || paymentsMonthError || paymentsTrendError },
         { label: 'la cartera vencida', error: receivablesError },
         { label: 'los estudiantes', error: studentsError },
         { label: 'los comunicados', error: messagesError },

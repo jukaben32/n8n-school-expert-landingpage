@@ -5636,6 +5636,12 @@ Centro de control y Reportes seguían usando `list_school_receivables()` y por e
 Plataforma recibió `20260930010000_network_receivables_breakdown.sql`, que actualiza
 `list_school_receivables_network()` para devolver el mismo desglose en vista multi-colegio.
 
+**Analíticas armonizada con el Panel (2026-09-30)**: al revisar producción, "Cobrado" en
+`/dashboard/reportes` seguía saliendo de `invoices` emitidas en el mes, mientras el Panel usa
+`payments.paid_at`. En datos reales eso daba RD$748,774.12 vs RD$660,424.12. Se corrigió para
+que "Facturado" siga viniendo de `invoices.issued_at`, pero "Cobrado" y la serie cobrada de los
+últimos 6 meses salgan de `payments.paid_at`.
+
 ## Módulo de Nómina: SOLO PLANIFICADO -- terminar la investigación legal es PRIORIDAD (2026-09-29)
 
 Plan completo en `docs/PLAN_MODULO_NOMINA.md` (marco legal RD, cifras 2026, diseño de tablas, motor de
