@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "smoke": "node ../scripts/smoke-roles.mjs"
+    "smoke": "node ../scripts/smoke-roles.mjs",
+    "test:family-academia": "node ../scripts/test-family-academia.mjs",
+    "test:family-academia:render": "node ../scripts/test-family-academia-render.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

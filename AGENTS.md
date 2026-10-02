@@ -5666,3 +5666,13 @@ cifra legal puede ir en el código: todo en `legal_parameters` con fecha de vige
 
 **Cómo aplicar:** en la próxima sesión que toque Nómina (o en cuanto haya acceso a esas fuentes),
 primero cerrar esta lista contra el texto oficial y actualizar el plan; recién después, Fase 0.
+
+
+## 2026-10-01 — Academia familiar y tarjetas de hijos
+
+Las tarjetas del Portal Familiar apuntaban a la ficha administrativa de Estudiantes. El rol guardian carece de ese permiso: la ficha lo enviaba a /dashboard y de ahí regresaba al portal. Además, el menú familiar omitía Academia y la página académica existente solo admite cuentas con student_id.
+
+Se agrega /dashboard/portal-familiar/academia para elegir hijo, /dashboard/portal-familiar/hijos/[studentId] para pendientes/completadas y una ruta anidada de consulta de lecciones. StudentCard y el acceso rápido familiar apuntan a estas rutas. El menú conserva una sola opción activa. Las rutas comprueban sesión, guardian_id, vínculo student_guardians, school_id y deleted_at antes de instanciar el cliente administrativo; las lecturas posteriores filtran colegio, curso, hijo, publicación y borrado. No hay escrituras de intentos desde la familia ni exposición de is_correct. Los errores de progreso no se convierten en falsas tareas pendientes. No se modifican policies, migraciones, autenticación, pagos ni las rutas académicas de alumno/personal.
+
+Verificación: 8 pruebas de autorización/progreso y 12 comprobaciones de render de las rutas Next contra un Supabase local simulado; incluyen hijo ajeno, curso ajeno, imágenes firmadas, doble rol, vistas anteriores de alumno/docente, bloqueo por mora y ausencia de escrituras. TypeScript y build completo pasan. El entorno local requirió temporalmente workerThreads/cpus para evitar spawn EPERM y typeRoots local para excluir tipos ajenos en directorios superiores; next.config.ts y tsconfig.json se restauraron antes de preparar el cambio. Lint de archivos modificados: sin errores (advertencia preexistente de img en StudentCard). Lint general: 7 errores preexistentes en verify-smtp-config.js, notas/periodos/page.tsx, GlobalSearch.tsx y NotificationBell.tsx. Smoke de producción pendiente: falta SUPABASE_ACCESS_TOKEN y la conexión Supabase disponible no incluye fssjgpqisfnmnkavsyld. No desplegar hasta completar esa validación.
+

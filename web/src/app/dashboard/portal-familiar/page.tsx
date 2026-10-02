@@ -141,7 +141,8 @@ export default async function PortalFamiliarPage() {
       )}
 
       {/* Resumen rápido */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <SummaryBadge label="Academia" value="Ver" icon="🎓" href="/dashboard/portal-familiar/academia" />
         <SummaryBadge label="Comunicados" value="Ver" icon="📬" href="/dashboard/comunicados" />
         <SummaryBadge label="Pagos" value="Ver" icon="💳" href="/dashboard/pagos" />
         <SummaryBadge label="Asistencia" value="Ver" icon="📅" href="/dashboard/asistencia" />

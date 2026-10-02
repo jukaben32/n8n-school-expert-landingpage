@@ -27,7 +27,7 @@ export default function StudentCard({
 
   return (
     <a
-      href={`/dashboard/estudiantes/${id}`}
+      href={`/dashboard/portal-familiar/hijos/${id}`}
       id={`student-card-${id}`}
       className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/30 dark:hover:border-accent/30 hover:shadow-soft transition group"
     >
