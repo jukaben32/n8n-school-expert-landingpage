@@ -170,7 +170,381 @@ function insertAttendanceSql() {
 }
 
 /**
- * Revisar una justificación de ausencia es una escritursistema SIN rol.
+ * Revisar una justificación de ausencia es una escritura que hace el
+ * personal con SU PROPIA sesión (no con service_role, a diferencia de las
+ * otras bandejas de revisión del proyecto), así que depende directamente de
+ * la policy attendance_justifications_staff_update.
+ *
+ * No hace falta que existan filas para que sirva: si la policy quedara con
+ * una llamada ambigua a teacher_is_assigned_to_grade (el fallo que dejó al
+ * colegio un día sin pasar lista), Postgres revienta al PLANIFICAR la
+ * consulta, aunque no toque ninguna fila.
+ */
+function reviewJustificationSql() {
+  return `
+    update attendance_justifications
+    set review_note = review_note
+    where status = 'pendiente';
+  `
+}
+
+/**
+ * El buscador global (globalSearchAction) exige cada palabra de lo que se
+ * teclea contra nombre O apellido, por separado. Antes mandaba la frase
+ * entera contra cada columna, así que buscar por NOMBRE COMPLETO -- que es
+ * como escribe cualquiera -- nunca encontraba nada (reportado por el
+ * colegio el 2026-09-15).
+ *
+ * No se fija en ninguna persona concreta: toma una fila real de la tabla,
+ * arma la búsqueda con su nombre y su apellido, y exige que se encuentre a
+ * sí misma. Si alguien vuelve a mandar la frase entera contra una sola
+ * columna, esto falla.
+ */
+function buscadorPorNombreCompletoSql(tabla) {
+  return `
+    do $$
+    declare v record; n int; nom text; ape text;
+    begin
+      select first_name, last_name into v from ${tabla}
+       where deleted_at is null and first_name <> '' and last_name <> '' limit 1;
+      if not found then return; end if;
+      nom := split_part(btrim(v.first_name), ' ', 1);
+      ape := split_part(btrim(v.last_name), ' ', 1);
+      select count(*) into n from ${tabla}
+       where deleted_at is null
+         and (first_name ilike '%' || nom || '%' or last_name ilike '%' || nom || '%')
+         and (first_name ilike '%' || ape || '%' or last_name ilike '%' || ape || '%');
+      if n = 0 then
+        raise exception 'El buscador no encuentra a "% %" en ${tabla} por nombre completo', nom, ape;
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * 2026-09-18: Academia (lessons/quiz_questions/quiz_options) pasó de una
+ * sola policy ALL sin restricción a acotar la ESCRITURA por asignación
+ * docente -- mismo patrón que Asistencia/Notas/Horarios
+ * (teacher_is_assigned_to_grade con 3 argumentos, categoría 'regular').
+ * Antes cualquier profesor podía crear/editar lecciones de cualquier curso.
+ *
+ * Prueba positiva: el profesor SÍ puede crear en un curso que de verdad
+ * tiene asignado (busca su propia asignación real, no asume ninguna).
+ */
+function academiaCrearEnCursoSql() {
+  return `
+    do $$
+    declare v_school uuid; v_grade text; v_subject uuid; v_id uuid;
+    begin
+      select school_id into v_school from users_profiles where auth_id = auth.uid();
+      -- OJO: no leer teacher_assignments con el cliente del profesor -- su
+      -- RLS no se lo permite (devuelve vacío, no error, mismo patrón que ya
+      -- costó un día con Mensajes/families). Usar la función oficial
+      -- security definer, igual que la policy real.
+      select distinct s.grade_level into v_grade from students s
+      where s.school_id = v_school and s.deleted_at is null and s.grade_level is not null
+        and teacher_is_assigned_to_grade(v_school, s.grade_level, 'regular')
+      limit 1;
+      if v_grade is null then
+        return; -- este profesor no tiene ningún curso asignado con estudiantes reales, se omite
+      end if;
+      select id into v_subject from subjects where school_id = v_school limit 1;
+      insert into lessons (school_id, subject_id, title, video_url, video_provider, grade_level, is_published)
+      values (v_school, v_subject, 'SMOKE-academia-curso-propio', 'https://youtube.com/watch?v=smoke', 'youtube', v_grade, false)
+      returning id into v_id;
+      if v_id is null then
+        raise exception 'No se pudo crear la lección de prueba en el curso asignado (%)', v_grade;
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * Prueba negativa: el profesor NO puede crear en un curso real del colegio
+ * que no tiene asignado. Si el insert tiene éxito, es un hueco de
+ * seguridad real -- se relanza como excepción para que el script lo marque
+ * FALLA (no "OK" invertido: un insert exitoso aquí es el fallo).
+ */
+function academiaNoCrearEnAjenoSql() {
+  return `
+    do $$
+    declare v_school uuid; v_grade text; v_subject uuid; v_inserted boolean := false;
+    begin
+      select school_id into v_school from users_profiles where auth_id = auth.uid();
+      -- misma razón que en academiaCrearEnCursoSql: usar la función oficial,
+      -- no un JOIN a teacher_assignments con el cliente del profesor.
+      select distinct s.grade_level into v_grade from students s
+      where s.school_id = v_school and s.deleted_at is null and s.grade_level is not null
+        and not teacher_is_assigned_to_grade(v_school, s.grade_level, 'regular')
+      limit 1;
+      if v_grade is null then
+        return; -- no hay ningún curso "ajeno" disponible para este profesor, se omite
+      end if;
+      select id into v_subject from subjects where school_id = v_school limit 1;
+      begin
+        insert into lessons (school_id, subject_id, title, video_url, video_provider, grade_level, is_published)
+        values (v_school, v_subject, 'SMOKE-academia-curso-ajeno', 'https://youtube.com/watch?v=smoke2', 'youtube', v_grade, false);
+        v_inserted := true;
+      exception when insufficient_privilege then
+        v_inserted := false;
+      end;
+      if v_inserted then
+        raise exception 'RIESGO: el profesor pudo crear una lección en un curso que NO tiene asignado (%)', v_grade;
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * 2026-09-18 (Horario para familias/estudiantes): comprobación negativa de
+ * aislamiento, mismo espíritu que `academiaNoCrearEnAjenoSql` -- no depende
+ * de que exista una fila concreta (si `class_schedules` está vacío para este
+ * tutor, `bool_and` da NULL y no revienta), pero si CUALQUIER fila visible
+ * pertenece a un curso que no es el de ninguno de sus hijos, es un hueco de
+ * seguridad real y se relanza como excepción.
+ */
+function guardianHorarioSoloSusHijosSql() {
+  return `
+    do $$
+    declare v_ok boolean;
+    begin
+      select bool_and(cs.grade_level in (
+        select s.grade_level from students s
+        join student_guardians sg on sg.student_id = s.id
+        join guardians g on g.id = sg.guardian_id
+        join users_profiles up on up.guardian_id = g.id
+        where up.auth_id = auth.uid()
+      )) into v_ok
+      from class_schedules cs;
+      if v_ok is false then
+        raise exception 'RIESGO: el tutor ve el horario de un curso que no es de ninguno de sus hijos';
+      end if;
+    end $$;
+  `
+}
+
+/** Mismo principio que la de arriba, para el estudiante y su propio curso. */
+function studentHorarioSoloSuCursoSql() {
+  return `
+    do $$
+    declare v_ok boolean;
+    begin
+      select bool_and(cs.grade_level = (select grade_level from students where id = current_student_id()))
+      into v_ok
+      from class_schedules cs;
+      if v_ok is false then
+        raise exception 'RIESGO: el estudiante ve el horario de un curso que no es el suyo';
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * Políticas internas (2026-09-23): el empleado firma SU propia política
+ * vigente (misma escritura que signStaffPolicyAction, con el cliente de
+ * sesión). Si no hay ninguna vigente, o ya la firmó, se omite sin fallar.
+ */
+function politicaFirmarPropiaSql() {
+  return `
+    do $$
+    declare v_prof record; v_pol record;
+    begin
+      select id, school_id, staff_id into v_prof from users_profiles where auth_id = auth.uid();
+      if v_prof.staff_id is null then return; end if;
+      select id, title, body into v_pol from staff_policies
+      where school_id = v_prof.school_id and is_active
+        and id not in (select policy_id from staff_policy_signatures where staff_id = v_prof.staff_id)
+      limit 1;
+      if v_pol.id is null then return; end if;
+      insert into staff_policy_signatures (policy_id, school_id, staff_id, profile_id, signer_full_name,
+        signer_national_id, signer_position, policy_title_snapshot, policy_body_snapshot)
+      values (v_pol.id, v_prof.school_id, v_prof.staff_id, v_prof.id, 'SMOKE', '000-0000000-0', 'SMOKE', v_pol.title, v_pol.body);
+    end $$;
+  `
+}
+
+/** Prueba negativa: firmar con la ficha de OTRO empleado tiene que fallar. */
+function politicaNoFirmarAjenaSql() {
+  return `
+    do $$
+    declare v_prof record; v_pol uuid; v_otro uuid;
+    begin
+      select id, school_id, staff_id into v_prof from users_profiles where auth_id = auth.uid();
+      select id into v_pol from staff_policies where school_id = v_prof.school_id and is_active limit 1;
+      if v_pol is null then return; end if;
+      -- security definer no hace falta: staff se lee con esta sesión o no;
+      -- si no se ve ningún otro empleado, no hay nada que probar.
+      select id into v_otro from staff where school_id = v_prof.school_id and id <> coalesce(v_prof.staff_id, gen_random_uuid()) limit 1;
+      if v_otro is null then return; end if;
+      begin
+        insert into staff_policy_signatures (policy_id, school_id, staff_id, profile_id, signer_full_name,
+          signer_national_id, signer_position, policy_title_snapshot, policy_body_snapshot)
+        values (v_pol, v_prof.school_id, v_otro, v_prof.id, 'SMOKE', '0', 'SMOKE', 'x', 'x');
+      exception when insufficient_privilege then
+        return; -- bloqueado por RLS: es lo esperado
+      end;
+      raise exception 'HUECO: pudo firmar la política en nombre de otro empleado';
+    end $$;
+  `
+}
+
+/** Tutores y estudiantes no deben ver ni una política interna del personal. */
+function politicasInvisiblesSql() {
+  return `
+    do $$
+    begin
+      if (select count(*) from staff_policies) > 0 or (select count(*) from staff_policy_signatures) > 0 then
+        raise exception 'HUECO: un rol que no es personal puede leer políticas internas';
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * Incidencias (2026-09-23): el docente registra una incidencia de un
+ * estudiante de SU curso, igual que createIncidentAction (cliente de sesión).
+ * Si no tiene ningún estudiante a su alcance, se omite sin fallar.
+ */
+function incidenciaRegistrarSql() {
+  return `
+    do $$
+    declare v_prof record; v_st record;
+    begin
+      select id, school_id into v_prof from users_profiles where auth_id = auth.uid();
+      select s.id, s.grade_level into v_st from students s
+      where s.school_id = v_prof.school_id and s.deleted_at is null and s.grade_level is not null
+        and teacher_is_assigned_to_grade(v_prof.school_id, s.grade_level, 'regular')
+      limit 1;
+      if v_st.id is null then return; end if;
+      insert into student_incidents (school_id, student_id, grade_level, incident_date, location, severity,
+        description, reported_by, reporter_name)
+      values (v_prof.school_id, v_st.id, v_st.grade_level, current_date, 'aula', 'leve', 'SMOKE', v_prof.id, 'SMOKE');
+    end $$;
+  `
+}
+
+/** Tutores y estudiantes no ven ninguna incidencia. */
+function incidenciasInvisiblesSql() {
+  return `
+    do $$
+    begin
+      if (select count(*) from student_incidents) > 0 then
+        raise exception 'HUECO: un rol que no es personal puede leer incidencias';
+      end if;
+    end $$;
+  `
+}
+
+async function main() {
+  console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
+
+  const users = await sql(`
+    select distinct on (up.role) up.role, up.auth_id, coalesce(st.first_name || ' ' || st.last_name, au.email) as quien
+    from users_profiles up
+    join auth.users au on au.id = up.auth_id
+    left join staff st on st.id = up.staff_id
+    where up.auth_id is not null
+    order by up.role, au.last_sign_in_at desc nulls last;
+  `)
+  if (!users.ok) {
+    console.error('No se pudo listar usuarios:', users.error)
+    process.exit(1)
+  }
+
+  const byRole = new Map(users.rows.map((r) => [r.role, r]))
+  let fallos = 0
+  let total = 0
+
+  for (const [role, checks] of Object.entries(CHECKS)) {
+    const user = byRole.get(role)
+    console.log(`\n${role.toUpperCase()}${user ? ` — ${user.quien}` : ''}`)
+    if (!user) {
+      console.log('  (omitido: no hay ningún usuario con este rol todavía)')
+      continue
+    }
+
+    for (const [nombre, consulta] of checks) {
+      total++
+      const body =
+        consulta === 'INSERT_ATTENDANCE' ? insertAttendanceSql()
+        : consulta === 'REVIEW_JUSTIFICATION' ? reviewJustificationSql()
+        : consulta === 'BUSCADOR_PERSONAL' ? buscadorPorNombreCompletoSql('staff')
+        : consulta === 'BUSCADOR_TUTORES' ? buscadorPorNombreCompletoSql('guardians')
+        : consulta === 'ACADEMIA_CREAR_EN_CURSO' ? academiaCrearEnCursoSql()
+        : consulta === 'ACADEMIA_NO_CREAR_EN_AJENO' ? academiaNoCrearEnAjenoSql()
+        : consulta === 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS' ? guardianHorarioSoloSusHijosSql()
+        : consulta === 'STUDENT_HORARIO_SOLO_SU_CURSO' ? studentHorarioSoloSuCursoSql()
+        : consulta === 'POLITICA_FIRMAR_PROPIA' ? politicaFirmarPropiaSql()
+        : consulta === 'POLITICA_NO_FIRMAR_AJENA' ? politicaNoFirmarAjenaSql()
+        : consulta === 'POLITICAS_INVISIBLES' ? politicasInvisiblesSql()
+        : consulta === 'INCIDENCIA_REGISTRAR' ? incidenciaRegistrarSql()
+        : consulta === 'INCIDENCIAS_INVISIBLES' ? incidenciasInvisiblesSql()
+        : consulta
+      const r = await asUser(user.auth_id, body)
+      if (r.ok) {
+        console.log(`  OK    ${nombre}`)
+      } else {
+        fallos++
+        console.log(`  FALLA ${nombre}\n        → ${r.error}`)
+      }
+    }
+  }
+
+  // Psicóloga (2026-09-23): entra con rol 'teacher', pero por su PUESTO en
+  // Personal (staff.role = 'psychologist') registra el seguimiento de las
+  // incidencias junto con Dirección. Se prueba de verdad: registra un caso de
+  // prueba y le escribe el seguimiento, todo revertido. Si el colegio no
+  // tiene a nadie con ese puesto y acceso, se omite sin fallar.
+  const psico = await sql(`
+    select up.auth_id, st.first_name || ' ' || st.last_name as quien
+    from users_profiles up
+    join staff st on st.id = up.staff_id
+    join auth.users au on au.id = up.auth_id
+    where st.role = 'psychologist' and st.deleted_at is null
+    order by au.last_sign_in_at desc nulls last
+    limit 1;
+  `)
+  console.log(`\nPSICÓLOGA (puesto)${psico.ok && psico.rows[0] ? ` — ${psico.rows[0].quien}` : ''}`)
+  if (!psico.ok) {
+    total++
+    fallos++
+    console.log(`  FALLA No se pudo buscar\n        → ${psico.error}`)
+  } else if (!psico.rows[0]) {
+    console.log('  (omitido: nadie tiene el puesto Psicóloga con acceso al sistema)')
+  } else {
+    total++
+    const r = await asUser(psico.rows[0].auth_id, `
+      do $$
+      declare v_prof record; v_st record; v_id uuid; v_n int;
+      begin
+        select id, school_id into v_prof from users_profiles where auth_id = auth.uid();
+        if not incident_is_counselor(v_prof.school_id) then
+          raise exception 'incident_is_counselor devolvió false para la psicóloga';
+        end if;
+        select s.id, s.grade_level into v_st from students s
+        where s.school_id = v_prof.school_id and s.deleted_at is null and s.grade_level is not null
+        limit 1;
+        -- Caso creado por otra vía (como si lo hubiera reportado un maestro).
+        insert into student_incidents (school_id, student_id, grade_level, incident_date, location, severity,
+          description, reported_by, reporter_name)
+        values (v_prof.school_id, v_st.id, v_st.grade_level, current_date, 'aula', 'leve', 'SMOKE', v_prof.id, 'SMOKE')
+        returning id into v_id;
+        update student_incidents set status = 'en_seguimiento', follow_up_notes = 'SMOKE',
+          reviewed_by = v_prof.id, reviewed_at = now()
+        where id = v_id;
+        get diagnostics v_n = row_count;
+        if v_n <> 1 then raise exception 'la psicóloga no pudo registrar el seguimiento'; end if;
+      end $$;
+    `)
+    if (r.ok) console.log('  OK    Incidencias: registrar seguimiento')
+    else {
+      fallos++
+      console.log(`  FALLA Incidencias: registrar seguimiento\n        → ${r.error}`)
+    }
+  }
+
+  // Comprobación global, no por rol: una cuenta de Auth que ya inició
+  // sesión pero no tiene fila en `users_profiles` entra al sistema SIN rol.
   // Hasta el 2026-09-15 eso la mandaba en silencio al Portal Familiar como
   // si fuera tutora (le pasó a dos docentes). Ahora ve una pantalla que lo
   // explica -- pero sigue sin poder trabajar, así que esto tiene que
