@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { normalizePhoneForMatch, maskPhone } from '@/lib/phone'
+import { logFamilyAccessFailure } from '@/lib/familyAccessLog'
 import {
   createFamilyAccessChallenge,
   FAMILY_ACCESS_CODE_TTL_LABEL,
@@ -20,12 +21,13 @@ type ManualCodeResult =
       code: string
       expiresAt: string
       message: string
+      remainingCodes: number
     }
   | { ok: false; message: string }
 
 function accessUrl() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
-  return `${siteUrl || 'https://n8n-school-expert-landingpage.vercel.app'}/acceso-familiar`
+  return `${siteUrl || 'https://n8n-school-expert-landingpage.vercel.app'}/acceso-familiar?modo=manual`
 }
 
 async function resolveOperator() {
@@ -64,6 +66,15 @@ async function findGuardianMatches(schoolId: string, normalizedPhone: string): P
 }
 
 export async function generateManualFamilyAccessCode(rawPhone: string): Promise<ManualCodeResult> {
+  try {
+    return await generateManualCode(rawPhone)
+  } catch (error) {
+    logFamilyAccessFailure('manual-generation', error)
+    return { ok: false, message: 'No pudimos generar el codigo. Intenta de nuevo; si persiste, contacta soporte.' }
+  }
+}
+
+async function generateManualCode(rawPhone: string): Promise<ManualCodeResult> {
   const operator = await resolveOperator()
   if (!operator.ok) return { ok: false, message: operator.message }
 
@@ -74,16 +85,21 @@ export async function generateManualFamilyAccessCode(rawPhone: string): Promise<
 
   const admin = createAdminClient()
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const { count } = await admin
+  const { count, error: quotaError } = await admin
     .from('family_phone_access_codes')
     .select('id', { count: 'exact', head: true })
     .eq('school_id', operator.schoolId)
     .gte('created_at', since)
 
+  if (quotaError || count === null) {
+    logFamilyAccessFailure('manual-quota', quotaError)
+    return { ok: false, message: 'No pudimos consultar el cupo del colegio. Intenta de nuevo.' }
+  }
+
   if ((count ?? 0) >= FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY) {
     return {
       ok: false,
-      message: `Ya se generaron ${FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY} codigos en las ultimas 24 horas. Para la transicion, trabaja pocas familias por dia.`,
+      message: `Ya se generaron ${FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY} codigos en las ultimas 24 horas. El cupo se libera cuando los codigos anteriores cumplen 24 horas.`,
     }
   }
 
@@ -118,7 +134,7 @@ export async function generateManualFamilyAccessCode(rawPhone: string): Promise<
       'Entre aqui:',
       accessUrl(),
       '',
-      'Escriba su celular registrado y luego el codigo.',
+      'Escriba su celular registrado y el codigo. Si no aparece el campo del codigo, pulse "Ya tengo un codigo".',
     ].join('\n')
 
     return {
@@ -128,8 +144,10 @@ export async function generateManualFamilyAccessCode(rawPhone: string): Promise<
       code: challenge.code,
       expiresAt: challenge.expiresAt,
       message,
+      remainingCodes: Math.max(0, FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY - count - 1),
     }
-  } catch {
+  } catch (error) {
+    logFamilyAccessFailure('manual-challenge', error)
     return { ok: false, message: 'No pudimos generar el codigo. Intenta de nuevo.' }
   }
 }

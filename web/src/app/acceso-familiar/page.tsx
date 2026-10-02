@@ -9,10 +9,13 @@ export const metadata: Metadata = {
   description: 'Acceso al Portal Familiar con celular y codigo de WhatsApp.',
 }
 
-export default async function AccesoFamiliarPage() {
+export default async function AccesoFamiliarPage({ searchParams }: {
+  searchParams: Promise<{ modo?: string | string[] }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (user) redirect('/dashboard/portal-familiar')
+  const manualMode = (await searchParams).modo === 'manual'
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-slate-950 dark:via-slate-900 dark:to-primary-dark/20 px-4 py-12">
@@ -37,7 +40,7 @@ export default async function AccesoFamiliarPage() {
             Usa el celular registrado en el colegio.
           </p>
 
-          <FamilyPhoneAccessForm />
+          <FamilyPhoneAccessForm initialManualMode={manualMode} />
         </div>
 
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">

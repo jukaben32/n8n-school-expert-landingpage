@@ -5666,3 +5666,25 @@ cifra legal puede ir en el código: todo en `legal_parameters` con fecha de vige
 
 **Cómo aplicar:** en la próxima sesión que toque Nómina (o en cuanto haya acceso a esas fuentes),
 primero cerrar esta lista contra el texto oficial y actualizar el plan; recién después, Fase 0.
+
+
+## Acceso familiar manual: cupo y recuperación de fallas (2026-10-01)
+
+El colegio reportó dos accesos exitosos y luego una falla; el error real y los
+registros de producción aún no están disponibles. No se confirmó la causa del
+incidente. El código sí tenía tres fallas comprobables: cupo de cinco códigos
+(contaba reintentos), consumo irreversible antes de preparar la sesión de Auth,
+y formularios que quedaban cargando ante excepciones de red. También insertaba
+`pending` antes del hash definitivo.
+
+Se aumenta el cupo a 20 códigos por colegio en una ventana móvil de 24 horas,
+se muestra el cupo restante, se inserta el hash completo de una vez, se reserva
+el código condicionalmente y se libera si falla Auth. Los formularios recuperan
+la carga, y el mensaje manual abre `/acceso-familiar?modo=manual`. Se mantienen
+los cinco intentos, la vigencia, los roles y las validaciones. No requiere SQL.
+
+Las 19 pruebas de `scripts/regression-family-access.mjs` pasan con Supabase en
+memoria; no equivalen a la prueba real de producción. El smoke sigue pendiente
+por falta de acceso al proyecto Supabase y `SUPABASE_ACCESS_TOKEN`. La cuota
+conserva el conteo seguido de inserción (no es transaccional entre operadores).
+Detalles y límites: `docs/2026-10-01-acceso-familiar-manual.md`.

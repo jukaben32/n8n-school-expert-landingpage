@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requestFamilyAccessCode, verifyFamilyAccessCode, verifyFamilyAccessCodeByPhone } from './actions'
 
-export default function FamilyPhoneAccessForm() {
+export default function FamilyPhoneAccessForm({ initialManualMode = false }: { initialManualMode?: boolean }) {
   const router = useRouter()
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [challengeId, setChallengeId] = useState<string | null>(null)
-  const [manualCodeMode, setManualCodeMode] = useState(false)
+  const [manualCodeMode, setManualCodeMode] = useState(initialManualMode)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -21,16 +21,19 @@ export default function FamilyPhoneAccessForm() {
     setError(null)
     setMessage(null)
 
-    const result = await requestFamilyAccessCode(phone)
-    setLoading(false)
-
-    if (!result.ok) {
-      setError(result.message)
-      return
+    try {
+      const result = await requestFamilyAccessCode(phone)
+      if (!result.ok) {
+        setError(result.message)
+        return
+      }
+      setChallengeId(result.challengeId)
+      setMessage(result.message)
+    } catch {
+      setError('No pudimos conectar con el servidor. Revisa tu conexion e intenta de nuevo.')
+    } finally {
+      setLoading(false)
     }
-
-    setChallengeId(result.challengeId)
-    setMessage(result.message)
   }
 
   async function handleVerifyCode(e: React.FormEvent) {
@@ -39,30 +42,34 @@ export default function FamilyPhoneAccessForm() {
     setLoading(true)
     setError(null)
 
-    const result = challengeId
-      ? await verifyFamilyAccessCode(challengeId, code)
-      : await verifyFamilyAccessCodeByPhone(phone, code)
+    try {
+      const result = challengeId
+        ? await verifyFamilyAccessCode(challengeId, code)
+        : await verifyFamilyAccessCodeByPhone(phone, code)
 
-    if (!result.ok) {
+      if (!result.ok) {
+        setError(result.message)
+        return
+      }
+
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.verifyOtp({
+        token_hash: result.tokenHash,
+        type: 'magiclink',
+      })
+
+      if (authError) {
+        setError('El codigo fue validado, pero no pudimos abrir tu portal. Contacta secretaria para obtener otro codigo.')
+        return
+      }
+
+      router.push('/dashboard/portal-familiar')
+      router.refresh()
+    } catch {
+      setError('Se interrumpio la conexion. Intenta entrar de nuevo; si el codigo ya fue usado, contacta secretaria.')
+    } finally {
       setLoading(false)
-      setError(result.message)
-      return
     }
-
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.verifyOtp({
-      token_hash: result.tokenHash,
-      type: 'magiclink',
-    })
-
-    if (authError) {
-      setLoading(false)
-      setError('El codigo fue validado, pero no pudimos abrir tu portal. Intenta pedir otro codigo.')
-      return
-    }
-
-    router.push('/dashboard/portal-familiar')
-    router.refresh()
   }
 
   const isEnteringCode = !!challengeId || manualCodeMode
@@ -147,7 +154,7 @@ export default function FamilyPhoneAccessForm() {
           disabled={loading}
           onClick={() => {
             setChallengeId(null)
-            setManualCodeMode(false)
+            setManualCodeMode(initialManualMode)
             setCode('')
             setMessage(null)
             setError(null)

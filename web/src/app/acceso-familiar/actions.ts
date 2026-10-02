@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getWhatsappConnection, sendWhatsappMessage } from '@/lib/whatsapp/connection'
 import { maskPhone, normalizePhoneForMatch, phoneDigits, toWhatsAppNumber } from '@/lib/phone'
+import { logFamilyAccessFailure } from '@/lib/familyAccessLog'
 import {
   createFamilyAccessChallenge,
   FAMILY_ACCESS_CODE_TTL_LABEL,
@@ -23,6 +24,15 @@ type VerifyCodeResult =
   | { ok: false; message: string }
 
 export async function requestFamilyAccessCode(rawPhone: string): Promise<RequestCodeResult> {
+  try {
+    return await requestCode(rawPhone)
+  } catch (error) {
+    logFamilyAccessFailure('automatic-request', error)
+    return { ok: false, message: 'No pudimos preparar el codigo. Intenta de nuevo o contacta secretaria.' }
+  }
+}
+
+async function requestCode(rawPhone: string): Promise<RequestCodeResult> {
   const normalizedPhone = normalizePhoneForMatch(rawPhone)
   if (normalizedPhone.length !== 10) {
     return { ok: false, message: 'Escribe un numero de celular valido.' }
@@ -30,11 +40,16 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
 
   const admin = createAdminClient()
   const since = new Date(Date.now() - 15 * 60 * 1000).toISOString()
-  const { count } = await admin
+  const { count, error: quotaError } = await admin
     .from('family_phone_access_codes')
     .select('id', { count: 'exact', head: true })
     .eq('normalized_phone', normalizedPhone)
     .gte('created_at', since)
+
+  if (quotaError || count === null) {
+    logFamilyAccessFailure('automatic-quota', quotaError)
+    return { ok: false, message: 'No pudimos consultar los intentos. Intenta de nuevo.' }
+  }
 
   if ((count ?? 0) >= FAMILY_ACCESS_MAX_CODES_PER_15_MINUTES) {
     return { ok: false, message: 'Se enviaron varios codigos seguidos. Espera unos minutos y vuelve a intentar.' }
@@ -59,7 +74,8 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
   let challenge: { challengeId: string; code: string }
   try {
     challenge = await createFamilyAccessChallenge(admin, guardian, normalizedPhone)
-  } catch {
+  } catch (error) {
+    logFamilyAccessFailure('automatic-challenge', error)
     return { ok: false, message: 'No pudimos preparar el codigo. Intenta de nuevo.' }
   }
 
@@ -73,7 +89,7 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
   try {
     await sendWhatsappMessage(connection, toWhatsAppNumber(phoneDigits(rawPhone)), message)
   } catch (error) {
-    console.error('[acceso-familiar] No se pudo enviar WhatsApp', error)
+    logFamilyAccessFailure('whatsapp-send', error)
     return { ok: false, message: 'No pudimos enviar el codigo por WhatsApp. Intenta mas tarde o contacta secretaria.' }
   }
 
@@ -86,6 +102,15 @@ export async function requestFamilyAccessCode(rawPhone: string): Promise<Request
 }
 
 export async function verifyFamilyAccessCode(challengeId: string, code: string): Promise<VerifyCodeResult> {
+  try {
+    return await verifyCode(challengeId, code)
+  } catch (error) {
+    logFamilyAccessFailure('verify-code', error)
+    return { ok: false, message: 'No pudimos verificar el codigo. Intenta de nuevo.' }
+  }
+}
+
+async function verifyCode(challengeId: string, code: string): Promise<VerifyCodeResult> {
   const cleanCode = code.replace(/\D/g, '')
   if (!challengeId || cleanCode.length !== 6) {
     return { ok: false, message: 'Escribe el codigo de 6 digitos.' }
@@ -102,7 +127,7 @@ export async function verifyFamilyAccessCode(challengeId: string, code: string):
     return { ok: false, message: 'Ese codigo ya no esta disponible. Pide uno nuevo.' }
   }
 
-  if (new Date(challenge.expires_at).getTime() < Date.now()) {
+  if (new Date(challenge.expires_at).getTime() <= Date.now()) {
     return { ok: false, message: 'Ese codigo vencio. Pide uno nuevo.' }
   }
 
@@ -119,25 +144,59 @@ export async function verifyFamilyAccessCode(challengeId: string, code: string):
     return { ok: false, message: 'Codigo incorrecto. Revisa WhatsApp e intenta de nuevo.' }
   }
 
-  await admin
+  // Reserve atomically so concurrent requests cannot mint two sessions.
+  // Release this reservation if Auth fails, keeping the same code retryable.
+  const consumedAt = new Date().toISOString()
+  const { data: claimed, error: claimError } = await admin
     .from('family_phone_access_codes')
-    .update({ consumed_at: new Date().toISOString() })
+    .update({ consumed_at: consumedAt })
     .eq('id', challenge.id)
+    .is('consumed_at', null)
+    .eq('attempt_count', challenge.attempt_count ?? 0)
+    .gt('expires_at', consumedAt)
+    .select('id')
+    .maybeSingle()
 
-  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-    type: 'magiclink',
-    email: challenge.auth_email,
-  })
-
-  const tokenHash = linkData.properties?.hashed_token
-  if (linkError || !tokenHash) {
-    return { ok: false, message: 'No pudimos iniciar la sesion. Intenta de nuevo.' }
+  if (claimError || !claimed) {
+    if (claimError) logFamilyAccessFailure('claim-code', claimError)
+    return { ok: false, message: 'No pudimos validar ese codigo. Intenta de nuevo; si ya fue usado, pide otro.' }
   }
 
-  return { ok: true, tokenHash }
+  try {
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: challenge.auth_email,
+    })
+
+    const tokenHash = linkData?.properties?.hashed_token
+    if (linkError || !tokenHash) throw linkError ?? new Error('Missing auth token')
+
+    return { ok: true, tokenHash }
+  } catch (error) {
+    logFamilyAccessFailure('prepare-session', error)
+    const { error: releaseError } = await admin
+      .from('family_phone_access_codes')
+      .update({ consumed_at: null })
+      .eq('id', challenge.id)
+      .eq('consumed_at', consumedAt)
+    if (releaseError) {
+      logFamilyAccessFailure('release-code', releaseError)
+      return { ok: false, message: 'No pudimos iniciar la sesion. Contacta secretaria para obtener otro codigo.' }
+    }
+    return { ok: false, message: 'No pudimos iniciar la sesion. Puedes intentar de nuevo con el mismo codigo.' }
+  }
 }
 
 export async function verifyFamilyAccessCodeByPhone(rawPhone: string, code: string): Promise<VerifyCodeResult> {
+  try {
+    return await verifyCodeByPhone(rawPhone, code)
+  } catch (error) {
+    logFamilyAccessFailure('verify-by-phone', error)
+    return { ok: false, message: 'No pudimos verificar el codigo. Intenta de nuevo.' }
+  }
+}
+
+async function verifyCodeByPhone(rawPhone: string, code: string): Promise<VerifyCodeResult> {
   const normalizedPhone = normalizePhoneForMatch(rawPhone)
   const cleanCode = code.replace(/\D/g, '')
   if (normalizedPhone.length !== 10 || cleanCode.length !== 6) {

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { generateManualFamilyAccessCode } from './actions'
+import { FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY } from '@/lib/familyAccessPolicy'
 
 type ManualResult = {
   guardianName: string
@@ -9,6 +10,7 @@ type ManualResult = {
   code: string
   expiresAt: string
   message: string
+  remainingCodes: number
 }
 
 function formatExpiration(value: string) {
@@ -32,21 +34,28 @@ export default function ManualFamilyAccessPanel() {
     setCopied(false)
     setResult(null)
 
-    const response = await generateManualFamilyAccessCode(phone)
-    setLoading(false)
-
-    if (!response.ok) {
-      setError(response.message)
-      return
+    try {
+      const response = await generateManualFamilyAccessCode(phone)
+      if (!response.ok) {
+        setError(response.message)
+        return
+      }
+      setResult(response)
+    } catch {
+      setError('No pudimos conectar con el servidor. Revisa la conexion e intenta de nuevo.')
+    } finally {
+      setLoading(false)
     }
-
-    setResult(response)
   }
 
   async function copyMessage() {
     if (!result) return
-    await navigator.clipboard.writeText(result.message)
-    setCopied(true)
+    try {
+      await navigator.clipboard.writeText(result.message)
+      setCopied(true)
+    } catch {
+      setError('El navegador no permite copiar automaticamente. Selecciona y copia el texto del mensaje.')
+    }
   }
 
   return (
@@ -55,7 +64,8 @@ export default function ManualFamilyAccessPanel() {
         <div className="space-y-1">
           <h2 className="text-lg font-bold text-slate-900">Generar codigo manual</h2>
           <p className="text-sm text-slate-500">
-            Usa esta opcion solo para pocas familias durante la transicion. El codigo vence en 24 horas.
+            Hasta {FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY} codigos por colegio en las ultimas 24 horas.
+            Cada generacion, incluidos los reintentos, usa un cupo. El codigo vence en 24 horas.
           </p>
         </div>
 
@@ -105,6 +115,9 @@ export default function ManualFamilyAccessPanel() {
 
         {result ? (
           <div className="mt-5 space-y-4">
+            <p role="status" className="text-sm text-slate-600">
+              Cupos restantes al generar este codigo: {result.remainingCodes}.
+            </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl bg-slate-50 p-3">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Tutor</p>
@@ -126,6 +139,7 @@ export default function ManualFamilyAccessPanel() {
             </div>
 
             <textarea
+              aria-label="Mensaje para enviar al tutor"
               readOnly
               value={result.message}
               rows={9}
