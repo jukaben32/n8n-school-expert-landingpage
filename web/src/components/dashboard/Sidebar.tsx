@@ -139,6 +139,7 @@ type NavGroup = { title?: string; items: NavItem[] }
 const navByRole: Record<string, NavGroup[]> = {
   guardian: [{ items: [
     { href: '/dashboard/portal-familiar', label: 'Inicio', icon: 'home' },
+    { href: '/dashboard/portal-familiar/academia', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },
     { href: '/dashboard/horarios',        label: 'Horario', icon: 'horarios' },
@@ -338,7 +339,10 @@ export default function Sidebar({ role, schoolName, newLeadsCount = 0, newMessag
             )}
             <div className="space-y-1">
               {group.items.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                const isFamilyAcademia = pathname.startsWith('/dashboard/portal-familiar/hijos/')
+                const isActive = item.href === '/dashboard/portal-familiar'
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`) || (item.href === '/dashboard/portal-familiar/academia' && isFamilyAcademia)
                 return (
                   <a
                     key={item.href}

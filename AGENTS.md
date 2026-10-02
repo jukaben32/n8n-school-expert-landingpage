@@ -5666,3 +5666,43 @@ cifra legal puede ir en el código: todo en `legal_parameters` con fecha de vige
 
 **Cómo aplicar:** en la próxima sesión que toque Nómina (o en cuanto haya acceso a esas fuentes),
 primero cerrar esta lista contra el texto oficial y actualizar el plan; recién después, Fase 0.
+
+
+## 2026-10-01 — Academia familiar y tarjetas de hijos
+
+Las tarjetas del Portal Familiar apuntaban a la ficha administrativa de Estudiantes. El rol guardian carece de ese permiso: la ficha lo enviaba a /dashboard y de ahí regresaba al portal. Además, el menú familiar omitía Academia y la página académica existente solo admite cuentas con student_id.
+
+Se agrega /dashboard/portal-familiar/academia para elegir hijo, /dashboard/portal-familiar/hijos/[studentId] para pendientes/completadas y una ruta anidada de consulta de lecciones. StudentCard y el acceso rápido familiar apuntan a estas rutas. El menú conserva una sola opción activa. Las rutas comprueban sesión, guardian_id, vínculo student_guardians, school_id y deleted_at antes de instanciar el cliente administrativo; las lecturas posteriores filtran colegio, curso, hijo, publicación y borrado. No hay escrituras de intentos desde la familia ni exposición de is_correct. Los errores de progreso no se convierten en falsas tareas pendientes. No se modifican policies, migraciones, autenticación, pagos ni las rutas académicas de alumno/personal.
+
+Verificación: 8 pruebas de autorización/progreso y 12 comprobaciones de render de las rutas Next contra un Supabase local simulado; incluyen hijo ajeno, curso ajeno, imágenes firmadas, doble rol, vistas anteriores de alumno/docente, bloqueo por mora y ausencia de escrituras. TypeScript y build completo pasan. El entorno local requirió temporalmente workerThreads/cpus para evitar spawn EPERM y typeRoots local para excluir tipos ajenos en directorios superiores; next.config.ts y tsconfig.json se restauraron antes de preparar el cambio. Lint de archivos modificados: sin errores (advertencia preexistente de img en StudentCard). Lint general: 7 errores preexistentes en verify-smtp-config.js, notas/periodos/page.tsx, GlobalSearch.tsx y NotificationBell.tsx. Smoke de producción pendiente: falta SUPABASE_ACCESS_TOKEN y la conexión Supabase disponible no incluye fssjgpqisfnmnkavsyld. No desplegar hasta completar esa validación.
+
+
+## Acceso familiar manual: cupo y recuperación de fallas (2026-10-01)
+
+El colegio reportó dos accesos exitosos y luego una falla; el error real y los
+registros de producción aún no están disponibles. No se confirmó la causa del
+incidente. El código sí tenía tres fallas comprobables: cupo de cinco códigos
+(contaba reintentos), consumo irreversible antes de preparar la sesión de Auth,
+y formularios que quedaban cargando ante excepciones de red. También insertaba
+`pending` antes del hash definitivo.
+
+Se aumenta el cupo a 20 códigos por colegio en una ventana móvil de 24 horas,
+se muestra el cupo restante, se inserta el hash completo de una vez, se reserva
+el código condicionalmente y se libera si falla Auth. Los formularios recuperan
+la carga, y el mensaje manual abre `/acceso-familiar?modo=manual`. Se mantienen
+los cinco intentos, la vigencia, los roles y las validaciones. No requiere SQL.
+
+Las 22 pruebas de `scripts/regression-family-access.mjs` pasan con Supabase en
+memoria; no equivalen a la prueba real de producción. El smoke sigue pendiente
+por falta de acceso al proyecto Supabase y `SUPABASE_ACCESS_TOKEN`. La cuota
+conserva el conteo seguido de inserción (no es transaccional entre operadores).
+Detalles y límites: `docs/2026-10-01-acceso-familiar-manual.md`.
+
+
+## Publicación autorizada por el usuario (2026-10-02 UTC)
+
+Se integran Academia familiar (PR #35) y acceso familiar manual con cupo de
+20 códigos (PR #36). El usuario pidió expresamente commit y push a main tras
+ser informado de que el smoke real seguía pendiente por falta de acceso a
+Supabase. Esta publicación sigue esa autorización; no equivale a haber ejecutado
+el smoke de producción. No se requieren migraciones SQL.

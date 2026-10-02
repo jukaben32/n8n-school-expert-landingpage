@@ -1,13 +1,14 @@
-import { createHash, randomInt } from 'crypto'
+import { createHash, randomInt, randomUUID } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findAuthUserByEmail } from '@/lib/auth/findAuthUserByEmail'
 import { normalizePhoneForMatch } from '@/lib/phone'
+import { logFamilyAccessFailure } from '@/lib/familyAccessLog'
 
 export const FAMILY_ACCESS_CODE_TTL_HOURS = 24
 export const FAMILY_ACCESS_CODE_TTL_LABEL = '24 horas'
 export const FAMILY_ACCESS_MAX_ATTEMPTS = 5
 export const FAMILY_ACCESS_MAX_CODES_PER_15_MINUTES = 3
-export const FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY = 5
+export { FAMILY_ACCESS_MAX_MANUAL_CODES_PER_DAY } from './familyAccessPolicy'
 
 const PHONE_AUTH_DOMAIN = 'familias.mentoriapp.local'
 
@@ -81,12 +82,16 @@ export async function ensureAuthForGuardian(
     .order('role', { ascending: true })
     .order('created_at', { ascending: true })
 
-  if (profilesError) throw profilesError
+  if (profilesError) {
+    logFamilyAccessFailure('guardian-profiles', profilesError)
+    throw profilesError
+  }
 
   const existingProfile = (profiles ?? []).find((profile) => profile.role === 'guardian') ?? profiles?.[0]
   if (existingProfile?.auth_id) {
     const { data: authUser, error: authError } = await admin.auth.admin.getUserById(existingProfile.auth_id)
     if (authError || !authUser.user?.email) {
+      logFamilyAccessFailure('guardian-auth-account', authError)
       throw new Error('No se pudo revisar la cuenta de acceso familiar.')
     }
     return { authId: existingProfile.auth_id as string, authEmail: authUser.user.email }
@@ -106,7 +111,8 @@ export async function ensureAuthForGuardian(
       },
     })
     if (createError || !created.user) {
-      throw new Error(createError?.message ?? 'No se pudo crear la cuenta de acceso por telefono.')
+      logFamilyAccessFailure('guardian-create-account', createError)
+      throw createError ?? new Error('No se pudo crear la cuenta de acceso por telefono.')
     }
     authUser = created.user
   }
@@ -118,16 +124,20 @@ export async function ensureAuthForGuardian(
     role: 'guardian',
   })
 
-  if (profileError) throw profileError
+  if (profileError) {
+    logFamilyAccessFailure('guardian-create-profile', profileError)
+    throw profileError
+  }
   return { authId: authUser.id, authEmail }
 }
 
 export async function guardianHasLinkedStudents(admin: AdminClient, guardianId: string) {
-  const { count } = await admin
+  const { count, error } = await admin
     .from('student_guardians')
     .select('student_id', { count: 'exact', head: true })
     .eq('guardian_id', guardianId)
 
+  if (error) throw error
   return (count ?? 0) > 0
 }
 
@@ -138,17 +148,19 @@ export async function createFamilyAccessChallenge(
 ) {
   const auth = await ensureAuthForGuardian(admin, guardian, normalizedPhone)
   const code = generateFamilyAccessCode()
+  const challengeId = randomUUID()
   const expiresAt = new Date(Date.now() + FAMILY_ACCESS_CODE_TTL_HOURS * 60 * 60 * 1000).toISOString()
 
   const { data: challenge, error: challengeError } = await admin
     .from('family_phone_access_codes')
     .insert({
+      id: challengeId,
       school_id: guardian.school_id,
       guardian_id: guardian.id,
       auth_id: auth.authId,
       auth_email: auth.authEmail,
       normalized_phone: normalizedPhone,
-      code_hash: 'pending',
+      code_hash: hashFamilyAccessCode(challengeId, code),
       expires_at: expiresAt,
     })
     .select('id')
@@ -157,13 +169,6 @@ export async function createFamilyAccessChallenge(
   if (challengeError || !challenge?.id) {
     throw new Error(challengeError?.message ?? 'No pudimos preparar el codigo.')
   }
-
-  const { error: hashError } = await admin
-    .from('family_phone_access_codes')
-    .update({ code_hash: hashFamilyAccessCode(challenge.id, code) })
-    .eq('id', challenge.id)
-
-  if (hashError) throw hashError
 
   return {
     challengeId: challenge.id as string,

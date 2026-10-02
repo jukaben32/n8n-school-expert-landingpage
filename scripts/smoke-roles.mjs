@@ -92,6 +92,7 @@ const CHECKS = {
   ],
   guardian: [
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
+    ['Academia familiar: vínculos y curso de sus hijos', `select s.id, s.school_id, s.grade_level from student_guardians sg join students s on s.id = sg.student_id join users_profiles up on up.guardian_id = sg.guardian_id where up.auth_id = auth.uid() and s.school_id = up.school_id and s.deleted_at is null;`],
     ['Portal: asistencia de sus hijos', `select count(*) from attendance;`],
     ['Portal: fotos del día', `select count(*) from class_updates where deleted_at is null;`],
     ['Portal: sus conversaciones', `select count(*) from direct_conversations;`],
