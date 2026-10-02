@@ -5765,3 +5765,40 @@ pendiente). El advisor avisa del predicado SECURITY DEFINER: booleano limitado
 a auth.uid/vínculo/colegio/curso, sin ejecución anónima ni permisos nuevos en
 private; excepción intencional verificada. Límites y configuración pendiente:
 docs/academia-family-notifications.md.
+
+
+## Biblioteca y tareas asignadas de Academia (2026-10-02, Caracas)
+
+Se separa contenido de biblioteca de asignaciones por curso. Los videos nuevos
+no aparecen como tareas hasta que el profesor los asigne. Se ofrecen actividad
+con video/cuestionario, respuesta escrita y realización en cuaderno/aula con
+revisión del profesor. Alumno: destinatario propio vigente, respuesta/progreso
+propios y repaso; familia: hijos vinculados exclusivamente, solo lectura.
+Primaria/Inicial usa teacher_assignments; Secundaria exige class_schedules con
+curso y materia exactos. Los niveles desconocidos también exigen esa relación.
+Los permisos se validan en servidor y RLS/RPC; vistas laborales filtran alcance
+incluso cuando un profesor además es tutor de un hijo de otro curso.
+
+Migración 20261002030916 aplicada y registrada, conservando 79 lecciones
+publicadas como asignaciones antiguas, sin avisos retroactivos. Despliegue en
+dos fases: puente temporal permite guardar intentos de la interfaz antigua
+solo para asignaciones legacy propias; tras éxito de Vercel ejecutar
+scripts/apply-academia-assignments.mjs finish (20261002035515), que relaciona
+esos intentos y cierra escrituras directas. Las nuevas tareas usan siempre RPC
+con calificación calculada en servidor y protección de reintentos. No aplicar
+el cierre antes de publicar el nuevo reproductor. Ambos pasos documentados en
+docs/academia-library-and-assignments.md. notify-academia fue actualizado y
+desplegado; WhatsApp sigue pendiente de EVOLUTION_API_URL/conexión del colegio.
+
+Validación: build completo Next, TypeScript y lint; 67 comprobaciones de roles
+reales en producción con rollback, SQL de cursos/materias/familias/destinatarios,
+respuesta/revisión/reenvío/calificación/duplicados y puente antiguo con rollback;
+15 pruebas de render Next, 8 de datos familiares y 8 del trabajador WhatsApp
+con proveedor simulado. Metadatos PostgREST y relaciones de las nuevas vistas
+verificados por REST; cero fixtures restantes. Advisor: diez advertencias de
+funciones SECURITY DEFINER ejecutables por authenticated, intencionales con
+validación explícita de auth.uid/rol/alcance y sin ejecución anónima; ningún
+ERROR nuevo en entidades de esta modificación. Límites: instrucciones/enlaces
+y respuesta textual, sin adjuntos de alumno; destinatarios fijados al asignar,
+altas futuras requieren nueva asignación; cuestionarios formativos conservan
+feedback de opción correcta, no son exámenes con respuestas secretas.

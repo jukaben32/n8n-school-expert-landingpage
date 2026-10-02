@@ -6,10 +6,12 @@ let handler, calls, tables, config, failRead
 function reset(){
   calls=[];config={WEBHOOK_SECRET:'test-secret',EVOLUTION_API_URL:'https://provider.invalid',SUPABASE_URL:'https://fixture.invalid',SUPABASE_SERVICE_ROLE_KEY:'fixture'};failRead=false
   tables={whatsapp_connections:[{school_id:'school',provider:'evolution_api',status:'connected',is_enabled:true,instance_name:'school-instance',instance_token:'fixture-token'}],
-    family_academia_notifications:[{id:'notice',school_id:'school',guardian_id:'guardian',student_id:'child',lesson_id:'lesson',whatsapp_state:'pending',whatsapp_attempts:0,created_at:new Date().toISOString()}],
+    family_academia_notifications:[{id:'notice',school_id:'school',guardian_id:'guardian',student_id:'child',lesson_id:'lesson',assignment_id:'assignment',whatsapp_state:'pending',whatsapp_attempts:0,created_at:new Date().toISOString()}],
     students:[{id:'child',school_id:'school',first_name:'Alumno',grade_level:'6to',deleted_at:null}],
     guardians:[{id:'guardian',school_id:'school',phone:'8091234567',deleted_at:null}],
-    lessons:[{id:'lesson',school_id:'school',title:'Tarea',grade_level:'6to',is_published:true,deleted_at:null}],
+    lessons:[{id:'lesson',school_id:'school',title:'Tarea',grade_level:'6to',subject_id:'subject',is_published:true,deleted_at:null}],
+    academia_assignments:[{id:'assignment',lesson_id:'lesson',school_id:'school',grade_level:'6to',subject_id:'subject',is_active:true}],
+    academia_assignment_students:[{assignment_id:'assignment',student_id:'child'}],
     student_guardians:[{guardian_id:'guardian',student_id:'child'}]}
 }
 function from(table){
@@ -32,3 +34,4 @@ await test('removed link, foreign course and unpublished lesson are not sent',as
 await test('transient database read error leaves notice pending',async()=>{reset();failRead=true;await handler(request());assert.equal(calls.length,0);assert.equal(tables.family_academia_notifications[0].whatsapp_state,'pending')})
 await test('concurrent webhook calls claim only one send',async()=>{reset();await Promise.all([handler(request()),handler(request())]);assert.equal(calls.length,1)})
 await test('sent notice is not sent again',async()=>{reset();await handler(request());await handler(request());assert.equal(calls.length,1)})
+await test('withdrawn task, removed recipient and changed subject are never sent',async()=>{for(const change of [()=>{tables.academia_assignments[0].is_active=false},()=>{tables.academia_assignment_students=[]},()=>{tables.academia_assignments[0].subject_id='foreign'}]){reset();change();await handler(request());assert.equal(calls.length,0);assert.equal(tables.family_academia_notifications[0].whatsapp_state,'cancelled')}})
