@@ -42,7 +42,7 @@ Academia. No se envían mensajes automáticos desde el modo manual.
 
 ## Validación y límites
 
-`node scripts/regression-family-access.mjs` ejecuta 19 pruebas sobre las acciones
+`node scripts/regression-family-access.mjs` ejecuta 22 pruebas sobre las acciones
 TypeScript y los manejadores reales, con un adaptador Supabase en memoria.
 Comprueba los códigos 20 y 21, autorización, colegio ajeno, duplicados, hijos,
 errores de cuota y red, hash, vencimiento, bloqueo de intentos, reutilización,

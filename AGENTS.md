@@ -5683,7 +5683,7 @@ el código condicionalmente y se libera si falla Auth. Los formularios recuperan
 la carga, y el mensaje manual abre `/acceso-familiar?modo=manual`. Se mantienen
 los cinco intentos, la vigencia, los roles y las validaciones. No requiere SQL.
 
-Las 19 pruebas de `scripts/regression-family-access.mjs` pasan con Supabase en
+Las 22 pruebas de `scripts/regression-family-access.mjs` pasan con Supabase en
 memoria; no equivalen a la prueba real de producción. El smoke sigue pendiente
 por falta de acceso al proyecto Supabase y `SUPABASE_ACCESS_TOKEN`. La cuota
 conserva el conteo seguido de inserción (no es transaccional entre operadores).

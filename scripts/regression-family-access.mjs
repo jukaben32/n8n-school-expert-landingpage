@@ -12,12 +12,14 @@ const require = createRequire(resolve(root, 'web/package.json'))
 const ts = require('typescript')
 let db, quota, operator, failLink, failClaim, failQuota, failNetwork, linkCalls, logs
 let states, stateIndex, browserError, navigation, rejectedAction
+let authUsers, failCreateUser, failProfile, createdUsers
 const guardian = { id: 'guardian', school_id: 'school', family_id: 'family', first_name: 'Tutor', last_name: 'Prueba', phone: '8091234567' }
 
 function reset() {
   db = { guardians: [guardian], users_profiles: [{ auth_id: 'auth', guardian_id: 'guardian', role: 'guardian' }], student_guardians: [{ student_id: 'student', guardian_id: 'guardian' }], schools: [{ id: 'school', name: 'Colegio' }], family_phone_access_codes: [] }
   quota = 0; operator = 'reception'; failLink = false; failClaim = false; failQuota = false; failNetwork = false; linkCalls = 0; logs = []
   states = []; stateIndex = 0; browserError = false; navigation = []; rejectedAction = false
+  authUsers = []; failCreateUser = false; failProfile = false; createdUsers = 0
 }
 
 function query(table) {
@@ -41,6 +43,7 @@ function query(table) {
         if (count && table === 'family_phone_access_codes') return { count: failQuota ? null : quota, error: failQuota ? { code: 'db_unavailable' } : null }
         if (operation === 'update' && payload.consumed_at && failClaim) return { data: null, error: { code: 'claim_failed' } }
         if (operation === 'insert') {
+          if (table === 'users_profiles' && failProfile) return { data: null, error: { code: 'profile_failed' } }
           const row = { attempt_count: 0, consumed_at: null, created_at: new Date().toISOString(), ...payload }
           db[table].push(row)
           if (table === 'family_phone_access_codes') quota++
@@ -58,6 +61,12 @@ function query(table) {
 }
 
 const admin = { from: query, auth: { admin: {
+  async listUsers() { return { data: { users: authUsers }, error: null } },
+  async createUser(options) {
+    if (failCreateUser) return { data: { user: null }, error: { code: 'auth_create_failed' } }
+    const user = { id: 'new-auth', email: options.email }; authUsers.push(user); createdUsers++
+    return { data: { user }, error: null }
+  },
   async getUserById() { return { data: { user: { email: 'test@example.invalid' } }, error: null } },
   async generateLink() { linkCalls++; if (failLink === 'throw') throw new Error('auth network'); return failLink ? { data: null, error: { code: 'auth_unavailable' } } : { data: { properties: { hashed_token: 'test-token' } }, error: null } },
 } } }
@@ -188,4 +197,24 @@ await test('browser success reaches family portal', async () => {
 await test('secretary panel releases loading after rejected action', async () => {
   reset(); rejectedAction = true; const panel = Panel(); const form = panel.props.children[0]
   await form.props.onSubmit(event); assert.equal(states[4], false); assert.match(states[2], /conexion/)
+})
+await test('a tutor without an account gets a confirmed synthetic account and guardian profile', async () => {
+  reset(); db.users_profiles = []
+  assert.equal((await manual.generateManualFamilyAccessCode(guardian.phone)).ok, true)
+  assert.equal(createdUsers, 1); assert.equal(db.users_profiles[0].role, 'guardian')
+  assert.equal(db.users_profiles[0].school_id, guardian.school_id)
+  assert.equal(db.family_phone_access_codes[0].auth_id, 'new-auth')
+})
+await test('account creation errors do not consume quota and report their stage', async () => {
+  reset(); db.users_profiles = []; failCreateUser = true
+  assert.equal((await manual.generateManualFamilyAccessCode(guardian.phone)).ok, false)
+  assert.equal(quota, 0); assert.ok(logs.includes('guardian-create-account'))
+})
+await test('retry after failed profile insertion reuses the existing Auth account', async () => {
+  reset(); db.users_profiles = []; failProfile = true
+  assert.equal((await manual.generateManualFamilyAccessCode(guardian.phone)).ok, false)
+  assert.equal(quota, 0); assert.equal(createdUsers, 1)
+  failProfile = false
+  assert.equal((await manual.generateManualFamilyAccessCode(guardian.phone)).ok, true)
+  assert.equal(createdUsers, 1); assert.equal(db.users_profiles.length, 1)
 })
