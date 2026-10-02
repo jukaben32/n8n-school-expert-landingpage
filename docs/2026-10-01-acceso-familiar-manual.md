@@ -66,6 +66,32 @@ del servidor después de reservar el código, puede requerir un código nuevo.
 La reserva recupera las fallas de Auth que el servidor puede capturar.
 
 El protocolo de `AGENTS.md` exige build completo y `scripts/smoke-roles.mjs`
-contra producción antes del despliegue. El smoke no puede ejecutarse sin acceso
-al proyecto Supabase correcto y `SUPABASE_ACCESS_TOKEN`. No se debe afirmar
-que se verificó producción ni que se confirmó el incidente con estas pruebas.
+contra producción antes del despliegue. El smoke estaba pendiente al preparar el PR por falta de acceso al proyecto.
+La validación posterior que sigue registra las pruebas reales realizadas.
+
+
+## Pruebas reales y captura del acceso familiar (2026-10-01, Caracas)
+
+Después de publicar e317d43 se obtuvo acceso temporal autorizado a Supabase.
+`scripts/smoke-roles.mjs` completó 59 comprobaciones reales, todas OK, incluida
+Academia familiar. La prueba de escritura real como service_role insertó un
+reto de prueba dentro de una transacción, verificó reserva condicional,
+rechazo de segunda reserva, liberación y reintento, y terminó en ROLLBACK.
+La consulta posterior confirmó cero registros de prueba restantes. No se
+crearon cuentas Auth ni se enviaron mensajes durante estas pruebas.
+
+La tabla family_phone_access_codes tenía cero registros al investigar; no hay
+evidencia de que el cupo anterior explique el incidente. Los bundles públicos
+de educacionmanantial.com y del dominio Vercel apuntan a fssjgpqisfnmnkavsyld.
+La captura aportada por el usuario muestra el error "El WhatsApp del colegio
+todavia no esta disponible para enviar codigos" junto al botón de envío
+automático: corresponde a requestFamilyAccessCode, que rechaza antes de
+crear el código cuando WhatsApp no está conectado/habilitado. Ese error es
+del flujo automático, no del límite manual ni de verificar un código.
+
+En modo manual Secretaría genera y envía el código; el padre usa
+/acceso-familiar?modo=manual. En enlaces antiguos puede pulsar "Ya tengo un
+codigo". Las pruebas de roles y de SQL ya están verificadas; no equivalen a
+un login completo desde un dispositivo real del padre ni confirman por sí
+solas los otros fallos que el colegio pudo haber experimentado. El token de
+acceso no se conserva en archivos ni en el repositorio.

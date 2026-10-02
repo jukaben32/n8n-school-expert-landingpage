@@ -5706,3 +5706,30 @@ Se integran Academia familiar (PR #35) y acceso familiar manual con cupo de
 ser informado de que el smoke real seguía pendiente por falta de acceso a
 Supabase. Esta publicación sigue esa autorización; no equivale a haber ejecutado
 el smoke de producción. No se requieren migraciones SQL.
+
+
+## Pruebas reales y captura del acceso familiar (2026-10-01, Caracas)
+
+Después de publicar e317d43 se obtuvo acceso temporal autorizado a Supabase.
+`scripts/smoke-roles.mjs` completó 59 comprobaciones reales, todas OK, incluida
+Academia familiar. La prueba de escritura real como service_role insertó un
+reto de prueba dentro de una transacción, verificó reserva condicional,
+rechazo de segunda reserva, liberación y reintento, y terminó en ROLLBACK.
+La consulta posterior confirmó cero registros de prueba restantes. No se
+crearon cuentas Auth ni se enviaron mensajes durante estas pruebas.
+
+La tabla family_phone_access_codes tenía cero registros al investigar; no hay
+evidencia de que el cupo anterior explique el incidente. Los bundles públicos
+de educacionmanantial.com y del dominio Vercel apuntan a fssjgpqisfnmnkavsyld.
+La captura aportada por el usuario muestra el error "El WhatsApp del colegio
+todavia no esta disponible para enviar codigos" junto al botón de envío
+automático: corresponde a requestFamilyAccessCode, que rechaza antes de
+crear el código cuando WhatsApp no está conectado/habilitado. Ese error es
+del flujo automático, no del límite manual ni de verificar un código.
+
+En modo manual Secretaría genera y envía el código; el padre usa
+/acceso-familiar?modo=manual. En enlaces antiguos puede pulsar "Ya tengo un
+codigo". Las pruebas de roles y de SQL ya están verificadas; no equivalen a
+un login completo desde un dispositivo real del padre ni confirman por sí
+solas los otros fallos que el colegio pudo haber experimentado. El token de
+acceso no se conserva en archivos ni en el repositorio.
