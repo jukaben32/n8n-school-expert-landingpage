@@ -1,10 +1,10 @@
 # Avisos de Academia para familias
 
-Al publicar una tarea para un curso, se genera un aviso para cada tutor activo
-vinculado a un estudiante inscrito de ese curso y colegio. Los borradores no
-notifican. Una restricción única por tutor, hijo y lección impide duplicados al
-republicar. Las nuevas tareas se publican al terminar de guardar las preguntas
-y opciones; una falla de guardado deja un borrador.
+Desde la separación de biblioteca y tareas, el aviso se genera al **asignar**
+una actividad a un curso. Publicar un video en la biblioteca no avisa ni lo
+convierte en tarea. Se registra cada estudiante inscrito destinatario y una
+restricción por tutor, hijo y asignación evita duplicados. Las tareas retiradas
+no permiten acceso. Véase [Biblioteca y tareas](academia-library-and-assignments.md).
 
 ## Portal y acceso
 
@@ -19,8 +19,8 @@ y opciones; una falla de guardado deja un borrador.
 - Las cuentas de personal con doble rol conservan sus permisos laborales, pero
   la vista familiar y los avisos solo muestran sus propios hijos.
 
-Las tareas de Academia actualmente se asignan **por curso**: cada hijo ve las
-publicadas para su curso. No se añade una asignación individual nueva.
+Cada hijo ve únicamente sus asignaciones vigentes como destinatario de su curso.
+El tutor consulta sus instrucciones, respuestas y progreso en modo lectura.
 
 ## WhatsApp
 

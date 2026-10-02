@@ -84,6 +84,8 @@ const CHECKS = {
     ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
     ['Academia: crear lección en SU curso asignado', 'ACADEMIA_CREAR_EN_CURSO'],
     ['Academia: NO puede crear en curso ajeno', 'ACADEMIA_NO_CREAR_EN_AJENO'],
+    ['Academia: tareas dentro de su ámbito', `select id,lesson_id from academia_assignments;`],
+    ['Academia: entregas dentro de su ámbito', `select assignment_id,student_id,status from academia_submissions;`],
     ['Políticas: ver las de su colegio', `select count(*) from staff_policies;`],
     ['Políticas: FIRMAR la suya (insert)', 'POLITICA_FIRMAR_PROPIA'],
     ['Políticas: NO puede firmar por otro empleado', 'POLITICA_NO_FIRMAR_AJENA'],
@@ -94,6 +96,8 @@ const CHECKS = {
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
     ['Academia familiar: vínculos y curso de sus hijos', `select s.id, s.school_id, s.grade_level from student_guardians sg join students s on s.id = sg.student_id join users_profiles up on up.guardian_id = sg.guardian_id where up.auth_id = auth.uid() and s.school_id = up.school_id and s.deleted_at is null;`],
     ['Academia familiar: solo sus avisos', `select id from family_academia_notifications;`],
+    ['Academia familiar: asignaciones de sus hijos', `select id from academia_assignments;`],
+    ['Academia familiar: entregas de sus hijos', `select assignment_id,student_id,status from academia_submissions;`],
     ['Portal: asistencia de sus hijos', `select count(*) from attendance;`],
     ['Portal: fotos del día', `select count(*) from class_updates where deleted_at is null;`],
     ['Portal: sus conversaciones', `select count(*) from direct_conversations;`],
@@ -137,6 +141,9 @@ const CHECKS = {
   ],
   student: [
     ['Academia: sus lecciones', `select count(*) from lessons;`],
+    ['Academia: sus tareas asignadas', `select id from academia_assignments;`],
+    ['Academia: solo su progreso', `select assignment_id,score,max_score from quiz_attempts;`],
+    ['Academia: sus entregas manuales', `select assignment_id,status from academia_submissions;`],
     ['Encuestas: las de su curso', `select count(*) from polls;`],
     ['Horario: solo el de su propio curso', 'STUDENT_HORARIO_SOLO_SU_CURSO'],
     ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
@@ -242,14 +249,10 @@ function academiaCrearEnCursoSql() {
       -- RLS no se lo permite (devuelve vacío, no error, mismo patrón que ya
       -- costó un día con Mensajes/families). Usar la función oficial
       -- security definer, igual que la policy real.
-      select distinct s.grade_level into v_grade from students s
-      where s.school_id = v_school and s.deleted_at is null and s.grade_level is not null
-        and teacher_is_assigned_to_grade(v_school, s.grade_level, 'regular')
-      limit 1;
+      select grade_level,subject_id into v_grade,v_subject from academia_available_scopes(v_school) limit 1;
       if v_grade is null then
         return; -- este profesor no tiene ningún curso asignado con estudiantes reales, se omite
       end if;
-      select id into v_subject from subjects where school_id = v_school limit 1;
       insert into lessons (school_id, subject_id, title, video_url, video_provider, grade_level, is_published)
       values (v_school, v_subject, 'SMOKE-academia-curso-propio', 'https://youtube.com/watch?v=smoke', 'youtube', v_grade, false)
       returning id into v_id;
@@ -274,14 +277,13 @@ function academiaNoCrearEnAjenoSql() {
       select school_id into v_school from users_profiles where auth_id = auth.uid();
       -- misma razón que en academiaCrearEnCursoSql: usar la función oficial,
       -- no un JOIN a teacher_assignments con el cliente del profesor.
-      select distinct s.grade_level into v_grade from students s
+      select distinct s.grade_level,subj.id into v_grade,v_subject from students s join subjects subj on subj.school_id=s.school_id
       where s.school_id = v_school and s.deleted_at is null and s.grade_level is not null
-        and not teacher_is_assigned_to_grade(v_school, s.grade_level, 'regular')
+        and not academia_staff_scope(v_school,s.grade_level,subj.id)
       limit 1;
       if v_grade is null then
         return; -- no hay ningún curso "ajeno" disponible para este profesor, se omite
       end if;
-      select id into v_subject from subjects where school_id = v_school limit 1;
       begin
         insert into lessons (school_id, subject_id, title, video_url, video_provider, grade_level, is_published)
         values (v_school, v_subject, 'SMOKE-academia-curso-ajeno', 'https://youtube.com/watch?v=smoke2', 'youtube', v_grade, false);

@@ -16,7 +16,7 @@ export async function GET() {
   if (!ctx) return Response.json({ notices: [] }, { status: 401 })
   // RLS also revalidates the current tutor/child/course relationship.
   const { data, error, count } = await ctx.db.from('family_academia_notifications')
-    .select('id,student_id,lesson_id,created_at,students!inner(first_name),lessons!inner(title)', { count: 'exact' })
+    .select('id,student_id,lesson_id,assignment_id,created_at,students!inner(first_name),lessons!inner(title)', { count: 'exact' })
     .eq('guardian_id', ctx.profile.guardian_id).eq('school_id', ctx.profile.school_id)
     .is('read_at', null).order('created_at', { ascending: false }).limit(10)
   if (error) return Response.json({ error: 'No se pudieron cargar los avisos.' }, { status: 503 })

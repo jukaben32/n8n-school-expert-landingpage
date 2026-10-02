@@ -16,6 +16,7 @@ const lessons = [
 let role = 'guardian'
 let progressFailure = false
 let blocked = false
+let taskMode='quiz'
 const requests = []
 const dataWrites = []
 const mock = createServer((req, res) => {
@@ -24,7 +25,8 @@ const mock = createServer((req, res) => {
   if (url.pathname.startsWith('/rest/v1/') && req.method !== 'GET' && req.method !== 'HEAD' && !url.pathname.includes('/rpc/')) dataWrites.push(url.pathname)
   let body = []
   if (url.pathname === '/auth/v1/user') body = { id: '33333333-3333-4333-8333-333333333333', aud: 'authenticated', role: 'authenticated', email: 'fixture@example.test', app_metadata: {}, user_metadata: { full_name: 'Tutor de prueba' }, created_at: '2026-01-01T00:00:00Z' }
-  const table = url.pathname.split('/').at(-1)
+  const rawTable = url.pathname.split('/').at(-1)
+  const table = ({academia_staff_lessons:'lessons',academia_staff_assignments:'academia_assignments',academia_staff_attempts:'quiz_attempts'})[rawTable]??rawTable
   if (table === 'users_profiles') body = { id: 'profile-a', role, school_id: child.school_id, guardian_id: role === 'student' ? null : 'guardian-a', student_id: role === 'student' ? child.id : null }
   if (table === 'schools' || table === 'schools_public') body = { name: 'Colegio de prueba', whatsapp_active: false }
   if (table === 'guardians') body = { id: 'guardian-a', school_id: child.school_id, family_id: blocked ? 'family-a' : null }
@@ -35,12 +37,21 @@ const mock = createServer((req, res) => {
     const filter = url.searchParams.get(key)
     return !filter || filter === `eq.${lesson[key]}`
   }))
+  if (table === 'academia_available_scopes') body=[{grade_level:child.grade_level,subject_id:'subject-a',subject_name:'Lengua'}]
+  if (table === 'academia_student_scope') body=true
+  if (table === 'academia_assignment_students') body=[{student_id:child.id,students:child}]
+  if (table === 'academia_assignments') {
+    body = lessons.filter(l=>l.is_published && l.school_id===child.school_id && l.grade_level===(url.searchParams.get('grade_level')?.slice(3)??child.grade_level) && (!url.searchParams.has('id')||url.searchParams.get('id')===`eq.${l.id}`)).map(l=>({
+      id:l.id,lesson_id:l.id,school_id:child.school_id,grade_level:child.grade_level,subject_id:'subject-a',instructions:'Instrucciones del profesor',due_date:'2026-10-10',delivery_mode:l.id==='pending-a'?taskMode:'quiz',is_active:true,subjects:l.subjects,lessons:{...l,id:l.id,video_provider:null,subject_id:'subject-a'},
+    }))
+    if(req.headers.accept?.includes('vnd.pgrst.object'))body=body[0]??null
+  }
   if (table === 'quiz_attempts') {
     if (progressFailure) { res.writeHead(503, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ message: 'Fixture progress unavailable' })); return }
     body = url.searchParams.get('student_id') === `eq.${child.id}`
-      ? [{ lesson_id: 'done-a', score: 8, max_score: 10, completed_at: '2026-10-01T10:00:00Z' }] : []
+      ? [{ assignment_id: 'done-a', score: 8, max_score: 10, completed_at: '2026-10-01T10:00:00Z' }] : []
   }
-  if (table === 'quiz_questions') body = [{ id: 'question-a', prompt: '¿Qué aprendiste?', image_path: 'school-a/question.png', quiz_options: [{ id: 'option-a', label: 'Una respuesta', sort_order: 0 }] }]
+  if (table === 'quiz_questions') body = [{ id: 'question-a', prompt: '¿Qué aprendiste?',points:10,sort_order:0, image_path: 'school-a/question.png', quiz_options: [{ id: 'option-a', label: 'Una respuesta', sort_order: 0 }] }]
   if (url.pathname.startsWith('/storage/v1/object/sign/')) body = { signedURL: '/object/sign/academia-imagenes/school-a/question.png?token=fixture' }
   if (table === 'student_points') body = null
   res.writeHead(200, { 'Content-Type': 'application/json', 'Content-Range': '0-0/0' })
@@ -122,16 +133,45 @@ try {
   console.log('PASS: staff with guardian link can consult own child')
   const teacherAcademia = await get('/dashboard/academia')
   assert.ok(
-    (teacherAcademia.response.status === 307 && teacherAcademia.response.headers.get('location')?.includes('/dashboard/academia/progreso')) ||
-    teacherAcademia.html.includes('NEXT_REDIRECT;replace;/dashboard/academia/progreso;307;'),
+    (teacherAcademia.response.status === 307 && teacherAcademia.response.headers.get('location')?.includes('/dashboard/academia/asignaciones')) ||
+    teacherAcademia.html.includes('NEXT_REDIRECT;replace;/dashboard/academia/asignaciones;307;'),
   )
   console.log('PASS: existing teacher Academia still redirects to management')
   role = 'student'
   const studentAcademia = await get('/dashboard/academia')
   assert.equal(studentAcademia.response.status, 200)
-  assert.ok(studentAcademia.html.includes('Hola, Ana'))
-  assert.ok(studentAcademia.html.includes('/dashboard/academia/pending-a'))
+  assert.ok(studentAcademia.html.replace(/<!--.*?-->/g,'').includes('Hola, Ana'))
+  assert.ok(studentAcademia.html.includes('/dashboard/academia/tareas/pending-a'))
   console.log('PASS: existing student Academia still renders their lessons')
+  const studentTask=await get('/dashboard/academia/tareas/pending-a')
+  assert.equal(studentTask.response.status,200)
+  assert.ok(studentTask.html.includes('Instrucciones del profesor'))
+  assert.ok(studentTask.html.includes('¿Qué aprendiste?'))
+  console.log('PASS: assigned student task renders instructions, deadline and quiz')
+  taskMode='text'
+  const manualTask=await get('/dashboard/academia/tareas/pending-a')
+  assert.equal(manualTask.response.status,200)
+  assert.ok(manualTask.html.includes('Entregar respuesta'))
+  taskMode='classroom'
+  const classroomTask=await get('/dashboard/academia/tareas/pending-a')
+  assert.equal(classroomTask.response.status,200)
+  assert.ok(classroomTask.html.includes('El profesor registrará la revisión en clase'))
+  taskMode='quiz'
+  console.log('PASS: manual text and classroom activity render the correct student flow')
+  role='teacher'
+  const assigned=await get('/dashboard/academia/asignaciones')
+  assert.equal(assigned.response.status,200)
+  assert.ok(assigned.html.includes('Asignar tarea'))
+  const libraryPage=await get('/dashboard/academia/biblioteca')
+  assert.equal(libraryPage.response.status,200)
+  assert.ok(libraryPage.html.includes('Asignar como tarea'))
+  const assignmentForm=await get('/dashboard/academia/asignaciones/nueva')
+  assert.equal(assignmentForm.response.status,200)
+  assert.ok(assignmentForm.html.includes('Tarea manual'))
+  const managementTask=await get('/dashboard/academia/asignaciones/pending-a')
+  assert.equal(managementTask.response.status,200)
+  assert.ok(managementTask.html.includes('Estudiantes y entregas'))
+  console.log('PASS: teacher assignment list, library, new task form and review render')
   role = 'guardian'
   blocked = true
   const overdue = await get(`/dashboard/portal-familiar/hijos/${child.id}`)

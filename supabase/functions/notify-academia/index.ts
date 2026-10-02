@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
   const eligible=(connections ?? []).filter(c=>c.instance_name && c.instance_token)
   if(!eligible.length)return Response.json({sent:0,deferredConnection:true})
   const { data: notices, error } = await db.from('family_academia_notifications')
-    .select('id,school_id,guardian_id,student_id,lesson_id,whatsapp_attempts')
+    .select('id,school_id,guardian_id,student_id,lesson_id,assignment_id,whatsapp_attempts')
     .eq('whatsapp_state','pending').gt('created_at',new Date(Date.now()-7*86400000).toISOString())
     .in('school_id',eligible.map(c=>c.school_id))
     .order('created_at').limit(50)
@@ -25,12 +25,14 @@ Deno.serve(async (req: Request) => {
     const results = await Promise.all([
       db.from('students').select('first_name,grade_level').eq('id',n.student_id).eq('school_id',n.school_id).is('deleted_at',null).maybeSingle(),
       db.from('guardians').select('phone').eq('id',n.guardian_id).eq('school_id',n.school_id).is('deleted_at',null).maybeSingle(),
-      db.from('lessons').select('title,grade_level,is_published').eq('id',n.lesson_id).eq('school_id',n.school_id).is('deleted_at',null).maybeSingle(),
+      db.from('lessons').select('title,grade_level,subject_id,is_published').eq('id',n.lesson_id).eq('school_id',n.school_id).is('deleted_at',null).maybeSingle(),
       db.from('student_guardians').select('student_id',{count:'exact',head:true}).eq('guardian_id',n.guardian_id).eq('student_id',n.student_id),
+      db.from('academia_assignments').select('id,is_active,grade_level,subject_id').eq('id',n.assignment_id).eq('lesson_id',n.lesson_id).eq('school_id',n.school_id).maybeSingle(),
+      db.from('academia_assignment_students').select('student_id',{count:'exact',head:true}).eq('assignment_id',n.assignment_id).eq('student_id',n.student_id),
     ])
     if(results.some(r=>r.error)){deferred++;continue}
-    const [{ data: student },{ data: guardian },{ data: lesson },{ count: linked }]=results
-    if (!student || !guardian || !lesson?.is_published || lesson.grade_level!==student.grade_level || !linked) {
+    const [{ data: student },{ data: guardian },{ data: lesson },{ count: linked },{data:assignment},{count:assigned}]=results
+    if (!student || !guardian || !lesson?.is_published || lesson.grade_level!==student.grade_level || !linked || !assignment?.is_active || assignment.grade_level!==student.grade_level || assignment.subject_id!==lesson.subject_id || !assigned) {
       await db.from('family_academia_notifications').update({whatsapp_state:'cancelled'}).eq('id',n.id).eq('whatsapp_state','pending'); continue
     }
     let phone=(guardian.phone ?? '').replace(/\D/g,'')
@@ -46,7 +48,7 @@ Deno.serve(async (req: Request) => {
       const site=(Deno.env.get('SITE_URL')||'https://n8n-school-expert-landingpage.vercel.app').replace(/\/$/,'')
       const response=await fetch(`${base}/message/sendText/${encodeURIComponent(connection.instance_name)}`,{
         method:'POST',headers:{'Content-Type':'application/json',apikey:connection.instance_token},
-        body:JSON.stringify({number:phone,text:`Nueva tarea para ${student.first_name}: ${lesson.title}\nConsulte la tarea en el Portal Familiar:\n${site}/dashboard/portal-familiar/hijos/${n.student_id}/lecciones/${n.lesson_id}`}),
+        body:JSON.stringify({number:phone,text:`Nueva tarea para ${student.first_name}: ${lesson.title}\nConsulte la tarea en el Portal Familiar:\n${site}/dashboard/portal-familiar/hijos/${n.student_id}/lecciones/${n.assignment_id}`}),
         signal:AbortSignal.timeout(15000),
       })
       if(!response.ok)throw new Error('Provider rejected delivery')

@@ -43,7 +43,8 @@ export default async function FamilyStudentPage({ params }: { params: Promise<{ 
               <p className="text-xs text-slate-500">{lesson.subjects?.name ?? 'Materia'}</p>
               <p className="font-semibold mt-1 break-words">{lesson.title}</p>
               {lesson.description && <p className="text-sm text-slate-500 mt-2 whitespace-pre-wrap break-words">{lesson.description}</p>}
-              <p className="text-sm text-dash-accent mt-3">{progressError ? 'Estado no disponible' : attempt ? `Completada · ${attempt.score}/${attempt.max_score}` : 'Pendiente'} · Consultar tarea →</p>
+              {lesson.due_date && <p className="text-sm mt-2">Entrega: {lesson.due_date}</p>}
+              <p className="text-sm text-dash-accent mt-3">{progressError ? 'Estado no disponible' : attempt ? lesson.delivery_mode==='quiz'?`Completada · ${attempt.score}/${attempt.max_score}`:'Revisada y completada' : lesson.submission?.status==='submitted'?'Entregada · esperando revisión':lesson.submission?.status==='returned'?'Devuelta para corregir':'Pendiente'} · Consultar tarea →</p>
             </Link>
           })}
         </section>)}

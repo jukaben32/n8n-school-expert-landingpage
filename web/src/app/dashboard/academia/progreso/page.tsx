@@ -5,6 +5,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import StaffAcademiaNav from '@/components/academia/StaffAcademiaNav'
 
 export const metadata: Metadata = {
   title: 'Progreso — Academia — MentorIApp',
@@ -97,7 +98,7 @@ export default async function ProgresoAcademiaPage() {
 
 async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>, schoolId: string) {
   const { data: attemptsRaw, error: attemptsRawError } = await supabase
-    .from('quiz_attempts')
+    .from('academia_staff_attempts')
     .select('id, score, max_score, completed_at, lessons(title, subjects(name)), students(first_name, last_name)')
     .eq('school_id', schoolId)
     .not('completed_at', 'is', null)
@@ -109,11 +110,11 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
   // y ningún estudiante que las hubiera abierto todavía, al personal le
   // decía "aún no hay cuestionarios completados. Crea tu primera lección".
   const { data: lessonsRaw, error: lessonsError } = await supabase
-    .from('lessons')
+    .from('academia_staff_lessons')
     .select('id, title, grade_level, video_url, is_published, subjects(name)')
     .eq('school_id', schoolId)
     .is('deleted_at', null)
-    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false }).limit(30)
 
   const lessons = (lessonsRaw ?? []) as unknown as LessonRow[]
 
@@ -147,6 +148,7 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <StaffAcademiaNav />
       <QueryErrorBanner errors={[{ label: 'los intentos', error: attemptsRawError }, { label: 'las lecciones', error: lessonsError }, { label: 'los cuestionarios', error: preguntasError }]} />
       <div className="flex items-center justify-between">
         <div>
@@ -154,7 +156,7 @@ async function renderProgreso(supabase: Awaited<ReturnType<typeof createClient>>
             Progreso — Academia
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            {lessons.length} lecciones · {attempts.length} cuestionarios completados por estudiantes
+            {lessons.length} contenidos recientes · {attempts.length} cuestionarios recientes completados. Consulta el catálogo completo en Biblioteca.
           </p>
         </div>
         <Link

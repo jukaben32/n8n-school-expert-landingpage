@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-type Notice = { id: string; student_id: string; lesson_id: string; students: { first_name: string }; lessons: { title: string } }
+type Notice = { id: string; student_id: string; lesson_id: string; assignment_id: string|null; students: { first_name: string }; lessons: { title: string } }
 
 // Same protected endpoint in the portal and the bell; no arbitrary child IDs.
 export default function FamilyAcademiaNotices({ compact = false, onCountChange }: { compact?: boolean; onCountChange?: (count: number) => void }) {
@@ -39,7 +39,7 @@ export default function FamilyAcademiaNotices({ compact = false, onCountChange }
     {error && <p role="alert" className="text-xs text-amber-700">No se pudo actualizar el aviso. Vuelve a intentarlo.</p>}
     <ul className="space-y-3 mt-3">
       {notices.map(n => <li key={n.id} className="text-sm">
-        <Link className="font-semibold underline" href={`/dashboard/portal-familiar/hijos/${n.student_id}/lecciones/${n.lesson_id}`}>{n.students.first_name}: {n.lessons.title}</Link>
+        <Link className="font-semibold underline" href={`/dashboard/portal-familiar/hijos/${n.student_id}/lecciones/${n.assignment_id ?? n.lesson_id}`}>{n.students.first_name}: {n.lessons.title}</Link>
         <button type="button" className="block text-xs mt-1 underline text-slate-500" onClick={() => void markRead(n.id)}>Marcar aviso como leído</button>
       </li>)}
     </ul>

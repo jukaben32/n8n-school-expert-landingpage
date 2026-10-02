@@ -18,12 +18,12 @@ export default async function FamilyLessonPage({ params }: { params: Promise<{ s
   const data = await loadFamilyAcademia(client, profile, studentId, createAdminClient)
   if (!data) notFound()
   // The lesson must be published, undeleted, in this child's school AND course.
-  const lesson = data.lessons.find(row => row.id === lessonId)
+  const lesson = data.lessons.find(row => row.id === lessonId) ?? data.lessons.find(row=>row.actual_lesson_id===lessonId)
   if (!lesson) notFound()
   const admin = createAdminClient()
   const { data: questionsRaw, error } = await admin.from('quiz_questions')
     .select('id, prompt, image_path, quiz_options(id, label, sort_order)')
-    .eq('lesson_id', lesson.id).order('sort_order', { ascending: true })
+    .eq('lesson_id', lesson.actual_lesson_id).order('sort_order', { ascending: true })
   if (error) throw new Error('No se pudo cargar el contenido de la tarea. Inténtalo de nuevo.')
   const questions = await Promise.all(((questionsRaw ?? []) as unknown as Question[]).map(async question => {
     let imageUrl: string | null = null
@@ -47,10 +47,14 @@ export default async function FamilyLessonPage({ params }: { params: Promise<{ s
       <header>
         <p className="text-sm text-slate-500">{data.student.first_name} {data.student.last_name} · {lesson.subjects?.name ?? 'Materia'}</p>
         <h1 className="text-2xl font-bold font-barlow mt-1 break-words">{lesson.title}</h1>
-        <p className="text-sm text-slate-500 mt-2">{data.progressError ? 'Estado no disponible: no se pudo cargar el progreso.' : attempt ? `Completada · ${attempt.score}/${attempt.max_score}` : 'Pendiente'}</p>
+        <p className="text-sm text-slate-500 mt-2">{data.progressError ? 'Estado no disponible: no se pudo cargar el progreso.' : attempt ? lesson.delivery_mode==='quiz'?`Completada · ${attempt.score}/${attempt.max_score}`:'Revisada y completada' : lesson.submission?.status==='submitted'?'Entregada · esperando revisión':lesson.submission?.status==='returned'?'Devuelta para corregir':'Pendiente'}</p>
+        {lesson.due_date && <p className="text-sm mt-2">Entrega: {lesson.due_date}</p>}
       </header>
       <p className="rounded-xl bg-blue-50 text-blue-800 p-4 text-sm">Vista de consulta para la familia. El estudiante debe responder desde su propia cuenta.</p>
       {lesson.description && <div className="dash-card p-5 whitespace-pre-wrap break-words">{linkifyText(lesson.description)}</div>}
+      {lesson.instructions && lesson.instructions!==lesson.description && <div className="dash-card p-5 whitespace-pre-wrap">{linkifyText(lesson.instructions)}</div>}
+      {lesson.submission?.response && <div className="dash-card p-5 whitespace-pre-wrap"><h2 className="font-semibold mb-2">Respuesta de tu hijo</h2>{lesson.submission.response}</div>}
+      {lesson.submission?.feedback && <p className="dash-card p-5 whitespace-pre-wrap">Comentario del profesor: {lesson.submission.feedback}</p>}
       {videoUrl && <a href={videoUrl} target="_blank" rel="noreferrer" className="inline-block rounded-xl bg-primary text-white px-5 py-3 font-semibold">Ver video de la lección ↗</a>}
       {imageError && <p role="alert" className="text-sm text-amber-800">No se pudieron cargar algunas imágenes. Vuelve a intentarlo para ver la tarea completa.</p>}
       {questions.length > 0 && <section className="space-y-4">

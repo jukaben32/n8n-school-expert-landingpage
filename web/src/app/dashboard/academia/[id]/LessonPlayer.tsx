@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @next/next/no-img-element -- private signed educational images */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -8,6 +9,7 @@ interface Option { id: string; label: string; is_correct: boolean; sort_order: n
 interface Question { id: string; prompt: string; points: number; sort_order: number; imageUrl: string | null; quiz_options: Option[] }
 
 interface LessonPlayerProps {
+  assignmentId: string
   lessonId: string
   schoolId: string
   title: string
@@ -53,7 +55,7 @@ function getEmbedUrl(url: string | null, provider: 'youtube' | 'vimeo' | null): 
 type Stage = 'video' | 'quiz' | 'result'
 
 export default function LessonPlayer(props: LessonPlayerProps) {
-  const { lessonId, schoolId, title, description, subjectName, videoUrl, videoProvider, questions, studentId, existingAttempt } = props
+  const { title, description, subjectName, videoUrl, videoProvider, questions, existingAttempt } = props
   const router = useRouter()
 
   // Una tarea sin video (ver AGENTS.md, 2026-09-23) va directo al
@@ -64,6 +66,8 @@ export default function LessonPlayer(props: LessonPlayerProps) {
   const [revealed, setRevealed] = useState(false)
   const [answers, setAnswers] = useState<{ questionId: string; selectedOptionId: string; isCorrect: boolean }[]>([])
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [serverResult, setServerResult] = useState<{score:number;max_score:number}|null>(null)
 
   const embedUrl = getEmbedUrl(videoUrl, videoProvider)
   const maxScore = questions.reduce((sum, q) => sum + q.points, 0)
@@ -88,53 +92,31 @@ export default function LessonPlayer(props: LessonPlayerProps) {
 
   async function submitAttempt() {
     setSaving(true)
+    setSaveError('')
     const supabase = createClient()
-    const score = answers.reduce((sum, a) => {
-      const q = questions.find((qq) => qq.id === a.questionId)
-      return sum + (a.isCorrect && q ? q.points : 0)
-    }, 0)
-    const correctCount = answers.filter((a) => a.isCorrect).length
-
-    const { data: attempt, error } = await supabase
-      .from('quiz_attempts')
-      .insert({
-        school_id: schoolId,
-        lesson_id: lessonId,
-        student_id: studentId,
-        score,
-        max_score: maxScore,
-        correct_count: correctCount,
-        total_questions: questions.length,
-        completed_at: new Date().toISOString(),
+    try {
+      const { data, error } = await supabase.rpc('academia_submit_quiz', {
+        p_assignment: props.assignmentId,
+        p_answers: answers.map(a=>({questionId:a.questionId,selectedOptionId:a.selectedOptionId})),
       })
-      .select('id')
-      .single()
-
-    if (!error && attempt) {
-      await supabase.from('quiz_answers').insert(
-        answers.map((a) => ({
-          attempt_id: attempt.id,
-          question_id: a.questionId,
-          selected_option_id: a.selectedOptionId,
-          is_correct: a.isCorrect,
-        }))
-      )
-    }
-
-    setSaving(false)
-    setStage('result')
-    router.refresh()
+      if (error) { setSaveError('No se pudo guardar: '+error.message); return }
+      setServerResult(data as {score:number;max_score:number})
+      setStage('result'); router.refresh()
+    } catch { setSaveError('No se pudo guardar. Vuelve a intentarlo sin salir de esta pantalla.') }
+    finally { setSaving(false) }
   }
 
-  const finalScore = existingAttempt?.score ?? answers.reduce((sum, a) => {
+  const finalScore = existingAttempt?.score ?? serverResult?.score ?? answers.reduce((sum, a) => {
     const q = questions.find((qq) => qq.id === a.questionId)
     return sum + (a.isCorrect && q ? q.points : 0)
   }, 0)
-  const finalMax = existingAttempt?.max_score ?? maxScore
+  const finalMax = existingAttempt?.max_score ?? serverResult?.max_score ?? maxScore
   const pct = finalMax > 0 ? Math.round((finalScore / finalMax) * 100) : 0
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {saveError && <p role="alert" className="rounded-xl bg-red-50 text-red-700 p-4">{saveError}</p>}
+      {stage==='quiz' && !question && !existingAttempt && <button disabled={saving} onClick={()=>void submitAttempt()} className="dash-btn-primary px-5 py-3">{saving?'Guardando…':'Completar actividad'}</button>}
       <div>
         {subjectName && (
           <p className="text-[11px] font-semibold uppercase tracking-wider text-accent-dark dark:text-accent-light mb-1">
@@ -163,7 +145,7 @@ export default function LessonPlayer(props: LessonPlayerProps) {
               </div>
             )}
           </div>
-          {questions.length > 0 ? (
+          {existingAttempt ? <button onClick={()=>setStage('result')} className="w-full dash-btn-primary py-3">Ver mi resultado guardado</button> : questions.length > 0 ? (
             <button
               onClick={() => setStage('quiz')}
               className="w-full rounded-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 text-sm transition shadow-glow"
@@ -171,7 +153,7 @@ export default function LessonPlayer(props: LessonPlayerProps) {
               Ya vi el video, ¡vamos al cuestionario! 🚀
             </button>
           ) : (
-            <p className="text-center text-sm text-slate-500 dark:text-slate-400">Esta lección no tiene cuestionario todavía.</p>
+            <button disabled={saving} onClick={()=>void submitAttempt()} className="w-full dash-btn-primary py-3">{saving?'Guardando…':'Ya vi el video · completar tarea'}</button>
           )}
         </div>
       )}
@@ -195,7 +177,6 @@ export default function LessonPlayer(props: LessonPlayerProps) {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4">
             <p className="font-bold text-lg text-slate-900 dark:text-white">{question.prompt}</p>
             {question.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={question.imageUrl}
                 alt="Imagen de apoyo de la pregunta"
@@ -258,6 +239,8 @@ export default function LessonPlayer(props: LessonPlayerProps) {
           >
             Volver a Academia
           </button>
+          {embedUrl && <button onClick={()=>setStage('video')} className="block mx-auto underline text-sm">Volver a ver el video para repasar</button>}
+          {!!questions.length && <details className="text-left space-y-3"><summary className="cursor-pointer text-sm underline">Repasar el cuestionario</summary>{questions.map(q=><article key={q.id} className="border rounded-xl p-4 mt-3"><p className="font-semibold">{q.prompt}</p>{q.imageUrl && <img src={q.imageUrl} alt="Imagen de apoyo" className="max-w-full rounded-lg" />}<ul className="text-sm mt-2">{q.quiz_options.map(o=><li key={o.id}>{o.label}{o.is_correct?' ✓':''}</li>)}</ul></article>)}</details>}
         </div>
       )}
     </div>

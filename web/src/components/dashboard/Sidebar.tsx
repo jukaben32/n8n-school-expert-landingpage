@@ -177,7 +177,7 @@ const navByRole: Record<string, NavGroup[]> = {
   // uso de imagen ya la están firmando los padres).
   teacher: [{ items: [
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
-    { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
+    { href: '/dashboard/academia/asignaciones', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/mensajes',        label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/actualizaciones', label: 'Actualizaciones', icon: 'academia' },
@@ -227,7 +227,7 @@ const navByRole: Record<string, NavGroup[]> = {
       { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     ] },
     { title: 'Académico', items: [
-      { href: '/dashboard/academia/progreso', label: 'Academia', icon: 'academia' },
+      { href: '/dashboard/academia/asignaciones', label: 'Academia', icon: 'academia' },
       { href: '/dashboard/notas',           label: 'Notas', icon: 'notas' },
       { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
       { href: '/dashboard/incidencias',     label: 'Incidencias', icon: 'incidencias' },

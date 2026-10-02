@@ -49,7 +49,7 @@ test('missing guardian or school fails closed without querying', async () => {
 
 test('authorization uses guardian, same school and undeleted child before reading progress', async () => {
   const client = familyClient()
-  const admin = clientWith({ lessons: { data: [{ id: 'lesson-a' }], error: null }, quiz_attempts: { data: [], error: null } })
+  const admin = clientWith({ academia_assignments: { data: [{ id: 'assignment-a',lesson_id:'lesson-a',subject_id:'subject-a',lessons:{subject_id:'subject-a',title:'Tarea'} }], error: null }, quiz_attempts: { data: [], error: null } })
   const result = await loadFamilyAcademia(client, profile, child.id, () => admin)
   assert.equal(result.student.id, child.id)
   assert.deepEqual(client.calls[0].filters, [
@@ -57,8 +57,9 @@ test('authorization uses guardian, same school and undeleted child before readin
   ])
   assert.ok(admin.calls[0].filters.some(f => f[1] === 'school_id' && f[2] === child.school_id))
   assert.ok(admin.calls[0].filters.some(f => f[1] === 'grade_level' && f[2] === child.grade_level))
-  assert.ok(admin.calls[0].filters.some(f => f[1] === 'is_published' && f[2] === true))
-  assert.ok(admin.calls[0].filters.some(f => f[0] === 'is' && f[1] === 'deleted_at' && f[2] === null))
+  assert.ok(admin.calls[0].filters.some(f => f[1] === 'lessons.is_published' && f[2] === true))
+  assert.ok(admin.calls[0].filters.some(f => f[1] === 'academia_assignment_students.student_id' && f[2] === child.id))
+  assert.ok(admin.calls[0].filters.some(f => f[0] === 'is' && f[1] === 'lessons.deleted_at' && f[2] === null))
   assert.ok(admin.calls[1].filters.some(f => f[1] === 'student_id' && f[2] === child.id))
   assert.ok(admin.calls[1].filters.some(f => f[1] === 'school_id' && f[2] === child.school_id))
 })
@@ -82,7 +83,7 @@ test('missing grade does not read unrestricted lessons', async () => {
 test('progress failure is explicit; lesson failure does not claim there are no tasks', async () => {
   const admin = clientWith({ quiz_attempts: { data: null, error: { message: 'unavailable' } } })
   assert.equal((await loadFamilyAcademia(familyClient(), profile, child.id, () => admin)).progressError, true)
-  const failed = clientWith({ lessons: { data: null, error: { message: 'unavailable' } } })
+  const failed = clientWith({ academia_assignments: { data: null, error: { message: 'unavailable' } } })
   await assert.rejects(loadFamilyAcademia(familyClient(), profile, child.id, () => failed), /cargar las tareas/)
 })
 

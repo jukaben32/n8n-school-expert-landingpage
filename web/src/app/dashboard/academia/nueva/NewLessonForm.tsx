@@ -13,6 +13,8 @@ interface NewLessonFormProps {
   subjects: Catalog[]
   /** Cursos reales del colegio (texto libre de students.grade_level). */
   courses: string[]
+  scopes: { grade_level:string;subject_id:string }[]
+  allowCatalogChanges: boolean
 }
 
 /** Archivo elegido para escanear + su miniatura (solo imágenes). */
@@ -55,11 +57,11 @@ function newQuestion(): DraftQuestion {
   }
 }
 
-export default function NewLessonForm({ schoolId, authorProfileId, subjects, courses }: NewLessonFormProps) {
+export default function NewLessonForm({ schoolId, authorProfileId, subjects, courses, scopes, allowCatalogChanges }: NewLessonFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [subjectId, setSubjectId] = useState(subjects[0]?.id ?? '')
+  const [subjectId, setSubjectId] = useState(scopes.find(s=>s.grade_level===courses[0])?.subject_id ?? '')
   const [gradeLevel, setGradeLevel] = useState(courses[0] ?? '')
   const [videoUrl, setVideoUrl] = useState('')
   const [videoProvider, setVideoProvider] = useState<'youtube' | 'vimeo'>('youtube')
@@ -335,7 +337,7 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
         const { error: publishError } = await supabase.from('lessons').update({ is_published: true }).eq('id', lesson.id).select('id').single()
         if (publishError) throw publishError
       }
-      router.push('/dashboard/academia/progreso')
+      router.push('/dashboard/academia/biblioteca')
       router.refresh()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ocurrió un error al guardar. Intenta de nuevo.'
@@ -363,29 +365,29 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
             <label htmlFor="subject" className={labelClass}>Materia</label>
             {localSubjects.length > 0 ? (
               <select id="subject" value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className={inputClass}>
-                {localSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {localSubjects.filter(s=>allowCatalogChanges || scopes.some(scope=>scope.grade_level===gradeLevel && scope.subject_id===s.id)).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             ) : (
               <p className="text-xs text-slate-500 dark:text-slate-400">Aún no hay materias — agrega una abajo.</p>
             )}
-            <div className="flex gap-2 mt-2">
+            {allowCatalogChanges && <div className="flex gap-2 mt-2">
               <input value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} placeholder="Nueva materia" className={`${inputClass} text-xs py-1.5`} />
               <button type="button" onClick={addSubject} disabled={creatingCatalog === 'subject'} className="shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 text-xs font-semibold text-slate-600 dark:text-slate-300">+</button>
-            </div>
+            </div>}
           </div>
           <div>
             <label htmlFor="grade" className={labelClass}>Curso</label>
             {localCourses.length > 0 ? (
-              <select id="grade" value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} className={inputClass}>
+              <select id="grade" value={gradeLevel} onChange={(e) => {setGradeLevel(e.target.value);if(!allowCatalogChanges)setSubjectId(scopes.find(s=>s.grade_level===e.target.value)?.subject_id ?? '')}} className={inputClass}>
                 {localCourses.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             ) : (
               <p className="text-xs text-slate-500 dark:text-slate-400">Aún no hay cursos con estudiantes inscritos — escribe uno abajo.</p>
             )}
-            <div className="flex gap-2 mt-2">
+            {allowCatalogChanges && <div className="flex gap-2 mt-2">
               <input value={newGradeName} onChange={(e) => setNewGradeName(e.target.value)} placeholder="Otro curso" className={`${inputClass} text-xs py-1.5`} />
               <button type="button" onClick={addCourse} className="shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 text-xs font-semibold text-slate-600 dark:text-slate-300">+</button>
-            </div>
+            </div>}
           </div>
         </div>
 
@@ -411,7 +413,7 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
 
         <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
           <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="rounded" />
-          Publicar de inmediato (visible para los estudiantes del grado)
+          Disponible en biblioteca (el profesor debe asignarla como tarea)
         </label>
       </div>
 
