@@ -48,6 +48,17 @@ const mock = createServer((req, res) => {
 })
 await new Promise(resolve => mock.listen(0, '127.0.0.1', resolve))
 const backend = `http://127.0.0.1:${mock.address().port}`
+// Next inlines NEXT_PUBLIC_* at build time. Route any compiled Supabase
+// hostname to this fixture too; this harness must never call production.
+const originalFetch = globalThis.fetch
+globalThis.fetch = (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : String(input))
+  if (url.hostname.endsWith('.supabase.co')) {
+    const target = `${backend}${url.pathname}${url.search}`
+    return originalFetch(input instanceof Request ? new Request(target, input) : target, init)
+  }
+  return originalFetch(input, init)
+}
 process.env.NEXT_PUBLIC_SUPABASE_URL = backend
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'fixture-anon-key'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'fixture-admin-key'
@@ -55,6 +66,7 @@ process.env.NEXT_PUBLIC_SITE_URL = 'http://localhost'
 const tokenPart = value => Buffer.from(JSON.stringify(value)).toString('base64url')
 const access_token = `${tokenPart({ alg: 'HS256', typ: 'JWT' })}.${tokenPart({ sub: '33333333-3333-4333-8333-333333333333', exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated' })}.fixture`
 const cookie = `sb-127-auth-token=base64-${Buffer.from(JSON.stringify({ access_token, refresh_token: 'fixture-refresh', token_type: 'bearer', expires_at: Math.floor(Date.now() / 1000) + 3600, expires_in: 3600 })).toString('base64url')}`
+const cookies = `${cookie}; ${cookie.replace('sb-127-auth-token', 'sb-fssjgpqisfnmnkavsyld-auth-token')}`
 const app = next({ dev: false, dir: fileURLToPath(new URL('../web', import.meta.url)) })
 let server
 try {
@@ -63,10 +75,11 @@ try {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
   const site = `http://127.0.0.1:${server.address().port}`
   const get = async (path, signedIn = true) => {
-    const response = await fetch(`${site}${path}`, { headers: signedIn ? { Cookie: cookie } : {}, redirect: 'manual' })
+    const response = await fetch(`${site}${path}`, { headers: signedIn ? { Cookie: cookies } : {}, redirect: 'manual' })
     return { response, html: await response.text() }
   }
   const home = await get('/dashboard/portal-familiar')
+  assert.equal(home.response.status, 200, `Portal response: ${home.response.headers.get('location')}`)
   assert.ok(home.html.includes('summary-badge-academia'))
   assert.ok(home.html.includes(`student-card-${child.id}`))
   assert.ok(home.html.includes(`/dashboard/portal-familiar/hijos/${child.id}`))
@@ -141,4 +154,5 @@ try {
   mock.closeAllConnections()
   await new Promise(resolve => mock.close(resolve))
   await app.close()
+  globalThis.fetch = originalFetch
 }

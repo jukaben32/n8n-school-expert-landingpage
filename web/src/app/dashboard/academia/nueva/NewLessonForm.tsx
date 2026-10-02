@@ -303,7 +303,8 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
           description: description.trim() || null,
           video_url: videoUrl.trim() || null,
           video_provider: videoUrl.trim() ? videoProvider : null,
-          is_published: isPublished,
+          // Publish only after saving the complete questionnaire.
+          is_published: false,
           created_by: authorProfileId,
         })
         .select('id')
@@ -330,6 +331,10 @@ export default function NewLessonForm({ schoolId, authorProfileId, subjects, cou
         if (oError) throw oError
       }
 
+      if (isPublished) {
+        const { error: publishError } = await supabase.from('lessons').update({ is_published: true }).eq('id', lesson.id).select('id').single()
+        if (publishError) throw publishError
+      }
       router.push('/dashboard/academia/progreso')
       router.refresh()
     } catch (err) {

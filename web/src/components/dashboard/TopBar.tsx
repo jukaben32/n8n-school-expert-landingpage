@@ -26,6 +26,7 @@ interface TopBarProps {
   role: string
   schoolName: string
   unreadMessagesCount?: number
+  hasFamilyAccess?: boolean
 }
 
 /**
@@ -33,7 +34,7 @@ interface TopBarProps {
  * Muestra búsqueda global (roles de gestión), notificaciones, y el
  * usuario con su rol y colegio actual.
  */
-export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0 }: TopBarProps) {
+export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0, hasFamilyAccess = false }: TopBarProps) {
   const { toggle } = useMobileNav()
   const displayName = user.user_metadata?.full_name ?? user.email ?? 'Usuario'
   const initials = displayName
@@ -73,7 +74,7 @@ export default function TopBar({ user, role, schoolName, unreadMessagesCount = 0
 
       {/* Notificaciones + usuario */}
       <div className="flex items-center gap-3 shrink-0">
-        <NotificationBell unreadMessagesCount={unreadMessagesCount} />
+        <NotificationBell unreadMessagesCount={unreadMessagesCount} hasFamilyAccess={hasFamilyAccess} />
         <div className="text-right hidden sm:block">
           <p className="text-sm font-medium text-dash-text leading-tight truncate max-w-[180px]">
             {displayName}

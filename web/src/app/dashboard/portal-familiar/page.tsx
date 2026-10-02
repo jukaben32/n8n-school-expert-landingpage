@@ -10,6 +10,7 @@ import DirectMessagesWidget from '@/components/portal/DirectMessagesWidget'
 import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 import { getFamilyClassUpdates } from './actions'
 import { countAbsencesToJustify } from '@/app/dashboard/asistencia/actions'
+import FamilyAcademiaNotices from '@/components/portal/FamilyAcademiaNotices'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — MentorIApp',
@@ -141,6 +142,7 @@ export default async function PortalFamiliarPage() {
       )}
 
       {/* Resumen rápido */}
+      <FamilyAcademiaNotices />
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryBadge label="Academia" value="Ver" icon="🎓" href="/dashboard/portal-familiar/academia" />
         <SummaryBadge label="Comunicados" value="Ver" icon="📬" href="/dashboard/comunicados" />

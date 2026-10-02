@@ -5733,3 +5733,35 @@ codigo". Las pruebas de roles y de SQL ya están verificadas; no equivalen a
 un login completo desde un dispositivo real del padre ni confirman por sí
 solas los otros fallos que el colegio pudo haber experimentado. El token de
 acceso no se conserva en archivos ni en el repositorio.
+
+## Avisos de Academia y aislamiento de familias (2026-10-01, Caracas)
+
+El tutor solo consulta tareas publicadas del curso de sus hijos vinculados y
+su progreso. Las pruebas SQL con rol real guardian confirman que no puede
+editar, borrar ni responder por un hijo; cambiar una URL tampoco permite
+consultar otro alumno. Personal con doble rol conserva los permisos laborales,
+pero la vista familiar/avisos se restringe a sus propios hijos.
+
+Se agregan avisos por tutor/hijo/lección al publicar, con RLS que revalida
+colegio, vínculo vigente, curso y publicación. Se muestran en campana y Portal
+Familiar, con actualización cada minuto y reconocimiento explícito de lectura.
+La única escritura del tutor es read_at; no completa ni cambia la tarea.
+La tarea se publica tras guardar todo el cuestionario, no al inicio del alta.
+
+Migración CLI 20261002014053 aplicada y registrada en Supabase; función privada
+notify-academia desplegada y job pg_cron cada 15 minutos activo. WhatsApp está
+preparado con cola y reserva atómica, validación del destinatario y protección
+contra duplicados; NO está enviando porque EVOLUTION_API_URL falta en secretos
+de Supabase y debe conectarse/habilitarse la integración Evolution del colegio.
+No se enviaron mensajes reales ni se generaron avisos retroactivos.
+
+Validación: 60 comprobaciones reales de roles, prueba SQL con ROLLBACK de
+destinatarios/borradores/duplicados/lectura propia/reconocimiento/protección
+de datos/edición-borrado-respuesta prohibidos/despublicación; cero fixtures
+restantes. 7 pruebas del trabajador WhatsApp con proveedor simulado, 8 de
+alcance familiar y 12 de render Next; TypeScript, lint y build completo OK.
+El webhook rechaza sin secreto (401) y admite el privado (200, configuración
+pendiente). El advisor avisa del predicado SECURITY DEFINER: booleano limitado
+a auth.uid/vínculo/colegio/curso, sin ejecución anónima ni permisos nuevos en
+private; excepción intencional verificada. Límites y configuración pendiente:
+docs/academia-family-notifications.md.
