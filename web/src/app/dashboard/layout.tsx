@@ -147,7 +147,7 @@ export default async function DashboardLayout({
                 </span>
               </div>
             )}
-            <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} />
+            <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} hasFamilyAccess={!!profile.guardian_id && !isBlockedByOverdue} />
             <main className="dash-main flex-1 overflow-y-auto p-4 sm:p-6">
               {children}
             </main>
