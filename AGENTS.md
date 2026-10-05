@@ -4072,6 +4072,83 @@ de "Familias" (nada de lo aplicado toca `families` ni su RLS).
 2. Las listas de útiles por curso siguen solo en el documento: falta el código
    que le pase al asistente únicamente la lista del curso de cada hijo.
 
+## El asistente de IA como primera línea de la secretaría (2026-10-05)
+
+**Reporte real del colegio**: una madre avisó por el portal "la niña fue con el pantalón de deporte
+porque el otro se dañó" y el asistente le contestó que consultara a la secretaría "los procedimientos
+y plazos para regularizar el uniforme". Dos fallas: mandó a la familia a otro lado por un simple
+AVISO (no era una pregunta), e inventó plazos que el colegio nunca definió. Era sistemático: la
+regla 4 del prompt decía "si no se puede responder con los datos, sugiere contactar a la
+secretaría", así que ante cualquier cosa fuera de sus datos derivaba. Decisión del colegio: el
+asistente debe resolver él un porcentaje alto y comunicarse con la secretaría cuando pueda.
+
+**Qué cambió** (sin migración, sin variables nuevas):
+- `lib/ai/familyAssistantPrompt.ts` (puro): prompt nuevo. Distingue AVISO (acusar recibo, dejar
+  constancia, no derivar) de SOLICITUD (juntar detalles y dejar constancia) y de PREGUNTA (responder
+  él con los datos y el documento de preguntas frecuentes). Prohíbe inventar políticas, plazos o
+  sanciones y el cierre de relleno "¿algo más respecto a la información de su familia?".
+- **Herramienta `avisar_secretaria`** (`lib/ai/secretariaNotice.ts` + `deliverSecretariaNotice.ts`):
+  el modelo deja el aviso como un MENSAJE DIRECTO de la familia en la conversación `regular`, que es
+  la bandeja de Mensajes que la secretaría (`reception`) ya lee a diario, con contador de no leídos.
+  Se reutilizó eso en vez de crear una tabla o un canal nuevo. El mensaje lleva el texto ORIGINAL de
+  la familia, que pone el servidor y no el modelo, para no depender solo del resumen de la IA.
+- `lib/ai/claudeMessages.ts`: el cliente de Anthropic ahora soporta el ciclo de herramientas
+  (tope de 3 vueltas; en la última se prohíbe usarlas con `tool_choice: none`, porque la API exige
+  declarar `tools` mientras haya bloques tool_use/tool_result en la conversación).
+
+**Reglas de seguridad que se respetaron:**
+- Lo que manda el modelo a la herramienta es entrada externa: `parseSecretariaNotice` valida el tipo
+  y recorta los textos. Tope de 2 avisos por mensaje de la familia.
+- La familia y el colegio del aviso salen de la identidad ya resuelta por el servidor, nunca del modelo.
+- **El prompt solo promete avisar si de verdad se puede.** Si el tutor nunca entró al portal (no tiene
+  `users_profiles`, y `direct_messages.sender_profile_id` es NOT NULL), no se ofrece la herramienta y
+  el prompt cambia a una variante que NO promete nada. Mentirle a la familia sería peor que derivarla.
+- El perfil del tutor se busca con `.limit(1)`, nunca `.single()` (bug real del 2026-09-28, ver
+  `resolveGuardianIdentity.ts`); el portal pasa el `profileId` que ya tiene resuelto.
+
+**Verificado con Claude REAL (2026-10-05, modelo `claude-haiku-4-5-20251001`, familia ficticia, avisos en
+memoria, nada escrito en producción)** -- unas 90 llamadas en varias rondas. La prueba con el modelo real
+encontró cuatro fallas que ninguna prueba simulada habría visto, y cada una se corrigió y se volvió a medir:
+1. **Promesa falsa**: el modelo escribía "queda constancia en la secretaría" SIN llamar a la herramienta.
+   Prompt solo no alcanzó. Se agregó una red de seguridad en el servidor (`claimsNoticeWasRegistered` en
+   `secretariaNotice.ts`): si el asistente afirma que avisó y no hubo aviso, el servidor deja él mismo un
+   aviso de respaldo con el mensaje original; si ni eso se puede, la respuesta se reemplaza por una honesta.
+2. **Respuesta vacía tras usar la herramienta** (7 de 31 = 23%): el aviso sí se registraba pero la familia
+   veía un error. `claudeMessages.ts` reintenta UNA vez con una indicación explícita de responder.
+3. **Daba el visto bueno del colegio** ("el pantalón de deporte es permitido", "no hay problema") y hacía
+   recomendaciones no pedidas ("consiga otro pantalón lo antes posible"). Se corrigió con reglas más
+   claras y ejemplos del tono correcto; citar la frase prohibida en el prompt NO sirvió, los ejemplos sí.
+4. **Mezclaba tuteo y usted**: ahora trata siempre de usted (guía de voz del colegio).
+
+**Resultado final, 31 escenarios seguidos** (aviso de uniforme x10, ausencia x6, llegada tarde x4, pregunta
+sin respuesta en los datos x4, quién recoge x4, dos hijos x3): **31/31 con aviso registrado, 0 errores, 0
+promesas falsas, 0 estilo prohibido**. Regresión: la carta de estudio deja una solicitud; una pregunta con
+respuesta en los datos se responde sin avisar; el intento de ver a otra familia se rechaza; el consejo
+médico se rechaza; sin herramienta disponible no promete avisar.
+
+**Pruebas sin red** (`node --experimental-strip-types`): `scripts/test-secretaria-notice.mjs` (17) y
+`scripts/test-claude-tool-loop.mjs` (11). `tsc --noEmit` y `eslint` limpios.
+
+**Límites conocidos, no resueltos:**
+- Con dos hijos y un aviso ambiguo, a veces pregunta cuál y a veces deja el aviso sin decir cuál (la
+  secretaría ve el mensaje original, pero puede que tenga que adivinar).
+- La variante SIN herramienta (tutor que nunca entró al portal) todavía recomienda de más ("le recomiendo
+  que se comunique con la secretaría"): es honesta, no promete avisar, pero no es tan limpia.
+- Es una muestra pequeña con un modelo que varía; en producción conviene revisar las primeras
+  conversaciones reales en `/dashboard/asistente-ia` y los avisos en `/dashboard/mensajes`.
+- NO se probó la escritura real en la bandeja (se evitó meter avisos falsos en la secretaría de un colegio
+  en producción): `deliverSecretariaNotice` replica el insert de `sendFamilyDirectMessage`, pero la primera
+  vez real hay que confirmar que el aviso aparece en Mensajes con el contador.
+- `npm run smoke` no se corrió (no se tocó ninguna policy ni migración).
+
+**Fuera de alcance, a propósito:**
+- La **llamada de voz en vivo** (`startVoiceCallSession.ts`) tiene su propio prompt y NO usa
+  herramientas (relay WebRTC distinto): conserva la regla vieja de "sugiere contactar a la secretaría".
+- El **modo recepción** para números no identificados (`answerGeneralQuestion`) sigue derivando a la
+  secretaría: ahí no hay familia ni perfil, así que no hay a quién atribuir un aviso.
+- La secretaría **se entera por el contador de Mensajes**, no por WhatsApp ni correo (Evolution API
+  sigue sin configurar en producción).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

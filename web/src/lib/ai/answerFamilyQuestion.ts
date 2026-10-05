@@ -1,5 +1,15 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildPortalBrandLine, getSchoolOrPlatformName } from '@/lib/branding'
+import { buildFamilyAssistantPrompt } from './familyAssistantPrompt'
+import { callClaude as callClaudeWithTools, type ChatTurn, type ToolHandler } from './claudeMessages'
+import {
+  FALLBACK_NOTICE,
+  SECRETARIA_TOOL,
+  SECRETARIA_TOOL_NAME,
+  claimsNoticeWasRegistered,
+  parseSecretariaNotice,
+} from './secretariaNotice'
+import { deliverSecretariaNotice, findGuardianProfileId } from './deliverSecretariaNotice'
 
 /**
  * "Un solo cerebro, dos salidas" — núcleo del asistente de IA de MentorIApp.
@@ -24,6 +34,18 @@ const MAX_MESSAGE_LENGTH = 2000
 const DAILY_MESSAGE_LIMIT = 30
 const HISTORY_TURNS = 8
 const ANONYMOUS_DAILY_LIMIT = 15
+// Tope de avisos a la secretaría por cada mensaje de la familia, para que un fallo del modelo no llene la bandeja.
+const MAX_NOTICES_PER_MESSAGE = 2
+// Vueltas máximas modelo -> herramienta -> modelo antes de forzar una respuesta de texto.
+const MAX_TOOL_ROUNDS = 3
+
+const NOTICE_FAILED_REPLY =
+  'No pude dejar el aviso en la secretaría desde este canal. Por favor, comuníquelo directamente a la secretaría del colegio.'
+
+const CHANNEL_LABELS: Record<ChatChannel, string> = {
+  widget: 'Portal Familiar',
+  whatsapp: 'WhatsApp',
+}
 
 /**
  * Límite de 30 turnos de usuario por familia cada 24h (ventana móvil),
@@ -57,6 +79,9 @@ export interface AnswerFamilyQuestionInput {
   schoolId: string
   familyId: string
   guardianId: string
+  // users_profiles.id del tutor, si el llamador ya lo resolvió (el portal sí; WhatsApp no).
+  // Se usa para dejar avisos en la bandeja de la secretaría.
+  profileId?: string
   channel: ChatChannel
   message: string
 }
@@ -98,14 +123,41 @@ export async function answerFamilyQuestion(input: AnswerFamilyQuestionInput): Pr
     return { ok: false, error: context.error }
   }
 
-  const systemPrompt = buildSystemPrompt(context.schoolName, context.contextText)
+  // Solo se ofrece la herramienta (y el prompt solo promete avisar) si existe un perfil de tutor al
+  // que atribuir el mensaje en la bandeja. Un tutor que nunca entró al portal no tiene perfil.
+  const profileId = input.profileId ?? (await findGuardianProfileId(admin, schoolId, guardianId))
+  const toolHandler = profileId
+    ? buildSecretariaToolHandler({ admin, schoolId, familyId, profileId, channel, originalMessage: message })
+    : undefined
+
+  const systemPrompt = buildFamilyAssistantPrompt({
+    brandLine: buildPortalBrandLine(context.schoolName),
+    contextText: context.contextText,
+    canNotifySecretaria: toolHandler !== undefined,
+  })
 
   let reply: string
   try {
-    reply = await callClaude(apiKey, systemPrompt, [...history, { role: 'user', content: message }])
+    reply = await callClaude(apiKey, systemPrompt, [...history, { role: 'user', content: message }], toolHandler)
   } catch (err) {
     const detail = err instanceof Error ? err.message : 'error desconocido'
     return { ok: false, error: `No se pudo obtener respuesta del asistente: ${detail}` }
+  }
+
+  // Red de seguridad: si el asistente le dijo a la familia que quedó constancia pero NO llamó a la
+  // herramienta (pasó en la prueba con Claude real), el servidor deja él mismo el aviso con el mensaje
+  // original. Así lo que ve la familia es siempre cierto. Si ni así se puede dejar, se reemplaza la
+  // respuesta por una honesta en vez de dejar la promesa falsa.
+  if (profileId && toolHandler && toolHandler.sentCount() === 0 && claimsNoticeWasRegistered(reply)) {
+    const fallback = await deliverSecretariaNotice(admin, {
+      schoolId,
+      familyId,
+      profileId,
+      notice: FALLBACK_NOTICE,
+      channelLabel: CHANNEL_LABELS[channel],
+      originalMessage: message,
+    })
+    if (!fallback.ok) reply = NOTICE_FAILED_REPLY
   }
 
   const { error: insertError } = await admin.from('ai_conversations').insert([
@@ -318,51 +370,47 @@ ${messagesText}${schoolRes.data?.faq_document ? `\n\nPreguntas frecuentes y pol�
   return { ok: true, schoolName, contextText }
 }
 
-function buildSystemPrompt(schoolName: string, contextText: string): string {
-  return `Eres el asistente virtual del Portal Familiar de ${buildPortalBrandLine(schoolName)}.
-
-Hablas con un padre/madre/tutor sobre SU PROPIA familia. Reglas estrictas:
-1. Solo puedes usar la información de la sección "DATOS DE LA FAMILIA" de abajo. No inventes datos que no estén ahí.
-2. Nunca reveles, menciones ni compares con datos de otras familias, otros estudiantes o de otros colegios -- no tienes acceso a esa información y debes decir que no puedes ayudar con eso si te la piden.
-3. No das consejos médicos, legales ni psicológicos -- para eso remite al colegio directamente.
-4. Si la pregunta no se puede responder con los datos disponibles, dilo claramente y sugiere contactar a la secretaría del colegio.
-5. Responde en español, de forma breve, cálida y profesional.
-6. La sección "Preguntas frecuentes y políticas generales del colegio" (si aparece más abajo) es información pública del colegio, igual para todas las familias -- úsala para preguntas de horarios, uniforme, reglas, etc. No la confundas con los datos privados de esta familia en particular.
-
-DATOS DE LA FAMILIA:
-${contextText}`
+interface SecretariaToolContext {
+  admin: AdminClient
+  schoolId: string
+  familyId: string
+  profileId: string
+  channel: ChatChannel
+  originalMessage: string
 }
 
-interface ChatTurn {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-async function callClaude(apiKey: string, system: string, messages: ChatTurn[]): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+// Ejecuta la herramienta avisar_secretaria cuando el modelo la pide. Valida lo que manda el modelo
+// (entrada externa) y limita cuántos avisos puede dejar por mensaje.
+function buildSecretariaToolHandler(ctx: SecretariaToolContext): ToolHandler & { sentCount: () => number } {
+  let sentNotices = 0
+  return {
+    tools: [SECRETARIA_TOOL],
+    sentCount: () => sentNotices,
+    run: async (name, toolInput) => {
+      if (name !== SECRETARIA_TOOL_NAME) {
+        return { ok: false, message: 'Herramienta desconocida.' }
+      }
+      if (sentNotices >= MAX_NOTICES_PER_MESSAGE) {
+        return { ok: false, message: 'Ya se dejaron avisos para este mensaje; no repitas el mismo aviso.' }
+      }
+      const parsed = parseSecretariaNotice(toolInput)
+      if (!parsed.ok) {
+        return { ok: false, message: parsed.error }
+      }
+      const delivered = await deliverSecretariaNotice(ctx.admin, {
+        schoolId: ctx.schoolId,
+        familyId: ctx.familyId,
+        profileId: ctx.profileId,
+        notice: parsed.notice,
+        channelLabel: CHANNEL_LABELS[ctx.channel],
+        originalMessage: ctx.originalMessage,
+      })
+      if (delivered.ok) sentNotices += 1
+      return delivered
     },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      system,
-      messages,
-    }),
-  })
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`Anthropic API respondió ${res.status}: ${body.slice(0, 300)}`)
   }
+}
 
-  const data = (await res.json()) as { content?: { type: string; text?: string }[] }
-  const text = data.content?.find((block) => block.type === 'text')?.text
-  if (!text) {
-    throw new Error('Respuesta del modelo sin contenido de texto.')
-  }
-  return text
+function callClaude(apiKey: string, system: string, messages: ChatTurn[], toolHandler?: ToolHandler): Promise<string> {
+  return callClaudeWithTools({ apiKey, model: MODEL, maxOutputTokens: MAX_OUTPUT_TOKENS, maxToolRounds: MAX_TOOL_ROUNDS, system, messages, toolHandler })
 }

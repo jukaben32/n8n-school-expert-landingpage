@@ -34,6 +34,7 @@ export async function sendFamilyChatMessage(message: string): Promise<ChatResult
     schoolId: identity.schoolId,
     familyId: identity.familyId,
     guardianId: identity.guardianId,
+    profileId: identity.profileId,
     channel: 'widget',
     message,
   })
