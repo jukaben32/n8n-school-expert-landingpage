@@ -6,10 +6,12 @@ import {
   FALLBACK_NOTICE,
   SECRETARIA_TOOL,
   SECRETARIA_TOOL_NAME,
+  checkNoticeStudent,
   claimsNoticeWasRegistered,
   parseSecretariaNotice,
+  type StudentRef,
 } from './secretariaNotice'
-import { deliverSecretariaNotice, findGuardianProfileId } from './deliverSecretariaNotice'
+import { deliverSecretariaNotice, findFamilyProfileId } from './deliverSecretariaNotice'
 
 /**
  * "Un solo cerebro, dos salidas" — núcleo del asistente de IA de MentorIApp.
@@ -125,9 +127,10 @@ export async function answerFamilyQuestion(input: AnswerFamilyQuestionInput): Pr
 
   // Solo se ofrece la herramienta (y el prompt solo promete avisar) si existe un perfil de tutor al
   // que atribuir el mensaje en la bandeja. Un tutor que nunca entró al portal no tiene perfil.
-  const profileId = input.profileId ?? (await findGuardianProfileId(admin, schoolId, guardianId))
+  const familyText = [...history.filter((turn) => turn.role === 'user').map((turn) => turn.content), message].join('\n')
+  const profileId = input.profileId ?? (await findFamilyProfileId(admin, schoolId, familyId, guardianId))
   const toolHandler = profileId
-    ? buildSecretariaToolHandler({ admin, schoolId, familyId, profileId, channel, originalMessage: message })
+    ? buildSecretariaToolHandler({ admin, schoolId, familyId, profileId, channel, originalMessage: message, students: context.students, familyText })
     : undefined
 
   const systemPrompt = buildFamilyAssistantPrompt({
@@ -279,6 +282,8 @@ export interface FamilyContext {
   ok: true
   schoolName: string
   contextText: string
+  // Hijos de la familia, para validar a qué estudiante se refiere un aviso.
+  students: StudentRef[]
 }
 export interface FamilyContextError {
   ok: false
@@ -367,7 +372,12 @@ ${invoicesText}
 Últimos comunicados generales del colegio:
 ${messagesText}${schoolRes.data?.faq_document ? `\n\nPreguntas frecuentes y políticas generales del colegio (aplican a todas las familias):\n${schoolRes.data.faq_document}` : ''}`
 
-  return { ok: true, schoolName, contextText }
+  const students: StudentRef[] = (studentsRes.data ?? []).map((s) => ({
+    fullName: `${s.first_name} ${s.last_name}`.trim(),
+    givenName: String(s.first_name ?? ''),
+  }))
+
+  return { ok: true, schoolName, contextText, students }
 }
 
 interface SecretariaToolContext {
@@ -377,6 +387,9 @@ interface SecretariaToolContext {
   profileId: string
   channel: ChatChannel
   originalMessage: string
+  students: StudentRef[]
+  // SOLO lo que escribió la familia en esta conversación (nunca lo que dijo el asistente).
+  familyText: string
 }
 
 // Ejecuta la herramienta avisar_secretaria cuando el modelo la pide. Valida lo que manda el modelo
@@ -396,6 +409,12 @@ function buildSecretariaToolHandler(ctx: SecretariaToolContext): ToolHandler & {
       const parsed = parseSecretariaNotice(toolInput)
       if (!parsed.ok) {
         return { ok: false, message: parsed.error }
+      }
+      // Con varios hijos, un aviso sin saber de cuál es obliga a la secretaría a adivinar. Se lo
+      // devolvemos al modelo como error para que le pregunte a la familia (no se confía solo en el prompt).
+      const studentCheck = checkNoticeStudent(parsed.notice, ctx.students, ctx.familyText)
+      if (!studentCheck.ok) {
+        return { ok: false, message: studentCheck.error }
       }
       const delivered = await deliverSecretariaNotice(ctx.admin, {
         schoolId: ctx.schoolId,

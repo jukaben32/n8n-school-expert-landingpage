@@ -50,7 +50,8 @@ export const SECRETARIA_TOOL = {
       },
       estudiante: {
         type: 'string',
-        description: 'Nombre del hijo/a al que se refiere, si aplica. Omítelo si es de toda la familia.',
+        description:
+          'Nombre del hijo/a al que se refiere. OBLIGATORIO si la familia tiene más de un hijo ("toda la familia" si aplica a todos); si no sabes de cuál es, pregúntale a la familia antes de llamar la herramienta.',
       },
       resumen: {
         type: 'string',
@@ -117,6 +118,96 @@ export function claimsNoticeWasRegistered(reply: string): boolean {
   if (NEGATED_CLAIM.test(reply)) return false
   if (DIRECT_CLAIM.test(reply)) return true
   return SECRETARIA_CLAIM.test(reply) && REGISTERED_WORD.test(reply)
+}
+
+function normalizeName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const WHOLE_FAMILY = /\b(toda la familia|todos|ambos|los dos)\b/
+const FAMILY_SAYS_ALL = /\b(toda la familia|ambos|ambas|los dos|las dos|los tres|las tres|mis hijos|mis hijas|mis ninos|mis ninas)\b/
+
+export interface StudentRef {
+  fullName: string
+  // Solo el nombre de pila: el apellido lo comparten los hermanos y no sirve para distinguirlos.
+  givenName: string
+}
+
+export type StudentCheckResult = { ok: true } | { ok: false; error: string }
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// ¿La familia mencionó el nombre de pila de este hijo en lo que escribió?
+function familyMentionedGivenName(student: StudentRef, familyText: string): boolean {
+  const tokens = normalizeName(student.givenName)
+    .split(' ')
+    .filter((token) => token.length >= 3)
+  if (tokens.length === 0) return true // sin nombre de pila usable no se puede comprobar: no se bloquea
+  const text = normalizeName(familyText)
+  return tokens.some((token) => new RegExp(`\\b${escapeRegExp(token)}\\b`).test(text))
+}
+
+/**
+ * Con una familia de varios hijos, un aviso sin saber de cuál es obliga a la secretaría a adivinar.
+ * La prueba con Claude real mostró dos cosas: el modelo a veces no pregunta aunque el prompt se lo pida,
+ * y cuando no sabe de cuál es, ADIVINA (elegía siempre al primer hijo, y una vez avisó por los dos).
+ * Por eso se exige por código, no por prompt:
+ *   1. el aviso debe nombrar a un hijo de la familia (o decir "toda la familia");
+ *   2. el nombre de pila de ese hijo debe aparecer en lo que la familia escribió (`familyText`).
+ * Si no se cumple, la herramienta devuelve un error que le dice al modelo que le pregunte a la familia.
+ * Con un solo hijo no se pide nada. `familyText` son SOLO los mensajes de la familia, nunca los del asistente
+ * (que podrían nombrar a un hijo sin que la familia lo haya dicho).
+ */
+export function checkNoticeStudent(notice: SecretariaNotice, students: StudentRef[], familyText: string): StudentCheckResult {
+  if (students.length <= 1) return { ok: true }
+  // Si la propia familia dijo que es para todos ("los dos", "ambos"), no hay a quién preguntarle: es de toda
+  // la familia. Sin esto el asistente le volvía a preguntar a la madre algo que ya había dicho. A propósito NO
+  // se incluye "todos" aquí (podría ser "todos los uniformes"); solo en el campo estudiante que escribe el modelo.
+  if (FAMILY_SAYS_ALL.test(normalizeName(familyText))) return { ok: true }
+
+  const list = students.map((s) => s.fullName).join(', ')
+  const given = notice.student ? normalizeName(notice.student) : ''
+  if (!given) {
+    return {
+      ok: false,
+      error:
+        `La familia tiene ${students.length} hijos (${list}) y no dijiste de cuál es el aviso. ` +
+        'Pregúntale a la familia a cuál se refiere y llama de nuevo la herramienta con ese nombre; ' +
+        'si es de toda la familia, escribe "toda la familia" en el campo estudiante.',
+    }
+  }
+  if (WHOLE_FAMILY.test(given)) return { ok: true }
+
+  const matched =
+    given.length >= 3
+      ? students.find((s) => {
+          const n = normalizeName(s.fullName)
+          return n.includes(given) || given.includes(n)
+        })
+      : undefined
+  if (!matched) {
+    return {
+      ok: false,
+      error: `"${notice.student}" no coincide con ningún hijo de esta familia (${list}). Usa el nombre exacto de uno de ellos.`,
+    }
+  }
+
+  if (!familyMentionedGivenName(matched, familyText)) {
+    return {
+      ok: false,
+      error:
+        `La familia todavía no ha dicho de cuál hijo habla: no lo supongas ni elijas el primero. ` +
+        `Pregúntale cuál es (${list}) y llama de nuevo la herramienta con el nombre que te confirme.`,
+    }
+  }
+  return { ok: true }
 }
 
 // Aviso que deja el servidor cuando el asistente prometió avisar y no generó el resumen él mismo.

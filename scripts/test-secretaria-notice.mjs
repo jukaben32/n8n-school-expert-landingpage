@@ -17,6 +17,7 @@ import {
   parseSecretariaNotice,
   buildSecretariaMessageBody,
   claimsNoticeWasRegistered,
+  checkNoticeStudent,
   FALLBACK_NOTICE,
 } from '../web/src/lib/ai/secretariaNotice.ts'
 import { buildFamilyAssistantPrompt } from '../web/src/lib/ai/familyAssistantPrompt.ts'
@@ -119,6 +120,79 @@ check('no se activa con respuestas normales ni con fallos honestos', () => {
 check('el aviso de respaldo es un "aviso" sin estudiante', () => {
   assert.equal(FALLBACK_NOTICE.kind, 'aviso')
   assert.equal(FALLBACK_NOTICE.student, null)
+})
+
+console.log('checkNoticeStudent')
+
+const aviso = (student) => ({ kind: 'aviso', student, summary: 'x' })
+const carmen = { fullName: 'Carmen Grace Del Rosario', givenName: 'Carmen Grace' }
+const daniel = { fullName: 'Daniel Del Rosario', givenName: 'Daniel' }
+const dosHijos = [carmen, daniel]
+
+check('con un solo hijo no pide nada, aunque no venga el estudiante ni lo mencione la familia', () => {
+  assert.equal(checkNoticeStudent(aviso(null), [carmen], 'se dañó el pantalón').ok, true)
+  assert.equal(checkNoticeStudent(aviso(null), [], '').ok, true)
+})
+
+check('con varios hijos y sin estudiante: error que le dice al modelo que pregunte', () => {
+  const r = checkNoticeStudent(aviso(null), dosHijos, 'se dañó el pantalón')
+  assert.equal(r.ok, false)
+  assert.match(r.error, /2 hijos/)
+  assert.match(r.error, /Carmen Grace Del Rosario, Daniel Del Rosario/)
+  assert.match(r.error, /Pregúntale a la familia/)
+})
+
+// El caso REAL que falló con Claude: ante "se le dañó el pantalón" el modelo ADIVINABA al primer hijo.
+check('rechaza que el modelo adivine: nombra a un hijo que la familia nunca mencionó', () => {
+  const r = checkNoticeStudent(aviso('Carmen Grace Del Rosario'), dosHijos, 'Buenos días, hoy se le dañó el pantalón del uniforme')
+  assert.equal(r.ok, false)
+  assert.match(r.error, /no ha dicho de cuál hijo/)
+})
+
+check('acepta el hijo cuando la familia sí lo nombró (en cualquier turno, con o sin acentos y mayúsculas)', () => {
+  assert.equal(checkNoticeStudent(aviso('Daniel Del Rosario'), dosHijos, 'Daniel llega tarde hoy').ok, true)
+  assert.equal(checkNoticeStudent(aviso('Daniel'), dosHijos, 'se dañó el pantalón\nA DANIEL').ok, true)
+  assert.equal(checkNoticeStudent(aviso('Carmen'), dosHijos, 'mi hija carmen no va hoy').ok, true)
+  const nico = [{ fullName: 'Nicolás Pérez', givenName: 'Nicolás' }, { fullName: 'Ana Pérez', givenName: 'Ana' }]
+  assert.equal(checkNoticeStudent(aviso('Nicolás Pérez'), nico, 'nicolas esta enfermo').ok, true)
+})
+
+check('el apellido compartido por los hermanos NO cuenta como haber nombrado al hijo', () => {
+  const r = checkNoticeStudent(aviso('Daniel Del Rosario'), dosHijos, 'los Del Rosario no van hoy')
+  assert.equal(r.ok, false)
+})
+
+check('un nombre de pila que es parte de otra palabra no cuenta (Ana vs. mañana)', () => {
+  const hijos = [{ fullName: 'Ana Pérez', givenName: 'Ana' }, { fullName: 'Luis Pérez', givenName: 'Luis' }]
+  assert.equal(checkNoticeStudent(aviso('Ana Pérez'), hijos, 'mañana llega tarde').ok, false)
+  assert.equal(checkNoticeStudent(aviso('Ana Pérez'), hijos, 'Ana llega tarde').ok, true)
+})
+
+check('acepta "toda la familia" sin exigir un nombre', () => {
+  assert.equal(checkNoticeStudent(aviso('toda la familia'), dosHijos, 'hoy los recoge su abuelo').ok, true)
+  assert.equal(checkNoticeStudent(aviso('Ambos'), dosHijos, 'hoy los recoge su abuelo').ok, true)
+})
+
+// Caso REAL (prueba con Claude): "Hoy a los dos los recoge su abuelo" -> el servidor lo rechazaba por no
+// aparecer ningún nombre y el asistente le volvía a preguntar a la madre algo que ya había dicho.
+check('si la familia dijo "los dos" / "ambos", es de toda la familia aunque no nombre a nadie', () => {
+  assert.equal(checkNoticeStudent(aviso('Carmen Grace Del Rosario y Daniel Del Rosario'), dosHijos, 'Hoy a los dos los recoge su abuelo').ok, true)
+  assert.equal(checkNoticeStudent(aviso(null), dosHijos, 'Ambos van a llegar tarde').ok, true)
+  assert.equal(checkNoticeStudent(aviso(null), dosHijos, 'mis hijos no van hoy').ok, true)
+})
+
+check('"todos" suelto en el mensaje de la familia NO basta (puede ser "todos los uniformes")', () => {
+  assert.equal(checkNoticeStudent(aviso('Carmen'), dosHijos, 'se dañaron todos los uniformes').ok, false)
+})
+
+check('rechaza un nombre que no es de ningún hijo y lo nombra en el error', () => {
+  const r = checkNoticeStudent(aviso('Pedro Pérez'), dosHijos, 'Pedro llega tarde')
+  assert.equal(r.ok, false)
+  assert.match(r.error, /Pedro Pérez/)
+})
+
+check('no se deja engañar por fragmentos de una o dos letras', () => {
+  assert.equal(checkNoticeStudent(aviso('a'), dosHijos, 'a').ok, false)
 })
 
 console.log('SECRETARIA_TOOL')

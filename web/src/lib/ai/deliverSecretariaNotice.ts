@@ -26,14 +26,35 @@ export interface DeliverNoticeResult {
  * por eso el 2026-09-28 (ver resolveGuardianIdentity.ts). Devuelve null si el tutor nunca entró al
  * portal: en ese caso el asistente no puede dejar avisos, y el prompt lo refleja.
  */
-export async function findGuardianProfileId(admin: AdminClient, schoolId: string, guardianId: string): Promise<string | null> {
-  const { data } = await admin
+export async function findFamilyProfileId(admin: AdminClient, schoolId: string, familyId: string, guardianId: string): Promise<string | null> {
+  const own = await admin
     .from('users_profiles')
     .select('id')
     .eq('school_id', schoolId)
     .eq('guardian_id', guardianId)
     .limit(1)
-  return (data?.[0]?.id as string | undefined) ?? null
+  const ownId = own.data?.[0]?.id as string | undefined
+  if (ownId) return ownId
+
+  // Quien escribe por WhatsApp puede no haber entrado nunca al portal, pero otro tutor de la MISMA familia
+  // sí. La conversación con la secretaría es una sola por familia, así que se le atribuye el mensaje a ese
+  // perfil: el texto original de la familia va dentro del aviso, de modo que nadie se confunde de quién es.
+  const guardians = await admin
+    .from('guardians')
+    .select('id')
+    .eq('school_id', schoolId)
+    .eq('family_id', familyId)
+    .is('deleted_at', null)
+  const guardianIds = (guardians.data ?? []).map((g) => g.id as string)
+  if (guardianIds.length === 0) return null
+
+  const sibling = await admin
+    .from('users_profiles')
+    .select('id')
+    .eq('school_id', schoolId)
+    .in('guardian_id', guardianIds)
+    .limit(1)
+  return (sibling.data?.[0]?.id as string | undefined) ?? null
 }
 
 // Misma conversación "regular" (familia <-> colegio) que ve la secretaría en Mensajes.

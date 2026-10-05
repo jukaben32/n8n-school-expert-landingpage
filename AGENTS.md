@@ -4129,16 +4129,35 @@ médico se rechaza; sin herramienta disponible no promete avisar.
 **Pruebas sin red** (`node --experimental-strip-types`): `scripts/test-secretaria-notice.mjs` (17) y
 `scripts/test-claude-tool-loop.mjs` (11). `tsc --noEmit` y `eslint` limpios.
 
-**Límites conocidos, no resueltos:**
-- Con dos hijos y un aviso ambiguo, a veces pregunta cuál y a veces deja el aviso sin decir cuál (la
-  secretaría ve el mensaje original, pero puede que tenga que adivinar).
-- La variante SIN herramienta (tutor que nunca entró al portal) todavía recomienda de más ("le recomiendo
-  que se comunique con la secretaría"): es honesta, no promete avisar, pero no es tan limpia.
-- Es una muestra pequeña con un modelo que varía; en producción conviene revisar las primeras
-  conversaciones reales en `/dashboard/asistente-ia` y los avisos en `/dashboard/mensajes`.
-- NO se probó la escritura real en la bandeja (se evitó meter avisos falsos en la secretaría de un colegio
-  en producción): `deliverSecretariaNotice` replica el insert de `sendFamilyDirectMessage`, pero la primera
-  vez real hay que confirmar que el aviso aparece en Mensajes con el contador.
+**Segunda ronda con Claude real (2026-10-05, noche): cierre de los límites de la primera**
+- **Dos hijos y aviso ambiguo**: el modelo ADIVINABA (en 5 de 8 pruebas eligió al primer hijo, y una vez avisó
+  por los dos). Un cambio de prompt no lo arregla, así que se exige por código
+  (`checkNoticeStudent` en `secretariaNotice.ts`): con varios hijos, el aviso debe nombrar a un hijo Y el
+  nombre de pila de ese hijo debe aparecer en lo que ESCRIBIÓ LA FAMILIA en la conversación (nunca en lo que
+  dijo el asistente). Si no, la herramienta devuelve un error y el modelo le pregunta a la familia. El apellido
+  no cuenta (los hermanos lo comparten). Si la familia dice "los dos"/"ambos"/"mis hijos" es de toda la
+  familia y no se le vuelve a preguntar (un primer borrador sí lo hacía: lo encontró la prueba real).
+  Resultado: 8 de 8 mensajes ambiguos terminan en pregunta, 0 avisos a un hijo equivocado; si la familia
+  contesta o ya dice cuál, 9 de 9 con el hijo correcto; "toda la familia" 3 de 3; un hijo 5 de 5, sin errores.
+- **Tutor que nunca entró al portal**: `findFamilyProfileId` busca primero su perfil y, si no tiene, el de
+  OTRO tutor de la misma familia (la conversación con la secretaría es una sola por familia y el texto
+  original de la familia va dentro del aviso). La variante sin herramienta queda solo para familias donde
+  NADIE ha entrado nunca al portal.
+- **Esquema de producción**: comprobado en SOLO LECTURA contra la API de Supabase (definición de tablas, sin
+  leer datos): `direct_conversations` y `direct_messages` tienen todas las columnas que escribimos y ninguna
+  obligatoria sin cubrir; `category` tiene default `regular`.
+
+**Límites que siguen abiertos (honestos):**
+- Si en un mensaje ambiguo el modelo escribe "Carmen" y promete sin llamar la herramienta (pasó 1 de 8), la red
+  de seguridad deja el aviso con el mensaje original pero SIN estudiante, y la respuesta a la familia ya
+  nombró a un hijo que ella no dijo. La familia puede corregirlo; la secretaría lee el mensaje original.
+- La variante sin herramienta (familia donde nadie entró al portal) es honesta pero a veces añade datos del
+  documento de preguntas frecuentes que nadie pidió. Es el caso más raro (WhatsApp ni está activo aún).
+- NO se hizo una escritura real de prueba en la bandeja de producción (para no meter avisos falsos en la
+  secretaría de un colegio real). La primera vez real hay que confirmar que el aviso aparece en
+  `/dashboard/mensajes` con el contador.
+- Es una muestra pequeña con un modelo que varía: revisar las primeras conversaciones reales en
+  `/dashboard/asistente-ia` y los avisos en `/dashboard/mensajes`.
 - `npm run smoke` no se corrió (no se tocó ninguna policy ni migración).
 
 **Fuera de alcance, a propósito:**
