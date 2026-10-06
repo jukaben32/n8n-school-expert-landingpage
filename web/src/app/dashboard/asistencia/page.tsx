@@ -142,6 +142,12 @@ export default async function AsistenciaPage() {
         {isStaff && (
           <div className="flex items-center gap-2 flex-wrap">
             <a
+              href="/dashboard/asistencia/listado"
+              className="inline-flex items-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            >
+              Listado
+            </a>
+            <a
               href="/dashboard/asistencia/justificaciones"
               className="inline-flex items-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
