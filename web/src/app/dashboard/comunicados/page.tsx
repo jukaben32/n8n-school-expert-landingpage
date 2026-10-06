@@ -50,7 +50,9 @@ export default async function ComunicadosPage() {
     `)
     .eq('school_id', schoolId)
     .is('deleted_at', null)
-    .order('published_at', { ascending: false })
+    // Más reciente arriba; borradores (published_at null) al final
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
 
   // Los guardians solo ven publicados
   if (!isStaff) query.not('published_at', 'is', null)
