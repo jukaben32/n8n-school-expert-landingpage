@@ -139,6 +139,7 @@ type NavGroup = { title?: string; items: NavItem[] }
 const navByRole: Record<string, NavGroup[]> = {
   guardian: [{ items: [
     { href: '/dashboard/portal-familiar', label: 'Inicio', icon: 'home' },
+    { href: '/dashboard/portal-familiar/mensajes', label: 'Mensajes', icon: 'messages' },
     { href: '/dashboard/portal-familiar/academia', label: 'Academia', icon: 'academia' },
     { href: '/dashboard/comunicados',     label: 'Comunicados', icon: 'messages' },
     { href: '/dashboard/agenda',          label: 'Agenda', icon: 'agenda' },

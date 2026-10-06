@@ -7,6 +7,7 @@ import { startVoiceCallSession } from '@/lib/ai/startVoiceCallSession'
 import { logVoiceCallTranscript, type VoiceCallTurn } from '@/lib/ai/logVoiceCallTranscript'
 import { resolveGuardianIdentity } from '@/lib/auth/resolveGuardianIdentity'
 import { type MessageCategory } from '@/lib/messaging/categoryAccess'
+import { notifyStaffOfFamilyMessage } from '@/lib/notifications/notifyStaffOfFamilyMessage'
 
 interface ChatResult {
   ok: boolean

@@ -222,7 +222,7 @@ export default async function PortalFamiliarPage() {
       )}
 
       {/* Mensajería directa con el colegio -- un humano responde, no la IA */}
-      <div className="space-y-3">
+      <div id="mensajes" className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
           Mensajes
         </h2>
