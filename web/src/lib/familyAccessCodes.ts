@@ -64,10 +64,88 @@ export async function findGuardianByPhone(
     (guardian) => guardian.phone && normalizePhoneForMatch(guardian.phone) === normalizedPhone
   )
 
-  // Si el mismo telefono aparece en mas de una ficha, no adivinamos. Es mejor
-  // que secretaria lo confirme antes de entregar acceso.
-  if (matches.length !== 1) return null
-  return matches[0]
+  const resolution = await resolveGuardianMatches(admin, matches)
+  return resolution.kind === 'ok' ? resolution.guardian : null
+}
+
+function normalizePersonName(guardian: Pick<GuardianMatch, 'first_name' | 'last_name'>) {
+  return `${guardian.first_name} ${guardian.last_name}`
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+export type GuardianResolution =
+  | { kind: 'none' }
+  // `guardian` es la ficha con la que se entrega el acceso (una con hijos
+  // vinculados si existe); `siblings` son todas las fichas de la misma
+  // persona, una por familia, que se enlazan al mismo perfil.
+  | { kind: 'ok'; guardian: GuardianMatch; siblings: GuardianMatch[] }
+  | { kind: 'conflict'; matches: GuardianMatch[] }
+
+/**
+ * Decide si las fichas que comparten un celular son UNA persona con hijos
+ * en varias familias (valido) o un error de carga (conflicto). Es una sola
+ * persona solo si todas son del mismo colegio, de familias distintas y
+ * con el mismo nombre. Cualquier otro caso no se adivina: secretaria debe
+ * corregir la ficha antes de entregar acceso.
+ */
+export async function resolveGuardianMatches(
+  admin: AdminClient,
+  matches: GuardianMatch[]
+): Promise<GuardianResolution> {
+  if (matches.length === 0) return { kind: 'none' }
+  if (matches.length === 1) return { kind: 'ok', guardian: matches[0], siblings: matches }
+
+  const sameSchool = new Set(matches.map((m) => m.school_id)).size === 1
+  const distinctFamilies = new Set(matches.map((m) => m.family_id)).size === matches.length
+  const sameName = new Set(matches.map(normalizePersonName)).size === 1
+  if (!sameSchool || !distinctFamilies || !sameName) return { kind: 'conflict', matches }
+
+  const { data: links, error } = await admin
+    .from('student_guardians')
+    .select('guardian_id')
+    .in('guardian_id', matches.map((m) => m.id))
+  if (error) throw error
+
+  const withStudents = new Set((links ?? []).map((l) => l.guardian_id as string))
+  const usable = matches.filter((m) => withStudents.has(m.id))
+  // Sin ninguna ficha con hijos se devuelve la primera: el llamador ya
+  // responde "sin estudiantes vinculados".
+  const siblings = usable.length > 0 ? usable : matches
+  return { kind: 'ok', guardian: siblings[0], siblings }
+}
+
+async function findSiblingGuardians(
+  admin: AdminClient,
+  guardian: GuardianMatch,
+  normalizedPhone: string
+): Promise<GuardianMatch[]> {
+  const { data, error } = await admin
+    .from('guardians')
+    .select('id, school_id, family_id, first_name, last_name, phone')
+    .eq('school_id', guardian.school_id)
+    .is('deleted_at', null)
+  if (error) throw error
+
+  const matches = ((data ?? []) as GuardianMatch[]).filter(
+    (g) => g.phone && normalizePhoneForMatch(g.phone) === normalizedPhone
+  )
+  const resolution = await resolveGuardianMatches(admin, matches)
+  if (resolution.kind !== 'ok') return [guardian]
+  return resolution.siblings.some((s) => s.id === guardian.id) ? resolution.siblings : [guardian]
+}
+
+// Enlaza el perfil con todas las familias de la misma persona. Si falla, el
+// acceso a la familia activa sigue funcionando: solo se pierde el selector.
+async function linkProfileToGuardians(admin: AdminClient, profileId: string, guardians: GuardianMatch[]) {
+  const { error } = await admin.from('profile_guardian_links').upsert(
+    guardians.map((g) => ({ profile_id: profileId, guardian_id: g.id, school_id: g.school_id })),
+    { onConflict: 'profile_id,guardian_id' }
+  )
+  if (error) logFamilyAccessFailure('guardian-link-families', error)
 }
 
 export async function ensureAuthForGuardian(
