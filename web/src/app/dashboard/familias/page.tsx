@@ -81,13 +81,24 @@ export default async function FamiliasPage() {
       <QueryErrorBanner errors={[{ label: 'las familias', error: familiesError }]} />
 
       {/* Encabezado */}
-      <div>
-        <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
-          Familias
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {families.length} familia{families.length !== 1 ? 's' : ''} registrada{families.length !== 1 ? 's' : ''}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-barlow text-slate-900 tracking-tight">
+            Familias
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {families.length} familia{families.length !== 1 ? 's' : ''} registrada{families.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        {/* Solo dirección ve (y restaura) las familias eliminadas */}
+        {['super_admin', 'school_admin', 'director'].includes(profile.role) && (
+          <Link
+            href="/dashboard/familias/eliminadas"
+            className="shrink-0 text-xs font-semibold text-slate-400 hover:text-primary transition"
+          >
+            🗂️ Ver eliminadas
+          </Link>
+        )}
       </div>
 
       {/* Lista de familias */}

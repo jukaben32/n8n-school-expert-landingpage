@@ -55,6 +55,17 @@ export async function resolveGuardianIdentity(): Promise<GuardianIdentity> {
 
   if (!guardian) return { ok: false, error: 'No se encontró tu ficha de tutor.' }
 
+  // Familia dada de baja (soft-delete): sus tutores quedan "dormidos". Su
+  // cuenta y su historial siguen en la base, pero ya no operan en el portal.
+  const { data: family } = await admin
+    .from('families')
+    .select('deleted_at')
+    .eq('id', guardian.family_id)
+    .maybeSingle()
+  if (!family || family.deleted_at) {
+    return { ok: false, error: 'Tu familia ya no está activa en el colegio. Comunícate con la administración.' }
+  }
+
   return {
     ok: true,
     schoolId: profile.school_id as string,

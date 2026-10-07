@@ -6,6 +6,7 @@ import { redirect, notFound } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import GrantGuardianAccessButton from './GrantGuardianAccessButton'
+import DeleteFamilyButton from './DeleteFamilyButton'
 
 export const metadata: Metadata = {
   title: 'Ficha de familia — MentorIApp',
@@ -83,12 +84,18 @@ export default async function FamiliaDetallePage({ params }: { params: Promise<{
             {family.billing_email ?? 'Sin correo de facturación'} {family.billing_phone ? `· ${family.billing_phone}` : ''}
           </p>
         </div>
-        <Link
-          href={`/dashboard/familias/${family.id}/editar`}
-          className="shrink-0 rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-        >
-          Editar
-        </Link>
+        <div className="shrink-0 flex flex-col items-end gap-2">
+          <Link
+            href={`/dashboard/familias/${family.id}/editar`}
+            className="rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+          >
+            Editar
+          </Link>
+          {/* Solo dirección puede dar de baja una familia */}
+          {['super_admin', 'school_admin', 'director'].includes(profile.role) && (
+            <DeleteFamilyButton familyId={family.id} familyName={family.name} />
+          )}
+        </div>
       </div>
 
       {/* Estado de cuenta */}
