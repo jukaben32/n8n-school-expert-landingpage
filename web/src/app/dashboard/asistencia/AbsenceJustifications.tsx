@@ -2,9 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { submitAbsenceJustification } from './actions'
+import { createClient } from '@/lib/supabase/client'
+import { prepareJustificationUpload, submitAbsenceJustification } from './actions'
 import {
+  JUSTIFICATION_BUCKET,
   JUSTIFICATION_FILE_ACCEPT,
+  MAX_JUSTIFICATION_BYTES,
   JUSTIFICATION_STATUS_LABEL,
   type JustifiableAbsence,
 } from '@/lib/attendance/justifications'
@@ -48,17 +51,60 @@ export default function AbsenceJustifications({ absences }: { absences: Justifia
     setExito(null)
 
     const formData = new FormData(event.currentTarget)
-    formData.set('attendanceId', attendanceId)
+    const reason = String(formData.get('reason') ?? '')
+    // Un <input type="file"> vacío llega como un File de 0 bytes, no como null.
+    const archivo = formData.get('file')
+    const file = archivo instanceof File && archivo.size > 0 ? archivo : null
+
+    if (file && file.size > MAX_JUSTIFICATION_BYTES) {
+      setError('El archivo es demasiado grande (máximo 10MB).')
+      return
+    }
 
     startTransition(async () => {
-      const result = await submitAbsenceJustification(formData)
-      if (!result.ok) {
-        setError(result.error ?? 'No se pudo enviar la justificación.')
-        return
+      // Todo dentro de try/catch: si falla la red o el servidor, el papá ve
+      // un mensaje y conserva lo que escribió, en vez de la pantalla
+      // "Algo salió mal" que tumbaba la página entera.
+      try {
+        let documentPath: string | null = null
+
+        if (file) {
+          // Paso 1: enlace de subida. La foto va directo a Storage y NO
+          // dentro de la Server Action (límite de 1 MB de Next).
+          const prep = await prepareJustificationUpload({
+            attendanceId,
+            fileName: file.name,
+            fileType: file.type,
+            size: file.size,
+          })
+          if (!prep.ok || !prep.path || !prep.token) {
+            setError(prep.error ?? 'No se pudo preparar la subida del documento.')
+            return
+          }
+
+          const { error: uploadError } = await createClient()
+            .storage.from(JUSTIFICATION_BUCKET)
+            .uploadToSignedUrl(prep.path, prep.token, file, { contentType: prep.contentType })
+          if (uploadError) {
+            setError('No se pudo subir el documento. Revisa tu conexión e intenta de nuevo.')
+            return
+          }
+          documentPath = prep.path
+        }
+
+        // Paso 2: guardar la justificación (solo texto + ruta del archivo).
+        const result = await submitAbsenceJustification({ attendanceId, reason, documentPath })
+        if (!result.ok) {
+          setError(result.error ?? 'No se pudo enviar la justificación.')
+          return
+        }
+        setAbiertaId(null)
+        setExito('Justificación enviada. El colegio la revisará.')
+        router.refresh()
+      } catch (err) {
+        console.error('[justificación] error al enviar', err)
+        setError('No se pudo enviar la justificación. Revisa tu conexión e intenta de nuevo.')
       }
-      setAbiertaId(null)
-      setExito('Justificación enviada. El colegio la revisará.')
-      router.refresh()
     })
   }
 
