@@ -38,7 +38,6 @@ export default function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -166,62 +165,6 @@ export default function LoginForm() {
         )}
       </button>
 
-      {/* Aviso informativo (por ejemplo, enlace mágico enviado) */}
-      {notice && (
-        <div role="status" className="mt-3 flex items-start gap-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3 text-sm text-blue-700 dark:text-blue-300">
-          <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-11.25a.75.75 0 011.5 0v4.5a.75.75 0 01-1.5 0v-4.5zM10 15a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-          </svg>
-          {notice}
-        </div>
-      )}
-
-      {/* Alternativa: acceso por enlace mágico */}
-      <div className="mt-3 text-center">
-        <button
-          type="button"
-          disabled={loading || !email}
-          onClick={async () => {
-            try {
-              setError(null)
-              setNotice(null)
-              const supabase = createClient()
-              if (!email.includes('@')) {
-                setError('El enlace mágico solo funciona con un correo. Si eres estudiante, entra con tu código y contraseña.')
-                return
-              }
-              const { error: otpError } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                  // shouldCreateUser: false -- este correo debe tener ya una
-                  // cuenta creada por invitación del colegio (personal o
-                  // tutor). Sin esto, cualquiera podía escribir un correo no
-                  // invitado aquí y Supabase le creaba una cuenta nueva y
-                  // vacía en el momento -- sin perfil, sin rol, cayendo por
-                  // defecto en el portal de padres (ver dashboard/layout.tsx).
-                  // Así fue como 2 profesores del colegio terminaron ahí sin
-                  // haber sido invitados todavía.
-                  shouldCreateUser: false,
-                  emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined,
-                },
-              })
-              if (otpError) throw otpError
-              setNotice('Te enviamos un enlace mágico a tu correo. Revísalo para acceder sin contraseña.')
-            } catch (e) {
-              const message = e instanceof Error ? e.message.toLowerCase() : ''
-              if (message.includes('signups not allowed') || message.includes('user not found')) {
-                setError('Ese correo todavía no tiene una cuenta. Pide a tu colegio que te invite primero.')
-              } else {
-                setError('No pudimos enviar el enlace mágico. Verifica el correo o inténtalo más tarde.')
-              }
-            }
-          }}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary dark:hover:border-accent-light dark:hover:text-accent-light disabled:opacity-60"
-        >
-          Enviarme enlace mágico
-        </button>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Te enviaremos un enlace de acceso al correo indicado.</p>
-      </div>
     </form>
   )
 }
