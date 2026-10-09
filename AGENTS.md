@@ -4475,6 +4475,20 @@ preguntas cada una. Los ejemplos son dominicanos a propósito (el colmado de la
 esquina, una funda de mangos, descuentos en pesos): además de entenderse mejor
 aquí, hace el contenido original por construcción, no por disimulo.
 
+**Mejora (2026-10-09): subtítulos y Windows.** `lib/subtitulos.mjs` genera un
+`.srt` por lección **a partir del guion y de las duraciones reales del audio**
+(sin Whisper: el subtítulo es idéntico al guion, nunca "oye" mal una fracción).
+Sale suelto (para subirlo a YouTube como subtítulos) y también va dentro del
+MP4 como pista `mov_text` activable, así no tapa las gráficas. Además la fábrica
+ya corre en Windows: antes `RAIZ` salía como `/C:/...` y Chromium estaba fijo a
+una ruta de Linux; ahora se detecta Chrome o Edge (o `CHROME_PATH`). Pruebas:
+`npm test` dentro de `produccion/`. **Probado de punta a punta con audio
+sintético, NO con la voz real** (no había `OPENROUTER_API_KEY`): falta una
+corrida real para oír el resultado. **Ojo al probar:** borrar `salida/<id>/`
+si se usó audio de prueba, porque el caché reutiliza los `.mp3` ("ya estaba").
+`LessonPlayer` NO cambió: seguirá embebiendo YouTube; los subtítulos solo
+aplican cuando exista el proveedor `mp4` (pendiente, ver abajo).
+
 **Pendiente**: subir los MP4 a YouTube **como no listados** (decisión de
 alcance para no bloquear la demo con la cuenta de Cloudflare y la migración de
 `video_provider`, que solo acepta `youtube`/`vimeo`), y correr el SQL que

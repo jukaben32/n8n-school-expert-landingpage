@@ -19,12 +19,29 @@ import { existsSync } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 import ffmpegPath from 'ffmpeg-static'
+import { construirSrt } from './subtitulos.mjs'
 
 const run = promisify(execFile)
-const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
-const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
+// fileURLToPath (y no `new URL(...).pathname`): en Windows el pathname sale como
+// "/C:/..." y path.resolve lo convierte en una ruta inválida.
+const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+/** Navegador para dibujar las gráficas: CHROME_PATH si se define, si no el primero que esté instalado. */
+const CHROME = process.env.CHROME_PATH || [
+  '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',                       // sandbox Linux original
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',               // Windows: Chrome
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',        // Windows: Edge (viene con el sistema)
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',             // macOS
+  '/usr/bin/google-chrome', '/usr/bin/chromium',                              // Linux
+].find((ruta) => existsSync(ruta))
+
+/** Las listas concat de ffmpeg se leen entre comillas: en Windows las rutas deben llevar "/" y no "\". */
+const aRutaFfmpeg = (p) => p.split(path.sep).join('/')
 const MODELO_VOZ = 'openai/gpt-audio-mini'
 /** La voz sale a ~178 palabras/min: muy rápido para un niño. 0.84 la deja en ~150. */
 const RITMO = 0.84
@@ -173,6 +190,7 @@ async function main() {
   console.log(`\n${guion.materia} · ${guion.curso}\n${guion.titulo}\n${'─'.repeat(60)}`)
 
   // 1. Gráficas: HTML real -> PNG. Cada número que se ve, se escribió aquí.
+  if (!CHROME) throw new Error('no se encontró Chrome ni Edge: instálalo o define CHROME_PATH con la ruta del ejecutable')
   const navegador = await chromium.launch({ executablePath: CHROME })
   const pagina = await navegador.newPage({ viewport: { width: 1920, height: 1080 } })
   for (const [i, esc] of guion.escenas.entries()) {
@@ -215,29 +233,40 @@ async function main() {
   await writeFile(listaImg, ['ffconcat version 1.0',
     ...guion.escenas.map((_, i) => {
       const n = String(i + 1).padStart(2, '0')
-      return `file '${path.join(dir, `escena-${n}.png`)}'\nduration ${duraciones[i].toFixed(4)}`
+      return `file '${aRutaFfmpeg(path.join(dir, `escena-${n}.png`))}'\nduration ${duraciones[i].toFixed(4)}`
     }),
     // El demuxer concat ignora la duración del último archivo: se repite
     // para que la última lámina dure lo que dura su narración.
-    `file '${path.join(dir, `escena-${String(guion.escenas.length).padStart(2, '0')}.png`)}'`,
+    `file '${aRutaFfmpeg(path.join(dir, `escena-${String(guion.escenas.length).padStart(2, '0')}.png`))}'`,
   ].join('\n'))
 
   const listaAud = path.join(dir, 'audios.txt')
   await writeFile(listaAud, guion.escenas.map((_, i) =>
-    `file '${path.join(dir, `escena-${String(i + 1).padStart(2, '0')}.wav`)}'`).join('\n'))
+    `file '${aRutaFfmpeg(path.join(dir, `escena-${String(i + 1).padStart(2, '0')}.wav`))}'`).join('\n'))
 
   // La última lámina se repite en la lista porque el demuxer concat ignora
   // la duración del último archivo; el `-t` de abajo recorta ese sobrante.
   const sumaAudio = duraciones.reduce((a, b) => a + b, 0)
 
+  // Subtítulos a partir del guion y las duraciones exactas (ver lib/subtitulos.mjs).
+  // El .srt queda suelto para subirlo a YouTube como subtítulos del video, y
+  // además va DENTRO del MP4 como pista activable: no tapa las gráficas.
+  const srt = path.join(dir, `${guion.id}.srt`)
+  await writeFile(srt, construirSrt(
+    guion.escenas.map((esc, i) => ({ narracion: esc.narracion, duracion: duraciones[i] })),
+    { pausaFinal: PAUSA_FINAL },
+  ))
+
   const salida = path.join(dir, `${guion.id}.mp4`)
   await run(ffmpegPath, ['-y',
     '-f', 'concat', '-safe', '0', '-i', listaImg,
     '-f', 'concat', '-safe', '0', '-i', listaAud,
-    '-map', '0:v', '-map', '1:a',
+    '-i', srt,
+    '-map', '0:v', '-map', '1:a', '-map', '2:s',
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '25', '-fps_mode', 'cfr',
     '-vf', 'scale=1920:1080',
     '-c:a', 'aac', '-b:a', '128k',
+    '-c:s', 'mov_text', '-metadata:s:s:0', 'language=spa', '-metadata:s:s:0', 'title=Español',
     '-t', sumaAudio.toFixed(4),
     '-movflags', '+faststart', salida])
 
@@ -254,6 +283,7 @@ async function main() {
 
   console.log(`${'─'.repeat(60)}`)
   console.log(`MP4         ${salida}`)
+  console.log(`subtítulos  ${srt}`)
   console.log(`duración    ${dur}`)
   console.log(`sincronía   video ${totalReal.toFixed(2)}s vs audio ${sumaAudio.toFixed(2)}s · desfase ${desfase.toFixed(2)}s ✓`)
   console.log(`costo voz   US$${costoTotal.toFixed(4)}`)
