@@ -53,9 +53,11 @@ export default async function MensajesPage({
       ? categoria
       : (availableCategories[0] ?? 'regular')
 
-  // Qué conversaciones ve este staff lo sigue decidiendo la RLS de
-  // direct_conversations (dirección ve todo; profesor/recepción ven la
-  // categoría Regular; Inglés/Deporte solo con asignación) -- eso no cambia.
+  // Qué conversaciones ve este staff lo decide la RLS de
+  // direct_conversations (dirección ve todo; recepción ve la categoría
+  // Regular; la maestra solo las familias de sus cursos asignados, migración
+  // 20261009000000). Abajo se repite el filtro para la maestra con
+  // eligibleFamilyIds, por si el código llega a producción antes que la SQL.
   //
   // La LISTA DE FAMILIAS, en cambio, se lee con el cliente de servicio: la
   // RLS de `families` solo la abre a dirección/finanzas/recepción, así que
@@ -81,7 +83,7 @@ export default async function MensajesPage({
     staff_last_read_at: string | null
     direct_messages: { sender_type: string; created_at: string }[]
   }
-  const rows = (conversations ?? []) as unknown as ConversationRow[]
+  const allRows = (conversations ?? []) as unknown as ConversationRow[]
 
   const families = allFamilies ?? []
   // El nombre de cada conversación sale de esta misma lista (antes venía de
@@ -96,6 +98,12 @@ export default async function MensajesPage({
     category,
     allFamilyIds: families.map((f) => f.id),
   })
+  // Reporte real del colegio (2026-10-09): cada maestra solo debe ver las
+  // conversaciones de las familias de su aula. Solo se filtra a la maestra:
+  // dirección y recepción conservan también las de familias borradas.
+  const rows = profile.role === 'teacher'
+    ? allRows.filter((r) => eligibleFamilyIds.has(r.family_id))
+    : allRows
   const startableFamilies = families.filter((f) => eligibleFamilyIds.has(f.id) && !rows.some((r) => r.family_id === f.id))
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })

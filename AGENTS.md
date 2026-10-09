@@ -5912,3 +5912,37 @@ ERROR nuevo en entidades de esta modificación. Límites: instrucciones/enlaces
 y respuesta textual, sin adjuntos de alumno; destinatarios fijados al asignar,
 altas futuras requieren nueva asignación; cuestionarios formativos conservan
 feedback de opción correcta, no son exámenes con respuestas secretas.
+
+## Mensajes: cada maestra solo ve las familias de su aula (2026-10-09)
+
+Reporte real del colegio: todas las maestras veian en Mensajes las conversaciones de TODAS
+las familias. No se habia "danado": la policy de la migracion 20260823020000 abria la
+categoria 'regular' a cualquier 'teacher' desde septiembre (solo Ingles/Deporte filtraban
+por aula). Se noto el 2026-10-09 porque desde el 6-oct los padres tienen la opcion Mensajes
+en su menu: 16 conversaciones nuevas en 3 dias, 45 en total, visibles para todas.
+
+- Migracion `20261009000000_direct_messages_teacher_by_grade.sql`: en `direct_conversations`
+  y `direct_messages`, la maestra ve una conversacion (de cualquier categoria) solo si
+  `staff_can_see_family_category(...)` -- la familia tiene un hijo activo en un curso que
+  ella tiene asignado, o ella tiene "todo el colegio". Direccion igual; recepcion sigue
+  viendo toda la categoria Regular. Policies de tutor sin tocar. Idempotente.
+- `categoryAccess.ts`: misma regla en TypeScript (abrir conversacion, enviar, marcar leido,
+  lista para iniciar). `mensajes/page.tsx` filtra tambien la lista de la maestra, asi que
+  el codigo protege aunque se publique antes que la SQL. El contador de no leidos del
+  layout depende solo de la RLS: queda bien al aplicar la SQL.
+- `npm run smoke`: comprobacion nueva `MENSAJES_SOLO_SU_AULA` para el rol teacher.
+
+Verificado: PGlite con esquema espejo (incluidas las DOS sobrecargas de
+`teacher_is_assigned_to_grade`), migracion aplicada 2 veces, 9 escenarios OK (maestra de
+1ro, de Parvulo, "todo el colegio", solo Ingles, recepcion, directora, sin asignacion, otro
+colegio, sin sesion). `tsc`, `eslint` y `next build` limpios. Simulacion con datos reales
+(solo lectura): de 45 conversaciones, Vianela Santana pasa a ver 10, Herminia Galay 2;
+Genesis Rodriguez y Jenniffer Soriano siguen viendo las 45 (tienen "todo el colegio").
+Ana Danelia Calderon tiene login de docente y NINGUNA asignacion: vera 0 (igual que hoy en
+Asistencia) -- confirmar con el colegio su curso.
+
+Limite conocido: hay UNA conversacion Regular por familia. Si una familia tiene hijos en
+dos cursos, las dos maestras ven la misma conversacion.
+
+Pendiente: aplicar la SQL en produccion, publicar el codigo, y correr `npm run smoke`
+(requiere SUPABASE_ACCESS_TOKEN).

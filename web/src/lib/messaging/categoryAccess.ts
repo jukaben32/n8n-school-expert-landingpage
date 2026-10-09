@@ -23,8 +23,13 @@ const FULL_ACCESS_ROLES = ['super_admin', 'school_admin', 'director']
  * ¿Puede este miembro del staff leer/escribir la conversación de esta
  * familia en esta categoría?
  *
+ * Desde el 2026-10-09 (reporte real del colegio: todas las maestras veían
+ * los mensajes de todas las familias) la maestra solo alcanza a las
+ * familias con un hijo en un curso que tiene asignado, también en
+ * 'regular'. Recepción (secretaría) sigue viendo toda la categoría Regular.
+ *
  * Replica en TypeScript la misma regla que la policy de RLS de
- * direct_conversations (migración 035) y la función SQL
+ * direct_conversations (migración 20261009000000) y la función SQL
  * staff_can_see_family_category() (migración 034) -- pero NO se puede
  * llamar a esa función vía RPC desde el cliente admin: es security
  * definer y depende de auth.uid(), que es null bajo service_role. Las
@@ -39,7 +44,7 @@ export async function staffCanAccessFamilyCategory(
   const { schoolId, role, staffId, familyId, category } = params
 
   if (FULL_ACCESS_ROLES.includes(role)) return true
-  if (category === 'regular') return role === 'teacher' || role === 'reception'
+  if (role === 'reception') return category === 'regular'
   if (role !== 'teacher' || !staffId) return false
 
   const { data: assignments } = await admin
@@ -66,13 +71,12 @@ export async function staffCanAccessFamilyCategory(
 }
 
 /**
- * Familias con las que este staff puede iniciar una conversación nueva en
- * esta categoría -- 'regular' sigue sin restricción (cualquier familia,
- * igual que siempre); 'ingles'/'deporte' solo familias con un hijo en un
- * grado asignado a este staff para esa categoría (o todas si tiene la
- * fila "todo el colegio"). Se usa para filtrar el selector de
- * StartConversationForm, no para autorizar lectura/escritura (eso es
- * staffCanAccessFamilyCategory).
+ * Familias que este staff puede ver en esta categoría (lista de
+ * conversaciones y selector de StartConversationForm) -- recepción, toda
+ * la categoría Regular; la maestra, en cualquier categoría, solo familias
+ * con un hijo en un grado que tiene asignado (o todas si tiene la fila
+ * "todo el colegio"). Para autorizar abrir/escribir una conversación
+ * concreta se usa staffCanAccessFamilyCategory.
  */
 export async function getEligibleFamilyIdsForCategory(
   admin: ReturnType<typeof createAdminClient>,
@@ -81,7 +85,7 @@ export async function getEligibleFamilyIdsForCategory(
   const { schoolId, role, staffId, category, allFamilyIds } = params
 
   if (FULL_ACCESS_ROLES.includes(role)) return new Set(allFamilyIds)
-  if (category === 'regular') return role === 'teacher' || role === 'reception' ? new Set(allFamilyIds) : new Set()
+  if (role === 'reception') return category === 'regular' ? new Set(allFamilyIds) : new Set()
   if (role !== 'teacher' || !staffId) return new Set()
 
   const { data: assignments } = await admin

@@ -77,6 +77,7 @@ const CHECKS = {
     ['Actualizaciones: ver fotos', `select count(*) from class_updates where deleted_at is null;`],
     ['Mensajes: ver conversaciones', `select count(*) from direct_conversations where category = 'regular';`],
     ['Mensajes: leer mensajes', `select count(*) from direct_messages;`],
+    ['Mensajes: NO ve familias fuera de su aula', 'MENSAJES_SOLO_SU_AULA'],
     ['Comunicados', `select count(*) from messages;`],
     ['Agenda', `select count(*) from calendar_events;`],
     ['Notas', `select count(*) from grades;`],
@@ -392,6 +393,28 @@ function politicaNoFirmarAjenaSql() {
 }
 
 /** Tutores y estudiantes no deben ver ni una política interna del personal. */
+/**
+ * Mensajes (2026-10-09): reporte real del colegio -- todas las maestras
+ * veían las conversaciones de todas las familias. Ahora solo las de las
+ * familias con un hijo en un curso que tienen asignado. Falla si la
+ * maestra alcanza a leer alguna conversación o mensaje fuera de su aula.
+ */
+function mensajesSoloSuAulaSql() {
+  return `
+    do $$
+    begin
+      if exists (select 1 from direct_conversations dc
+                 where not staff_can_see_family_category(dc.school_id, dc.family_id, dc.category)) then
+        raise exception 'HUECO: la maestra ve conversaciones de familias fuera de su aula';
+      end if;
+      if exists (select 1 from direct_messages dm join direct_conversations dc on dc.id = dm.conversation_id
+                 where not staff_can_see_family_category(dc.school_id, dc.family_id, dc.category)) then
+        raise exception 'HUECO: la maestra lee mensajes de familias fuera de su aula';
+      end if;
+    end $$;
+  `
+}
+
 function politicasInvisiblesSql() {
   return `
     do $$
@@ -479,6 +502,7 @@ async function main() {
         : consulta === 'STUDENT_HORARIO_SOLO_SU_CURSO' ? studentHorarioSoloSuCursoSql()
         : consulta === 'POLITICA_FIRMAR_PROPIA' ? politicaFirmarPropiaSql()
         : consulta === 'POLITICA_NO_FIRMAR_AJENA' ? politicaNoFirmarAjenaSql()
+        : consulta === 'MENSAJES_SOLO_SU_AULA' ? mensajesSoloSuAulaSql()
         : consulta === 'POLITICAS_INVISIBLES' ? politicasInvisiblesSql()
         : consulta === 'INCIDENCIA_REGISTRAR' ? incidenciaRegistrarSql()
         : consulta === 'INCIDENCIAS_INVISIBLES' ? incidenciasInvisiblesSql()
