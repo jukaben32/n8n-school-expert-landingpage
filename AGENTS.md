@@ -4199,6 +4199,44 @@ Ley 136-03, ver "Alerta de uso de imagen" más arriba).
   roja ya no aparece, y seguir cargando las firmas que lleguen. Los nombres de menores y tutores NO se
   documentan aquí a propósito.
 
+### Actualizaciones ahora también muestra a los AUTORIZADOS en verde (2026-10-11, PR #41)
+
+Pedido del colegio: que el maestro vea **al momento de fotografiar** quién SÍ puede salir, no solo la alerta
+roja de quién no. Antes la pantalla solo avisaba a quien no tenía luz verde y no marcaba nada a los
+autorizados, así que "no hay alerta" no se distinguía de "no se ha cargado nada".
+
+- `actualizaciones/page.tsx` arma, junto a `restrictedStudents`, un mapa `authorizedStudents`
+  (`decision === 'autorizado'`) y se lo pasa a `PostUpdateForm.tsx` como dato plano (no funciones).
+  Cualquier decisión que no sea `autorizado`/`no_autorizado` sigue tratándose como `pendiente` (rojo).
+- `PostUpdateForm.tsx`: en la lista desplegable cada estudiante lleva ✅ (autorizado) o ⚠️ (alerta); al
+  elegir uno autorizado sale un cuadro verde "SÍ tiene autorización de uso de imagen"; en "Todo un
+  grado/sección" sale un resumen verde "N de M autorizados" con nombres, además del rojo de siempre.
+- **Solo presentación**: no se tocó ninguna consulta, permiso, RLS ni migración, por eso no hizo falta
+  `npm run smoke`. Verificado con `tsc`, `eslint` y `next build` limpios; **sin prueba en navegador con
+  datos reales todavía** (confirmar con un estudiante autorizado y uno sin respuesta).
+- Con la carga de arriba, la pantalla debe mostrar ✅ para los **105** autorizados; quien no tenga papel
+  cargado sigue en rojo (es lo correcto: sin firma registrada se trata con precaución).
+
+### Trampa de despliegue: commits de "Claude" fallan en la vista previa de Vercel (2026-10-11)
+
+La vista previa de ese PR salió **fallida** con `errorCode: git_info_fail` (se leyó con la API de Vercel,
+`GET /v13/deployments/{id}`; el estado de GitHub solo decía "Deployment has failed"). **No era el
+código** (el build local pasó). Causa: los commits de esta herramienta salen con autor
+`Claude <noreply@anthropic.com>`, que no es miembro del equipo de Vercel, y en el plan **Hobby** Vercel
+no construye commits de autores ajenos al equipo.
+
+- **Cómo se resolvió**: fusión tipo **squash** en GitHub. El commit resultante en `main` queda a nombre de
+  la cuenta dueña del repositorio, y el despliegue de **producción** salió `READY` (verificado por API).
+  No se reescribió historia ni se cambió el autor de ningún commit.
+- **Consecuencia**: las vistas previas de las ramas de Claude van a salir en rojo mientras el autor no sea
+  del equipo; no es una señal de código roto. La verificación real es el build local (`tsc`, `eslint`,
+  `npm run build`) y el despliegue de producción tras fusionar. Si algún día se quiere vista previa
+  verde, hay que subir a Vercel Pro (lo que ya se recomienda por Skew Protection) o commitear con una
+  identidad del equipo.
+- **Regla**: antes de culpar al código por un despliegue fallido, leer `errorCode` del despliegue.
+  `git_info_fail` = problema de autor/permiso, no de build. Para leer el log hace falta un token de
+  **equipo** de Vercel (`?slug=<equipo>`), igual que con los logs de runtime.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
