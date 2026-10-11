@@ -68,6 +68,9 @@ export default async function ActualizacionesPage() {
     .maybeSingle()
 
   const restrictedStudents: Record<string, 'no_autorizado' | 'pendiente'> = {}
+  // Estudiantes con luz verde explícita: se muestran con cotejo verde para que
+  // el maestro vea al instante que SÍ puede fotografiarlos.
+  const authorizedStudents: Record<string, true> = {}
   if (imageConsentRequest) {
     const { data: responsesRaw } = await supabase
       .from('authorization_responses')
@@ -77,7 +80,8 @@ export default async function ActualizacionesPage() {
     for (const s of students ?? []) {
       const decision = decisionByStudent.get(s.id)
       if (decision === 'no_autorizado') restrictedStudents[s.id] = 'no_autorizado'
-      else if (!decision) restrictedStudents[s.id] = 'pendiente'
+      else if (decision === 'autorizado') authorizedStudents[s.id] = true
+      else restrictedStudents[s.id] = 'pendiente'
     }
   }
 
@@ -137,6 +141,7 @@ export default async function ActualizacionesPage() {
           ])
         )}
         restrictedStudents={restrictedStudents}
+        authorizedStudents={authorizedStudents}
       />
 
       {updates.length > 0 ? (
