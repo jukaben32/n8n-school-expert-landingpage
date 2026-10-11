@@ -4168,6 +4168,37 @@ médico se rechaza; sin herramienta disponible no promete avisar.
 - La secretaría **se entera por el contador de Mensajes**, no por WhatsApp ni correo (Evolution API
   sigue sin configurar en producción).
 
+## Uso de imagen: carga de las autorizaciones en papel (2026-10-11)
+
+Los padres dejaron firmadas ~66 autorizaciones físicas de Uso de Imagen en la reunión. Se pasaron a la
+plataforma para que los maestros vean el estado al publicar fotos en Actualizaciones (alerta de la
+Ley 136-03, ver "Alerta de uso de imagen" más arriba).
+
+- **Fuente**: un Excel de Secretaría con cédula del firmante, nombre del estudiante y decisión (todas
+  "Autoriza"; 72 filas porque un tutor puede firmar por varios hijos). Las fotos originales NO sirvieron:
+  llegaron a 320x240 px (~15 KB, el iPhone las encoge al enviarlas por correo) y el OCR de Drive deformaba
+  cédulas y nombres. Para futuras cargas: pedir el Excel, o fotos en "Tamaño real" pegadas en el chat.
+- **Cómo se emparejó**: por **cédula del tutor** (`guardians.national_id`, solo dígitos) y por nombre del
+  estudiante (comparando palabras, ignorando orden, tildes y "de/la/los/del"), nunca solo por nombre. Hay
+  que normalizar los nombres porque el colegio abrevia segundos nombres/apellidos y escribe "Apellidos, Nombres".
+- **Resultado** sobre la autorización `eadb8e1a-8223-4956-9ed4-4e3520c1056b` (`is_image_consent`): se
+  insertaron **50** respuestas `autorizado` (47 exactas + 3 con cédula corregida por el colegio). Las que
+  ya existían no se tocaron (`unique(request, student)`; insert con `on conflict do nothing`). Quedó en
+  **105 autorizadas y 2 no autorizadas; 107 de 286 inscritos con respuesta** (179 por responder).
+  `signer_full_name` = nombre del tutor registrado en la base (no el escrito en el papel).
+- **No cargados, decisión del colegio**: un estudiante cuya cédula del Excel corresponde a un registro
+  duplicado borrado (el colegio decide cuál es el correcto), y otro cuyo firmante real no figura entre sus
+  tutores registrados.
+- **Datos por corregir (no se tocaron)**: la cédula de una tutora está en la base con un cero de más
+  (`027-00042643-6`, 12 dígitos). Otros tres descuadres de una cifra entre el Excel y la base se resolvieron
+  a favor de la base.
+- **Cómo se aplicó**: Management API con PAT de un solo uso (borrado/revocado después), una sola sentencia
+  `insert ... select ... from (values ...)`. El clasificador del harness bloqueó las primeras escrituras
+  (datos de menores) y solo las permitió con autorización explícita del usuario en el chat.
+- **Pendiente real**: confirmar en `/dashboard/actualizaciones` con un estudiante de la lista que la alerta
+  roja ya no aparece, y seguir cargando las firmas que lleguen. Los nombres de menores y tutores NO se
+  documentan aquí a propósito.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

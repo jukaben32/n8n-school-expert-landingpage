@@ -21,11 +21,13 @@ export default function PostUpdateForm({
   gradeLevelOptions,
   studentsByGrade = {},
   restrictedStudents = {},
+  authorizedStudents = {},
 }: {
   students: Student[]
   gradeLevelOptions: string[]
   studentsByGrade?: Record<string, Student[]>
   restrictedStudents?: Record<string, ImageConsentStatus>
+  authorizedStudents?: Record<string, true>
 }) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -108,8 +110,17 @@ export default function PostUpdateForm({
         <>
           <select value={studentId} onChange={(e) => setStudentId(e.target.value)} className={inputClass}>
             {students.length === 0 && <option value="">No hay estudiantes</option>}
-            {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {students.map((s) => (
+              <option key={s.id} value={s.id}>
+                {authorizedStudents[s.id] ? '✅ ' : restrictedStudents[s.id] ? '⚠️ ' : ''}{s.name}
+              </option>
+            ))}
           </select>
+          {authorizedStudents[studentId] && (
+            <p role="status" className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-3.5 py-2.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+              ✅ Este estudiante <strong>SÍ tiene autorización de uso de imagen</strong> (Ley 136-03). Puedes fotografiarlo.
+            </p>
+          )}
           {restrictedStudents[studentId] && (
             <p role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-400">
               ⚠️ Este estudiante <strong>{statusLabel[restrictedStudents[studentId]]}</strong> (Ley 136-03). No publiques una foto donde se le identifique de frente.
@@ -123,9 +134,21 @@ export default function PostUpdateForm({
             {gradeLevelOptions.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
           {(() => {
-            const restrictedInGrade = (studentsByGrade[gradeLevel] ?? []).filter((s) => restrictedStudents[s.id])
-            if (restrictedInGrade.length === 0) return null
+            const inGrade = studentsByGrade[gradeLevel] ?? []
+            const restrictedInGrade = inGrade.filter((s) => restrictedStudents[s.id])
+            const authorizedInGrade = inGrade.filter((s) => authorizedStudents[s.id])
+            if (restrictedInGrade.length === 0 && authorizedInGrade.length === 0) return null
             return (
+              <>
+              {authorizedInGrade.length > 0 && (
+                <div role="status" className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-3.5 py-2.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                  ✅ {authorizedInGrade.length} de {inGrade.length} estudiantes de este grado SÍ tienen autorización de imagen:
+                  <ul className="mt-1 list-disc list-inside">
+                    {authorizedInGrade.map((s) => <li key={s.id}>{s.name}</li>)}
+                  </ul>
+                </div>
+              )}
+              {restrictedInGrade.length > 0 && (
               <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-400">
                 ⚠️ En este grado, estos estudiantes no tienen autorización de imagen vigente (Ley 136-03) — no deben aparecer identificables de frente:
                 <ul className="mt-1 list-disc list-inside">
@@ -134,6 +157,8 @@ export default function PostUpdateForm({
                   ))}
                 </ul>
               </div>
+              )}
+              </>
             )
           })()}
         </>
