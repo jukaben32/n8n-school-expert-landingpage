@@ -4237,6 +4237,28 @@ no construye commits de autores ajenos al equipo.
   `git_info_fail` = problema de autor/permiso, no de build. Para leer el log hace falta un token de
   **equipo** de Vercel (`?slug=<equipo>`), igual que con los logs de runtime.
 
+## Excellent (Amco): correos de estudiantes + envío a las familias (2026-10-15)
+
+La Coordinación de Inglés (Amco) creó un correo por estudiante, que es su usuario
+en la plataforma de exámenes Excellent (`https://app.eecertification.com/`,
+contraseña `12345678`, vigencia todo 2026-2027). Los dos correos originales, las
+listas y el comunicado unificado están en `docs/AMCO_EXCELLENT_2026-2027.md`.
+
+- Tablas `amco_student_accounts` (correo por estudiante, `batch`, `send_after`) y
+  `amco_access_dispatches` (un envío por familia y lote). Sin policy de lectura
+  para tutores/estudiantes; el asistente de IA ve solo el de SUS hijos
+  (`gatherFamilyContext`).
+- Envío: `/api/cron/amco-excellent` (pg_cron, 16-oct-2026 8:00 am RD; 3 horarios,
+  idempotente), mismo patrón que `/api/cron/alegra` y mismo destinatario que los
+  comunicados urgentes. `notify-message` responde 200 aunque Resend falle: el
+  motor mira `success`/`channel` antes de marcar `enviado`.
+- Emparejamiento por nombre en SQL (seed); lo ambiguo NUNCA se envía.
+- **Estado al escribir esto:** código, migraciones y seeds listos y probados en
+  Postgres local, pero NO aplicados en producción (sin credenciales en esa sesión).
+  Pendiente real: aplicarlos, revisar el reporte del seed y probar el envío real
+  con `dry=1` y luego el 16-oct. Lote 2 (1ro-2do Primaria, Inicial) pendiente.
+- Pruebas: `node --experimental-strip-types scripts/test-amco-excellent.mjs`.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
