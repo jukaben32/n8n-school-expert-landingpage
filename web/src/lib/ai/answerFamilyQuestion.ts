@@ -339,9 +339,29 @@ export async function gatherFamilyContext(admin: AdminClient, schoolId: string, 
 
   const schoolName = getSchoolOrPlatformName(schoolRes.data?.name)
 
+  // Correo de Amco (usuario de Excellent) de CADA hijo de esta familia. Se filtra
+  // por los estudiantes de la familia ya resueltos arriba, nunca por colegio
+  // completo. Si la tabla todavía no existe en ese entorno, el error se ignora:
+  // el asistente sigue funcionando sin este dato.
+  const familyStudentIds = (studentsRes.data ?? []).map((s) => s.id)
+  const amcoRes = familyStudentIds.length
+    ? await admin
+        .from('amco_student_accounts')
+        .select('student_id, email')
+        .eq('school_id', schoolId)
+        .in('student_id', familyStudentIds)
+    : { data: [] as { student_id: string; email: string }[], error: null }
+  if (amcoRes.error) console.warn('[gatherFamilyContext] amco_student_accounts:', amcoRes.error.message)
+  const amcoEmailByStudent = new Map((amcoRes.data ?? []).map((a) => [a.student_id as string, a.email as string]))
+
   const studentsText = (studentsRes.data ?? [])
     .map((s) => `- ${s.first_name} ${s.last_name} (nacimiento: ${s.birth_date}, estado de matrícula: ${s.enrollment_status})`)
     .join('\n') || 'No hay estudiantes registrados en esta familia.'
+
+  const amcoText = (studentsRes.data ?? [])
+    .filter((s) => amcoEmailByStudent.has(s.id))
+    .map((s) => `- ${s.first_name} ${s.last_name}: ${amcoEmailByStudent.get(s.id)}`)
+    .join('\n')
 
   const studentNameById = new Map((studentsRes.data ?? []).map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
   const attendanceText = attendanceRows
@@ -362,7 +382,7 @@ Familia: ${familyRes.data.name}
 
 Hijos de esta familia:
 ${studentsText}
-
+${amcoText ? `\nCorreo de Amco de cada hijo (es su usuario en la plataforma Excellent, exámenes de inglés; puedes dárselo a esta familia):\n${amcoText}\n` : ''}
 Asistencia reciente (últimos registros):
 ${attendanceText}
 
