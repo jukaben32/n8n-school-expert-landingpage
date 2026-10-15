@@ -92,6 +92,8 @@ const CHECKS = {
     ['Políticas: NO puede firmar por otro empleado', 'POLITICA_NO_FIRMAR_AJENA'],
     ['Incidencias: ver las de sus cursos', `select count(*) from student_incidents;`],
     ['Incidencias: REGISTRAR en su curso (insert)', 'INCIDENCIA_REGISTRAR'],
+    ['Nómina: solo ve SUS comprobantes publicados', 'NOMINA_SOLO_PROPIOS'],
+    ['Nómina: NO puede cargar comprobantes', 'NOMINA_NO_INSERTAR'],
   ],
   guardian: [
     ['Portal: sus hijos', `select count(*) from students where deleted_at is null;`],
@@ -106,6 +108,7 @@ const CHECKS = {
     ['Portal: comunicados', `select count(*) from messages;`],
     ['Portal: justificaciones de ausencia de sus hijos', `select count(*) from attendance_justifications;`],
     ['Horario: solo el curso de sus hijos', 'GUARDIAN_HORARIO_SOLO_SUS_HIJOS'],
+    ['Nómina: NO la ve (comprobantes del personal)', 'NOMINA_INVISIBLE'],
     ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
     ['Incidencias: NO las ve (expediente interno)', 'INCIDENCIAS_INVISIBLES'],
   ],
@@ -117,6 +120,8 @@ const CHECKS = {
     ['Facturas', `select count(*) from invoices;`],
     ['Justificaciones de ausencia', `select count(*) from attendance_justifications;`],
     ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
+    ['Nómina: solo ve SUS comprobantes publicados', 'NOMINA_SOLO_PROPIOS'],
+    ['Nómina: NO puede cargar comprobantes', 'NOMINA_NO_INSERTAR'],
   ],
   director: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
@@ -130,15 +135,21 @@ const CHECKS = {
     ['Buscador: tutores por nombre completo', 'BUSCADOR_TUTORES'],
     ['Políticas: ver firmas de todo el personal', `select count(*) from staff_policy_signatures;`],
     ['Incidencias: ver todos los casos', `select count(*) from student_incidents;`],
+    ['Nómina: ver los comprobantes del colegio', `select count(*) from payslips;`],
+    ['Nómina: cargar y publicar (insert + update, revertido)', 'NOMINA_DIRECCION_CARGA'],
   ],
   school_admin: [
     ['Familias', `select count(*) from families where deleted_at is null;`],
     ['Asistencia', `select count(*) from attendance;`],
     ['Facturas', `select count(*) from invoices;`],
+    ['Nómina: ver los comprobantes del colegio', `select count(*) from payslips;`],
+    ['Nómina: cargar y publicar (insert + update, revertido)', 'NOMINA_DIRECCION_CARGA'],
   ],
   finance: [
     ['Facturas', `select count(*) from invoices;`],
     ['Familias', `select count(*) from families where deleted_at is null;`],
+    ['Nómina: solo ve SUS comprobantes publicados', 'NOMINA_SOLO_PROPIOS'],
+    ['Nómina: NO puede cargar comprobantes', 'NOMINA_NO_INSERTAR'],
   ],
   student: [
     ['Academia: sus lecciones', `select count(*) from lessons;`],
@@ -147,6 +158,7 @@ const CHECKS = {
     ['Academia: sus entregas manuales', `select assignment_id,status from academia_submissions;`],
     ['Encuestas: las de su curso', `select count(*) from polls;`],
     ['Horario: solo el de su propio curso', 'STUDENT_HORARIO_SOLO_SU_CURSO'],
+    ['Nómina: NO la ve (comprobantes del personal)', 'NOMINA_INVISIBLE'],
     ['Políticas internas: NO las ve (son solo del personal)', 'POLITICAS_INVISIBLES'],
     ['Incidencias: NO las ve (expediente interno)', 'INCIDENCIAS_INVISIBLES'],
   ],
@@ -461,6 +473,82 @@ function incidenciasInvisiblesSql() {
   `
 }
 
+/**
+ * Nómina / "Mi nómina" (2026-10-15): cada empleado ve SOLO sus comprobantes
+ * PUBLICADOS. Si todavía no hay ninguno, pasa en vacío: lo que se vigila es
+ * que, cuando los haya, nadie lea los de otra persona ni los borradores.
+ */
+function nominaSoloPropiosSql() {
+  return `
+    do $$
+    declare v_staff uuid;
+    begin
+      select staff_id into v_staff from users_profiles where auth_id = auth.uid();
+      if exists (
+        select 1 from payslips
+        where published_at is null or staff_id is distinct from v_staff
+      ) then
+        raise exception 'HUECO: este empleado puede leer borradores o comprobantes de otra persona';
+      end if;
+    end $$;
+  `
+}
+
+/** Prueba negativa: un empleado que no es Dirección no puede crear comprobantes. */
+function nominaNoInsertarSql() {
+  return `
+    do $$
+    declare v_prof record; v_ok boolean := false;
+    begin
+      select school_id, staff_id into v_prof from users_profiles where auth_id = auth.uid();
+      if v_prof.staff_id is null then return; end if;
+      begin
+        insert into payslips (school_id, staff_id, period_key, run, employee_name, gross, total_deductions, net)
+        values (v_prof.school_id, v_prof.staff_id, 209912, 'M', 'SMOKE', 1, 0, 1);
+      exception when others then v_ok := true; end;
+      if not v_ok then raise exception 'HUECO: un empleado pudo crear su propio comprobante'; end if;
+    end $$;
+  `
+}
+
+/** Tutores y estudiantes no ven ningún comprobante de personal. */
+function nominaInvisibleSql() {
+  return `
+    do $$
+    begin
+      if (select count(*) from payslips) > 0 or (select count(*) from payslip_staff_map) > 0 then
+        raise exception 'HUECO: un rol que no es personal puede leer comprobantes de nómina';
+      end if;
+    end $$;
+  `
+}
+
+/**
+ * Dirección carga un borrador, lo publica y confirma que el publicado ya no
+ * se puede editar (trigger). Todo revertido. Se usa un empleado del propio
+ * colegio como destinatario.
+ */
+function nominaDireccionCargaSql() {
+  return `
+    do $$
+    declare v_prof record; v_staff uuid; v_id uuid; v_blocked boolean := false; v_n int;
+    begin
+      select school_id into v_prof from users_profiles where auth_id = auth.uid();
+      select id into v_staff from staff where school_id = v_prof.school_id and deleted_at is null limit 1;
+      if v_staff is null then return; end if;
+      insert into payslips (school_id, staff_id, period_key, run, employee_name, gross, afp, total_deductions, net)
+      values (v_prof.school_id, v_staff, 209912, 'M', 'SMOKE', 1000, 28.7, 28.7, 971.3) returning id into v_id;
+      update payslips set published_at = now() where id = v_id;
+      get diagnostics v_n = row_count;
+      if v_n <> 1 then raise exception 'Dirección no pudo publicar'; end if;
+      begin
+        update payslips set net = 1, gross = 1, afp = 0, total_deductions = 0 where id = v_id;
+      exception when sqlstate '23514' then v_blocked := true; end;
+      if not v_blocked then raise exception 'HUECO: se pudo editar un comprobante PUBLICADO'; end if;
+    end $$;
+  `
+}
+
 async function main() {
   console.log(`\nPrueba de humo por rol — proyecto ${PROJECT}\n${'='.repeat(60)}`)
 
@@ -506,6 +594,10 @@ async function main() {
         : consulta === 'POLITICAS_INVISIBLES' ? politicasInvisiblesSql()
         : consulta === 'INCIDENCIA_REGISTRAR' ? incidenciaRegistrarSql()
         : consulta === 'INCIDENCIAS_INVISIBLES' ? incidenciasInvisiblesSql()
+        : consulta === 'NOMINA_SOLO_PROPIOS' ? nominaSoloPropiosSql()
+        : consulta === 'NOMINA_NO_INSERTAR' ? nominaNoInsertarSql()
+        : consulta === 'NOMINA_INVISIBLE' ? nominaInvisibleSql()
+        : consulta === 'NOMINA_DIRECCION_CARGA' ? nominaDireccionCargaSql()
         : consulta
       const r = await asUser(user.auth_id, body)
       if (r.ok) {

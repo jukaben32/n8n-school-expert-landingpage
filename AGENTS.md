@@ -4237,6 +4237,55 @@ no construye commits de autores ajenos al equipo.
   `git_info_fail` = problema de autor/permiso, no de build. Para leer el log hace falta un token de
   **equipo** de Vercel (`?slug=<equipo>`), igual que con los logs de runtime.
 
+## "Mi nómina": comprobantes de pago en la plataforma (2026-10-15) — construido, NO aplicado ni desplegado
+
+**Contexto**: la nómina se calcula y se cierra en un libro de Excel (fuente de verdad; ver `nomina-local/`,
+fuera de git porque trae cédulas y sueldos). Pedido del colegio: que cada empleado vea su comprobante desde la
+plataforma, con aviso por correo. Decisión explícita: **solo correo al principio** (Evolution/WhatsApp sigue sin
+configurar) y **el correo NO lleva montos**, solo avisa que ya puede entrar a "Mi nómina". No se envían PDF por
+correo ni WhatsApp (datos salariales fuera de la plataforma, imposibles de retirar).
+
+**Radio de impacto (decidido antes de escribir código)**: tablas y pantallas NUEVAS. **No se tocó** ninguna tabla ni
+policy existente, ni `staff` (los sueldos no van ahí: un permiso de Personal nunca debe dar acceso a sueldos), ni
+Estudiantes, Familias, Tesorería, Mensajes, Portal Familiar, ni la Edge Function `notify-message` (se reutiliza tal cual).
+
+**Piezas**
+- `supabase/migrations/20261015000000_payslips.sql`: `payslips` (un comprobante por persona+período+corrida
+  `M|Q1|Q2`), `payslip_staff_map` (ID de la hoja de Excel → ficha de personal, se confirma una vez) y `payslip_views`
+  (constancia de la primera vez que cada persona abre el suyo, Ley 172-13). Reglas: el empleado ve SOLO los suyos
+  **y ya publicados** (vínculo real `users_profiles.staff_id`); borradores y todo el colegio, solo
+  `director/school_admin/super_admin`; recepción/finanzas/docentes/tutores/estudiantes no ven los ajenos; **no hay
+  DELETE**; un comprobante **publicado no se edita** (trigger; se retira la publicación, se corrige y se vuelve a
+  publicar); el neto tiene que cuadrar (`check`). No guarda cédula ni cuenta bancaria.
+- `web/src/lib/payroll/*`: lectura de lo pegado desde la hoja `Cierres` (columnas A–Z; función pura y probada),
+  sugerencia de empleado por nombre (solo SUGIERE), etiquetas, texto del correo.
+- `/dashboard/nomina` (+ `/importar`, `/[periodKey]/[run]`): módulo `nomina_gestionar` (solo dirección). Flujo:
+  pegar filas de `Cierres` → Revisar → confirmar quién es quién (primera vez) → **Guardar como borrador** → Publicar
+  → Avisar por correo (6 por llamada, el navegador repite hasta terminar; solo marca `notified_at` lo que de verdad
+  salió). Las Server Actions usan el cliente de SESIÓN (las policies son la segunda barrera), no el admin.
+- `/dashboard/mi-nomina` (+ `/[id]` imprimible): módulo `mi_nomina` (teacher, reception, finance y dirección). Si el
+  comprobante no es del usuario (y no es dirección), responde 404, no "sin permiso".
+- `permissions.ts` y `Sidebar.tsx` revisados juntos (trampa conocida): "Mi nómina" en teacher/reception/finance/default;
+  "Nómina" solo en `default` (director/school_admin).
+
+**Verificado (2026-10-15)**: `tsc --noEmit`, `eslint` de lo nuevo y `npm run build` limpios (`/dashboard/mi-nomina`,
+`/dashboard/nomina/*` en la tabla de rutas). `scripts/test-payslips.sql` contra un Postgres local con esquema espejo
+(migración aplicada DOS veces, idempotente): 10 grupos de comprobaciones de RLS, todos OK. `scripts/test-payslip-parse.mjs`:
+13 OK, y el lector se probó con las **383 filas reales** de `Cierres` tal como las copia Excel (0 errores; septiembre
+suma 441,538.18 igual que el libro). Se agregaron comprobaciones de nómina a `scripts/smoke-roles.mjs` (**sin correr:
+requiere `SUPABASE_ACCESS_TOKEN`**).
+
+**Pendiente, en este orden (nada de esto se hizo)**
+1. El contador revisa el formato del comprobante (mañana, 2026-10-16).
+2. Aplicar la migración (SQL Editor o `supabase db push`) y correr `npm run smoke`. **Fuera del horario de clases**,
+   y desplegar el mismo día de la migración (sin Skew Protection, quien tenga la pantalla abierta debe recargar).
+3. **Vincular las cuentas de acceso**: cada comprobante se ve por `users_profiles.staff_id`. Ya hubo docentes con la
+   cuenta ligada al correo equivocado (ver "Dos bugs del 2026-09-15"); los quincenales quizá no tengan cuenta. La
+   pantalla de período marca "sin acceso" a quien no la tenga: resolverlo ANTES de avisar.
+4. Primera carga real: probar con UN período (p. ej. 202610 Q1), publicar, confirmar que el empleado ve solo el suyo y
+   que el correo llega, antes de cargar el resto del año.
+5. WhatsApp: cuando Evolution esté configurado, el mismo aviso sin montos puede salir por ahí.
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

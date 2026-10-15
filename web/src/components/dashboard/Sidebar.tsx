@@ -190,6 +190,7 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/autorizaciones',  label: 'Autorizaciones', icon: 'autorizaciones' },
     { href: '/dashboard/encuestas',       label: 'Encuestas', icon: 'encuestas' },
     { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
+    { href: '/dashboard/mi-nomina',       label: 'Mi nómina', icon: 'payments' },
   ] }],
   super_admin: [{ items: [
     { href: '/dashboard/plataforma',      label: 'Plataforma', icon: 'plataforma' },
@@ -209,6 +210,7 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/pagos',           label: 'Pagos', icon: 'payments' },
     { href: '/dashboard/asistencia',      label: 'Asistencia', icon: 'attendance' },
     { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
+    { href: '/dashboard/mi-nomina',       label: 'Mi nómina', icon: 'payments' },
   ] }],
   finance: [{ items: [
     { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
@@ -216,6 +218,7 @@ const navByRole: Record<string, NavGroup[]> = {
     { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
     { href: '/dashboard/reportes',        label: 'Analíticas', icon: 'reports' },
     { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
+    { href: '/dashboard/mi-nomina',       label: 'Mi nómina', icon: 'payments' },
   ] }],
   default: [
     { title: 'Operación', items: [
@@ -224,6 +227,8 @@ const navByRole: Record<string, NavGroup[]> = {
       { href: '/dashboard/familias',        label: 'Familias', icon: 'families' },
       { href: '/dashboard/secretaria/acceso-familiar', label: 'Acceso familiar', icon: 'families' },
       { href: '/dashboard/personal',        label: 'Personal', icon: 'personal' },
+      { href: '/dashboard/nomina',          label: 'Nómina', icon: 'payments' },
+      { href: '/dashboard/mi-nomina',       label: 'Mi nómina', icon: 'payments' },
       { href: '/dashboard/politicas',       label: 'Políticas', icon: 'politicas' },
       { href: '/dashboard/tesoreria',       label: 'Tesorería', icon: 'payments' },
     ] },
