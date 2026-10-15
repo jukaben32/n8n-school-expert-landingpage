@@ -9,7 +9,7 @@
 
 export const EXCELLENT_URL = 'https://app.eecertification.com/'
 export const EXCELLENT_TUTORIAL_URL = 'https://youtu.be/qNFdgJy3NH4?feature=shared'
-export const EXCELLENT_SCHOOL_SITE_URL = 'https://www.educacionmanantial.com/colegio/cegmas'
+export const EXCELLENT_SCHOOL_SITE_URL = 'https://www.educacionmanantial.com/colegio/gran-manantial-de-sabiduria'
 export const EXCELLENT_PASSWORD = '12345678'
 export const EXCELLENT_SCHOOL_YEAR = '2026-2027'
 
@@ -35,16 +35,16 @@ export function buildExcellentAccessEmail(children: ExcellentChild[]): { subject
     plural ? '📧 Correos de Amco de sus hijos:' : '📧 Correo de Amco de su hijo(a):',
     accountLines,
     '',
-    `🔗 Enlace: ${EXCELLENT_URL}`,
-    `Además, desde el sitio web del colegio pueden entrar a Amco y conocer más de nuestros programas y servicios: ${EXCELLENT_SCHOOL_SITE_URL}`,
-    '',
-    '📱 Importante: Deben descargar la aplicación en un teléfono o tableta compatible para realizar los exámenes.',
-    '',
     '🔐 Datos de acceso:',
     plural
       ? '* Usuario: Correo de Amco de cada estudiante (el que aparece arriba).'
       : '* Usuario: Correo de Amco del estudiante (el que aparece arriba).',
     `* Contraseña: ${EXCELLENT_PASSWORD} (del 1 al 8).`,
+    '',
+    `🔗 Enlace: ${EXCELLENT_URL}`,
+    `Además, desde el sitio web del colegio pueden entrar a Amco y conocer más de nuestros programas y servicios: ${EXCELLENT_SCHOOL_SITE_URL}`,
+    '',
+    '📱 Importante: Deben descargar la aplicación en un teléfono o tableta compatible para realizar los exámenes.',
     '',
     `🎥 Video con el paso a paso para entrar a la plataforma: ${EXCELLENT_TUTORIAL_URL}`,
     '',

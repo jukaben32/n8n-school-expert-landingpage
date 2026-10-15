@@ -54,7 +54,7 @@ comunicado original, más (a) el correo de Amco de cada hijo, con su vigencia
 (todo el período 2026-2027), (b) el video tutorial, (c) el aviso de que los
 estudiantes deben tomar una evaluación del período y los padres darles el apoyo
 que necesiten en casa, y (d) el sitio web del colegio
-(https://www.educacionmanantial.com/colegio/cegmas), que tiene el enlace a Amco.
+(https://www.educacionmanantial.com/colegio/gran-manantial-de-sabiduria), que tiene el enlace a Amco.
 Se usa «Excellent» (como lo escribió la coordinación en el segundo correo; el
 primero decía «Excellence»).
 
