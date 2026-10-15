@@ -96,7 +96,12 @@ Deno.serve(async (req: Request) => {
     console.warn('No se pudo leer resend_from_address:', settingError.message)
   }
   const resendFromAddress =
-    (typeof resendFromAddressSetting === 'string' && resendFromAddressSetting.trim()) || 'onboarding@resend.dev'
+    (typeof resendFromAddressSetting === 'string' && resendFromAddressSetting.trim()) ||
+    // El esquema `private` no está expuesto a la API, así que la lectura de arriba
+    // falla siempre: sin este respaldo el remitente caía a onboarding@resend.dev
+    // (solo de pruebas) y Resend rechazaba todo correo a un padre real (403).
+    Deno.env.get('RESEND_FROM_ADDRESS')?.trim() ||
+    'onboarding@resend.dev'
 
   const schoolName = getSchoolOrPlatformName(payload.schoolName)
 
