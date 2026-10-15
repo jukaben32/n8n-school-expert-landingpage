@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildPortalBrandLine, getSchoolOrPlatformName } from '@/lib/branding'
 import { checkDailyLimit, gatherFamilyContext } from './answerFamilyQuestion'
+import { stripReplyPhotos } from './replyPhotos'
 
 /**
  * Llamada de voz en vivo del asistente de Portal Familiar -- WebRTC en
@@ -58,7 +59,8 @@ export async function startVoiceCallSession(input: StartVoiceCallSessionInput): 
   const context = await gatherFamilyContext(admin, schoolId, familyId)
   if (!context.ok) return { ok: false, error: context.error }
 
-  const instructions = buildVoiceInstructions(getSchoolOrPlatformName(context.schoolName), context.contextText)
+  // La voz no puede mostrar fotos: se quitan las marcas [[foto:...]] del FAQ para que no las lea en voz alta.
+  const instructions = buildVoiceInstructions(getSchoolOrPlatformName(context.schoolName), stripReplyPhotos(context.contextText))
 
   let openaiResponse: Response
   try {

@@ -260,6 +260,8 @@ ${school.faq_document ? `\nPreguntas frecuentes y políticas generales:\n${schoo
     const detail = err instanceof Error ? err.message : 'error desconocido'
     return { ok: false, error: `No se pudo obtener respuesta del asistente: ${detail}` }
   }
+  // WhatsApp todavía no envía imágenes: si el modelo copia una marca [[foto:...]] del FAQ, se quita.
+  reply = stripReplyPhotos(reply)
 
   const { error: logError } = await admin.from('whatsapp_anonymous_messages').insert({ school_id: schoolId, phone })
   if (logError) {
