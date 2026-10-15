@@ -83,7 +83,8 @@ primero decía «Excellence»).
 3. Correr `supabase/seeds/20261015_amco_cuentas_excellent.sql` y **revisar el
    reporte**: filas `sin_emparejar` (con candidatos sugeridos) y estudiantes
    inscritos de esos cursos que no están en la lista de Amco.
-4. Correr `supabase/seeds/20261015_faq_excellent_amco.sql` (asistente de IA).
+4. Correr `supabase/seeds/20261015_faq_excellent_amco.sql` (asistente de IA) y `20261015_website_card_excellent.sql` (tarjeta «Excellent · para estudiantes» en el sitio web).
+   El aviso al teléfono NO existe en los comunicados urgentes (solo correo; WhatsApp sigue sin configurar): las familias sin correo las atiende Secretaría.
 5. Ensayo sin enviar nada:
    `curl -X POST -H "Authorization: Bearer $CRON_SECRET" "https://www.educacionmanantial.com/api/cron/amco-excellent?batch=1&dry=1"`
    — devuelve cuántas familias recibirían el correo y cuántas no tienen correo.
