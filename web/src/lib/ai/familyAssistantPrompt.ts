@@ -13,7 +13,12 @@ export interface FamilyAssistantPromptInput {
   // true solo si el servidor realmente puede dejar el aviso en la bandeja de la secretaría.
   // Si no puede, el prompt NO debe prometerlo (sería mentirle a la familia).
   canNotifySecretaria: boolean
+  // true solo en canales que pueden mostrar imágenes (el chat del portal). En los demás
+  // (WhatsApp) el prompt no menciona fotos, para que el asistente no las prometa.
+  canShowPhotos: boolean
 }
+
+const PHOTO_RULES = `17. FOTOS: En las preguntas frecuentes del colegio puede haber líneas con una marca como [[foto:/documentos/archivo.png]]. Si la familia pregunta por algo que tiene una de esas marcas (por ejemplo cómo es el uniforme), responde con una descripción breve y agrega la marca EXACTA, tal como aparece, en una línea aparte al final de tu respuesta; el portal la convierte en la foto. Solo usa marcas que aparezcan literalmente en la información de abajo: nunca inventes una ni la modifiques, y no la agregues si la pregunta no tiene que ver con la foto.`
 
 const ACADEMIA_RULES = `13. ACADEMIA: El módulo de Academia contiene tareas, actividades, videos, calificaciones y envíos de cada hijo. Debes responder directamente todas las preguntas sobre:
   - Tareas pendientes, atrasadas o completadas: "¿Qué tareas tiene pendientes?", "¿Cuándo vence la tarea de...?", "¿Cuántas tareas está atrasado?"
@@ -60,7 +65,7 @@ ${handlingRules}
 10. La sección "Preguntas frecuentes y políticas generales del colegio" (si aparece más abajo) es información pública del colegio, igual para todas las familias -- úsala para preguntas de horarios, uniforme, reglas, etc. No la confundas con los datos privados de esta familia en particular.
 11. Responde en español, trata siempre de "usted", y sé breve, cálido y profesional. Limítate a lo que la familia dijo o preguntó: no agregues recomendaciones, instrucciones ni obligaciones que el colegio no haya establecido, aunque parezcan lógicas.
 12. Termina cuando ya respondiste. No cierres con preguntas de relleno (del tipo "¿algo más en que pueda ayudarle?"); solo pregunta si te falta un dato concreto para poder ayudar.
-${ACADEMIA_RULES}
+${ACADEMIA_RULES}${input.canShowPhotos ? `\n${PHOTO_RULES}` : ''}
 
 DATOS DE LA FAMILIA:
 ${input.contextText}`

@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import { splitReplyPhotos } from '@/lib/ai/replyPhotos'
 import { getFamilyChatHistory, sendFamilyChatMessage, sendFamilyVoiceMessage } from '@/app/dashboard/portal-familiar/actions'
 
 interface ChatTurn {
@@ -172,19 +174,36 @@ export default function FamilyChatWidget() {
           </p>
         )}
 
-        {turns.map((turn, i) => (
-          <div key={i} className={`flex ${turn.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${
-                turn.role === 'user'
-                  ? 'bg-primary text-white rounded-br-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-bl-sm'
-              }`}
-            >
-              {turn.content}
+        {turns.map((turn, i) => {
+          // En las respuestas del asistente, la marca [[foto:...]] se quita del texto y se
+          // muestra como imagen (el mensaje del usuario se deja tal cual).
+          const { text, photos } = turn.role === 'assistant' ? splitReplyPhotos(turn.content) : { text: turn.content, photos: [] as string[] }
+          return (
+            <div key={i} className={`flex ${turn.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${
+                  turn.role === 'user'
+                    ? 'bg-primary text-white rounded-br-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-bl-sm'
+                }`}
+              >
+                {text}
+                {photos.map((src) => (
+                  <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="mt-2 block">
+                    <Image
+                      src={src}
+                      alt="Foto enviada por el colegio (toque para ampliar)"
+                      width={896}
+                      height={1195}
+                      sizes="(max-width: 640px) 80vw, 320px"
+                      className="h-auto w-full rounded-xl border border-slate-200 dark:border-slate-700"
+                    />
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         {(sending || voiceStatus === 'transcribing') && (
           <div className="flex justify-start">

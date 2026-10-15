@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildPortalBrandLine, getSchoolOrPlatformName } from '@/lib/branding'
 import { buildFamilyAssistantPrompt } from './familyAssistantPrompt'
+import { stripReplyPhotos } from './replyPhotos'
 import { callClaude as callClaudeWithTools, type ChatTurn, type ToolHandler } from './claudeMessages'
 import {
   FALLBACK_NOTICE,
@@ -137,6 +138,8 @@ export async function answerFamilyQuestion(input: AnswerFamilyQuestionInput): Pr
     brandLine: buildPortalBrandLine(context.schoolName),
     contextText: context.contextText,
     canNotifySecretaria: toolHandler !== undefined,
+    // Solo el chat del portal sabe mostrar fotos; WhatsApp todavía no.
+    canShowPhotos: channel === 'widget',
   })
 
   let reply: string
@@ -146,6 +149,9 @@ export async function answerFamilyQuestion(input: AnswerFamilyQuestionInput): Pr
     const detail = err instanceof Error ? err.message : 'error desconocido'
     return { ok: false, error: `No se pudo obtener respuesta del asistente: ${detail}` }
   }
+
+  // En canales sin soporte de imágenes (WhatsApp) nunca debe llegar una marca de foto cruda.
+  if (channel !== 'widget') reply = stripReplyPhotos(reply)
 
   // Red de seguridad: si el asistente le dijo a la familia que quedó constancia pero NO llamó a la
   // herramienta (pasó en la prueba con Claude real), el servidor deja él mismo el aviso con el mensaje
