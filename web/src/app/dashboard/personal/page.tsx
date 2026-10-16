@@ -220,7 +220,11 @@ export default async function PersonalPage({
                       )}
                     </div>
 
-                    {s.role === 'teacher' && (
+                    {/* Las asignaciones (Regular/Inglés/Deporte + "Todo el colegio") también
+                        aplican a coordinadoras de área (ej. la de Inglés), que antes no veían
+                        este panel porque su puesto no es "Docente". Se muestra si el puesto es
+                        docente o coordinador, o si entra al sistema con rol de acceso Docente. */}
+                    {(s.role === 'teacher' || s.role === 'coordinator' || acceso?.role === 'teacher') && (
                       <TeacherGradeAssignments
                         staffId={s.id}
                         initialAssignments={assignmentsByStaff.get(s.id) ?? []}
