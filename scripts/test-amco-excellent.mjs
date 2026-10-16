@@ -11,7 +11,7 @@
 import assert from 'node:assert/strict'
 import {
   buildExcellentAccessEmail, EXCELLENT_FAQ_SECTION, EXCELLENT_URL, EXCELLENT_TUTORIAL_URL,
-  EXCELLENT_PASSWORD, EXCELLENT_SCHOOL_SITE_URL,
+  EXCELLENT_PASSWORD, EXCELLENT_SCHOOL_SITE_URL, EXCELLENT_EXAM_DEADLINE,
 } from '../web/src/lib/amco/excellentEmail.ts'
 
 let passed = 0
@@ -47,6 +47,13 @@ check('el asistente de IA recibe enlace, tutorial, contraseña y la regla de no 
     assert.ok(EXCELLENT_FAQ_SECTION.includes(t), t)
   }
   assert.ok(!/@do\.amcoedu\.org/.test(EXCELLENT_FAQ_SECTION), 'el documento general no lleva correos de estudiantes')
+})
+
+check('versión impresa: examen disponible hasta el 30 de noviembre de 2026, sin "esperar autorización"', () => {
+  const open = buildExcellentAccessEmail([{ fullName: 'A B', grade: '3ro. Primaria', amcoEmail: 'a@do.amcoedu.org' }], { examStatus: 'open' })
+  assert.ok(open.body.includes('ya está disponible') && open.body.includes(EXCELLENT_EXAM_DEADLINE))
+  assert.ok(!open.body.includes('esperar nuestra autorización'))
+  assert.ok(one.body.includes('esperar nuestra autorización'), 'el envío del 15-oct no cambia')
 })
 
 console.log(`\n${passed} comprobaciones OK`)
