@@ -19,7 +19,18 @@ export interface ExcellentChild {
   amcoEmail: string
 }
 
-export function buildExcellentAccessEmail(children: ExcellentChild[]): { subject: string; body: string } {
+export const EXCELLENT_EXAM_DEADLINE = '30 de noviembre de 2026'
+
+/**
+ * `examStatus`: 'pending' = todavía no hay fecha (el envío del 15-oct-2026);
+ * 'open' = el examen ya está disponible hasta EXCELLENT_EXAM_DEADLINE (versión
+ * impresa para las familias sin correo, y futuros envíos).
+ */
+export function buildExcellentAccessEmail(
+  children: ExcellentChild[],
+  options: { examStatus?: 'pending' | 'open' } = {}
+): { subject: string; body: string } {
+  const open = options.examStatus === 'open'
   const plural = children.length > 1
   const accountLines = children
     .map((c) => `• ${c.fullName} (${c.grade}): ${c.amcoEmail}`)
@@ -54,7 +65,9 @@ export function buildExcellentAccessEmail(children: ExcellentChild[]): { subject
       ? '🤝 Los estudiantes deben tomar una evaluación del período, y les pedimos darles en casa el apoyo que necesiten para realizarla.'
       : '🤝 El estudiante debe tomar una evaluación del período, y les pedimos darle en casa el apoyo que necesite para realizarla.',
     '',
-    '⚠️ Atención: Les informaremos por esta misma vía cuándo podrán comenzar a realizar los exámenes. Favor esperar nuestra autorización antes de iniciarlos.',
+    open
+      ? `⚠️ Atención: El examen ya está disponible y podrá realizarse hasta el ${EXCELLENT_EXAM_DEADLINE}. Favor realizarlo dentro de ese plazo.`
+      : '⚠️ Atención: Les informaremos por esta misma vía cuándo podrán comenzar a realizar los exámenes. Favor esperar nuestra autorización antes de iniciarlos.',
     '',
     'Agradecemos su colaboración y apoyo.',
     '',
