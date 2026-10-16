@@ -85,7 +85,7 @@ export function buildExcellentAccessEmail(
  */
 export const EXCELLENT_FAQ_SECTION = `EXÁMENES DE INGLÉS EN LA PLATAFORMA EXCELLENT (AMCO) — PERÍODO ${EXCELLENT_SCHOOL_YEAR}
 Los exámenes de inglés se hacen en Excellent, la plataforma de trabajo de Amco para los estudiantes. Lo coordina la Coordinación del Área de Inglés del colegio.
-- Quiénes: por ahora, de 3ro de Primaria a 6to de Secundaria. 1ro y 2do de Primaria e Inicial se confirmarán después; si el padre pregunta por ellos, decir que todavía no hay confirmación y que se avisará por correo.
+- Quiénes: el examen es para los estudiantes de 3ro de Primaria a 6to de Secundaria. 1ro y 2do de Primaria e Inicial no lo toman; si el padre pregunta por ellos, decir que este examen es solo a partir de 3ro de Primaria.
 - Enlace de la plataforma: ${EXCELLENT_URL}
 - El sitio web del colegio (${EXCELLENT_SCHOOL_SITE_URL}) tiene el enlace a Amco, y ahí también pueden conocer más de los programas y servicios del colegio.
 - Hay que descargar la aplicación de Excellent en un teléfono o tableta compatible: los exámenes se hacen en la aplicación.
