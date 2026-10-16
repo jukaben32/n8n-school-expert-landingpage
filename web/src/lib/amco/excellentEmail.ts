@@ -93,6 +93,6 @@ Los exámenes de inglés se hacen en Excellent, la plataforma de trabajo de Amco
 - Contraseña: ${EXCELLENT_PASSWORD} (del 1 al 8), igual para todos.
 - Video con el paso a paso para entrar: ${EXCELLENT_TUTORIAL_URL}
 - Los estudiantes deben tomar una evaluación del período. Los padres deben darles en casa el apoyo que necesiten para hacerla.
-- Antes de que lleguen los exámenes se pide entrar a la plataforma y comprobar que el acceso funciona.
-- Fecha de los exámenes: todavía no está definida. La Coordinación del Área de Inglés avisará por correo cuándo comenzar; los estudiantes deben esperar esa autorización antes de iniciar cualquier examen. Si el padre pregunta la fecha, decir exactamente eso; no inventar fechas.
+- El examen YA ESTÁ DISPONIBLE: está vigente desde hoy (16 de octubre de 2026) hasta el 30 de noviembre de 2026. Después de esa fecha ya no podrán tomarlo.
+- Reglas importantes del examen: (1) Una vez que el estudiante lo inicia, debe completarlo. Si lo cierra sin terminar, el sistema de Amco asume que finalizó y no le permite volver a tomarlo. (2) Por eso hay que disponer de tiempo al sentarse a hacerlo: es un examen extenso. (3) Los niños necesitarán el apoyo de los padres para lograrlo. Si el padre pregunta si puede retomarlo después de cerrarlo, decir que no: Amco lo da por finalizado; no prometer que el colegio pueda reabrirlo. Cerrar siempre con un mensaje de ánimo: ¡Muchos éxitos en la realización del mismo!
 - Si el correo de Amco de un hijo no aparece en los datos de la familia, o la contraseña no funciona, o la aplicación da problemas: dejar aviso a la secretaría con el nombre del estudiante y qué ocurre (la Coordinación de Inglés lo resuelve con Amco). No prometer soluciones de la plataforma de Amco.`
