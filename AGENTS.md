@@ -4256,7 +4256,7 @@ listas y el comunicado unificado están en `docs/AMCO_EXCELLENT_2026-2027.md`.
 - **Estado al escribir esto:** código, migraciones y seeds listos y probados en
   Postgres local, pero NO aplicados en producción (sin credenciales en esa sesión).
   Pendiente real: aplicarlos, revisar el reporte del seed y probar el envío real
-  con `dry=1` y luego el 16-oct. Lote 2 (1ro-2do Primaria, Inicial) pendiente.
+  con `dry=1` y luego el 16-oct. El examen es solo desde 3ro de Primaria (confirmado 2026-10-16): NO hay lote 2.
 - Pruebas: `node --experimental-strip-types scripts/test-amco-excellent.mjs`.
 
 ## Convenciones de trabajo

@@ -69,10 +69,7 @@ primero decía «Excellence»).
   `amco_access_dispatches` para que Secretaría las atienda en persona.
 - **Qué estudiantes:** solo los que se emparejaron con un estudiante inscrito del
   sistema. Una fila sin emparejar nunca se envía.
-- **Lote 1:** 3ro de Primaria a 6to de Secundaria. **Lote 2 (pendiente):** 1ro y
-  2do de Primaria e Inicial, si la supervisora confirma que participan: cargar
-  con `batch = 2` en `amco_student_accounts` (y `send_after` de ese día) y
-  disparar `/api/cron/amco-excellent?batch=2`.
+- **Alcance (confirmado por el colegio el 2026-10-16):** el examen es solo a partir de 3ro de Primaria. **1ro y 2do de Primaria e Inicial NO participan; no hay segundo lote.** El lote 1 (3ro de Primaria a 6to de Secundaria) es el único.
 
 ## Puesta en marcha (en este orden)
 
