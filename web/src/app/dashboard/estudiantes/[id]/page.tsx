@@ -8,6 +8,7 @@ import EnrollmentStatusSelect from './EnrollmentStatusSelect'
 import GradeLevelInput from './GradeLevelInput'
 import EditStudentButton from './EditStudentButton'
 import DeleteStudentButton from './DeleteStudentButton'
+import MoveStudentFamilyButton from './MoveStudentFamilyButton'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { schoolDateString } from '@/lib/schoolDate'
 
@@ -102,8 +103,9 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
                 <> · <Link href={`/dashboard/familias/${family.id}`} className="text-primary dark:text-accent-light hover:underline">{family.name}</Link></>
               )}
             </p>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <EditStudentButton student={student} />
+              <MoveStudentFamilyButton studentId={student.id} fullName={`${student.first_name} ${student.last_name}`} currentFamilyId={student.family_id} />
               <DeleteStudentButton studentId={student.id} fullName={`${student.first_name} ${student.last_name}`} />
             </div>
           </div>

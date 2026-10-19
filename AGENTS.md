@@ -6037,3 +6037,36 @@ dos cursos, las dos maestras ven la misma conversacion.
 
 Pendiente: aplicar la SQL en produccion, publicar el codigo, y correr `npm run smoke`
 (requiere SUPABASE_ACCESS_TOKEN).
+
+---
+
+## Cambiar a un estudiante de familia sin perder su historial (2026-10-19)
+
+Reporte real del colegio: para agregar a Weiler Guerrero a la familia Matos Montero,
+secretaria lo creaba de nuevo dentro de esa familia y eliminaba la ficha vieja -- y con
+ella se iban de los listados sus asistencias y notas (todo el historial cuelga del id del
+estudiante). No existia ninguna forma de mover un estudiante de familia.
+
+Arreglo: boton "Cambiar de familia" en la ficha del estudiante
+(`estudiantes/[id]/MoveStudentFamilyButton.tsx` + `moveStudentToFamilyAction` y
+`searchFamiliesForMoveAction` en `estudiantes/[id]/actions.ts`). Mismo id: solo cambia
+`students.family_id` y se rehacen sus `student_guardians` (todos los tutores de la familia
+nueva; se quitan los de la anterior para que dejen de verlo en el Portal Familiar).
+Cliente admin con la autorizacion repetida en codigo (`resolveStudentsAdmin`, roles con
+'estudiantes') y siempre filtrado por colegio. Sin migracion ni cambio de RLS.
+
+Mapeo de alcance hecho antes de escribir: mensajes, asistente de IA, conciliacion Alegra y
+`guardianBlock` leen `family_id` en vivo (se mueven solos); el descuento por hermanos
+(`calculate_sibling_discount`) se recalcula en ambas familias; Cuentas por Cobrar suma pagos
+por `i.student_id`, asi que lo ya pagado no se pierde. NO se tocan las facturas ya emitidas:
+se quedan en la familia a la que se facturaron (comprobantes fiscales / e-CF).
+
+Otros hallazgos del mismo reporte: la familia "." no la puede borrar secretaria porque
+`deleteFamilyAction` y su boton son solo para super_admin/school_admin/director (por
+diseno). "Felipe Frias" aparece dos veces en el buscador: probablemente dos familias
+duplicadas -- se resuelve moviendo los hijos con el boton nuevo y que direccion elimine la
+vacia.
+
+Pendiente: `npm run smoke` (requiere SUPABASE_ACCESS_TOKEN); revisar con datos reales si
+algun intento anterior dejo eliminada la ficha original de Weiler (no hay pantalla para
+restaurar un estudiante suelto).
