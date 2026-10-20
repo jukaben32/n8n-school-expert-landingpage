@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { canAccess } from '@/lib/permissions'
 import GrantAccessButton from './GrantAccessButton'
 import ChangeAccessRoleButton from './ChangeAccessRoleButton'
+import ResendInvitationButton from './ResendInvitationButton'
 import { accessRoleLabels, assignableAccessRoles } from '@/lib/auth/accessRoleLabels'
 import PublicRegistrationLinkButton from './PublicRegistrationLinkButton'
 import TeacherGradeAssignments from './TeacherGradeAssignments'
@@ -211,10 +212,13 @@ export default async function PersonalPage({
                     )}
                     <div>
                       {acceso ? (
-                        <ChangeAccessRoleButton
-                          profileId={acceso.profileId}
-                          currentRole={acceso.role}
-                        />
+                        <div className="flex items-start gap-4 flex-wrap">
+                          <ChangeAccessRoleButton
+                            profileId={acceso.profileId}
+                            currentRole={acceso.role}
+                          />
+                          <ResendInvitationButton staffId={s.id} email={s.email} />
+                        </div>
                       ) : (
                         <GrantAccessButton staffId={s.id} suggestedRole={s.role} />
                       )}

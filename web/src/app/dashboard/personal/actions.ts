@@ -314,6 +314,87 @@ export async function deleteStaffAction(staffId: string): Promise<InviteResult> 
 }
 
 /**
+ * Reenvía el correo de acceso a alguien que YA tiene cuenta enlazada.
+ *
+ * Caso real (2026-10-20): se invitó a una docente con el correo mal escrito;
+ * al corregirlo en la ficha solo cambió `staff.email`, la cuenta de Auth
+ * siguió con el correo viejo y no había forma de volver a invitar.
+ *
+ * - Si la persona NUNCA ha iniciado sesión, la cuenta de Auth se pasa al
+ *   correo actual de la ficha (si ese correo no es de otra cuenta).
+ * - Si ya inició sesión, el correo de acceso NO se toca (cambiarlo le
+ *   cambiaría el usuario de login a alguien que ya lo usa): solo se le
+ *   reenvía el enlace si el correo ya coincide.
+ * Siempre se envía un enlace para crear/restablecer contraseña.
+ */
+export async function resendStaffInvitation(staffId: string): Promise<InviteResult> {
+  const resolved = await resolveStaffAdmin()
+  if (!resolved.ok) return { ok: false, message: resolved.message }
+
+  const siteUrl = getPublicSiteUrl()
+  if (!siteUrl) return { ok: false, message: 'Falta configurar NEXT_PUBLIC_SITE_URL en produccion.' }
+
+  const admin = createAdminClient()
+
+  const { data: staff } = await admin
+    .from('staff')
+    .select('id, email')
+    .eq('id', staffId)
+    .eq('school_id', resolved.schoolId)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (!staff) return { ok: false, message: 'No se encontró ese miembro del personal en este colegio.' }
+
+  const { data: linked } = await admin
+    .from('users_profiles')
+    .select('auth_id')
+    .eq('staff_id', staffId)
+    .eq('school_id', resolved.schoolId)
+    .maybeSingle()
+  if (!linked) return { ok: false, message: 'Esta persona todavía no tiene acceso. Usa «Dar acceso al sistema».' }
+
+  const { data: authData, error: authError } = await admin.auth.admin.getUserById(linked.auth_id)
+  const authUser = authData?.user
+  if (authError || !authUser) {
+    return { ok: false, message: 'No se encontró la cuenta de acceso de esta persona. Elimina la ficha y créala de nuevo.' }
+  }
+
+  const newEmail = staff.email.trim().toLowerCase()
+  const currentEmail = (authUser.email ?? '').toLowerCase()
+
+  if (newEmail !== currentEmail) {
+    if (authUser.last_sign_in_at) {
+      return {
+        ok: false,
+        message: 'Esta persona ya entró al sistema con otro correo; no se puede cambiar desde aquí. Contacta soporte.',
+      }
+    }
+    const other = await findAuthUserByEmail(admin, newEmail)
+    if (other && other.id !== authUser.id) {
+      return { ok: false, message: 'Ese correo ya pertenece a otra cuenta del sistema.' }
+    }
+    const { error: updateError } = await admin.auth.admin.updateUserById(authUser.id, {
+      email: newEmail,
+      email_confirm: true,
+    })
+    if (updateError) {
+      console.error('[resendStaffInvitation] no se pudo actualizar el correo', { staffId, error: updateError })
+      return { ok: false, message: 'No se pudo actualizar el correo de acceso.' }
+    }
+  }
+
+  const { error: resetError } = await admin.auth.resetPasswordForEmail(newEmail, {
+    redirectTo: `${siteUrl}/actualizar-contrasena`,
+  })
+  if (resetError) {
+    return { ok: false, message: `El correo de acceso quedó actualizado, pero no se pudo enviar el mensaje (${resetError.message}). Intenta de nuevo en unos minutos.` }
+  }
+
+  revalidatePath('/dashboard/personal')
+  return { ok: true, message: `Enlace de acceso enviado a ${staff.email}.` }
+}
+
+/**
  * Cambia el rol de acceso de alguien que YA tiene cuenta en el sistema --
  * ej. se le dio "Docente" por error cuando en realidad es recepción.
  * inviteStaffAccess solo cubre el momento de la invitación inicial; esto
