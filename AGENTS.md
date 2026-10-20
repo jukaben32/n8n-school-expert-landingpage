@@ -6099,3 +6099,28 @@ vacia.
 Pendiente: `npm run smoke` (requiere SUPABASE_ACCESS_TOKEN); revisar con datos reales si
 algun intento anterior dejo eliminada la ficha original de Weiler (no hay pantalla para
 restaurar un estudiante suelto).
+
+## El gráfico "Flujo de cobranza" salía vacío (2026-10-20)
+
+**Reporte del usuario**: captura del Panel con el cuadro del gráfico sin barras ni
+etiquetas de mes (solo la nota al pie).
+
+**Causa (inferida del código; sin acceso a producción en esta sesión)**:
+`list_school_monthly_cashflow` era `security invoker` y recorre a todos los
+inscritos llamando `student_tuition_basis` por cada uno. Con la sesión real del
+usuario, eso repite las políticas RLS por estudiante -- el mismo patrón que ya dio
+`statement timeout` en `list_school_receivables` (ver
+`20260828000000_receivables_security_definer.sql`). La RPC falla, `data` es `null`,
+`cuotas` queda `[]` y el componente dibuja cero barras. La nota de
+`20260907000000` ("security invoker a propósito") medía sin RLS por usuario.
+
+**Corregido**: migración `20261020000000_cashflow_security_definer.sql` -- misma
+lógica y mismas columnas, ahora `security definer` con verificación de acceso
+una sola vez (staff del colegio o `is_super_admin()`). `PanelCentroControl` muestra
+"Sin datos de cobranza para mostrar todavía." si el arreglo viene vacío, en vez de
+un cuadro en blanco.
+
+**Pendiente**: aplicar la migración en Supabase y confirmar en vivo; el banner
+`QueryErrorBanner` ("flujo de cobranza") del Panel confirma o descarta el timeout.
+**Para revertir**: reaplicar el cuerpo de `20260907000000` (invoker) y quitar el
+estado vacío del componente.

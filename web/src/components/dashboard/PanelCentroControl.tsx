@@ -272,6 +272,11 @@ export default function PanelCentroControl(p: PanelProps) {
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 200, borderBottom: `1px solid ${C.hairStrong}` }}>
+              {cashflow.length === 0 && (
+                <div style={{ flex: 1, alignSelf: 'center', textAlign: 'center', fontSize: 13, color: C.muted }}>
+                  Sin datos de cobranza para mostrar todavía.
+                </div>
+              )}
               {cashflow.map((m) => (
                 <div key={m.label} title={m.hint} style={{
                   flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
