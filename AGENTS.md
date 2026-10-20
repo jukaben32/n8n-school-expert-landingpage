@@ -4259,6 +4259,35 @@ listas y el comunicado unificado están en `docs/AMCO_EXCELLENT_2026-2027.md`.
   con `dry=1` y luego el 16-oct. El examen es solo desde 3ro de Primaria (confirmado 2026-10-16): NO hay lote 2.
 - Pruebas: `node --experimental-strip-types scripts/test-amco-excellent.mjs`.
 
+## Correo mal escrito al dar acceso a personal: «Reenviar invitación» (2026-10-20)
+
+**Reporte real**: se creó a una docente (Nicol Noemi Gonzalez Castro) con el correo mal
+escrito y se le dio acceso. Al corregir el correo en la ficha ya no había forma de volver a
+invitarla.
+
+**Causa**: «Guardar cambios» (`updateStaffAction`) solo actualiza `staff.email`; la cuenta de
+Auth y su `users_profiles` se crearon con el correo viejo y siguen ahí. Como el perfil ya
+existe, `personal/page.tsx` ofrece «Cambiar rol de acceso» en vez de «Dar acceso», e
+`inviteStaffAccess` rechaza con "Esta persona ya tiene acceso al sistema".
+
+**Arreglo** (PR #50, sin migración ni cambio de RLS): `resendStaffInvitation(staffId)` en
+`personal/actions.ts` + `ResendInvitationButton.tsx`, visible en la ficha de quien ya tiene
+acceso.
+- Si la cuenta de Auth **nunca ha iniciado sesión** (`last_sign_in_at` nulo) y su correo
+  difiere del de la ficha: se actualiza al de la ficha (`updateUserById` con
+  `email_confirm: true`) si ningún otro usuario lo usa, y se envía el enlace.
+- Si **ya inició sesión** y el correo difiere: se rechaza, porque cambiarlo le cambiaría el
+  usuario de entrada a alguien que ya lo usa. Si coincide, solo reenvía el enlace.
+- El correo enviado es el de **restablecer contraseña** (`resetPasswordForEmail`), no el de
+  invitación original; sirve igual para entrar.
+- Misma autorización que el resto de Personal (`resolveStaffAdmin`), siempre acotado al colegio.
+
+**Verificado**: `tsc`, `eslint`, `next build` y una prueba real del usuario en producción
+(funcionó). `npm run smoke` no se corrió (sin acceso a producción desde esa sesión).
+
+**Antes de este botón**, la única salida era Eliminar la ficha y recrearla (borra la cuenta de
+Auth y las asignaciones de grados).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en
