@@ -33,16 +33,23 @@ export default function FamilyAcademiaNotices({ compact = false, onCountChange }
       onCountChange?.(Math.max(0, count - 1))
     } catch { setError(true) }
   }
-  if (!count && !error) return compact ? <p className="px-4 py-3 text-sm text-slate-500">Sin tareas nuevas por revisar.</p> : null
+  // Colores explícitos para cada superficie: en el portal la tarjeta es
+  // verde claro (texto verde oscuro, como el aviso ámbar de ausencias) y en
+  // la campanita la tarjeta es oscura (textos claros del tema dash-*).
+  // Nunca heredar: el color heredado cambia con el modo oscuro del teléfono.
+  const tone = compact
+    ? { title: 'text-dash-text', link: 'text-dash-accent-light', muted: 'text-dash-text-muted', error: 'text-dash-warning' }
+    : { title: 'text-emerald-900', link: 'text-emerald-800', muted: 'text-slate-600', error: 'text-amber-800' }
+  if (!count && !error) return compact ? <p className="px-4 py-3 text-sm text-dash-text-faint">Sin tareas nuevas por revisar.</p> : null
   return <section aria-label="Avisos de tareas" className={compact ? 'border-t border-white/10 p-4' : 'rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-3'}>
-    <h2 className="font-semibold text-sm">🎓 {count} aviso{count !== 1 ? 's' : ''} de tareas por revisar</h2>
-    {error && <p role="alert" className="text-xs text-amber-700">No se pudo actualizar el aviso. Vuelve a intentarlo.</p>}
+    <h2 className={`font-semibold text-sm ${tone.title}`}>🎓 {count} aviso{count !== 1 ? 's' : ''} de tareas por revisar</h2>
+    {error && <p role="alert" className={`text-xs ${tone.error}`}>No se pudo actualizar el aviso. Vuelve a intentarlo.</p>}
     <ul className="space-y-3 mt-3">
       {notices.map(n => <li key={n.id} className="text-sm">
-        <Link className="font-semibold underline" href={`/dashboard/portal-familiar/hijos/${n.student_id}/lecciones/${n.assignment_id ?? n.lesson_id}`}>{n.students.first_name}: {n.lessons.title}</Link>
-        <button type="button" className="block text-xs mt-1 underline text-slate-500" onClick={() => void markRead(n.id)}>Marcar aviso como leído</button>
+        <Link className={`font-semibold underline underline-offset-2 ${tone.link}`} href={`/dashboard/portal-familiar/hijos/${n.student_id}/lecciones/${n.assignment_id ?? n.lesson_id}`}>{n.students.first_name}: {n.lessons.title}</Link>
+        <button type="button" className={`block text-xs mt-1 underline ${tone.muted}`} onClick={() => void markRead(n.id)}>Marcar aviso como leído</button>
       </li>)}
     </ul>
-    {!compact && <p className="text-xs text-slate-500">Leer un aviso no completa la tarea. Tu hijo responde desde su cuenta.</p>}
+    {!compact && <p className={`text-xs ${tone.muted}`}>Leer un aviso no completa la tarea. Tu hijo responde desde su cuenta.</p>}
   </section>
 }

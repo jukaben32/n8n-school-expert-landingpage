@@ -288,7 +288,7 @@ export default function ReceivablesTable({
                   </td>
                   <td className="px-4 py-3 space-y-1.5 min-w-[220px]">
                     {payingId === r.student_id ? (
-                      <div className="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800/50 p-2">
+                      <div className="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800/50 p-2 text-slate-800">
                         <div className="grid grid-cols-2 gap-1.5">
                           <input
                             type="number" min="0" step="0.01" value={payPrincipal}
