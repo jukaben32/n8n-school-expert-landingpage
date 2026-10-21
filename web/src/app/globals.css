@@ -120,6 +120,20 @@
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 16px 38px rgba(0, 26, 18, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
+/* Las tarjetas son SIEMPRE oscuras, así que su texto heredado debe ser
+   SIEMPRE claro. Sin esto heredaban el color del <body> (--foreground),
+   que cambia con el modo claro/oscuro del teléfono: en modo claro el
+   texto sin clase text-* salía gris oscuro sobre verde oscuro. */
+.dash-card,
+.dash-card-danger {
+  color: var(--dash-text);
+}
+/* La lista desplegable nativa de un <select> se abre sobre fondo blanco
+   del sistema: sus opciones no deben heredar el texto claro de la tarjeta. */
+.dash-card option,
+.dash-card-danger option {
+  color: #1e293b;
+}
 .dash-card-danger {
   border-radius: 16px;
   border: 1px solid rgba(255, 157, 144, 0.4);
@@ -162,6 +176,12 @@
    sobre este fondo quedaría ilegible si usa los colores de texto claros
    del resto del dashboard oscuro. */
 .dash-main {
+  /* El plato es SIEMPRE claro, así que su texto heredado es SIEMPRE oscuro
+     (el mismo #1e293b de --foreground en modo claro). No se usa
+     var(--foreground) porque en teléfonos con modo oscuro pasa a casi
+     blanco (#f1f5f9) y todo texto sin clase text-* quedaba blanco sobre
+     claro -- era la queja de las familias en el Portal Familiar. */
+  color: #1e293b;
   background: linear-gradient(180deg, rgba(248,250,249,.96), rgba(240,245,243,.94));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);

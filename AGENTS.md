@@ -6099,3 +6099,23 @@ vacia.
 Pendiente: `npm run smoke` (requiere SUPABASE_ACCESS_TOKEN); revisar con datos reales si
 algun intento anterior dejo eliminada la ficha original de Weiler (no hay pantalla para
 restaurar un estudiante suelto).
+
+## Textos ilegibles con el teléfono en modo oscuro (2026-10-21)
+
+Queja de familias: en el Portal Familiar el aviso "🎓 N avisos de tareas por revisar" salía
+blanco sobre verde claro. Causa raíz (patrón, no un caso aislado): `globals.css` cambia
+`--foreground` a casi blanco con `prefers-color-scheme: dark`, y el `<body>` usa ese color.
+El plato `.dash-main` es SIEMPRE claro y las `.dash-card` son SIEMPRE oscuras, pero ninguno
+fijaba su color de texto: todo texto sin clase `text-*` heredaba el del body y dependía del
+modo del teléfono (modo oscuro -> blanco sobre claro; modo claro -> gris oscuro sobre las
+tarjetas oscuras, p. ej. el mismo aviso dentro de la campanita).
+
+Arreglo: `.dash-main { color: #1e293b }`, `.dash-card/.dash-card-danger { color:
+var(--dash-text) }` y `option` oscuro dentro de tarjetas (la lista nativa abre en blanco).
+`FamilyAcademiaNotices` ahora usa colores explícitos por superficie. Único caso anidado
+(superficie clara dentro de una `.dash-card` con campos sin color): el formulario de pago
+de `ReceivablesTable`, que recibió `text-slate-800`. Se verificó con un escaneo del árbol
+JSX de todo `src/` y con capturas en modo claro/oscuro usando el CSS compilado.
+
+Regla: dentro del dashboard, un fondo propio claro u oscuro debe llevar su `text-*`; no
+confiar en el color heredado del body.
