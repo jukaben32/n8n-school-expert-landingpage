@@ -6,6 +6,10 @@ import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { schoolHasAzulConfigured } from '@/lib/payments/azul'
+import Link from 'next/link'
+import CardBrandLogos from '@/components/pagos/CardBrandLogos'
+import { createPublicClient } from '@/lib/supabase/publicClient'
+import { POLICY_LINK_LABELS } from '@/app/colegio/[subdomain]/politicas/contenido'
 
 export const metadata: Metadata = {
   title: 'Estado de Cuenta — MentorIApp',
@@ -119,6 +123,13 @@ export default async function PagosPage({
     ? await schoolHasAzulConfigured(profile.school_id)
     : false
 
+  // Subdominio del sitio público del colegio, para enlazar sus políticas
+  // desde el checkout (Azul exige verlas antes de pagar).
+  const { data: schoolPublic } = cardPaymentEnabled && profile?.school_id
+    ? await createPublicClient().from('schools_public').select('subdomain').eq('id', profile.school_id).maybeSingle()
+    : { data: null }
+  const schoolSubdomain = (schoolPublic as { subdomain: string } | null)?.subdomain ?? null
+
   // Último comprobante subido por factura (para no dejar que la familia
   // suba dos veces mientras uno ya está en revisión, y para mostrar si
   // uno fue rechazado).
@@ -193,6 +204,32 @@ export default async function PagosPage({
               <InvoiceCard key={invoice.id} invoice={invoice} receiptStatus={receiptStatusByInvoice.get(invoice.id)} cardPaymentEnabled={cardPaymentEnabled} />
             ))}
           </div>
+
+          {/* Checkout: logos, sellos 3D Secure, moneda y políticas -- requisitos de Azul */}
+          {cardPaymentEnabled && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 space-y-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Pago seguro con AZUL</p>
+              <CardBrandLogos variant="todas" height={26} />
+              <p className="text-xs text-slate-600">
+                Los montos se cobran en pesos dominicanos (RD$). Los datos de tu tarjeta se escriben en la página
+                segura de AZUL; el colegio nunca los ve ni los guarda.
+              </p>
+              {schoolSubdomain && (
+                <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs">
+                  {(['reembolsos', 'seguridad', 'privacidad'] as const).map((slug) => (
+                    <li key={slug}>
+                      <Link
+                        href={`/colegio/${schoolSubdomain}/politicas/${slug}`}
+                        className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
+                      >
+                        {POLICY_LINK_LABELS[slug]}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </section>
       )}
 

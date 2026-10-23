@@ -6119,3 +6119,33 @@ JSX de todo `src/` y con capturas en modo claro/oscuro usando el CSS compilado.
 
 Regla: dentro del dashboard, un fondo propio claro u oscuro debe llevar su `text-*`; no
 confiar en el color heredado del body.
+
+## Requisitos de Azul para afiliar el e-commerce de Gran Manantial (2026-10-23)
+
+Azul (Luis Recio, correo del 2026-10-20 a Octavio Mesa) revisó el sitio y pidió: descripción de
+servicios, logos Visa/Mastercard, políticas de reembolso/cancelación, contacto, política de
+entrega, dirección con país, moneda RD$, privacidad, política de seguridad de datos de tarjeta,
+modelo de recibo, y sellos 3D Secure (Visa Secure y Mastercard ID Check) en portada, página de
+seguridad y checkout. URL que se le envía a Azul:
+`https://www.educacionmanantial.com/colegio/gran-manantial-de-sabiduria` (la raíz del dominio
+muestra la landing de MentorIApp, no la del colegio).
+
+Hecho:
+- `/colegio/[subdomain]/politicas/[politica]`: servicios-y-pagos, reembolsos, entrega,
+  privacidad, seguridad. Textos en `politicas/contenido.ts`, armados con los datos públicos del
+  colegio. La de seguridad se adaptó del ejemplo de Azul **sin** la frase "almacenamos la
+  tarjeta con AES-256": aquí la tarjeta nunca toca nuestro servidor (Página de Pago de Azul).
+- `SchoolLegalFooter`: logos, enlaces a políticas, moneda y dirección con país en el pie de la
+  portada del colegio. `addressWithCountry()` cambia "R. D." por "República Dominicana".
+- Checkout (`/dashboard/pagos`): logos, moneda y enlaces a políticas junto a las facturas
+  pendientes, solo si `cardPaymentEnabled`.
+- Logos oficiales enviados por Azul en `web/public/marcas/` (recortados y reducidos con sharp).
+- `lib/payments/cardBrands.ts`: los logos se muestran si el colegio tiene Azul configurado o está
+  en `AZUL_AFILIACION_EN_CURSO` (Azul exige verlos ANTES de dar credenciales). Sacar a
+  Gran Manantial de esa lista cuando cargue sus credenciales es opcional.
+
+Pendiente:
+- El colegio debe confirmar la política de reembolsos (texto conservador escrito por nosotros).
+- Recibo de pago por correo tras la aprobación de Azul: no existe; hoy la familia solo ve la
+  factura como pagada. Debe ser recibo de pago, no NCF (el comprobante fiscal vive en Alegra).
+- El checkout está detrás del login: Azul necesitará capturas o una cuenta de prueba.

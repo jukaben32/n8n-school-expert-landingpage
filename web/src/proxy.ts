@@ -142,6 +142,10 @@ export const config = {
     // eso el sitio era invisible -- no hay forma de indexar lo que no se
     // puede leer. Comprobado en producción antes del fix: los tres
     // devolvían 307 hacia /login.
-    '/((?!_next/static|_next/image|favicon.ico|icon.*|manifest.*|sw\\.js|robots\\.txt|sitemap\\.xml|llms\\.txt).*)',
+    //
+    // marcas/ = logos de Visa/Mastercard y 3D Secure (requisito de Azul): el
+    // revisor de Azul y las familias sin sesión deben verlos, y el optimizador
+    // de next/image los pide sin cookies -- sin esta excepción salían rotos.
+    '/((?!_next/static|_next/image|favicon.ico|icon.*|manifest.*|sw\\.js|robots\\.txt|sitemap\\.xml|llms\\.txt|marcas/).*)',
   ],
 }

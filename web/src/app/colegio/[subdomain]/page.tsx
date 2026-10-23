@@ -9,6 +9,9 @@ import { getWebsiteSettings, type SchoolWebsiteSettings } from '@/lib/websiteSet
 import InquiryForm from './InquiryForm'
 import InstallAppButton from './InstallAppButton'
 import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
+import { schoolShowsCardBrands } from '@/lib/payments/cardBrands'
+import SchoolLegalFooter from './SchoolLegalFooter'
+import { addressWithCountry } from './politicas/contenido'
 
 type SchoolPublic = {
   id: string
@@ -189,7 +192,11 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
     )
   }
 
-  const { services, team, testimonials, faqs } = await getWebsiteLists(school.id)
+  const [{ services, team, testimonials, faqs }, showCardBrands] = await Promise.all([
+    getWebsiteLists(school.id),
+    schoolShowsCardBrands(school.id, school.subdomain),
+  ])
+  const fullAddress = addressWithCountry(school.address)
   const mapEmbedUrl = normalizeMapEmbedUrl(website.contactMapsUrl)
 
   const heroTitle = website.heroTitle || school.name
@@ -409,7 +416,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
             <div className="space-y-4">
               {school.phone && <ContactRow icon={Phone} label="Teléfono" value={school.phone} accent={primaryColor} />}
               {school.email && <ContactRow icon={Mail} label="Correo" value={school.email} accent={primaryColor} />}
-              {school.address && <ContactRow icon={MapPin} label="Dirección" value={school.address} accent={primaryColor} />}
+              {fullAddress && <ContactRow icon={MapPin} label="Dirección" value={fullAddress} accent={primaryColor} />}
               {website.contactHours && <ContactRow icon={Clock} label="Horario" value={website.contactHours} accent={primaryColor} />}
 
               {mapEmbedUrl && (
@@ -428,6 +435,7 @@ export default async function SchoolLandingPage({ params }: { params: Promise<{ 
       <footer className="px-6 sm:px-10 py-10 border-t border-slate-100 text-center text-xs text-slate-500">
         <div className="flex flex-col items-center gap-4">
           <SocialLinks website={website} />
+          <SchoolLegalFooter subdomain={subdomain} address={school.address} showCardBrands={showCardBrands} />
           <div>
             <p className="mb-1">{website.footerTagline || `Portal escolar de ${school.name}.`}</p>
             <p>© {new Date().getFullYear()} {school.name}. Todos los derechos reservados.</p>
