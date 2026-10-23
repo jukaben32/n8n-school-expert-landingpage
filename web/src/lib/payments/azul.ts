@@ -1,5 +1,7 @@
 import crypto from 'node:crypto'
+import { after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendAzulPaymentReceipt } from '@/lib/payments/paymentReceipt'
 
 /**
  * Integración con "Página de Pago AZUL" -- la opción de página alojada
@@ -360,6 +362,21 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
     status: 'pagado',
     paid_at: new Date().toISOString(),
   }).eq('id', txn.invoice_id)
+
+  // Recibo por correo (requisito de Azul). Solo llega aquí un pago con la
+  // firma verificada y una sola vez por transacción (ver idempotencia arriba).
+  // after(): se envía DESPUÉS de redirigir al padre, para que un correo lento
+  // nunca lo deje esperando ni le muestre un error con el pago ya registrado.
+  // sendAzulPaymentReceipt nunca lanza error.
+  const receipt = {
+    schoolId: txn.school_id,
+    invoiceId: txn.invoice_id,
+    amount: invoice?.total_amount ?? Number(params.amount) / 100,
+    authorizationCode: params.authorizationCode,
+    azulReference: params.azulOrderId || params.rrn || null,
+    azulDateTime: params.dateTime,
+  }
+  after(() => sendAzulPaymentReceipt(admin, receipt))
 
   return { outcome: 'approved' }
 }
