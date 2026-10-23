@@ -6149,3 +6149,30 @@ Pendiente:
 - Recibo de pago por correo tras la aprobación de Azul: no existe; hoy la familia solo ve la
   factura como pagada. Debe ser recibo de pago, no NCF (el comprobante fiscal vive en Alegra).
 - El checkout está detrás del login: Azul necesitará capturas o una cuenta de prueba.
+
+## Recibo de pago por correo + modelos para Azul (2026-10-23)
+
+Cierra lo que faltaba de los requisitos de Azul (sección anterior).
+
+- `lib/payments/receiptText.ts` (puro): arma asunto y texto del recibo. Es **recibo de pago,
+  no comprobante fiscal** (el NCF vive en Alegra) y lo dice en el texto.
+- `lib/payments/paymentReceipt.ts`: `sendAzulPaymentReceipt()` lo envía al tutor principal con
+  correo (si no, el primero con correo) por `notify-message`, que sí entrega correos reales
+  desde el 2026-09-11 (secreto `RESEND_FROM_ADDRESS`). Best-effort: un correo fallido no
+  deshace el pago.
+- Se llama en `processAzulResult()` SOLO después de verificar el AuthHash y marcar la factura
+  pagada; la idempotencia por `azul_transactions.status` evita reenviarlo al recargar. Va
+  dentro de `after()` (next/server): se envía DESPUÉS de redirigir al padre, así un correo
+  lento nunca lo deja esperando ni le muestra un error con el pago ya registrado.
+- El aviso "aprobado" de `/dashboard/pagos` menciona el recibo.
+- `CardCheckoutNotice`: el bloque de logos del checkout pasó a componente propio.
+- Prueba: `npm run test:payment-receipt` (19 comprobaciones, incluye la dirección real con
+  "R. D." de Gran Manantial).
+- `docs/azul/`: modelo del recibo y modelo del checkout (PDF y PNG) para enviar a Azul.
+  Salen de renderizar los componentes y la función reales con datos de ejemplo y el CSS
+  compilado; están marcados "Modelo con datos de ejemplo". No son capturas de producción:
+  el checkout real exige sesión de padre y credenciales de Azul cargadas.
+
+No probado en vivo: un pago real aprobado (no hay credenciales de Azul todavía). Cuando
+lleguen las de pruebas, hacer un pago en `pruebas.azul.com.do` con una familia cuyo tutor
+sea un correo propio y confirmar que llega el recibo.

@@ -6,10 +6,8 @@ import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { schoolHasAzulConfigured } from '@/lib/payments/azul'
-import Link from 'next/link'
-import CardBrandLogos from '@/components/pagos/CardBrandLogos'
+import CardCheckoutNotice from '@/components/pagos/CardCheckoutNotice'
 import { createPublicClient } from '@/lib/supabase/publicClient'
-import { POLICY_LINK_LABELS } from '@/app/colegio/[subdomain]/politicas/contenido'
 
 export const metadata: Metadata = {
   title: 'Estado de Cuenta — MentorIApp',
@@ -30,7 +28,7 @@ interface Invoice {
 }
 
 const azulBannerCopy: Record<string, { text: string; tone: 'ok' | 'warn' | 'error' }> = {
-  aprobado: { text: '✓ Tu pago con tarjeta fue aprobado.', tone: 'ok' },
+  aprobado: { text: '✓ Tu pago con tarjeta fue aprobado. Si tienes correo registrado, te llegará el recibo ahí.', tone: 'ok' },
   declinado: { text: 'El pago con tarjeta fue declinado. Puedes intentar de nuevo o pagar por transferencia.', tone: 'warn' },
   cancelado: { text: 'Cancelaste el pago con tarjeta.', tone: 'warn' },
   error: { text: 'No se pudo confirmar el resultado del pago. Si tu tarjeta fue cargada, contacta a secretaría.', tone: 'error' },
@@ -206,30 +204,7 @@ export default async function PagosPage({
           </div>
 
           {/* Checkout: logos, sellos 3D Secure, moneda y políticas -- requisitos de Azul */}
-          {cardPaymentEnabled && (
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 space-y-3 text-center">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Pago seguro con AZUL</p>
-              <CardBrandLogos variant="todas" height={26} />
-              <p className="text-xs text-slate-600">
-                Los montos se cobran en pesos dominicanos (RD$). Los datos de tu tarjeta se escriben en la página
-                segura de AZUL; el colegio nunca los ve ni los guarda.
-              </p>
-              {schoolSubdomain && (
-                <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs">
-                  {(['reembolsos', 'seguridad', 'privacidad'] as const).map((slug) => (
-                    <li key={slug}>
-                      <Link
-                        href={`/colegio/${schoolSubdomain}/politicas/${slug}`}
-                        className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
-                      >
-                        {POLICY_LINK_LABELS[slug]}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+          {cardPaymentEnabled && <CardCheckoutNotice schoolSubdomain={schoolSubdomain} />}
         </section>
       )}
 
