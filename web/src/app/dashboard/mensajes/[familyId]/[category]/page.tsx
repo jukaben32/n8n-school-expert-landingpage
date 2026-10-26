@@ -77,10 +77,52 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
   const { data: messages } = conversation
     ? await admin
         .from('direct_messages')
-        .select('id, sender_type, body, created_at')
+        .select('id, sender_type, body, created_at, sender_profile_id')
         .eq('conversation_id', conversation.id)
         .order('created_at', { ascending: true })
     : { data: [] }
+
+  // Solo dirección ve quién escribió cada mensaje del colegio (para dar
+  // seguimiento a la calidad de las respuestas). Los nombres se resuelven con
+  // el cliente de servicio porque `staff` no es legible para todos los roles;
+  // el permiso sobre la conversación ya quedó validado arriba.
+  const showAuthors = ['super_admin', 'school_admin', 'director'].includes(profile.role)
+  const authorNames = new Map<string, string>()
+  if (showAuthors) {
+    const profileIds = [
+      ...new Set(
+        (messages ?? [])
+          .filter((m) => m.sender_type === 'staff' && m.sender_profile_id)
+          .map((m) => m.sender_profile_id as string),
+      ),
+    ]
+    if (profileIds.length > 0) {
+      const { data: senders } = await admin
+        .from('users_profiles')
+        .select('id, staff:staff_id(first_name, last_name)')
+        .in('id', profileIds)
+      for (const s of senders ?? []) {
+        const staff = Array.isArray(s.staff) ? s.staff[0] : s.staff
+        if (staff) authorNames.set(s.id, `${staff.first_name} ${staff.last_name}`.trim())
+      }
+    }
+  }
+  const threadMessages = (messages ?? []).map((m) => ({
+    id: m.id,
+    sender_type: m.sender_type as 'guardian' | 'staff',
+    body: m.body,
+    created_at: m.created_at,
+    author:
+      showAuthors && m.sender_type === 'staff'
+        ? (m.sender_profile_id ? authorNames.get(m.sender_profile_id) ?? 'Personal del colegio' : 'Personal del colegio')
+        : null,
+  }))
+
+  let viewerName: string | null = null
+  if (showAuthors && profile.staff_id) {
+    const { data: me } = await admin.from('staff').select('first_name, last_name').eq('id', profile.staff_id).maybeSingle()
+    if (me) viewerName = `${me.first_name} ${me.last_name}`.trim()
+  }
 
   // Marca la conversación como leída con un update directo, sin pasar por
   // markStaffReadAction: esa Server Action llama revalidatePath('/dashboard/mensajes'),
@@ -108,7 +150,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
         </p>
       </div>
 
-      <ThreadView familyId={familyId} category={category} initialMessages={messages ?? []} />
+      <ThreadView familyId={familyId} category={category} initialMessages={threadMessages} showAuthors={showAuthors} viewerName={viewerName} />
     </div>
   )
 }
