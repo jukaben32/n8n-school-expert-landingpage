@@ -82,11 +82,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ f
         .order('created_at', { ascending: true })
     : { data: [] }
 
-  // Solo dirección ve quién escribió cada mensaje del colegio (para dar
-  // seguimiento a la calidad de las respuestas). Los nombres se resuelven con
+  // Todo el personal con acceso a esta conversación ve quién escribió cada
+  // mensaje del colegio (la familia no los ve). Los nombres se resuelven con
   // el cliente de servicio porque `staff` no es legible para todos los roles;
   // el permiso sobre la conversación ya quedó validado arriba.
-  const showAuthors = ['super_admin', 'school_admin', 'director'].includes(profile.role)
+  const showAuthors = true
   const authorNames = new Map<string, string>()
   if (showAuthors) {
     const profileIds = [
