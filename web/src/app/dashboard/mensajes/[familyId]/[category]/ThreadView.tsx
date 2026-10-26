@@ -10,16 +10,33 @@ interface Message {
   sender_type: 'guardian' | 'staff'
   body: string
   created_at: string
+  author?: string | null
+}
+
+// Fecha y hora originales del mensaje, siempre en hora de RD.
+function formatSentAt(iso: string) {
+  return new Date(iso).toLocaleString('es-DO', {
+    timeZone: 'America/Santo_Domingo',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 export default function ThreadView({
   familyId,
   category,
   initialMessages,
+  showAuthors = false,
+  viewerName = null,
 }: {
   familyId: string
   category: MessageCategory
   initialMessages: Message[]
+  showAuthors?: boolean
+  viewerName?: string | null
 }) {
   const [messages, setMessages] = useState(initialMessages)
   const [input, setInput] = useState('')
@@ -48,7 +65,7 @@ export default function ThreadView({
     setError(null)
     setInput('')
     setSending(true)
-    setMessages((prev) => [...prev, { id: `temp-${Date.now()}`, sender_type: 'staff', body, created_at: new Date().toISOString() }])
+    setMessages((prev) => [...prev, { id: `temp-${Date.now()}`, sender_type: 'staff', body, created_at: new Date().toISOString(), author: showAuthors ? viewerName ?? 'Personal del colegio' : null }])
 
     const result = await sendStaffMessageAction(familyId, category, body)
     setSending(false)
@@ -80,7 +97,7 @@ export default function ThreadView({
           </p>
         ) : (
           messages.map((m) => (
-            <div key={m.id} className={`flex ${m.sender_type === 'staff' ? 'justify-end' : 'justify-start'}`}>
+            <div key={m.id} className={`flex flex-col ${m.sender_type === 'staff' ? 'items-end' : 'items-start'}`}>
               <div
                 className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
                   m.sender_type === 'staff'
@@ -90,6 +107,10 @@ export default function ThreadView({
               >
                 {m.body}
               </div>
+              <p className="mt-0.5 px-1 text-[11px] text-slate-500 dark:text-slate-400">
+                {m.author ? <span className="font-semibold">{m.author} · </span> : null}
+                {formatSentAt(m.created_at)}
+              </p>
             </div>
           ))
         )}
