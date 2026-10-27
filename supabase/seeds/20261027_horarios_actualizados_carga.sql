@@ -24,7 +24,7 @@ from (values
     ('jsoriano', 'jenn%', 'soriano%'),
     ('juanairis', 'juana iris%', 'severino%'),
     ('manuela', 'manuela%', 'vicente%'),
-    ('marcelis', 'marcelis%', 'santos%'),
+    ('marcelis', 'marcel%', 'santos%'),
     ('marianelis', 'mar_anelis%', 'rivera%'),
     ('melissa', 'melissa%', '%'),
     ('nicol', 'nicol%', 'gonz_lez%'),
@@ -463,9 +463,6 @@ commit;
 -- =========================================================================
 begin;
 insert into class_periods (school_id, name, start_time, end_time, sort_order, level)
-select '0001da6e-2fe8-4dc9-97bf-8eadb7ee944e', 'Ini. 07:40', '07:40', '08:30', 20, 'inicial'
-where not exists (select 1 from class_periods where school_id='0001da6e-2fe8-4dc9-97bf-8eadb7ee944e' and name='Ini. 07:40');
-insert into class_periods (school_id, name, start_time, end_time, sort_order, level)
 select '0001da6e-2fe8-4dc9-97bf-8eadb7ee944e', 'Ini. 08:00', '08:00', '09:05', 21, 'inicial'
 where not exists (select 1 from class_periods where school_id='0001da6e-2fe8-4dc9-97bf-8eadb7ee944e' and name='Ini. 08:00');
 insert into class_periods (school_id, name, start_time, end_time, sort_order, level)
@@ -486,8 +483,7 @@ insert into _doc_i (key, staff_id)
 select k.key, s.id
 from (values
     ('jsoriano', 'jenn%', 'soriano%'),
-    ('nercy', 'nercy%', '%'),
-    ('yuleimi', 'yule%', 'lugo%')
+    ('nercy', 'nercy%', '%')
 ) as k(key, f, l)
 join staff s on s.school_id = '0001da6e-2fe8-4dc9-97bf-8eadb7ee944e' and s.deleted_at is null
      and s.first_name ilike k.f and s.last_name ilike k.l;
@@ -507,7 +503,7 @@ begin
   if malos is not null then
     raise exception 'Grados de Inicial sin texto unico en students (cod, textos distintos): %. Revisar el diagnostico C.', malos;
   end if;
-  select string_agg(k, ', ') into malos from (values ('nercy'),('yuleimi'),('jsoriano')) v(k)
+  select string_agg(k, ', ') into malos from (values ('jsoriano'), ('nercy')) v(k)
    where (select count(*) from _doc_i where key = v.k) <> 1;
   if malos is not null then
     raise exception 'Docentes de Inicial sin ficha unica: %', malos;
@@ -528,9 +524,6 @@ insert into _nuevo_i values
 ('pp', 3, 'Ini. 09:45', 'Inglés', 'nercy'),
 ('pp', 2, 'Ini. 10:30', 'Inglés', 'nercy'),
 ('pp', 5, 'Ini. 10:30', 'Inglés', 'nercy'),
-('pk', 2, 'Ini. 07:40', 'Inglés', 'yuleimi'),
-('pk', 4, 'Ini. 11:10', 'Inglés', 'yuleimi'),
-('k', 5, 'Ini. 07:40', 'Inglés', 'yuleimi'),
 ('pk', 3, 'Ini. 09:10', 'Educación Física', 'jsoriano'),
 ('pk', 4, 'Ini. 09:10', 'Educación Física', 'jsoriano');
 

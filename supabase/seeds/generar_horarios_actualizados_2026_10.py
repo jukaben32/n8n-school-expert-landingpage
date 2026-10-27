@@ -36,7 +36,7 @@ STAFF = {
     'yucleidy':   ('yuc%', 'pozo%'),
     'jsanchez':   ('jennifer%', 's_nchez%'),
     'casandra':   ('casandra%', 'medina%'),
-    'marcelis':   ('marcelis%', 'santos%'),
+    'marcelis':   ('marcel%', 'santos%'),   # en la base esta como 'Marceli'
     'elisa':      ('elisa%', 'santana%'),
     'gary':       ('gary%', '%'),
     'ruth':       ('ruth%', 'mingo%'),
@@ -296,9 +296,11 @@ INICIAL = [
     ('k', 5, 'Ini. 11:10', 'ING', 'nercy'),
     ('pp', 4, 'Ini. 08:00', 'ING', 'nercy'), ('pp', 3, 'Ini. 09:45', 'ING', 'nercy'),
     ('pp', 2, 'Ini. 10:30', 'ING', 'nercy'), ('pp', 5, 'Ini. 10:30', 'ING', 'nercy'),
-    # Yuleimi (hoja con celdas repetidas: solo lo que parece real)
-    ('pk', 2, 'Ini. 07:40', 'ING', 'yuleimi'), ('pk', 4, 'Ini. 11:10', 'ING', 'yuleimi'),
-    ('k', 5, 'Ini. 07:40', 'ING', 'yuleimi'),
+    # Yuleimi (hoja con celdas repetidas: solo lo que parece real). FUERA DE LA CARGA
+    # (2026-10-27): no hay ficha activa (solo 'Yuleymis Lugo', baja 2026-09-11, mismo correo
+    # que Gabriela Lugo, baja 2026-10-20). Reactivar aqui cuando el colegio confirme quien es:
+    #   ('pk', 2, 'Ini. 07:40', 'ING', 'yuleimi'), ('pk', 4, 'Ini. 11:10', 'ING', 'yuleimi'),
+    #   ('k', 5, 'Ini. 07:40', 'ING', 'yuleimi'),
     # Ed. Fisica de Pre-kinder (Soriano)
     ('pk', 3, 'Ini. 09:10', 'EF', 'jsoriano'), ('pk', 4, 'Ini. 09:10', 'EF', 'jsoriano'),
 ]
@@ -490,7 +492,10 @@ commit;
 -- =========================================================================
 begin;
 """)
+    usados = {c[2] for c in INICIAL}
     for nombre, ini, fin, orden in INI_PERIODOS:
+        if nombre not in usados:
+            continue
         c.append(f"""insert into class_periods (school_id, name, start_time, end_time, sort_order, level)
 select '{SCHOOL}', '{nombre}', '{ini}', '{fin}', {orden}, 'inicial'
 where not exists (select 1 from class_periods where school_id='{SCHOOL}' and name='{nombre}');
@@ -520,7 +525,7 @@ begin
   if malos is not null then
     raise exception 'Grados de Inicial sin texto unico en students (cod, textos distintos): %. Revisar el diagnostico C.', malos;
   end if;
-  select string_agg(k, ', ') into malos from (values ('nercy'),('yuleimi'),('jsoriano')) v(k)
+  select string_agg(k, ', ') into malos from (values __LLAVES_INI__) v(k)
    where (select count(*) from _doc_i where key = v.k) <> 1;
   if malos is not null then
     raise exception 'Docentes de Inicial sin ficha unica: %', malos;
@@ -561,8 +566,9 @@ where s.school_id = '{SCHOOL}' and s.deleted_at is null
   and not exists (select 1 from teacher_assignments t
                   where t.staff_id = s.id and t.category = 'regular' and t.grade_level = '1ro. Primaria');
 """)
+    texto = ''.join(c).replace('__LLAVES_INI__', ', '.join(f"('{k}')" for k in sorted(llaves_ini)))
     with open(os.path.join(AQUI, '20261027_horarios_actualizados_carga.sql'), 'w', encoding='utf-8') as f:
-        f.write(''.join(c))
+        f.write(texto)
 
     print(f'OK: {n_prim} primaria + {n_sec} secundaria = {n_prim + n_sec}; inicial {len(INICIAL)}; docentes {len(todas)}')
 

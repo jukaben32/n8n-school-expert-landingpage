@@ -19,7 +19,7 @@ from (values
     ('jsoriano', 'jenn%', 'soriano%'),
     ('juanairis', 'juana iris%', 'severino%'),
     ('manuela', 'manuela%', 'vicente%'),
-    ('marcelis', 'marcelis%', 'santos%'),
+    ('marcelis', 'marcel%', 'santos%'),
     ('marianelis', 'mar_anelis%', 'rivera%'),
     ('melissa', 'melissa%', '%'),
     ('nercy', 'nercy%', '%'),
@@ -28,8 +28,7 @@ from (values
     ('teresa', 'teresa%', 'santana%'),
     ('vianela', 'vianela%', 'santana%'),
     ('yendry', 'yendry%', 'paulino%'),
-    ('yucleidy', 'yuc%', 'pozo%'),
-    ('yuleimi', 'yule%', 'lugo%')
+    ('yucleidy', 'yuc%', 'pozo%')
 ) as k(key, f, l)
 left join staff s on s.school_id = '0001da6e-2fe8-4dc9-97bf-8eadb7ee944e' and s.deleted_at is null
      and s.first_name ilike k.f and s.last_name ilike k.l
