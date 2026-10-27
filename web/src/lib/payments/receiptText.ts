@@ -23,6 +23,8 @@ export interface PaymentReceiptData {
   authorizationCode: string
   azulReference: string | null
   refundPolicyUrl: string | null
+  // Pago hecho con credenciales de PRUEBA de Azul: no entró dinero
+  isTest?: boolean
 }
 
 // Monto en pesos dominicanos, igual que el resto del Portal (RD$5,000.00)
@@ -50,6 +52,8 @@ export function buildPaymentReceiptText(d: PaymentReceiptData): { subject: strin
 
   // Solo se incluyen las líneas que tienen dato, para no mostrar "null"
   const lines = [
+    d.isTest ? 'PAGO DE PRUEBA — no se realizó ningún cobro ni se modificó ninguna factura.' : null,
+    d.isTest ? '' : null,
     'Hola,',
     '',
     'Recibimos tu pago con tarjeta. Este es tu recibo.',
@@ -70,7 +74,7 @@ export function buildPaymentReceiptText(d: PaymentReceiptData): { subject: strin
     d.azulReference ? `Referencia AZUL: ${d.azulReference}` : null,
     '----------------------------------------',
     '',
-    'La factura ya aparece como pagada en el Portal Familiar.',
+    d.isTest ? 'Al ser un pago de prueba, la factura sigue pendiente.' : 'La factura ya aparece como pagada en el Portal Familiar.',
     '',
     'Este documento es un recibo de pago y no constituye un comprobante fiscal.',
     '',
@@ -79,7 +83,7 @@ export function buildPaymentReceiptText(d: PaymentReceiptData): { subject: strin
   ]
 
   return {
-    subject: `Recibo de pago — ${d.schoolName}`,
+    subject: `${d.isTest ? '[PRUEBA] ' : ''}Recibo de pago — ${d.schoolName}`,
     // Las líneas '' son renglones en blanco a propósito; null = dato que no hay
     body: lines.filter((l): l is string => typeof l === 'string').join('\n'),
   }

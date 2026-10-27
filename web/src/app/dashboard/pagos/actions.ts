@@ -2,7 +2,8 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveGuardianIdentity } from '@/lib/auth/resolveGuardianIdentity'
-import { buildAzulPaymentForm, type AzulPaymentForm } from '@/lib/payments/azul'
+import { createClient } from '@/lib/supabase/server'
+import { buildAzulPaymentForm, schoolCardPaymentAvailableFor, type AzulPaymentForm } from '@/lib/payments/azul'
 import { getPublicSiteUrl } from '@/lib/siteUrl'
 
 const RECEIPT_BUCKET = 'comprobantes-pago'
@@ -26,6 +27,13 @@ export type StartAzulPaymentResult =
 export async function startAzulPayment(invoiceId: string): Promise<StartAzulPaymentResult> {
   const identity = await resolveGuardianIdentity()
   if (!identity.ok) return { ok: false, error: identity.error }
+
+  // Misma regla que el botón, pero aplicada en el servidor: con credenciales
+  // de PRUEBA solo pueden iniciar un pago los correos autorizados.
+  const { data: { user } } = await (await createClient()).auth.getUser()
+  if (!(await schoolCardPaymentAvailableFor(identity.schoolId, user?.email))) {
+    return { ok: false, error: 'El pago con tarjeta no está disponible todavía.' }
+  }
 
   const siteUrl = getPublicSiteUrl()
   if (!siteUrl) return { ok: false, error: 'Falta configurar NEXT_PUBLIC_SITE_URL.' }

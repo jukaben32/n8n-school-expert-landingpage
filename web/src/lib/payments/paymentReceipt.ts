@@ -22,6 +22,7 @@ export async function sendAzulPaymentReceipt(admin: AdminClient, input: {
   authorizationCode: string
   azulReference: string | null
   azulDateTime: string
+  isTest?: boolean
 }): Promise<void> {
   try {
     const { data: invoice, error: invoiceError } = await admin
@@ -57,6 +58,7 @@ export async function sendAzulPaymentReceipt(admin: AdminClient, input: {
       authorizationCode: input.authorizationCode,
       azulReference: input.azulReference,
       refundPolicyUrl: siteUrl && school.subdomain ? `${siteUrl}/colegio/${school.subdomain}/politicas/reembolsos` : null,
+      isTest: input.isTest,
     })
 
     await notifyGuardianByEmail({ schoolName: school.name, guardianEmail, subject, body })

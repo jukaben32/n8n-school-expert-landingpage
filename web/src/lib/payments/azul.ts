@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { computeRequestAuthHash, toAzulAmount, verifyResponseAuthHash } from './azulHash'
 import { after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendAzulPaymentReceipt } from '@/lib/payments/paymentReceipt'
@@ -82,75 +83,27 @@ export async function schoolHasAzulConfigured(schoolId: string): Promise<boolean
   return credentials !== null
 }
 
-// Azul: "Se envía sin coma ni punto; los dos últimos dígitos representan
-// los decimales." Ej. 1000 equivale a 10.00.
-function toAzulAmount(amount: number): string {
-  return Math.round(amount * 100).toString()
+// Correos de tutores que pueden pagar mientras el colegio tenga cargadas
+// credenciales de PRUEBA (variable de entorno AZUL_TEST_GUARDIAN_EMAILS,
+// separados por coma). Las tarjetas de prueba de Azul son públicas: sin
+// este filtro, cualquier familia vería el botón en modo prueba.
+function azulTesterEmails(): string[] {
+  return (process.env.AZUL_TEST_GUARDIAN_EMAILS ?? '')
+    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
 }
 
-// El manual (acápite "Manejo de la Autenticación") calcula el hash sobre
-// una cadena Unicode (UTF-16LE) en los ejemplos oficiales (C#/PHP) -- se
-// sigue ese formato exactamente en vez de confiar en la nota genérica de
-// que "el sistema acepta UTF-8 o Unicode indistintamente", para no
-// arriesgar un mismatch de hash que no se puede probar en vivo sin
-// credenciales reales de Azul.
-function hmacSha512Hex(authKey: string, data: string): string {
-  return crypto.createHmac('sha512', Buffer.from(authKey, 'utf16le'))
-    .update(Buffer.from(data, 'utf16le'))
-    .digest('hex')
-}
-
-interface RequestHashInput {
-  merchantId: string
-  merchantName: string
-  merchantType: string
-  currencyCode: string
-  orderNumber: string
-  amount: string
-  itbis: string
-  approvedUrl: string
-  declinedUrl: string
-  cancelUrl: string
-  authKey: string
-}
-
-// Orden exacto documentado para una transacción de venta:
-// MerchantId + MerchantName + MerchantType + CurrencyCode + OrderNumber +
-// Amount + ITBIS + ApprovedUrl + DeclinedUrl + CancelUrl + UseCustomField1
-// + CustomField1Label + CustomField1Value + UseCustomField2 +
-// CustomField2Label + CustomField2Value + AuthKey
-// (UseCustomField1/2 se envían siempre en "0" con labels/values vacíos --
-// no se usan en este flujo).
-function computeRequestAuthHash(input: RequestHashInput): string {
-  const data =
-    input.merchantId + input.merchantName + input.merchantType + input.currencyCode +
-    input.orderNumber + input.amount + input.itbis + input.approvedUrl + input.declinedUrl +
-    input.cancelUrl + '0' + '' + '' + '0' + '' + '' + input.authKey
-  return hmacSha512Hex(input.authKey, data)
-}
-
-interface ResponseHashInput {
-  orderNumber: string
-  amount: string
-  authorizationCode: string
-  dateTime: string
-  responseCode: string
-  isoCode: string
-  responseMessage: string
-  errorDescription: string
-  rrn: string
-  authKey: string
-}
-
-// Orden exacto documentado para la respuesta:
-// OrderNumber + Amount + AuthorizationCode + DateTime + ResponseCode +
-// ISOCode + ResponseMessage + ErrorDescription + RRN + AuthKey
-function computeResponseAuthHash(input: ResponseHashInput): string {
-  const data =
-    input.orderNumber + input.amount + input.authorizationCode + input.dateTime +
-    input.responseCode + input.isoCode + input.responseMessage + input.errorDescription +
-    input.rrn + input.authKey
-  return hmacSha512Hex(input.authKey, data)
+/**
+ * ¿Esta persona puede pagar con tarjeta en este colegio?
+ * - Credenciales de PRODUCCIÓN: cualquier tutor.
+ * - Credenciales de PRUEBA: solo los correos de AZUL_TEST_GUARDIAN_EMAILS.
+ * - Sin credenciales: nadie.
+ */
+export async function schoolCardPaymentAvailableFor(schoolId: string, email: string | null | undefined): Promise<boolean> {
+  if (!schoolId) return false
+  const credentials = await getSchoolAzulCredentials(createAdminClient(), schoolId)
+  if (!credentials) return false
+  if (credentials.environment === 'production') return true
+  return !!email && azulTesterEmails().includes(email.trim().toLowerCase())
 }
 
 export interface AzulPaymentForm {
@@ -271,9 +224,11 @@ export interface AzulResultParams {
   authHash: string
 }
 
+// test = el colegio tiene credenciales de PRUEBA: el resultado es real de
+// Azul, pero no se registró ningún cobro ni se tocó la factura.
 export type ProcessAzulResultOutcome =
-  | { outcome: 'approved' }
-  | { outcome: 'declined' }
+  | { outcome: 'approved'; test: boolean }
+  | { outcome: 'declined'; test: boolean }
   | { outcome: 'invalid'; reason: string }
 
 /**
@@ -297,18 +252,20 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
     return { outcome: 'invalid', reason: 'Transacción desconocida.' }
   }
 
+  const credentials = await getSchoolAzulCredentials(admin, txn.school_id)
+  const isTest = credentials?.environment === 'test'
+
   // Idempotencia: si el navegador recarga la URL de retorno, no se
   // reprocesa (evita duplicar el registro en `payments`).
   if (txn.status !== 'pending') {
-    return txn.status === 'approved' ? { outcome: 'approved' } : { outcome: 'declined' }
+    return txn.status === 'approved' ? { outcome: 'approved', test: isTest } : { outcome: 'declined', test: isTest }
   }
 
-  const credentials = await getSchoolAzulCredentials(admin, txn.school_id)
   if (!credentials) {
     return { outcome: 'invalid', reason: 'El colegio ya no tiene credenciales de Azul configuradas.' }
   }
 
-  const expectedHash = computeResponseAuthHash({
+  const hashOk = verifyResponseAuthHash({
     orderNumber: params.orderNumber,
     amount: params.amount,
     authorizationCode: params.authorizationCode,
@@ -319,9 +276,9 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
     errorDescription: params.errorDescription,
     rrn: params.rrn,
     authKey: credentials.authKey,
-  })
+  }, params.authHash)
 
-  if (expectedHash.toLowerCase() !== params.authHash.toLowerCase()) {
+  if (!hashOk) {
     await admin.from('azul_transactions').update({
       status: 'error',
       response_payload: { ...params, hashVerified: false },
@@ -339,7 +296,26 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
   }).eq('id', txn.id)
 
   if (!approved) {
-    return { outcome: 'declined' }
+    return { outcome: 'declined', test: isTest }
+  }
+
+  // MODO PRUEBA: el pago lo aprobó el ambiente de pruebas de Azul con una
+  // tarjeta de prueba -- no entró dinero. Nunca se registra en `payments`
+  // ni se marca la factura como pagada; solo queda la transacción anotada
+  // (azul_transactions) y se manda el recibo marcado "[PRUEBA]" para poder
+  // revisarlo durante la certificación.
+  if (isTest) {
+    const testReceipt = {
+      schoolId: txn.school_id,
+      invoiceId: txn.invoice_id,
+      amount: Number(params.amount) / 100,
+      authorizationCode: params.authorizationCode,
+      azulReference: params.azulOrderId || params.rrn || null,
+      azulDateTime: params.dateTime,
+      isTest: true,
+    }
+    after(() => sendAzulPaymentReceipt(admin, testReceipt))
+    return { outcome: 'approved', test: true }
   }
 
   const { data: invoice } = await admin
@@ -378,5 +354,5 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
   }
   after(() => sendAzulPaymentReceipt(admin, receipt))
 
-  return { outcome: 'approved' }
+  return { outcome: 'approved', test: false }
 }

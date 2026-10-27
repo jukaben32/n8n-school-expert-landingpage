@@ -63,5 +63,12 @@ check('sin referencia AZUL no aparece', sinDatos.includes('Referencia AZUL'), fa
 check('sin contacto no hay frase de contacto', sinDatos.includes('¿Tienes preguntas'), false)
 check('sin datos tampoco imprime "null"', sinDatos.includes('null'), false)
 
+console.log('\n== Recibo de un pago de PRUEBA (credenciales de prueba de Azul) ==')
+const prueba = buildPaymentReceiptText({ ...base, isTest: true })
+check('asunto marcado [PRUEBA]', prueba.subject.startsWith('[PRUEBA] '), true)
+contiene('avisa que no hubo cobro', prueba.body, 'PAGO DE PRUEBA — no se realizó ningún cobro')
+check('no dice que la factura se pagó', prueba.body.includes('ya aparece como pagada'), false)
+check('un pago real no lleva la marca', body.includes('PAGO DE PRUEBA'), false)
+
 console.log(fallos === 0 ? '\nTodas las comprobaciones OK' : `\n${fallos} comprobaciones FALLARON`)
 process.exit(fallos === 0 ? 0 : 1)
