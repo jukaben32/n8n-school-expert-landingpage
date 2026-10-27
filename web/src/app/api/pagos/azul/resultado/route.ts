@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
     console.error('[azul/resultado] Respuesta inválida:', outcome.reason)
     dashboardPagos.searchParams.set('azul', 'error')
   } else {
-    dashboardPagos.searchParams.set('azul', outcome.outcome === 'approved' ? 'aprobado' : 'declinado')
+    const result = outcome.outcome === 'approved' ? 'aprobado' : 'declinado'
+    // Con credenciales de prueba se avisa en pantalla que no hubo cobro real
+    dashboardPagos.searchParams.set('azul', outcome.test ? `${result}-prueba` : result)
   }
 
   return NextResponse.redirect(dashboardPagos)

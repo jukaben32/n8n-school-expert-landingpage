@@ -6176,3 +6176,40 @@ Cierra lo que faltaba de los requisitos de Azul (sección anterior).
 No probado en vivo: un pago real aprobado (no hay credenciales de Azul todavía). Cuando
 lleguen las de pruebas, hacer un pago en `pruebas.azul.com.do` con una familia cuyo tutor
 sea un correo propio y confirmar que llega el recibo.
+
+## Azul: firmas corregidas contra los ejemplos oficiales + modo prueba (2026-10-26)
+
+Azul (Luis Recio, 2026-10-26) envió los accesos de PRUEBA (comercio `39038540035`), el
+"Documento técnico - Página de Pago AZUL 2026" y el "Ejemplo Calculo Hash SALE" (con resultado
+conocido). Probado de verdad contra `pruebas.azul.com.do` y contra esos ejemplos: **la
+integración de julio no habría funcionado nunca**, por tres bugs:
+
+1. **ITBIS "0"**: Azul lo rechaza (`VALIDATION_ERROR:Itbis`); exige mínimo 3 dígitos ("000").
+   Las mensualidades no llevan ITBIS, así que ningún pago podía siquiera empezar.
+   `toAzulAmount()` ahora rellena con ceros.
+2. **Firma de envío**: la llave iba en UTF-16LE. El ejemplo oficial solo coincide con llave y
+   texto en UTF-8. Corregido; el ambiente de pruebas ahora acepta el formulario.
+3. **Firma de respuesta**: el ejemplo de respuesta del documento técnico (pág. 35) solo
+   coincide con llave UTF-8 + texto UTF-16LE. Con el código viejo, todo pago APROBADO se habría
+   guardado como `error` de firma: **se le cobraba al padre y la factura quedaba pendiente**.
+   `verifyResponseAuthHash()` prueba UTF-16LE y luego UTF-8, en tiempo constante.
+
+Las funciones de firma pasaron a `lib/payments/azulHash.ts` (puro) y se prueban con
+`npm run test:azul-hash` (necesita `AZUL_TEST_AUTHKEY` = llave de prueba del correo de Azul;
+no se guarda en el repo).
+
+**Modo prueba** (para certificar en el sitio real sin riesgo): con credenciales de ambiente
+`test` cargadas en `/dashboard/colegio`:
+- el botón "Pagar con tarjeta" y `startAzulPayment()` solo funcionan para los correos de la
+  variable de entorno `AZUL_TEST_GUARDIAN_EMAILS` (Vercel, separados por coma). Las tarjetas
+  de prueba son públicas: sin esto cualquier familia podía "pagar" con ellas;
+- un pago aprobado NO se inserta en `payments` ni marca la factura; solo queda en
+  `azul_transactions` y se manda el recibo con asunto "[PRUEBA]";
+- la vuelta muestra "PAGO DE PRUEBA aprobado/declinado".
+Con credenciales `production` todo funciona como antes, para cualquier tutor.
+
+Nota: el formulario de tarjeta de Azul bloquea navegadores automatizados ("Access Denied,
+Error 15", su firewall): el pago con tarjeta de prueba lo tiene que hacer una persona.
+
+Pendiente: el documento técnico pide intentar una "URL de contingencia" si falla la principal;
+no la publica. Preguntar a Azul cuál es antes de producción.

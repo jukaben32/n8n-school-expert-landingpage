@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
-import { schoolHasAzulConfigured } from '@/lib/payments/azul'
+import { schoolCardPaymentAvailableFor } from '@/lib/payments/azul'
 import CardCheckoutNotice from '@/components/pagos/CardCheckoutNotice'
 import { createPublicClient } from '@/lib/supabase/publicClient'
 
@@ -30,6 +30,8 @@ interface Invoice {
 const azulBannerCopy: Record<string, { text: string; tone: 'ok' | 'warn' | 'error' }> = {
   aprobado: { text: '✓ Tu pago con tarjeta fue aprobado. Si tienes correo registrado, te llegará el recibo ahí.', tone: 'ok' },
   declinado: { text: 'El pago con tarjeta fue declinado. Puedes intentar de nuevo o pagar por transferencia.', tone: 'warn' },
+  'aprobado-prueba': { text: '✓ PAGO DE PRUEBA aprobado por AZUL. No se realizó ningún cobro y la factura sigue pendiente.', tone: 'ok' },
+  'declinado-prueba': { text: 'PAGO DE PRUEBA declinado por AZUL (respuesta esperada con algunas tarjetas de prueba).', tone: 'warn' },
   cancelado: { text: 'Cancelaste el pago con tarjeta.', tone: 'warn' },
   error: { text: 'No se pudo confirmar el resultado del pago. Si tu tarjeta fue cargada, contacta a secretaría.', tone: 'error' },
 }
@@ -117,8 +119,10 @@ export default async function PagosPage({
   // botón que lo único que hacía era responder "este colegio todavía no
   // tiene configurado el pago con tarjeta". La transferencia con
   // comprobante no depende de Azul y sigue disponible siempre.
+  // Con credenciales de PRUEBA, solo lo ven los correos de
+  // AZUL_TEST_GUARDIAN_EMAILS (ver schoolCardPaymentAvailableFor).
   const cardPaymentEnabled = profile?.school_id
-    ? await schoolHasAzulConfigured(profile.school_id)
+    ? await schoolCardPaymentAvailableFor(profile.school_id, user.email)
     : false
 
   // Subdominio del sitio público del colegio, para enlazar sus políticas
