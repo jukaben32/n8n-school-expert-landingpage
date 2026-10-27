@@ -26,6 +26,7 @@ export type Module =
   | 'familias'
   | 'personal'
   | 'tesoreria' | 'pagos' | 'tesoreria_proveedores'
+  | 'tesoreria_analisis' // Análisis Financiero: solo dirección (no finance ni reception)
   | 'comunicados' | 'comunicados_nuevo'
   | 'agenda' | 'agenda_nuevo' // agenda digital: eventos del colegio (reuniones, feriados, evaluaciones...)
   | 'horarios' // ver el horario de clases (propio si es teacher, del colegio si es staff)
@@ -54,7 +55,7 @@ export type Module =
 
 const FULL_ACCESS: Module[] = [
   'secretaria', 'estudiantes', 'estudiantes_nuevo', 'estudiantes_escaneos', 'estudiantes_accesos', 'familias', 'personal',
-  'tesoreria', 'pagos', 'tesoreria_proveedores', 'comunicados', 'comunicados_nuevo',
+  'tesoreria', 'pagos', 'tesoreria_proveedores', 'tesoreria_analisis', 'comunicados', 'comunicados_nuevo',
   'agenda', 'agenda_nuevo', 'mensajes_directos',
   'asistencia', 'asistencia_registrar', 'reportes', 'academia_gestionar', 'actualizaciones',
   'horarios', 'horarios_gestionar', 'planificacion', 'notas', 'notas_gestionar',

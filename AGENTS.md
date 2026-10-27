@@ -4288,6 +4288,27 @@ acceso.
 **Antes de este botón**, la única salida era Eliminar la ficha y recrearla (borra la cuenta de
 Auth y las asignaciones de grados).
 
+## Análisis Financiero en Tesorería -- Fase 1 (2026-10-27)
+
+Pestaña `/dashboard/tesoreria/analisis-financiero`, **solo dirección**: módulo nuevo
+`tesoreria_analisis` en `FULL_ACCESS` (ni `finance` ni `reception`). Se llega por un botón en
+Tesorería (mismo patrón que la bandeja de Alegra; sin enlace en `Sidebar.tsx`).
+
+- **A. Ingreso proyectado por nivel**: función nueva `school_income_projection_by_level` (solo
+  lectura, `security invoker`). Neto = `student_tuition_basis` (becas + descuento por hermanos);
+  anual = suma de `installment_schedule`. No copia la regla de cuotas. Bruto = inscritos x tarifa.
+- **B. Cobrado vs exigible**: reutiliza `list_school_monthly_cashflow` SIN cambios (misma fuente que
+  el Panel). "Cobrado en caja" = `payments.amount_paid` por `paid_at` del mes (todos los conceptos,
+  incluye atrasos), igual que el Panel.
+- **No se tocó** ninguna función, tabla ni policy existente; solo se agregó una función, un módulo
+  de permisos y un botón en Tesorería.
+- Probado en Postgres local con esquema espejo (aplicada 2 veces; becas, admitidos, borrados y
+  nivel sin tarifa). `tsc`, `eslint` y `next build` limpios. `npm run smoke` tiene 2 comprobaciones
+  nuevas para `director`, **sin correr** (falta `SUPABASE_ACCESS_TOKEN` en esa sesión).
+- **Pendiente**: aplicar la migración `20261027000000` en producción y correr el smoke. Fases
+  siguientes: gastos (Nómina + Alegra) y comparativa 2025-2026 (fuente: Formato 607/606 de la DGII
+  o Alegra, tabla histórica mensual; nunca llamar a Alegra en vivo al abrir la página).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

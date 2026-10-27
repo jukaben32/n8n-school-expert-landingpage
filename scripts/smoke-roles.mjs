@@ -119,6 +119,9 @@ const CHECKS = {
     ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
   ],
   director: [
+    // Análisis Financiero (2026-10-27): las dos funciones que lee la pantalla.
+    ['Análisis Financiero: proyección por nivel', `select count(*) from school_income_projection_by_level((select school_id from users_profiles where auth_id = auth.uid()));`],
+    ['Análisis Financiero: cuotas del año escolar', `select count(*) from list_school_monthly_cashflow((select school_id from users_profiles where auth_id = auth.uid()));`],
     ['Familias', `select count(*) from families where deleted_at is null;`],
     ['Estudiantes', `select count(*) from students where deleted_at is null;`],
     ['Asistencia', `select count(*) from attendance;`],

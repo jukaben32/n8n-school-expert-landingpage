@@ -115,6 +115,11 @@ export default async function TesoreriaPage() {
               Facturas de proveedores
             </a>
           )}
+          {canAccess(profile.role, 'tesoreria_analisis') && (
+            <a href="/dashboard/tesoreria/analisis-financiero" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold px-5 py-2.5 transition">
+              Análisis financiero
+            </a>
+          )}
           <a href="/dashboard/tesoreria/facturar" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold px-5 py-2.5 transition">
             Generar factura
           </a>
