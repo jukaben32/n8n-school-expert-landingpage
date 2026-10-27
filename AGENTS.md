@@ -4288,7 +4288,7 @@ acceso.
 **Antes de este botón**, la única salida era Eliminar la ficha y recrearla (borra la cuenta de
 Auth y las asignaciones de grados).
 
-## Horarios actualizados por cambio de docentes (2026-10-27) -- script listo, NO aplicado
+## Horarios actualizados por cambio de docentes (2026-10-27) -- APLICADO en producción
 
 El colegio cambio docentes y horarios (salen Orlando Natera, Gabriela Lugo, Juana Alcantara,
 Alejandrina Lake y Diarkis Leon; entran Melissa Julian Sosa -- que cubre el Ingles de Orlando --,
@@ -4300,16 +4300,22 @@ Ingles de 1ro-4to Primaria es de Marianelis, 5to-6to de Melissa; Ingles 3ro-6to 
 1ro-2do de Melissa; Salida Optativa se llama "Matematica aplicada a la tecnologia" (Jennifer
 Sanchez 4to-5to, Gary 6to); Fisica de 6to y Biologia de 4to son de Marcelis.
 
-- **Probado solo en Postgres local con esquema espejo** (idempotente, aborta si falta o hay duplicada
-  una ficha). Falta correr el diagnostico contra produccion y revisar su resultado.
-- **Decisiones del colegio ("ok a todo")**: la hoja de Yuleimi tiene casi todas las celdas como "1ro"
-  (no cuadra con 1ro Primaria); solo se cargan Pre-kinder (mar 7:40, jue 11:10) y Kinder (vie 7:40).
-  Parvulo sin Ingles ni Ed. Fisica. Ed. Fisica de 5to practica/teorica = una sola materia.
-  Dos celdas ilegibles ("Naturales") = Ciencias Naturales. Roces de 10 min de Jennifer Soriano se dejan.
-- **Pendiente**: dar de alta en Personal a Gary, Melissa, Adriana (puesto Ayudante Docente, con acceso)
-  y verificar la ficha de Nicole ANTES de la carga; dar de baja a los 5 que salen (con la app, no a
-  mano); asignaciones de grado en `teacher_assignments` para los nuevos; las franjas de Inicial son
-  propias (8:00-9:05, recreo 9:05-9:45) y Pre-kinder jueves se pisa 15 min (Ed. Fisica 9:10 vs Ingles 9:45).
+- **Aplicado el 2026-10-27** con un PAT de un solo uso (ya no se necesita; revocar): diagnóstico limpio,
+  prueba completa con ROLLBACK y luego la carga real. Verificado después: 344 clases (330 Primaria/Secundaria
+  + 14 Inicial), 0 con docente dado de baja, 0 sin docente, 25 por grado de Primaria y 30 por grado de Secundaria.
+- **Decisiones del colegio ("ok a todo")**: Párvulo sin Inglés ni Ed. Física; Ed. Física 5to práctica/teórica = una
+  materia; celdas ilegibles ("Naturales") = Ciencias Naturales; roces de 10 min de Jennifer Soriano se dejan.
+- **Yuleimi Lugo Ochoa está de licencia (~120 días desde oct. 2026)**: sus 3 clases de Inicial (Pre-kinder
+  mar 7:40 y jue 11:10, Kinder vie 7:40) NO se cargaron. Su ficha aparece dada de baja como "Yuleymis Lugo"
+  (baja 2026-09-11, mismo correo que Gabriela Lugo Ochoa, baja 2026-10-20): al regresar hay que REACTIVARLA,
+  no crear otra. La hoja de Yuleimi traía casi todas las celdas como "1ro" (error de la hoja).
+- Trampas encontradas: el patrón de nombre de Marcelis fallaba porque en la base es "Marceli" Santos Fajardo;
+  `Marianelis` es "Rivera Cordero" en la base y "Perdomo" en la hoja. Salida Optativa quedó con el nombre
+  "Salida Optativa (Matemática aplicada a la tecnología)" (mismo id).
+- **Pendiente**: Arlen Fulgencio (secretaria) tiene acceso de docente, no de Recepción; quién cubre las 3 clases
+  de Yuleimi; Pre-kinder jueves se pisa 15 min (Ed. Física 9:10 vs Inglés 9:45); correo de las franjas de Inicial
+  propias (8:00-9:05, recreo 9:05-9:45); asignaciones de grado en `teacher_assignments` de los nuevos
+  (Adriana ya tiene 1ro. Primaria).
 
 ## Convenciones de trabajo
 
