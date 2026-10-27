@@ -4305,15 +4305,16 @@ Sanchez 4to-5to, Gary 6to); Fisica de 6to y Biologia de 4to son de Marcelis.
   + 14 Inicial), 0 con docente dado de baja, 0 sin docente, 25 por grado de Primaria y 30 por grado de Secundaria.
 - **Decisiones del colegio ("ok a todo")**: Párvulo sin Inglés ni Ed. Física; Ed. Física 5to práctica/teórica = una
   materia; celdas ilegibles ("Naturales") = Ciencias Naturales; roces de 10 min de Jennifer Soriano se dejan.
-- **Yuleimi Lugo Ochoa está de licencia (~120 días desde oct. 2026)**: sus 3 clases de Inicial (Pre-kinder
-  mar 7:40 y jue 11:10, Kinder vie 7:40) NO se cargaron. Su ficha aparece dada de baja como "Yuleymis Lugo"
+- **El Inglés de Inicial es solo de Nercy** (confirmado por el colegio el 2026-10-27): Pre-kinder 3, Kinder 5 y
+  Pre-primario 4 sesiones, ya cargadas. Las 3 celdas de Inicial de la hoja de Yuleimi (Pre-kinder mar 7:40 y
+  jue 11:10, Kinder vie 7:40) NO hacen falta: usaban franjas de Primaria (7:40) y se pisaban con las de Nercy.
+- **Yuleimi Lugo Ochoa está de licencia (~120 días desde oct. 2026)**; no tiene clases en el horario nuevo. Su ficha aparece dada de baja como "Yuleymis Lugo"
   (baja 2026-09-11, mismo correo que Gabriela Lugo Ochoa, baja 2026-10-20): al regresar hay que REACTIVARLA,
   no crear otra. La hoja de Yuleimi traía casi todas las celdas como "1ro" (error de la hoja).
 - Trampas encontradas: el patrón de nombre de Marcelis fallaba porque en la base es "Marceli" Santos Fajardo;
   `Marianelis` es "Rivera Cordero" en la base y "Perdomo" en la hoja. Salida Optativa quedó con el nombre
   "Salida Optativa (Matemática aplicada a la tecnología)" (mismo id).
-- **Pendiente**: Arlen Fulgencio (secretaria) tiene acceso de docente, no de Recepción; quién cubre las 3 clases
-  de Yuleimi; Pre-kinder jueves se pisa 15 min (Ed. Física 9:10 vs Inglés 9:45); correo de las franjas de Inicial
+- **Pendiente**: Arlen Fulgencio (secretaria) tiene acceso de docente, no de Recepción; Pre-kinder jueves se pisa 15 min (Ed. Física 9:10 vs Inglés 9:45); correo de las franjas de Inicial
   propias (8:00-9:05, recreo 9:05-9:45); asignaciones de grado en `teacher_assignments` de los nuevos
   (Adriana ya tiene 1ro. Primaria).
 
