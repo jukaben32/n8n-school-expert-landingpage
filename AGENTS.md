@@ -4288,6 +4288,29 @@ acceso.
 **Antes de este botón**, la única salida era Eliminar la ficha y recrearla (borra la cuenta de
 Auth y las asignaciones de grados).
 
+## Horarios actualizados por cambio de docentes (2026-10-27) -- script listo, NO aplicado
+
+El colegio cambio docentes y horarios (salen Orlando Natera, Gabriela Lugo, Juana Alcantara,
+Alejandrina Lake y Diarkis Leon; entran Melissa Julian Sosa -- que cubre el Ingles de Orlando --,
+Gary Mathews Joseph Soto, Nicole Gonzalez, Adriana de los Santos Pena como **ayudante de 1ro
+Primaria** sin horario, y Arlen Fulgencio como secretaria). Se transcribieron 26 fotos y el generador
+`supabase/seeds/generar_horarios_actualizados_2026_10.py` cruza hoja de grado vs hoja de docente
+(330 clases, cero choques) antes de escribir SQL. Lo que cambia respecto a la carga de agosto:
+Ingles de 1ro-4to Primaria es de Marianelis, 5to-6to de Melissa; Ingles 3ro-6to Sec. de Yendry,
+1ro-2do de Melissa; Salida Optativa se llama "Matematica aplicada a la tecnologia" (Jennifer
+Sanchez 4to-5to, Gary 6to); Fisica de 6to y Biologia de 4to son de Marcelis.
+
+- **Probado solo en Postgres local con esquema espejo** (idempotente, aborta si falta o hay duplicada
+  una ficha). Falta correr el diagnostico contra produccion y revisar su resultado.
+- **Decisiones del colegio ("ok a todo")**: la hoja de Yuleimi tiene casi todas las celdas como "1ro"
+  (no cuadra con 1ro Primaria); solo se cargan Pre-kinder (mar 7:40, jue 11:10) y Kinder (vie 7:40).
+  Parvulo sin Ingles ni Ed. Fisica. Ed. Fisica de 5to practica/teorica = una sola materia.
+  Dos celdas ilegibles ("Naturales") = Ciencias Naturales. Roces de 10 min de Jennifer Soriano se dejan.
+- **Pendiente**: dar de alta en Personal a Gary, Melissa, Adriana (puesto Ayudante Docente, con acceso)
+  y verificar la ficha de Nicole ANTES de la carga; dar de baja a los 5 que salen (con la app, no a
+  mano); asignaciones de grado en `teacher_assignments` para los nuevos; las franjas de Inicial son
+  propias (8:00-9:05, recreo 9:05-9:45) y Pre-kinder jueves se pisa 15 min (Ed. Fisica 9:10 vs Ingles 9:45).
+
 ## Convenciones de trabajo
 
 - Todo cambio de base de datos es una migración nueva en

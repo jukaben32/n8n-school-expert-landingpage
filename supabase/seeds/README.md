@@ -49,3 +49,18 @@ correrlo dos veces no duplica nada.
   el documento de origen trae ese campo en blanco. Falta que Dirección Académica
   diga quién es; se puede asignar después desde `/dashboard/horarios` sin volver
   a correr este script.
+
+## `20261027_horarios_actualizados_*.sql` (cambio de docentes, oct. 2026)
+
+Actualiza los horarios 2026-2027 tras el cambio de docentes (generado con
+`generar_horarios_actualizados_2026_10.py` desde las 26 fotos de las hojas
+impresas). Orden: 1) `_diagnostico.sql` (solo lectura, un bloque a la vez),
+2) `_carga.sql` (parte 1 Primaria/Secundaria, parte 2 Inicial, parte 3
+asignacion de Adriana a 1ro. Primaria).
+
+- **Actualiza en sitio, no borra**: `lesson_plans` cuelga de `class_schedules`
+  con `on delete cascade`. Las clases viejas que ya no existen quedan y se listan.
+- **No crea personal**: las personas nuevas se dan de alta en Personal con su
+  correo real antes. Si falta o hay una ficha duplicada, aborta sin tocar nada.
+- El generador cruza hoja de grado vs hoja de docente (330 clases) y falla si
+  una celda no cuadra.
