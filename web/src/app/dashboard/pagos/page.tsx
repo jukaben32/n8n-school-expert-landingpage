@@ -6,8 +6,7 @@ import InvoiceCard from '@/components/pagos/InvoiceCard'
 import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { schoolCardPaymentAvailableFor } from '@/lib/payments/azul'
-import CardCheckoutNotice from '@/components/pagos/CardCheckoutNotice'
-import { createPublicClient } from '@/lib/supabase/publicClient'
+import PortalLegalFooter from '@/components/pagos/PortalLegalFooter'
 
 export const metadata: Metadata = {
   title: 'Estado de Cuenta — MentorIApp',
@@ -125,13 +124,6 @@ export default async function PagosPage({
     ? await schoolCardPaymentAvailableFor(profile.school_id, user.email)
     : false
 
-  // Subdominio del sitio público del colegio, para enlazar sus políticas
-  // desde el checkout (Azul exige verlas antes de pagar).
-  const { data: schoolPublic } = cardPaymentEnabled && profile?.school_id
-    ? await createPublicClient().from('schools_public').select('subdomain').eq('id', profile.school_id).maybeSingle()
-    : { data: null }
-  const schoolSubdomain = (schoolPublic as { subdomain: string } | null)?.subdomain ?? null
-
   // Último comprobante subido por factura (para no dejar que la familia
   // suba dos veces mientras uno ya está en revisión, y para mostrar si
   // uno fue rechazado).
@@ -206,9 +198,6 @@ export default async function PagosPage({
               <InvoiceCard key={invoice.id} invoice={invoice} receiptStatus={receiptStatusByInvoice.get(invoice.id)} cardPaymentEnabled={cardPaymentEnabled} />
             ))}
           </div>
-
-          {/* Checkout: logos, sellos 3D Secure, moneda y políticas -- requisitos de Azul */}
-          {cardPaymentEnabled && <CardCheckoutNotice schoolSubdomain={schoolSubdomain} />}
         </section>
       )}
 
@@ -235,6 +224,9 @@ export default async function PagosPage({
           </p>
         </div>
       )}
+
+      {/* Logos, sellos 3D Secure, moneda, dirección y políticas -- requisitos de Azul, siempre visibles */}
+      <PortalLegalFooter schoolId={profile?.school_id} />
     </div>
   )
 }
