@@ -11,6 +11,7 @@ import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 import { getFamilyClassUpdates } from './actions'
 import { countAbsencesToJustify } from '@/app/dashboard/asistencia/actions'
 import FamilyAcademiaNotices from '@/components/portal/FamilyAcademiaNotices'
+import PortalLegalFooter from '@/components/pagos/PortalLegalFooter'
 
 export const metadata: Metadata = {
   title: 'Portal Familiar — MentorIApp',
@@ -237,6 +238,8 @@ export default async function PortalFamiliarPage() {
         <FamilyChatWidget />
         <VoiceCallWidget />
       </div>
+
+      <PortalLegalFooter schoolId={profile?.school_id} />
 
       {school?.whatsapp_active && school.whatsapp_phone_number && (
         <FloatingWhatsAppButton
