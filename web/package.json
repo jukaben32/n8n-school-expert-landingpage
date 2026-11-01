@@ -11,7 +11,8 @@
     "test:family-academia": "node ../scripts/test-family-academia.mjs",
     "test:family-academia:render": "node ../scripts/test-family-academia-render.mjs",
     "test:payment-receipt": "node --experimental-strip-types ../scripts/test-payment-receipt.mjs",
-    "test:azul-hash": "node --experimental-strip-types ../scripts/test-azul-hash.mjs"
+    "test:azul-hash": "node --experimental-strip-types ../scripts/test-azul-hash.mjs",
+    "test:tuition-plan": "node --experimental-strip-types ../scripts/test-tuition-plan.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

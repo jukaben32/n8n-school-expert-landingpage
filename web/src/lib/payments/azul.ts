@@ -145,14 +145,71 @@ export async function buildAzulPaymentForm(params: {
     return { ok: false, error: 'Esta factura ya no está pendiente de pago.' }
   }
 
+  return createAzulCheckout(admin, {
+    schoolId: params.schoolId,
+    siteUrl: params.siteUrl,
+    amount: invoice.total_amount,
+    itbis: invoice.tax_amount || 0,
+    transaction: { invoice_id: invoice.id },
+  })
+}
+
+/** Lo que guarda azul_transactions.tuition_plan: qué se cobra y cómo se registra al aprobarse. */
+export interface TuitionPaymentPlan {
+  principalDue: number
+  lateFee: number
+  monthsAhead: number
+  prepayGross: number
+  discountPercent: number
+  prepayDiscount: number
+  total: number
+  /** 'YYYY-MM-DD' de cada mes adelantado. */
+  months: string[]
+  description: string
+}
+
+/**
+ * Pago de mensualidad SIN factura previa (el colegio no factura por
+ * adelantado). La factura "pagado" se crea en processAzulResult solo si
+ * Azul aprueba y la firma se verifica -- un pago cancelado no deja nada.
+ * El plan lo calcula el servidor (startTuitionCardPayment), nunca el navegador.
+ */
+export async function buildAzulTuitionPaymentForm(params: {
+  schoolId: string
+  familyId: string
+  studentId: string
+  plan: TuitionPaymentPlan
+  siteUrl: string
+}): Promise<BuildAzulPaymentFormResult> {
+  if (!(params.plan.total > 0)) return { ok: false, error: 'No hay monto para pagar.' }
+  return createAzulCheckout(createAdminClient(), {
+    schoolId: params.schoolId,
+    siteUrl: params.siteUrl,
+    amount: params.plan.total,
+    itbis: 0,
+    transaction: { family_id: params.familyId, student_id: params.studentId, tuition_plan: params.plan },
+  })
+}
+
+/**
+ * Parte común a los dos cobros: registra la transacción pendiente y arma
+ * los campos firmados que el navegador envía a Azul.
+ */
+async function createAzulCheckout(admin: AdminClient, params: {
+  schoolId: string
+  siteUrl: string
+  amount: number
+  itbis: number
+  transaction: { invoice_id: string } | { family_id: string; student_id: string; tuition_plan: TuitionPaymentPlan }
+}): Promise<BuildAzulPaymentFormResult> {
   const credentials = await getSchoolAzulCredentials(admin, params.schoolId)
   if (!credentials) {
     return { ok: false, error: 'Este colegio todavía no tiene configurado el pago con tarjeta.' }
   }
 
   const orderNumber = crypto.randomUUID().replace(/-/g, '')
-  const amount = toAzulAmount(invoice.total_amount)
-  const itbis = toAzulAmount(invoice.tax_amount || 0)
+  const amount = toAzulAmount(params.amount)
+  const itbis = toAzulAmount(params.itbis)
 
   const approvedUrl = `${params.siteUrl}/api/pagos/azul/resultado`
   const declinedUrl = approvedUrl
@@ -160,9 +217,9 @@ export async function buildAzulPaymentForm(params: {
 
   const { error: insertError } = await admin.from('azul_transactions').insert({
     school_id: params.schoolId,
-    invoice_id: invoice.id,
+    ...params.transaction,
     order_number: orderNumber,
-    amount: invoice.total_amount,
+    amount: params.amount,
     status: 'pending',
   })
   if (insertError) {
@@ -244,7 +301,7 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
 
   const { data: txn } = await admin
     .from('azul_transactions')
-    .select('id, school_id, invoice_id, status')
+    .select('id, school_id, invoice_id, family_id, student_id, tuition_plan, status')
     .eq('order_number', params.orderNumber)
     .maybeSingle()
 
@@ -289,14 +346,35 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
 
   const approved = params.isoCode === '00'
 
-  await admin.from('azul_transactions').update({
+  // Actualización condicional (solo si sigue 'pending'): si Azul o el
+  // navegador mandan la respuesta dos veces a la vez, solo una la procesa
+  // y el pago nunca se registra dos veces.
+  const { data: claimed } = await admin.from('azul_transactions').update({
     status: approved ? 'approved' : 'declined',
     response_payload: { ...params, hashVerified: true },
     updated_at: new Date().toISOString(),
-  }).eq('id', txn.id)
+  }).eq('id', txn.id).eq('status', 'pending').select('id')
+
+  if (!claimed || claimed.length === 0) {
+    return approved ? { outcome: 'approved', test: isTest } : { outcome: 'declined', test: isTest }
+  }
 
   if (!approved) {
     return { outcome: 'declined', test: isTest }
+  }
+
+  if (!txn.invoice_id) {
+    return processApprovedTuitionPayment(admin, {
+      txn: {
+        id: txn.id,
+        schoolId: txn.school_id,
+        familyId: txn.family_id,
+        studentId: txn.student_id,
+        plan: txn.tuition_plan as TuitionPaymentPlan | null,
+      },
+      params,
+      isTest,
+    })
   }
 
   // MODO PRUEBA: el pago lo aprobó el ambiente de pruebas de Azul con una
@@ -354,5 +432,121 @@ export async function processAzulResult(params: AzulResultParams): Promise<Proce
   }
   after(() => sendAzulPaymentReceipt(admin, receipt))
 
+  return { outcome: 'approved', test: false }
+}
+
+/** Busca el concepto del colegio (mensualidad o recargo) o lo crea, igual que recordExternalPayment. */
+async function findOrCreateConcept(admin: AdminClient, schoolId: string, kind: 'mensualidad' | 'recargo', amount: number): Promise<string | null> {
+  const query = admin
+    .from('billing_concepts')
+    .select('id')
+    .eq('school_id', schoolId)
+    .is('deleted_at', null)
+    .limit(1)
+  const { data: existing } = kind === 'mensualidad'
+    ? await query.eq('recurrence', 'monthly').ilike('name', '%mensualidad%').maybeSingle()
+    : await query.eq('recurrence', 'one_time').ilike('name', '%recargo%mora%').maybeSingle()
+  if (existing) return existing.id
+
+  const { data: created, error } = await admin.from('billing_concepts').insert(
+    kind === 'mensualidad'
+      ? { school_id: schoolId, name: 'Mensualidad', amount, recurrence: 'monthly', applies_to: 'student' }
+      : { school_id: schoolId, name: 'Recargo por Mora', amount, recurrence: 'one_time', applies_to: 'student' },
+  ).select('id').single()
+  if (error) console.error('[azul] no se pudo crear el concepto', kind, error.message)
+  return created?.id ?? null
+}
+
+/**
+ * Mensualidad pagada con tarjeta desde el Portal Familiar (firma ya
+ * verificada, transacción ya reclamada). Registra lo mismo que
+ * "Registrar pago externo" en Tesorería: una factura "pagado" de
+ * mensualidad y otra de recargo, cada una con su pago, sin NCF. El
+ * descuento por pago adelantado va en prepay_discount_amount para que
+ * Cuentas por Cobrar cuente esos meses como cuotas completas.
+ */
+async function processApprovedTuitionPayment(admin: AdminClient, input: {
+  txn: { id: string; schoolId: string; familyId: string | null; studentId: string | null; plan: TuitionPaymentPlan | null }
+  params: AzulResultParams
+  isTest: boolean
+}): Promise<ProcessAzulResultOutcome> {
+  const { txn, params, isTest } = input
+  if (!txn.familyId || !txn.studentId || !txn.plan) {
+    console.error('[azul] transacción de mensualidad incompleta', txn.id)
+    return { outcome: 'invalid', reason: 'La transacción no tiene el detalle de la mensualidad.' }
+  }
+  const plan = txn.plan
+  const receiptBase = {
+    schoolId: txn.schoolId,
+    amount: plan.total,
+    authorizationCode: params.authorizationCode,
+    azulReference: params.azulOrderId || params.rrn || null,
+    azulDateTime: params.dateTime,
+  }
+
+  // MODO PRUEBA: no entró dinero; no se registra nada, solo el recibo "[PRUEBA]".
+  if (isTest) {
+    after(() => sendAzulPaymentReceipt(admin, {
+      ...receiptBase,
+      invoiceId: null,
+      tuition: { familyId: txn.familyId!, studentId: txn.studentId!, description: plan.description },
+      isTest: true,
+    }))
+    return { outcome: 'approved', test: true }
+  }
+
+  const paidAt = new Date().toISOString()
+  const today = paidAt.slice(0, 10)
+  const gatewayNote = `Pago con tarjeta vía Azul desde el Portal Familiar. Autorización ${params.authorizationCode}.`
+
+  async function insertPaid(kind: 'mensualidad' | 'recargo', description: string, amount: number, prepayDiscount: number) {
+    const conceptId = await findOrCreateConcept(admin, txn.schoolId, kind, amount)
+    const { data: invoice, error: invoiceError } = await admin.from('invoices').insert({
+      school_id: txn.schoolId,
+      family_id: txn.familyId,
+      student_id: txn.studentId,
+      concept_id: conceptId,
+      description,
+      amount,
+      tax_amount: 0,
+      total_amount: amount,
+      prepay_discount_amount: prepayDiscount,
+      due_date: today,
+      status: 'pagado',
+      paid_at: paidAt,
+      ncf: null,
+      ncf_type: null,
+    }).select('id').single()
+    if (invoiceError || !invoice) {
+      console.error('[azul] COBRO APROBADO SIN REGISTRAR (factura)', txn.id, kind, invoiceError?.message)
+      return null
+    }
+    const { error: paymentError } = await admin.from('payments').insert({
+      school_id: txn.schoolId,
+      invoice_id: invoice.id,
+      amount_paid: amount,
+      payment_method: 'azul',
+      paid_at: paidAt,
+      gateway_reference: params.azulOrderId || params.rrn,
+      gateway_response: params,
+      notes: gatewayNote,
+    })
+    if (paymentError) console.error('[azul] COBRO APROBADO SIN REGISTRAR (pago)', txn.id, kind, paymentError.message)
+    return invoice.id as string
+  }
+
+  // Mensualidad: lo atrasado + los meses adelantados, ya con su descuento.
+  const principalPaid = Math.round((plan.principalDue + plan.prepayGross - plan.prepayDiscount) * 100) / 100
+  const principalInvoiceId = principalPaid > 0
+    ? await insertPaid('mensualidad', plan.description, principalPaid, plan.prepayDiscount)
+    : null
+  const lateFeeInvoiceId = plan.lateFee > 0
+    ? await insertPaid('recargo', 'Recargo por mora — pago con tarjeta en el Portal Familiar', plan.lateFee, 0)
+    : null
+
+  const receiptInvoiceId = principalInvoiceId ?? lateFeeInvoiceId
+  if (receiptInvoiceId) {
+    after(() => sendAzulPaymentReceipt(admin, { ...receiptBase, invoiceId: receiptInvoiceId }))
+  }
   return { outcome: 'approved', test: false }
 }
