@@ -3,8 +3,10 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveGuardianIdentity } from '@/lib/auth/resolveGuardianIdentity'
 import { createClient } from '@/lib/supabase/server'
-import { buildAzulPaymentForm, schoolCardPaymentAvailableFor, type AzulPaymentForm } from '@/lib/payments/azul'
+import { buildAzulPaymentForm, buildAzulTuitionPaymentForm, schoolCardPaymentAvailableFor, type AzulPaymentForm } from '@/lib/payments/azul'
 import { getPublicSiteUrl } from '@/lib/siteUrl'
+import { getFamilyTuitionOverview } from '@/lib/payments/familyTuition'
+import { buildTuitionQuote, formatPeriodMonth } from '@/lib/payments/tuitionPlan'
 
 const RECEIPT_BUCKET = 'comprobantes-pago'
 const MAX_RECEIPT_BYTES = 10 * 1024 * 1024 // 10MB
@@ -43,6 +45,83 @@ export async function startAzulPayment(invoiceId: string): Promise<StartAzulPaym
     familyId: identity.familyId,
     invoiceId,
     siteUrl,
+  })
+}
+
+/**
+ * Pago de la mensualidad de un hijo con tarjeta, con la opción de
+ * adelantar meses. El navegador solo dice QUÉ hijo y CUÁNTOS meses; el
+ * monto, los meses y el descuento los vuelve a calcular el servidor con
+ * los mismos datos que Cuentas por Cobrar (getFamilyTuitionOverview), así
+ * que nadie puede cambiar lo que se cobra desde el navegador.
+ */
+export async function startTuitionCardPayment(studentId: string, monthsAhead: number): Promise<StartAzulPaymentResult> {
+  const identity = await resolveGuardianIdentity()
+  if (!identity.ok) return { ok: false, error: identity.error }
+
+  const { data: { user } } = await (await createClient()).auth.getUser()
+  if (!(await schoolCardPaymentAvailableFor(identity.schoolId, user?.email))) {
+    return { ok: false, error: 'El pago con tarjeta no está disponible todavía.' }
+  }
+
+  const siteUrl = getPublicSiteUrl()
+  if (!siteUrl) return { ok: false, error: 'Falta configurar NEXT_PUBLIC_SITE_URL.' }
+
+  if (typeof studentId !== 'string' || !studentId) return { ok: false, error: 'Falta indicar el estudiante.' }
+  const requestedMonths = Number.isInteger(monthsAhead) && monthsAhead > 0 ? monthsAhead : 0
+
+  // Filtrado por la familia de la sesión: si el estudiante no es de esta
+  // familia, sale vacío.
+  const overview = await getFamilyTuitionOverview({
+    schoolId: identity.schoolId,
+    familyId: identity.familyId,
+    studentId,
+  })
+  const student = overview.students[0]
+  if (!student) return { ok: false, error: 'No se encontró la mensualidad de este estudiante.' }
+
+  if (requestedMonths > 0 && !overview.prepayEnabled) {
+    return { ok: false, error: 'El colegio no tiene habilitado el pago de meses por adelantado.' }
+  }
+  if (requestedMonths > student.future.length) {
+    return { ok: false, error: 'No quedan tantos meses por adelantar este año escolar.' }
+  }
+
+  const quote = buildTuitionQuote({
+    principalDue: student.currentAmount + student.overduePrincipal,
+    lateFee: student.lateFee,
+    future: student.future,
+    monthsAhead: requestedMonths,
+    tiers: overview.prepayTiers,
+  })
+  if (!(quote.total > 0)) return { ok: false, error: 'No hay nada pendiente por pagar.' }
+
+  const parts: string[] = []
+  if (quote.principalDue > 0) parts.push(`pendiente${student.oldestReference ? ` desde ${student.oldestReference}` : ''}`)
+  if (quote.lateFee > 0) parts.push('recargo por mora aparte')
+  if (quote.monthsAhead > 0) {
+    const first = formatPeriodMonth(quote.months[0].periodMonth)
+    const last = formatPeriodMonth(quote.months[quote.months.length - 1].periodMonth)
+    const range = quote.monthsAhead === 1 ? first : `${first} a ${last}`
+    parts.push(`adelanto de ${quote.monthsAhead} ${quote.monthsAhead === 1 ? 'mes' : 'meses'} (${range})${quote.discountPercent > 0 ? `, ${quote.discountPercent}% de descuento` : ''}`)
+  }
+
+  return buildAzulTuitionPaymentForm({
+    schoolId: identity.schoolId,
+    familyId: identity.familyId,
+    studentId: student.studentId,
+    siteUrl,
+    plan: {
+      principalDue: quote.principalDue,
+      lateFee: quote.lateFee,
+      monthsAhead: quote.monthsAhead,
+      prepayGross: quote.prepayGross,
+      discountPercent: quote.discountPercent,
+      prepayDiscount: quote.prepayDiscount,
+      total: quote.total,
+      months: quote.months.map((m) => m.periodMonth),
+      description: `Mensualidad — pago con tarjeta en el Portal Familiar (${parts.join('; ')})`,
+    },
   })
 }
 

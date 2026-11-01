@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Percent, Sparkles, Wallet } from 'lucide-react'
+import { CalendarClock, Percent, Sparkles, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { normalizePrepayTiers } from '@/lib/payments/tuitionPlan'
 
 interface School {
   id: string
@@ -24,7 +25,11 @@ interface School {
   late_fee_stage3_percent: number
   late_fee_stage4_days: number
   late_fee_stage4_percent: number
+  prepay_enabled: boolean
+  prepay_discount_tiers: unknown
 }
+
+const MAX_PREPAY_TIERS = 3
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -50,7 +55,15 @@ export default function OperationsForm({ school }: { school: School }) {
   const [stage3Percent, setStage3Percent] = useState(String(school.late_fee_stage3_percent))
   const [stage4Days, setStage4Days] = useState(String(school.late_fee_stage4_days))
   const [stage4Percent, setStage4Percent] = useState(String(school.late_fee_stage4_percent))
+  const [prepayEnabled, setPrepayEnabled] = useState(school.prepay_enabled)
+  const [prepayTiers, setPrepayTiers] = useState(
+    normalizePrepayTiers(school.prepay_discount_tiers).map((t) => ({ months: String(t.months), percent: String(t.percent) })),
+  )
   const [saving, setSaving] = useState(false)
+
+  function updateTier(index: number, field: 'months' | 'percent', value: string) {
+    setPrepayTiers((tiers) => tiers.map((t, i) => (i === index ? { ...t, [field]: value } : t)))
+  }
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -82,6 +95,9 @@ export default function OperationsForm({ school }: { school: School }) {
         late_fee_stage3_percent: Math.min(100, Math.max(0, Number(stage3Percent) || 0)),
         late_fee_stage4_days: Math.max(0, Number(stage4Days) || 0),
         late_fee_stage4_percent: Math.min(100, Math.max(0, Number(stage4Percent) || 0)),
+        prepay_enabled: prepayEnabled,
+        // Se guardan solo los niveles válidos (meses >= 1, % entre 0 y 100)
+        prepay_discount_tiers: normalizePrepayTiers(prepayTiers),
       })
       .eq('id', school.id)
 
@@ -209,6 +225,63 @@ export default function OperationsForm({ school }: { school: School }) {
           Ej. con 3 y 10%: una familia con 3+ hijos inscritos paga completo por el 1ro y 2do, y el 3ro en
           adelante (ordenados por fecha de nacimiento) recibe 10% de descuento en su factura. Se aplica
           automáticamente al generar la factura en Tesorería.
+        </p>
+      </div>
+
+      <div className={sectionClass}>
+        <div className="flex items-center gap-2">
+          <CalendarClock className="w-4 h-4 text-primary dark:text-accent-light" />
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Pago de meses por adelantado (Portal Familiar)</p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={prepayEnabled}
+            onChange={(e) => setPrepayEnabled(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          Permitir que las familias paguen meses por adelantado con tarjeta
+        </label>
+        {prepayEnabled && (
+          <div className="space-y-2">
+            <p className={labelClass}>Descuento por pago adelantado</p>
+            {prepayTiers.length === 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">Sin descuento: la familia puede adelantar meses al precio normal.</p>
+            )}
+            {prepayTiers.map((tier, index) => (
+              <div key={index} className="flex items-end gap-2">
+                <div className="flex-1">
+                  <label htmlFor={`prepayMonths${index}`} className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Desde cuántos meses</label>
+                  <input id={`prepayMonths${index}`} type="number" min="1" step="1" value={tier.months} onChange={(e) => updateTier(index, 'months', e.target.value)} className={inputClass} />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor={`prepayPercent${index}`} className="block text-xs text-slate-500 dark:text-slate-400 mb-1">% de descuento</label>
+                  <input id={`prepayPercent${index}`} type="number" min="0" max="100" step="0.5" value={tier.percent} onChange={(e) => updateTier(index, 'percent', e.target.value)} className={inputClass} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPrepayTiers((tiers) => tiers.filter((_, i) => i !== index))}
+                  className="shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                >
+                  Quitar
+                </button>
+              </div>
+            ))}
+            {prepayTiers.length < MAX_PREPAY_TIERS && (
+              <button
+                type="button"
+                onClick={() => setPrepayTiers((tiers) => [...tiers, { months: '', percent: '' }])}
+                className="text-xs font-semibold text-primary dark:text-accent-light underline underline-offset-2"
+              >
+                + Agregar nivel de descuento
+              </button>
+            )}
+          </div>
+        )}
+        <p className="text-xs text-slate-400 dark:text-slate-500">
+          Ej. &quot;desde 3 meses, 5%&quot; y &quot;desde 10 meses, 10%&quot;: si la familia adelanta 4 meses recibe 5% sobre
+          esos 4 meses; si adelanta 10, 10%. El descuento nunca se aplica a cuotas atrasadas ni al recargo. En Cuentas por
+          Cobrar esos meses quedan cubiertos completos. Solo se ofrece con el pago con tarjeta (Azul).
         </p>
       </div>
 
