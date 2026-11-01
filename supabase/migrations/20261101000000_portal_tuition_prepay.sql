@@ -135,9 +135,15 @@ declare
     v_stage3_days int; v_stage3_percent numeric;
     v_stage4_days int; v_stage4_percent numeric;
 begin
-    select * into v_basis from student_tuition_basis(p_student_id);
+    -- A propósito NO se asigna con la forma SELECT-a-variable: el SQL Editor
+    -- de Supabase la confunde con crear una tabla, agrega "enable row level
+    -- security" sobre la variable y la migración falla. Mismo resultado: un
+    -- FOR que toma la única fila (FOUND = false si no hay ninguna).
+    for v_basis in select * from student_tuition_basis(p_student_id) loop
+        exit;
+    end loop;
 
-    if v_basis.school_id is null then
+    if not found or v_basis.school_id is null then
         return;
     end if;
 
@@ -147,22 +153,26 @@ begin
         return;
     end if;
 
-    select sch.late_fee_percent,
-           sch.late_fee_stage2_days, sch.late_fee_stage2_percent,
-           sch.late_fee_stage3_days, sch.late_fee_stage3_percent,
-           sch.late_fee_stage4_days, sch.late_fee_stage4_percent
-    into v_stage1_percent, v_stage2_days, v_stage2_percent,
-         v_stage3_days, v_stage3_percent, v_stage4_days, v_stage4_percent
-    from schools sch where sch.id = v_basis.school_id;
+    v_stage1_percent := (select sch.late_fee_percent from schools sch where sch.id = v_basis.school_id);
+    v_stage2_days := (select sch.late_fee_stage2_days from schools sch where sch.id = v_basis.school_id);
+    v_stage2_percent := (select sch.late_fee_stage2_percent from schools sch where sch.id = v_basis.school_id);
+    v_stage3_days := (select sch.late_fee_stage3_days from schools sch where sch.id = v_basis.school_id);
+    v_stage3_percent := (select sch.late_fee_stage3_percent from schools sch where sch.id = v_basis.school_id);
+    v_stage4_days := (select sch.late_fee_stage4_days from schools sch where sch.id = v_basis.school_id);
+    v_stage4_percent := (select sch.late_fee_stage4_percent from schools sch where sch.id = v_basis.school_id);
 
-    select coalesce(sum(i.total_amount + coalesce(i.prepay_discount_amount, 0)), 0) into v_collected
-    from invoices i
-    join billing_concepts bc on bc.id = i.concept_id
-    where i.student_id = p_student_id
-    and i.status = 'pagado'
-    and i.deleted_at is null
-    and bc.recurrence = 'monthly'
-    and bc.name ilike '%mensualidad%';
+    -- Lo cobrado de mensualidad. ÚNICO cambio de lógica de esta migración:
+    -- suma también prepay_discount_amount (ver encabezado).
+    v_collected := (
+        select coalesce(sum(i.total_amount + coalesce(i.prepay_discount_amount, 0)), 0)
+        from invoices i
+        join billing_concepts bc on bc.id = i.concept_id
+        where i.student_id = p_student_id
+        and i.status = 'pagado'
+        and i.deleted_at is null
+        and bc.recurrence = 'monthly'
+        and bc.name ilike '%mensualidad%'
+    );
 
     v_collected_remaining := v_collected;
     v_fifo_remaining := v_collected;
@@ -295,9 +305,15 @@ declare
     v_stage3_days int; v_stage3_percent numeric;
     v_stage4_days int; v_stage4_percent numeric;
 begin
-    select * into v_basis from student_tuition_basis(p_student_id);
+    -- A propósito NO se asigna con la forma SELECT-a-variable: el SQL Editor
+    -- de Supabase la confunde con crear una tabla, agrega "enable row level
+    -- security" sobre la variable y la migración falla. Mismo resultado: un
+    -- FOR que toma la única fila (FOUND = false si no hay ninguna).
+    for v_basis in select * from student_tuition_basis(p_student_id) loop
+        exit;
+    end loop;
 
-    if v_basis.school_id is null then
+    if not found or v_basis.school_id is null then
         return;
     end if;
 
@@ -308,22 +324,26 @@ begin
         return;
     end if;
 
-    select sch.late_fee_percent,
-           sch.late_fee_stage2_days, sch.late_fee_stage2_percent,
-           sch.late_fee_stage3_days, sch.late_fee_stage3_percent,
-           sch.late_fee_stage4_days, sch.late_fee_stage4_percent
-    into v_stage1_percent, v_stage2_days, v_stage2_percent,
-         v_stage3_days, v_stage3_percent, v_stage4_days, v_stage4_percent
-    from schools sch where sch.id = v_basis.school_id;
+    v_stage1_percent := (select sch.late_fee_percent from schools sch where sch.id = v_basis.school_id);
+    v_stage2_days := (select sch.late_fee_stage2_days from schools sch where sch.id = v_basis.school_id);
+    v_stage2_percent := (select sch.late_fee_stage2_percent from schools sch where sch.id = v_basis.school_id);
+    v_stage3_days := (select sch.late_fee_stage3_days from schools sch where sch.id = v_basis.school_id);
+    v_stage3_percent := (select sch.late_fee_stage3_percent from schools sch where sch.id = v_basis.school_id);
+    v_stage4_days := (select sch.late_fee_stage4_days from schools sch where sch.id = v_basis.school_id);
+    v_stage4_percent := (select sch.late_fee_stage4_percent from schools sch where sch.id = v_basis.school_id);
 
-    select coalesce(sum(i.total_amount + coalesce(i.prepay_discount_amount, 0)), 0) into v_collected
-    from invoices i
-    join billing_concepts bc on bc.id = i.concept_id
-    where i.student_id = p_student_id
-    and i.status = 'pagado'
-    and i.deleted_at is null
-    and bc.recurrence = 'monthly'
-    and bc.name ilike '%mensualidad%';
+    -- Lo cobrado de mensualidad. ÚNICO cambio de lógica de esta migración:
+    -- suma también prepay_discount_amount (ver encabezado).
+    v_collected := (
+        select coalesce(sum(i.total_amount + coalesce(i.prepay_discount_amount, 0)), 0)
+        from invoices i
+        join billing_concepts bc on bc.id = i.concept_id
+        where i.student_id = p_student_id
+        and i.status = 'pagado'
+        and i.deleted_at is null
+        and bc.recurrence = 'monthly'
+        and bc.name ilike '%mensualidad%'
+    );
 
     v_fifo_remaining := v_collected;
 
