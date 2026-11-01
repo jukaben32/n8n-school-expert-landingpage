@@ -83,6 +83,19 @@ export async function schoolHasAzulConfigured(schoolId: string): Promise<boolean
   return credentials !== null
 }
 
+/**
+ * En qué estado está el pago con tarjeta del colegio, sin mirar quién
+ * pregunta: 'production' (todas las familias), 'test' (solo correos de
+ * prueba) o 'none'. Lo usa el asistente de IA para no prometerle a una
+ * familia un botón que todavía no ve. Nunca devuelve datos de la credencial.
+ */
+export async function schoolCardPaymentMode(schoolId: string): Promise<'production' | 'test' | 'none'> {
+  if (!schoolId) return 'none'
+  const credentials = await getSchoolAzulCredentials(createAdminClient(), schoolId)
+  if (!credentials) return 'none'
+  return credentials.environment
+}
+
 // Correos de tutores que pueden pagar mientras el colegio tenga cargadas
 // credenciales de PRUEBA (variable de entorno AZUL_TEST_GUARDIAN_EMAILS,
 // separados por coma). Las tarjetas de prueba de Azul son públicas: sin
