@@ -6248,8 +6248,8 @@ con `calculate_receivable_breakdown`: los dos en RD$0, sin recargo.
 - Escaneo de los 424 cobros con e-CF en producción con la regla nueva: ningún
   otro pago asignado a un hermano equivocado.
 
-⚠️ **Migración `20261109000000_alegra_match_reason_nota_distinta.sql` escrita
-pero NO aplicada** (la sesión no tuvo permiso para escribir en producción). Solo
+✅ **Migración `20261109000000_alegra_match_reason_nota_distinta.sql` aplicada
+a producción el 2026-11-09** (la corrió el usuario en el SQL Editor de Supabase). Solo
 amplía el CHECK de `alegra_payment_matches.reason`; es compatible con el código
 viejo. Aplicarla antes o después del despliegue da igual gracias al respaldo de
 arriba, pero hasta aplicarla esos casos se verán como "Varios estudiantes
