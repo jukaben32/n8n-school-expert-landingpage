@@ -11,7 +11,7 @@ import type { AlegraInvoice } from './alegraClient'
  * `answerFamilyQuestion.ts`: el núcleo no sabe de sesión ni de base.
  */
 
-export type MatchReason = 'sin_emparejar' | 'ambiguo' | 'aproximado' | 'posible_duplicado' | 'conjunto'
+export type MatchReason = 'sin_emparejar' | 'ambiguo' | 'aproximado' | 'posible_duplicado' | 'conjunto' | 'nota_distinta'
 
 export interface StudentRow {
   id: string
@@ -33,7 +33,9 @@ export interface Candidate {
   studentId: string
   name: string
   gradeLevel: string | null
-  via: 'matricula' | 'nombre' | 'nombre_aproximado' | 'cedula_tutor'
+  via: 'matricula' | 'nombre' | 'nombre_aproximado' | 'cedula_tutor' | 'nota'
+  /** La nota de la factura en Alegra nombra a este estudiante. */
+  namedInNote?: boolean
 }
 
 /** Conceptos de Alegra que sí bajan la deuda de mensualidad. */
@@ -133,6 +135,105 @@ export function mensualidadAmount(invoice: AlegraInvoice): number {
  *      nombre del estudiante) -- se REPORTA pero nunca se carga solo.
  */
 export function matchInvoice(
+  invoice: AlegraInvoice,
+  students: StudentRow[],
+  guardians: GuardianRow[]
+): { candidates: Candidate[]; auto: Candidate | null; reason: MatchReason | null } {
+  const base = matchInvoiceByIdentity(invoice, students, guardians)
+  const note = invoice.note
+  const byId = new Map(students.map((s) => [s.id, s]))
+
+  const marcar = (cands: Candidate[]): Candidate[] =>
+    cands
+      .map((c) => {
+        const s = byId.get(c.studentId)
+        return s && studentNamedInNote(note, s) ? { ...c, namedInNote: true } : c
+      })
+      // El que la nota nombra va primero: es la sugerencia natural.
+      .sort((a, b) => Number(!!b.namedInNote) - Number(!!a.namedInNote))
+
+  if (!base.auto) return { ...base, candidates: marcar(base.candidates) }
+
+  // ── La nota de Alegra contradice el emparejamiento automático ─────────
+  // Caso real (2026-10-07, familia Felipe Frias): e-CF a nombre de la madre,
+  // nota "para Analia Victoria Felipe Frias", pero Analia aún no estaba dada
+  // de alta y Oliver era el único inscrito de esa familia. La regla 3 lo vio
+  // "inequívoco" y le cargó a Oliver el pago de su hermana. Si la nota dice
+  // otro nombre, eso no es inequívoco: va a la bandeja.
+  const elegido = byId.get(base.auto.studentId)
+  if (elegido && noteContradicts(note, elegido, base.auto.via, students, invoice.clientName)) {
+    const otros = students
+      .filter((s) => s.id !== elegido.id && studentNamedInNote(note, s) && noteMentionsSurname(note, s))
+      .map((s): Candidate => ({ studentId: s.id, name: `${s.first_name} ${s.last_name}`.trim(), gradeLevel: s.grade_level, via: 'nota' }))
+    return { candidates: marcar([...base.candidates, ...otros]), auto: null, reason: 'nota_distinta' }
+  }
+
+  const auto = marcar([base.auto])[0]
+  return { candidates: marcar(base.candidates), auto, reason: null }
+}
+
+/** Palabras con contenido (3+ letras) de un texto, normalizadas. */
+function palabras(value: string | null | undefined): string[] {
+  return normalizeName(value).split(' ').filter((w) => w.length > 2)
+}
+
+/**
+ * Igual que `palabraSeParece` pero sin tolerancia en palabras cortas: en una
+ * nota libre, "ana" no puede emparejar con "una".
+ */
+function mismaPalabraEnNota(a: string, b: string): boolean {
+  if (a === b) return true
+  if (Math.min(a.length, b.length) < 5) return false
+  return palabraSeParece(a, b)
+}
+
+/** ¿La nota nombra a este estudiante? (por su primer nombre) */
+export function studentNamedInNote(note: string | null | undefined, s: StudentRow): boolean {
+  const nota = palabras(note)
+  const primerNombre = palabras(s.first_name)[0]
+  if (!primerNombre || nota.length === 0) return false
+  return nota.some((w) => mismaPalabraEnNota(w, primerNombre))
+}
+
+/** ¿La nota menciona algún apellido de este estudiante (= habla de su familia)? */
+function noteMentionsSurname(note: string | null | undefined, s: StudentRow): boolean {
+  const nota = palabras(note)
+  const apellidos = palabras(s.last_name).filter((w) => w.length >= 4)
+  return apellidos.some((a) => nota.some((w) => mismaPalabraEnNota(w, a)))
+}
+
+/**
+ * La nota habla de OTRA persona, no del estudiante elegido:
+ *  - nombra a otro estudiante inscrito (nombre + apellido), sin nombrar al
+ *    elegido; o
+ *  - (solo si se emparejó por la cédula del tutor) menciona el apellido de
+ *    la familia pero no el nombre del elegido -- es un hermano que todavía
+ *    no está dado de alta, exactamente el caso Felipe Frias. Antes se
+ *    quitan de la nota las palabras del nombre del tutor (el cliente de
+ *    Alegra): "e-CF a nombre del tutor Carlos Reyes" habla del tutor, no de
+ *    otro hijo.
+ * Una nota vacía o sin nombres ("Pago de octubre") no contradice nada.
+ */
+function noteContradicts(
+  note: string | null | undefined,
+  elegido: StudentRow,
+  via: Candidate['via'],
+  students: StudentRow[],
+  clientName: string | null | undefined
+): boolean {
+  if (palabras(note).length === 0) return false
+  if (studentNamedInNote(note, elegido)) return false
+  const nombraAOtro = students.some(
+    (s) => s.id !== elegido.id && studentNamedInNote(note, s) && noteMentionsSurname(note, s)
+  )
+  if (nombraAOtro) return true
+  if (via !== 'cedula_tutor') return false
+  const delTutor = new Set(palabras(clientName))
+  const notaSinTutor = palabras(note).filter((w) => !delTutor.has(w)).join(' ')
+  return noteMentionsSurname(notaSinTutor, elegido)
+}
+
+function matchInvoiceByIdentity(
   invoice: AlegraInvoice,
   students: StudentRow[],
   guardians: GuardianRow[]

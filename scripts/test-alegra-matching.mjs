@@ -91,5 +91,39 @@ check('los dos hermanos del e-CF conjunto', sugiere(inv({ ident: '02300785520', 
 check('Andrian sugiere a Adrian', sugiere(inv({ name: 'Teylor Andrian Diaz Mota ' })), 's3')
 check('Sara Olivarez sugiere a Sarha Olivares', sugiere(inv({ name: 'Sara Olivarez Perez' })), 's8')
 
+// ── Caso real 2026-10-07: familia Felipe Frias ───────────────────────────
+// e-CF E310000000099 a nombre de la madre (cédula), nota "para Analia...".
+// Ese día Analia no estaba dada de alta: Oliver era el único inscrito, y el
+// motor le cargó a Oliver el pago de su hermana.
+console.log('\n== La nota de Alegra contradice el emparejamiento (caso Felipe Frias) ==')
+const oliver = S('ff1', 'Oliver de Jesus', 'Felipe Frias', null, 'ff', 'Kinder')
+const analia = S('ff2', 'Analia Victoria ', 'Felipe Frias ', null, 'ff', 'Parvulo')
+const tutoraFF = [{ family_id: 'ff', first_name: 'Ana Maria', last_name: 'Frias Peguero', national_id: '023-0160871-3' }]
+const ff = (note, lista) => matchInvoice(
+  { ...inv({ ident: '02301608713', type: 'CED', name: 'Ana Maria Frias Peguero ', items: [{ name: 'Mensualidad', total: 5250 }] }), note },
+  [...alumnos, ...lista], [...tutores, ...tutoraFF]
+)
+const ffAuto = (note, lista) => { const r = ff(note, lista); return r.auto ? r.auto.studentId : `revision:${r.reason}` }
+
+check('solo Oliver inscrito, nota nombra a Analia -> bandeja',
+  ffAuto('Medio mes de ago, mora y mes de sep, para Analia Victoria Felipe Frias', [oliver]), 'revision:nota_distinta')
+check('solo Oliver inscrito, nota nombra a Oliver -> se carga',
+  ffAuto('Pago mes de octubre, de Oliver de jesùs Felipe Frias.', [oliver]), 'ff1')
+check('solo Oliver inscrito, nota sin nombres -> se carga', ffAuto('Pago de octubre', [oliver]), 'ff1')
+check('solo Oliver inscrito, sin nota -> se carga', ffAuto(null, [oliver]), 'ff1')
+check('los dos inscritos: sigue siendo conjunto',
+  ffAuto('Pago de Octubre, de Analia Victoria Felipe Frias.', [oliver, analia]), 'revision:conjunto')
+check('conjunto: el nombrado en la nota va primero y marcado',
+  (() => { const c = ff('Pago de Octubre, de Analia Victoria Felipe Frias.', [oliver, analia]).candidates; return `${c[0].studentId}:${!!c[0].namedInNote}:${!!c[1].namedInNote}` })(),
+  'ff2:true:false')
+check('nombre exacto, pero la nota nombra a otro estudiante inscrito -> bandeja',
+  auto({ ...inv({ name: 'HEATHER LIZ RONDON CASTILLO' }), note: 'Mensualidad de Karolyn Matos' }), 'revision:nota_distinta')
+check('nombre exacto con nota que solo trae el mes -> se carga',
+  auto({ ...inv({ name: 'HEATHER LIZ RONDON CASTILLO' }), note: 'media cuota agosto' }), 's1')
+check('"Ana" en la nota no confunde con "una"',
+  ffAuto('Pago de una cuota, Oliver Felipe', [oliver, S('ff3', 'Ana', 'Felipe Frias', null, 'zz', 'Kinder')]), 'ff1')
+check('nota que nombra al tutor (no a otro hijo) -> se carga',
+  auto({ ...inv({ ident: '023-0157420-4', type: 'CED', name: 'Yomar Matos' }), note: 'media cuota agosto (e-CF a nombre del tutor Yomar Matos)' }), 's6')
+
 console.log(fallos === 0 ? '\nTodas las comprobaciones OK' : `\n${fallos} comprobaciones FALLARON`)
 process.exit(fallos === 0 ? 0 : 1)

@@ -18,6 +18,7 @@ export interface MatchCandidate {
   name: string
   gradeLevel: string | null
   via: string
+  namedInNote?: boolean
 }
 
 export interface PendingMatch {
@@ -47,6 +48,7 @@ const REASON_LABELS: Record<string, string> = {
   aproximado: 'El nombre no calza exacto',
   posible_duplicado: 'Puede que ya esté registrado',
   conjunto: 'Comprobante a nombre del tutor (varios hijos)',
+  nota_distinta: 'La nota de Alegra nombra a otro estudiante',
 }
 
 const REASON_HELP: Record<string, string> = {
@@ -55,6 +57,7 @@ const REASON_HELP: Record<string, string> = {
   aproximado: 'El nombre se parece pero no es idéntico (una letra, un apellido). Confírmalo antes de registrar.',
   posible_duplicado: 'Ese estudiante ya tiene un cobro del mismo monto y la misma fecha sin referencia. Revisa que no sea el mismo.',
   conjunto: 'El comprobante fiscal va a nombre del tutor y cubre a varios hijos. Regístralo una vez por hijo, con el monto de cada uno.',
+  nota_distinta: 'El comprobante coincide con un estudiante, pero la nota escrita en Alegra habla de otro (a veces un hermano que todavía no está dado de alta). Verifica a quién corresponde antes de registrar.',
 }
 
 const REASON_TONE: Record<string, string> = {
@@ -63,6 +66,7 @@ const REASON_TONE: Record<string, string> = {
   aproximado: 'bg-amber-50 text-amber-800 border-amber-200',
   posible_duplicado: 'bg-orange-50 text-orange-800 border-orange-200',
   conjunto: 'bg-sky-50 text-sky-800 border-sky-200',
+  nota_distinta: 'bg-amber-50 text-amber-800 border-amber-200',
 }
 
 const formatDOP = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' })
@@ -73,13 +77,23 @@ function formatDate(value: string): string {
 
 function MatchCard({ match, students }: { match: PendingMatch; students: StudentOption[] }) {
   const restante = Math.round((match.amount - match.assigned_amount) * 100) / 100
-  const [studentId, setStudentId] = useState(match.candidates.length === 1 ? match.candidates[0].studentId : '')
+  // Si la nota de Alegra nombra a un solo candidato, ese es el sugerido.
+  // Así se evita el error real del 2026-11: elegir al hermano equivocado en
+  // un comprobante a nombre del tutor.
+  const nombradosEnNota = match.candidates.filter((c) => c.namedInNote)
+  const sugerido = match.candidates.length === 1
+    ? match.candidates[0].studentId
+    : nombradosEnNota.length === 1 ? nombradosEnNota[0].studentId : ''
+  const [studentId, setStudentId] = useState(sugerido)
   const [amount, setAmount] = useState(String(restante))
   const [note, setNote] = useState('')
   const [discarding, setDiscarding] = useState(false)
   const [discardNote, setDiscardNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+
+  const contradiceNota = nombradosEnNota.length > 0 && studentId !== '' &&
+    !nombradosEnNota.some((c) => c.studentId === studentId)
 
   const submit = () => {
     setError(null)
@@ -146,7 +160,7 @@ function MatchCard({ match, students }: { match: PendingMatch; students: Student
                   : 'border-slate-300 bg-white text-slate-700 hover:border-[#1a5f7a]'
               }`}
             >
-              {c.name}{c.gradeLevel ? ` · ${c.gradeLevel}` : ''}
+              {c.name}{c.gradeLevel ? ` · ${c.gradeLevel}` : ''}{c.namedInNote ? ' · nombrado en la nota' : ''}
             </button>
           ))}
         </div>
@@ -222,6 +236,13 @@ function MatchCard({ match, students }: { match: PendingMatch; students: Student
             </button>
           </div>
         </div>
+      )}
+
+      {contradiceNota && (
+        <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <span className="font-semibold">Ojo:</span> la nota de Alegra menciona a{' '}
+          {nombradosEnNota.map((c) => c.name).join(' / ')}, no al estudiante elegido. Confirma que sea correcto antes de registrar.
+        </p>
       )}
 
       {error && <p className="text-sm text-red-700">{error}</p>}

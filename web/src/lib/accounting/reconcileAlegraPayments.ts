@@ -211,7 +211,7 @@ export async function reconcileAlegraPayments(options: {
         continue
       }
 
-      await admin.from('alegra_payment_matches').insert({
+      const filaBandeja = {
         school_id: schoolId,
         run_id: runId,
         alegra_invoice_id: invoice.id,
@@ -225,7 +225,14 @@ export async function reconcileAlegraPayments(options: {
         amount: monto,
         reason: motivo ?? 'sin_emparejar',
         candidates,
-      })
+      }
+      const { error: errorBandeja } = await admin.from('alegra_payment_matches').insert(filaBandeja)
+      if (errorBandeja && filaBandeja.reason === 'nota_distinta') {
+        // Red de seguridad si la migración 20261109000000 (que agrega
+        // 'nota_distinta' al CHECK) aún no está aplicada: el cobro igual
+        // llega a la bandeja, como 'ambiguo', en vez de quedarse fuera.
+        await admin.from('alegra_payment_matches').insert({ ...filaBandeja, reason: 'ambiguo' })
+      }
       yaEnBandeja.add(invoice.id)
       reviewCount++
     }

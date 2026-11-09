@@ -2950,6 +2950,7 @@ Orden de emparejamiento, de más confiable a menos:
 | 2 | Nombre exacto normalizado | Sí |
 | 3 | Cédula del tutor (tipo `CED`) y la familia tiene **un** inscrito | Sí |
 | 3b | Cédula del tutor y la familia tiene **varios** inscritos = e-CF conjunto | No → bandeja |
+| ⚠️ | Cualquiera de las anteriores, pero **la nota de Alegra nombra a otra persona** (otro estudiante inscrito, o —si fue por cédula— el apellido de la familia sin el nombre del elegido) | No → bandeja (`nota_distinta`, desde 2026-11-09) |
 | 4 | Nombre a una letra de distancia (Levenshtein) | No → bandeja, **con el candidato sugerido** |
 | — | Nada coincide | No → bandeja |
 
@@ -2988,7 +2989,7 @@ bandeja como `posible_duplicado` para que una persona decida.
 | `web/src/components/tesoreria/AlegraSyncBanner.tsx` | La alerta de "última actualización" en Cuentas por Cobrar. |
 | `supabase/migrations/20260912000000_alegra_sync.sql` | `students.student_code` único por colegio, `invoices.external_reference`, `alegra_sync_runs`, `alegra_payment_matches`. |
 | `supabase/migrations/20260912010000_alegra_sync_cron.sql` | pg_cron `0 23 * * 1-5` (= 7:00 pm hora RD) → pg_net → la ruta. |
-| `scripts/test-alegra-matching.mjs` | 22 comprobaciones del núcleo, con los casos reales del 2026-09-09. |
+| `scripts/test-alegra-matching.mjs` | 32 comprobaciones del núcleo, con los casos reales del 2026-09-09 y del caso Felipe Frias (2026-11-09). |
 
 **Sin módulo nuevo en `permissions.ts` a propósito**: la bandeja usa el mismo
 permiso `tesoreria` y se llega por un enlace desde Cuentas por Cobrar. Un módulo
@@ -6213,3 +6214,43 @@ Error 15", su firewall): el pago con tarjeta de prueba lo tiene que hacer una pe
 
 Pendiente: el documento técnico pide intentar una "URL de contingencia" si falla la principal;
 no la publica. Preguntar a Azul cuál es antes de producción.
+
+
+## Conciliación Alegra: pago de un hermano cargado al otro — caso Felipe Frias (2026-11-09)
+
+**Qué pasó.** El 2026-10-07 la corrida automática cargó el e-CF E310000000099
+(RD$5,250, nota *"…para Analia Victoria Felipe Frias"*) a **Oliver**. El e-CF iba
+a nombre de la madre (cédula) y ese día **Analia todavía no estaba dada de alta**
+(se creó el 2026-10-19): Oliver era el único inscrito de la familia, así que la
+regla 3 (cédula del tutor + un solo hijo) lo trató como inequívoco. Resultado:
+Analia salió en Cuentas por Cobrar con RD$9,485 de deuda (incluido recargo) y
+Oliver al día aunque su octubre (E310000000127) seguía en la bandeja.
+
+**Corrección de datos (hecha el 2026-11-09 con la service_role):** la factura
+`f84ef8d7…` (E…099) pasó de Oliver a Analia (solo `student_id`); E…127 se
+registró a Oliver por RD$3,900 igual que `resolveAlegraMatch` (factura `pagado`,
+`ncf` null, pago `alegra`) y su fila de la bandeja quedó `cargado`. Verificado
+con `calculate_receivable_breakdown`: los dos en RD$0, sin recargo.
+
+**Prevención (código):**
+- `alegraMatching.ts`: `matchInvoice` ahora revisa la **nota** de la factura. Si
+  el emparejamiento automático elige a alguien y la nota nombra a otro
+  estudiante inscrito (nombre + apellido) — o, por cédula del tutor, menciona el
+  apellido de la familia sin el nombre del elegido — no se carga solo: va a la
+  bandeja con motivo `nota_distinta`. Las palabras del nombre del tutor se
+  quitan antes ("e-CF a nombre del tutor Carlos Reyes" no es otro hijo). Notas
+  vacías o sin nombres ("Pago de octubre") no cambian nada.
+- Los candidatos que la nota nombra llevan `namedInNote: true` y van primero.
+- Bandeja (`AlegraMatchesReview.tsx`): si la nota nombra a un solo candidato,
+  queda **preseleccionado**; si se elige a otro, aparece un aviso ámbar.
+- `reconcileAlegraPayments.ts`: si el CHECK aún no acepta `nota_distinta`, la
+  fila entra a la bandeja como `ambiguo` en vez de perderse.
+- Escaneo de los 424 cobros con e-CF en producción con la regla nueva: ningún
+  otro pago asignado a un hermano equivocado.
+
+⚠️ **Migración `20261109000000_alegra_match_reason_nota_distinta.sql` escrita
+pero NO aplicada** (la sesión no tuvo permiso para escribir en producción). Solo
+amplía el CHECK de `alegra_payment_matches.reason`; es compatible con el código
+viejo. Aplicarla antes o después del despliegue da igual gracias al respaldo de
+arriba, pero hasta aplicarla esos casos se verán como "Varios estudiantes
+coinciden" en vez de su etiqueta propia.
