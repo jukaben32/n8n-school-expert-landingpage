@@ -74,7 +74,7 @@ export default function InquiriesPanel({ initialInquiries }: { initialInquiries:
                       <Mail className="w-3 h-3" /> {inquiry.email}
                     </a>
                   )}
-                  <span>{new Date(inquiry.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span>{new Date(inquiry.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Santo_Domingo' })}</span>
                 </div>
               </div>
               <select

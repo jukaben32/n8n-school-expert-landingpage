@@ -415,7 +415,7 @@ export default function EnrollmentScansReview({ initialScans }: { initialScans: 
                       {scan.extracted_data?.estudiante.nombre ?? '(sin nombre legible)'} {scan.extracted_data?.estudiante.apellido ?? ''}
                       {scan.source_page ? ` — página ${scan.source_page}` : ''}
                     </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(scan.created_at).toLocaleString('es-DO')}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(scan.created_at).toLocaleString('es-DO', { timeZone: 'America/Santo_Domingo' })}</p>
                     {scan.extraction_error && (
                       <p className="text-xs text-red-500 mt-1">No se pudo leer automáticamente: {scan.extraction_error}</p>
                     )}

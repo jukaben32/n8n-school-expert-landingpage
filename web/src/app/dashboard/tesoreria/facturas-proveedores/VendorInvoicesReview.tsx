@@ -224,7 +224,7 @@ export default function VendorInvoicesReview({ initialInvoices }: { initialInvoi
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {invoice.extracted_data?.ncf ?? 'sin NCF'} · {invoice.extracted_data?.total != null ? `RD$${invoice.extracted_data.total.toLocaleString('es-DO')}` : ''}
                     </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{new Date(invoice.created_at).toLocaleString('es-DO')}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{new Date(invoice.created_at).toLocaleString('es-DO', { timeZone: 'America/Santo_Domingo' })}</p>
                     {invoice.extraction_error && (
                       <p className="text-xs text-red-500 mt-1">No se pudo leer automáticamente: {invoice.extraction_error}</p>
                     )}

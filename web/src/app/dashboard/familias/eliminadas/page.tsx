@@ -55,7 +55,7 @@ export default async function FamiliasEliminadasPage() {
   const families = (raw ?? []) as unknown as DeletedFamily[]
 
   const fecha = (iso: string) =>
-    new Date(iso).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })
+    new Date(iso).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santo_Domingo' })
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

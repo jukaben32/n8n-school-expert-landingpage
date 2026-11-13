@@ -31,7 +31,7 @@ export default function LeadNotes({ leadId, notes }: { leadId: string; notes: No
     router.refresh()
   }
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santo_Domingo' })
 
   return (
     <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">

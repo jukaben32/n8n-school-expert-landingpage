@@ -17,6 +17,7 @@ function formatExpiration(value: string) {
   return new Date(value).toLocaleString('es-DO', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: 'America/Santo_Domingo',
   })
 }
 

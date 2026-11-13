@@ -77,7 +77,7 @@ export default function ReceiptsReview({ initialReceipts }: { initialReceipts: P
                 {receipt.invoices?.description ?? 'Factura'} — factura {receipt.invoices ? formatDOP.format(receipt.invoices.total_amount) : ''}
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                {new Date(receipt.created_at).toLocaleString('es-DO')}
+                {new Date(receipt.created_at).toLocaleString('es-DO', { timeZone: 'America/Santo_Domingo' })}
               </p>
             </div>
             <p className="text-base font-black text-slate-900 dark:text-white shrink-0">

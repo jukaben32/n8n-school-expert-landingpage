@@ -89,7 +89,7 @@ export default function JustificationsReview({ initial }: { initial: PendingJust
                 {item.subject_name ? ` · ${item.subject_name}` : ''}
               </p>
               <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                Enviada por {item.guardian_name} · {new Date(item.created_at).toLocaleString('es-DO')}
+                Enviada por {item.guardian_name} · {new Date(item.created_at).toLocaleString('es-DO', { timeZone: 'America/Santo_Domingo' })}
               </p>
             </div>
             {item.has_document && (
