@@ -64,7 +64,7 @@ export default async function LeadsPage() {
     notesByLead.set(n.lead_id, [...(notesByLead.get(n.lead_id) ?? []), n])
   }
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Santo_Domingo' })
   const newCount = leads.filter((l) => l.status === 'nuevo').length
 
   return (

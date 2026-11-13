@@ -106,7 +106,7 @@ export default async function MensajesPage({
     : allRows
   const startableFamilies = families.filter((f) => eligibleFamilyIds.has(f.id) && !rows.some((r) => r.family_id === f.id))
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santo_Domingo' })
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

@@ -68,7 +68,7 @@ export default async function PoliticasPage() {
     }
   }
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santo_Domingo' })
   const pendingForMe = policies.filter((p) => p.is_active && !mySignedAt.has(p.id)).length
 
   return (

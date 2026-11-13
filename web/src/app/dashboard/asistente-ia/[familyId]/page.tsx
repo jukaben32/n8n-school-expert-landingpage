@@ -50,7 +50,7 @@ export default async function AsistenteIAFamiliaPage({ params }: { params: Promi
   type Turn = { id: string; role: 'user' | 'assistant'; content: string; channel: string; created_at: string }
   const turns = (rows ?? []) as Turn[]
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santo_Domingo' })
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

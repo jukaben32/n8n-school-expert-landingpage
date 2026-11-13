@@ -32,7 +32,7 @@ export default function MessageCard({
   // Formatea la fecha de publicación en español
   const dateStr = publishedAt
     ? new Date(publishedAt).toLocaleDateString('es-DO', {
-        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Santo_Domingo'
       })
     : 'Borrador'
 

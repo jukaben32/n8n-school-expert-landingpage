@@ -62,7 +62,7 @@ export default async function AutorizacionDetallePage({ params }: { params: Prom
   const responseByStudent = new Map(responses.map((r) => [r.student_id, r]))
 
   const pendingCount = students.filter((s) => !responseByStudent.has(s.id)).length
-  const formatDateTime = (d: string) => new Date(d).toLocaleString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const formatDateTime = (d: string) => new Date(d).toLocaleString('es-DO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santo_Domingo' })
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 print:max-w-full">

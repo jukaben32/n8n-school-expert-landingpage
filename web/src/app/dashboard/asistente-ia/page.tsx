@@ -60,7 +60,7 @@ export default async function AsistenteIAPage() {
   }
   const families = Array.from(byFamily.entries()).map(([familyId, data]) => ({ familyId, ...data }))
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santo_Domingo' })
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
