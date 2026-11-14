@@ -49,16 +49,36 @@ function authHeader(): string {
   return `Basic ${Buffer.from(`${email}:${token}`).toString('base64')}`
 }
 
+const pausa = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * GET a la API de Alegra con reintentos cuando Alegra pide bajar el ritmo.
+ *
+ * Caso real (2026-11-14): "Vincular matrículas" pide los ~440 contactos en
+ * 15 páginas seguidas y Alegra cortó en la 13 con `429 Too many requests`.
+ * Ante 429 (o un 502/503/504 pasajero) se espera -- lo que diga `Retry-After`
+ * o 2s, 4s, 8s, 16s -- y se reintenta, hasta 4 veces. Cualquier otro error
+ * se lanza de una vez.
+ */
 async function alegraGet(path: string): Promise<unknown> {
-  const res = await fetch(`${ALEGRA_API}${path}`, {
-    headers: { authorization: authHeader(), accept: 'application/json' },
-    cache: 'no-store',
-  })
-  if (!res.ok) {
+  const reintentables = new Set([429, 502, 503, 504])
+  for (let intento = 0; ; intento++) {
+    const res = await fetch(`${ALEGRA_API}${path}`, {
+      headers: { authorization: authHeader(), accept: 'application/json' },
+      cache: 'no-store',
+    })
+    if (res.ok) return res.json()
+    if (reintentables.has(res.status) && intento < 4) {
+      const retryAfter = Number(res.headers.get('retry-after'))
+      const espera = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter, 30) * 1000
+        : 2000 * 2 ** intento
+      await pausa(espera)
+      continue
+    }
     const body = await res.text()
     throw new Error(`Alegra respondió ${res.status} en ${path}: ${body.slice(0, 300)}`)
   }
-  return res.json()
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -130,6 +150,8 @@ export async function fetchAlegraInvoiceDetail(id: string): Promise<AlegraInvoic
 export async function fetchAlegraStudentContacts(maxPages = 60): Promise<{ name: string; code: string }[]> {
   const out: { name: string; code: string }[] = []
   for (let page = 0; page < maxPages; page++) {
+    // Un respiro entre páginas para no chocar con el límite de Alegra.
+    if (page > 0) await pausa(700)
     const batch = await alegraGet(`/contacts?type=client&limit=30&start=${page * 30}`)
     const rows = Array.isArray(batch) ? batch : []
     if (rows.length === 0) break

@@ -8,6 +8,10 @@ import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import LinkStudentCodesPanel from './LinkStudentCodesPanel'
 import AlegraMatchesReview, { type PendingMatch, type StudentOption } from './AlegraMatchesReview'
 
+// Vincular matrículas y conciliar llaman a Alegra muchas veces y, si Alegra
+// pide pausa (429), esperan y reintentan: necesitan más que el tiempo por defecto.
+export const maxDuration = 300
+
 export const metadata: Metadata = {
   title: 'Conciliación con Alegra — MentorIApp',
   description: 'Cobros del POS que necesitan revisión antes de descontarse de la deuda.',

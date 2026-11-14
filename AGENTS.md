@@ -6313,3 +6313,13 @@ estudiante correcto**. Quedan 2, legítimamente: empresa con nota "Mes de octubr
 y un abono de Donastorg sin nombre que no cuadra con ninguna cuota. Los estudiantes de la
 simulación se reconstruyeron de las notas (sin acceso a la base): confirmar en producción.
 Recomendación a caja: escribir siempre el nombre (o la matrícula) del estudiante en la nota.
+
+### Alegra respondió 429 al vincular matrículas (2026-11-14, tercera parte)
+
+Primer uso real del botón "Vincular matrículas ahora": Alegra cortó en la página 13 de 15
+(`429 Too many requests` en `/contacts?...start=360`). `alegraGet()` ahora reintenta ante
+429/502/503/504 (respeta `Retry-After`, si no 2s/4s/8s/16s, máximo 4 veces); los demás errores
+fallan al instante. `fetchAlegraStudentContacts()` pausa 700 ms entre páginas. La conciliación
+solo vuelve a pedir los contactos si queda algún inscrito sin matrícula. `alegra/page.tsx` declara
+`maxDuration = 300`. Probado con un fetch simulado: dos 429 seguidos y luego éxito -> 42/42
+contactos; un 401 no se reintenta.

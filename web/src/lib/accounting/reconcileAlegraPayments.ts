@@ -105,8 +105,14 @@ export async function reconcileAlegraPayments(options: {
     // que aún no la tienen, para que el emparejamiento sea por matrícula y
     // no por cómo se escribió el nombre. Si esto falla, la corrida sigue
     // igual (por nombre), no se cae.
+    // Solo si hay inscritos sin matrícula: cuando ya están todos vinculados
+    // no hace falta pedirle a Alegra los ~440 contactos cada noche.
     try {
-      await syncStudentCodesFromAlegra(schoolId)
+      const { count: sinMatricula } = await admin.from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('school_id', schoolId).eq('enrollment_status', 'inscrito')
+        .is('deleted_at', null).is('student_code', null)
+      if ((sinMatricula ?? 1) > 0) await syncStudentCodesFromAlegra(schoolId)
     } catch (syncError) {
       console.error('[alegra] No se pudieron vincular matrículas:', syncError)
     }
