@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { reconcileAlegraPayments } from '@/lib/accounting/reconcileAlegraPayments'
+import { syncStudentCodesFromAlegra, learnStudentCode } from '@/lib/accounting/syncStudentCodes'
+import { isStudentCode } from '@/lib/accounting/alegraStudentCodes'
 
 /**
  * Bandeja de conciliación con Alegra.
@@ -95,7 +97,7 @@ export async function resolveAlegraMatch(
 
   const { data: match } = await admin
     .from('alegra_payment_matches')
-    .select('id, school_id, status, amount, assigned_amount, alegra_number, alegra_date, alegra_note, alegra_payment_method')
+    .select('id, school_id, status, amount, assigned_amount, alegra_number, alegra_date, alegra_note, alegra_payment_method, alegra_client_identification, alegra_client_id_type')
     .eq('id', matchId)
     .eq('school_id', staff.schoolId)
     .single()
@@ -179,6 +181,10 @@ export async function resolveAlegraMatch(
   })
   if (paymentError) return { ok: false, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
 
+  // Aprende la matrícula: la próxima factura de este estudiante con esta
+  // matrícula se emparejará sola, sin pasar por la bandeja.
+  await learnStudentCode(staff.schoolId, student.id, match.alegra_client_id_type, match.alegra_client_identification)
+
   const asignado = Math.round((Number(match.assigned_amount) + roundedAmount) * 100) / 100
   const cubierto = asignado >= Number(match.amount) - 0.001
 
@@ -226,6 +232,62 @@ export async function discardAlegraMatch(matchId: string, note: string): Promise
   if (error) return { ok: false, error: `No se pudo descartar: ${error.message}` }
   if (!data || data.length === 0) return { ok: false, error: 'Ese cobro ya no está pendiente.' }
 
+  revalidatePath('/dashboard/tesoreria/alegra')
+  return { ok: true }
+}
+
+/**
+ * Botón "Vincular matrículas": trae las matrículas de Alegra y las guarda
+ * en las fichas donde el emparejamiento es seguro. Devuelve además las
+ * sugerencias que hay que confirmar a mano. Nunca cambia un nombre.
+ */
+export async function linkAlegraStudentCodes(): Promise<ActionResult & {
+  applied?: number
+  alreadyLinked?: number
+  unmatched?: number
+  links?: { studentName: string; code: string; alegraName: string; level: string }[]
+  suggestions?: { code: string; alegraName: string; candidates: { studentId: string; studentName: string }[] }[]
+}> {
+  const staff = await resolveTesoreriaStaff()
+  if (!staff.ok) return { ok: false, error: staff.error }
+  try {
+    const r = await syncStudentCodesFromAlegra(staff.schoolId)
+    if (r.errors.length > 0 && r.applied === 0 && r.links.length === 0 && r.suggestions.length === 0) {
+      return { ok: false, error: r.errors.join(' · ') }
+    }
+    revalidatePath('/dashboard/tesoreria/alegra')
+    return {
+      ok: true,
+      applied: r.applied,
+      alreadyLinked: r.alreadyLinked,
+      unmatched: r.unmatched,
+      links: r.links.map((l) => ({ studentName: l.studentName, code: l.code, alegraName: l.alegraName, level: l.level })),
+      suggestions: r.suggestions,
+      error: r.errors.length > 0 ? r.errors.join(' · ') : undefined,
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : JSON.stringify(e) }
+  }
+}
+
+/** Confirma a mano una sugerencia: guarda esa matrícula en ese estudiante. */
+export async function confirmStudentCode(studentId: string, code: string): Promise<ActionResult> {
+  const staff = await resolveTesoreriaStaff()
+  if (!staff.ok) return { ok: false, error: staff.error }
+  const limpio = (code ?? '').trim()
+  if (!isStudentCode(limpio)) return { ok: false, error: 'Matrícula con formato inválido.' }
+  const admin = createAdminClient()
+  const { data: enUso } = await admin.from('students')
+    .select('id, first_name, last_name').eq('school_id', staff.schoolId).eq('student_code', limpio).is('deleted_at', null).limit(1)
+  if (enUso && enUso.length > 0) {
+    return { ok: false, error: `La matrícula ${limpio} ya la tiene ${enUso[0].first_name} ${enUso[0].last_name}.` }
+  }
+  const { data, error } = await admin.from('students')
+    .update({ student_code: limpio })
+    .eq('id', studentId).eq('school_id', staff.schoolId).is('deleted_at', null)
+    .select('id')
+  if (error) return { ok: false, error: error.message }
+  if (!data || data.length === 0) return { ok: false, error: 'No se encontró el estudiante.' }
   revalidatePath('/dashboard/tesoreria/alegra')
   return { ok: true }
 }

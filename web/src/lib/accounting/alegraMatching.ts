@@ -97,7 +97,7 @@ function editDistance(a: string, b: string): number {
 }
 
 /** Dos palabras "son la misma" si difieren en una letra (dos si son largas). */
-function palabraSeParece(a: string, b: string): boolean {
+export function palabraSeParece(a: string, b: string): boolean {
   if (a === b) return true
   if (Math.abs(a.length - b.length) > 2) return false
   const tolerancia = Math.max(a.length, b.length) >= 7 ? 2 : 1
