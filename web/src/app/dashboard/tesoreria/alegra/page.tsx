@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { canAccess } from '@/lib/permissions'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
+import LinkStudentCodesPanel from './LinkStudentCodesPanel'
 import AlegraMatchesReview, { type PendingMatch, type StudentOption } from './AlegraMatchesReview'
 
 export const metadata: Metadata = {
@@ -52,7 +53,7 @@ export default async function ConciliacionAlegraPage() {
         .eq('status', 'pendiente')
         .order('alegra_date', { ascending: false }),
       supabase.from('students')
-        .select('id, first_name, last_name, grade_level')
+        .select('id, first_name, last_name, grade_level, student_code')
         .eq('school_id', schoolId)
         .eq('enrollment_status', 'inscrito')
         .is('deleted_at', null)
@@ -70,6 +71,8 @@ export default async function ConciliacionAlegraPage() {
     name: `${s.first_name} ${s.last_name}`.trim(),
     gradeLevel: (s.grade_level as string | null) ?? null,
   }))
+
+  const withoutCode = (studentsRaw ?? []).filter((s) => !((s.student_code as string | null) ?? '').trim()).length
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -91,6 +94,8 @@ export default async function ConciliacionAlegraPage() {
           alguien decida a qué estudiante corresponden — nunca se registran a ciegas.
         </p>
       </div>
+
+      <LinkStudentCodesPanel withoutCode={withoutCode} total={students.length} />
 
       <AlegraMatchesReview matches={matches} students={students} />
 

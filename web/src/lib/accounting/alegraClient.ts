@@ -117,3 +117,29 @@ export async function fetchAlegraInvoicesSince(sinceDate: string, maxPages = 20)
 export async function fetchAlegraInvoiceDetail(id: string): Promise<AlegraInvoice> {
   return normalizeInvoice(await alegraGet(`/invoices/${encodeURIComponent(id)}`))
 }
+
+/**
+ * Contactos de Alegra que son estudiantes (identificación de tipo IE =
+ * matrícula, ej. "24-0033"). Se usan para vincular cada estudiante de la
+ * plataforma con su matrícula (`alegraStudentCodes.ts`). Los contactos con
+ * cédula (CED) son tutores y se ignoran aquí.
+ *
+ * Forma verificada contra la cuenta real el 2026-11-14 (442 contactos):
+ * `identificationObject: { type: 'IE', number: '23-0133' }`.
+ */
+export async function fetchAlegraStudentContacts(maxPages = 60): Promise<{ name: string; code: string }[]> {
+  const out: { name: string; code: string }[] = []
+  for (let page = 0; page < maxPages; page++) {
+    const batch = await alegraGet(`/contacts?type=client&limit=30&start=${page * 30}`)
+    const rows = Array.isArray(batch) ? batch : []
+    if (rows.length === 0) break
+    for (const raw of rows as Array<Record<string, any>>) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const type = String(raw?.identificationObject?.type ?? '').toUpperCase()
+      const code = String(raw?.identificationObject?.number ?? raw?.identification ?? '').trim()
+      const name = String(raw?.name ?? '').trim()
+      if (type === 'IE' && code && name && raw?.status !== 'inactive') out.push({ name, code })
+    }
+    if (rows.length < 30) break
+  }
+  return out
+}

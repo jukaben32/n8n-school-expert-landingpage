@@ -6254,3 +6254,34 @@ amplía el CHECK de `alegra_payment_matches.reason`; es compatible con el códig
 viejo. Aplicarla antes o después del despliegue da igual gracias al respaldo de
 arriba, pero hasta aplicarla esos casos se verán como "Varios estudiantes
 coinciden" en vez de su etiqueta propia.
+
+## Conciliación Alegra por MATRÍCULA, no por nombre (2026-11-14)
+
+Pedido del colegio: que la conciliación corra sin intervención manual, porque mientras un
+cobro espera en la bandeja el padre no ve su deuda actualizada. **Regla del colegio: ante una
+discrepancia, MANDA el nombre de la plataforma** (las actas ya le dieron la razón 4 de 4).
+
+Por eso no se cambia ningún nombre en ningún lado: se guarda la **matrícula de Alegra**
+(contacto con identificación tipo IE, ej. `24-0033`) en `students.student_code`. El motor ya
+emparejaba primero por matrícula; lo que faltaba era poblarla (hasta hoy solo Victor la tenía).
+
+- `lib/accounting/alegraStudentCodes.ts` (puro): `planStudentCodeLinks()`. Vincula solo si es
+  seguro: nombre exacto normalizado, o el nombre de Alegra contenido en el de la plataforma con
+  tolerancia de una letra por palabra y el primer nombre igual (≥3 palabras), y único en los dos
+  sentidos. Lo demás queda como sugerencia. Nunca reusa una matrícula ya asignada ni usa una
+  repetida en Alegra; las cédulas (CED) no cuentan.
+- `alegraClient.fetchAlegraStudentContacts()` lee `/contacts` (442 contactos el 2026-11-14).
+- `lib/accounting/syncStudentCodes.ts`: `syncStudentCodesFromAlegra()` corre **al inicio de cada
+  conciliación** (cron 7pm y botón) y solo escribe donde `student_code is null`.
+  `learnStudentCode()` aprende la matrícula de cada cobro atribuido (automático o resuelto en
+  la bandeja), así un caso resuelto a mano una vez se empareja solo la próxima.
+- Bandeja `/dashboard/tesoreria/alegra`: panel "Matrículas de Alegra" con cuántos inscritos no
+  tienen matrícula, botón "Vincular matrículas ahora" y confirmación de sugerencias.
+- Prueba: `npx --prefix web tsx scripts/test-alegra-student-codes.mjs` (15 casos).
+  Sin migración ni cambio de RLS (`student_code` y su índice único por colegio ya existían).
+
+**Límite real**: los e-CF a nombre del tutor (cédula) que cubren a varios hermanos siguen
+yendo a la bandeja como "conjunto": la matrícula no ayuda ahí (el comprobante no la trae).
+Lo que lo elimina es la práctica ya anunciada de cobrar por estudiante.
+**Pendiente**: desplegar y correr "Vincular matrículas ahora" una vez para revisar las
+sugerencias; sin `npm run smoke` (no hubo credenciales de Supabase en esta sesión).

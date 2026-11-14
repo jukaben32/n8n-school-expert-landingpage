@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { alegraIsConfigured, fetchAlegraInvoicesSince, fetchAlegraInvoiceDetail } from './alegraClient'
 import { matchInvoice, mensualidadAmount, type MatchReason, type StudentRow, type GuardianRow } from './alegraMatching'
+import { syncStudentCodesFromAlegra, learnStudentCode } from './syncStudentCodes'
 
 /**
  * Conciliación automática Alegra → Cuentas por Cobrar.
@@ -100,6 +101,16 @@ export async function reconcileAlegraPayments(options: {
   let skippedCount = 0
 
   try {
+    // Antes de emparejar: vincular matrículas de Alegra con los estudiantes
+    // que aún no la tienen, para que el emparejamiento sea por matrícula y
+    // no por cómo se escribió el nombre. Si esto falla, la corrida sigue
+    // igual (por nombre), no se cae.
+    try {
+      await syncStudentCodesFromAlegra(schoolId)
+    } catch (syncError) {
+      console.error('[alegra] No se pudieron vincular matrículas:', syncError)
+    }
+
     const listado = await fetchAlegraInvoicesSince(sinceDate)
     invoicesSeen = listado.length
 
@@ -205,6 +216,11 @@ export async function reconcileAlegraPayments(options: {
           paid_at: new Date(`${invoice.date}T00:00:00`).toISOString(),
           notes: etiqueta || null,
         })
+        // Aprende la matrícula: si este cobro trae una matrícula (IE) y el
+        // estudiante aún no la tiene, se guarda para los próximos.
+        if (!alumno.student_code) {
+          await learnStudentCode(schoolId, alumno.id, invoice.clientIdentificationType, invoice.clientIdentification)
+        }
         loadedCount++
         loadedAmount += monto
         if (invoice.fullNumber) referenciasCargadas.add(invoice.fullNumber)
