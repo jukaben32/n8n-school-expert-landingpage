@@ -6285,3 +6285,31 @@ yendo a la bandeja como "conjunto": la matrícula no ayuda ahí (el comprobante 
 Lo que lo elimina es la práctica ya anunciada de cobrar por estudiante.
 **Pendiente**: desplegar y correr "Vincular matrículas ahora" una vez para revisar las
 sugerencias; sin `npm run smoke` (no hubo credenciales de Supabase en esta sesión).
+
+### Resolución automática de la bandeja (2026-11-14, segunda parte)
+
+Medido con los cobros REALES de noviembre en Alegra (111): los que iban a revisión eran casi
+todos e-CF a nombre de un padre/madre (cédula) o de una empresa (RNC). **14 de esos 16 traían
+el nombre completo del estudiante en la nota** ("pago mes de octubre, de Onaimi Nayeli Nuñez
+Rivera"), pero el motor solo usaba la nota para BLOQUEAR, nunca para asignar. Reglas nuevas,
+todas en `alegraMatching.ts` (puro) y probadas con esos casos:
+
+- `studentsNamedInNote()`: estudiante elegible si la nota trae su primer nombre + un apellido;
+  gana el de más palabras coincidentes (hermanos "Luis David"/"Luis Manuel", 2026-11-04);
+  tolera una letra ("Yosmalilyn" = "Yosmailyn"). Empate → no adivina.
+- Sin emparejamiento (RNC, cédula no registrada) y la nota nombra a UN estudiante → se le carga.
+- Conjunto por cédula: si la nota nombra a uno, es suyo; si nombra a varios o a ninguno, se usa
+  `splitByTuition()`: solo si hay UNA ÚNICA combinación de hermanos con la que el monto es k
+  veces la suma de sus cuotas (k en medias cuotas). Cuotas de `student_tuition_basis`.
+- Matrículas escritas en la nota ("24-0033, 24-0034") mandan sobre todo lo demás.
+- e-CF del tutor con nota que nombra a otro estudiante (caso Felipe Frias con Analia ya dada
+  de alta) → se le carga al nombrado. Si vino por matrícula/nombre del propio estudiante y la
+  nota contradice, sigue a revisión.
+- Reintento nocturno: cada conciliación vuelve a evaluar la bandeja pendiente sin asignar
+  (estudiante dado de alta después, matrícula ya vinculada) y carga lo que ya es inequívoco.
+
+Simulación con los 16 reales (`E310000000129`..`144`): **14 se cargan solos, todos al
+estudiante correcto**. Quedan 2, legítimamente: empresa con nota "Mes de octubre" (sin nombre)
+y un abono de Donastorg sin nombre que no cuadra con ninguna cuota. Los estudiantes de la
+simulación se reconstruyeron de las notas (sin acceso a la base): confirmar en producción.
+Recomendación a caja: escribir siempre el nombre (o la matrícula) del estudiante en la nota.
