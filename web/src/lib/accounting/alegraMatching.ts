@@ -109,12 +109,45 @@ export function palabraSeParece(a: string, b: string): boolean {
  * Libros, Uniformes y Recargo por Mora se excluyen a propósito: no son
  * cuota, así que no deben descontar deuda de mensualidad.
  */
+/** ¿Esta línea de Alegra es mensualidad (Mensualidad/Abono/Colegiatura)? */
+export function isMensualidadItem(name: string | null | undefined): boolean {
+  const n = normalizeName(name)
+  return CONCEPTOS_MENSUALIDAD.some((c) => n.includes(c))
+}
+
+/**
+ * Descuento por pago adelantado que caja anotó EXPLÍCITAMENTE en la factura
+ * de Alegra (línea de mensualidad con precio completo y % de descuento, ej.
+ * "Mensualidad RD$47,250 con 5%"). Es la forma exacta de saberlo: no se
+ * adivina nada, se toma lo que Alegra dice que se descontó.
+ *
+ * Solo cuenta líneas que cubren DOS cuotas o más (precio x cantidad >= 2
+ * mensualidades): la media cuota de agosto se factura como "Mensualidad
+ * RD$4,100 con 50%" y eso NO es un descuento, es el medio mes del calendario
+ * de 10.5 cuotas -- si se contara, se regalaría medio mes.
+ *
+ * Tope de seguridad: nunca más del 25% de lo que cubre la línea (el mayor
+ * descuento visto en caja fue ~20%); un descuento mayor es un error de
+ * digitación o una beca, y eso lo decide una persona.
+ */
+export function explicitPrepayDiscount(items: AlegraInvoice['items'], monthlyAmount: number): number {
+  if (!(monthlyAmount > 0)) return 0
+  let credit = 0
+  for (const item of items) {
+    if (!isMensualidadItem(item.name)) continue
+    const discount = Number(item.discountAmount ?? 0)
+    if (!(discount > 0)) continue
+    const gross = Number(item.price ?? 0) * Number(item.quantity ?? 1)
+    if (!(gross >= 2 * monthlyAmount - 0.01)) continue
+    if (discount > gross * 0.25) continue
+    credit += discount
+  }
+  return Math.round(credit * 100) / 100
+}
+
 export function mensualidadAmount(invoice: AlegraInvoice): number {
   const total = invoice.items
-    .filter((item) => {
-      const name = normalizeName(item.name)
-      return CONCEPTOS_MENSUALIDAD.some((c) => name.includes(c))
-    })
+    .filter((item) => isMensualidadItem(item.name))
     .reduce((sum, item) => sum + (Number.isFinite(item.total) ? item.total : 0), 0)
   return Math.round(total * 100) / 100
 }

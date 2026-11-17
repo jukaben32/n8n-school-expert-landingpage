@@ -262,3 +262,72 @@ export async function moveStudentToFamilyAction(studentId: string, targetFamilyI
   revalidatePath('/dashboard/familias')
   return { ok: true, message: avisos.join(' ') }
 }
+
+/**
+ * Beca / cuota especial de un estudiante (students.tuition_override_amount).
+ *
+ * Es dinero que el colegio deja de cobrar, así que la decide Dirección
+ * (director, administración del colegio o súper admin), no Secretaría ni
+ * Finanzas, y siempre con motivo escrito: queda quién la autorizó y cuándo.
+ * `monthlyAmount = null` quita la beca y el estudiante vuelve a la
+ * mensualidad de su nivel. El descuento por hermanos se sigue aplicando
+ * encima (comportamiento vigente de student_tuition_basis).
+ *
+ * Cliente admin: students no tiene policy de update para estos campos desde
+ * la sesión de dirección en todos los casos; la autorización se repite aquí.
+ */
+export async function setStudentScholarshipAction(
+  studentId: string,
+  monthlyAmount: number | null,
+  reason: string,
+): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, message: 'No hay sesión activa.' }
+
+  const { data: profile } = await supabase
+    .from('users_profiles')
+    .select('id, role, school_id')
+    .eq('auth_id', user.id)
+    .single()
+  if (!profile || !['super_admin', 'school_admin', 'director'].includes(profile.role)) {
+    return { ok: false, message: 'Solo Dirección puede asignar o quitar una beca.' }
+  }
+  const { schoolId } = await getActiveSchool(profile.role, profile.school_id)
+
+  const motivo = reason.trim()
+  let amount: number | null = null
+  if (monthlyAmount !== null) {
+    if (!Number.isFinite(monthlyAmount) || monthlyAmount < 0) {
+      return { ok: false, message: 'La cuota debe ser un monto igual o mayor a cero.' }
+    }
+    amount = Math.round(monthlyAmount * 100) / 100
+    if (motivo.length < 5) return { ok: false, message: 'Escribe el motivo de la beca (quién la aprobó y por qué).' }
+  }
+
+  const admin = createAdminClient()
+  const { data: student } = await admin
+    .from('students')
+    .select('id')
+    .eq('id', studentId)
+    .eq('school_id', schoolId)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (!student) return { ok: false, message: 'No se encontró el estudiante.' }
+
+  const { error } = await admin
+    .from('students')
+    .update({
+      tuition_override_amount: amount,
+      tuition_override_reason: amount === null ? (motivo || null) : motivo,
+      tuition_override_set_by: profile.id,
+      tuition_override_set_at: new Date().toISOString(),
+    })
+    .eq('id', studentId)
+    .eq('school_id', schoolId)
+  if (error) return { ok: false, message: `No se pudo guardar la beca: ${error.message}` }
+
+  revalidatePath(`/dashboard/estudiantes/${studentId}`)
+  revalidatePath('/dashboard/tesoreria/cuentas-por-cobrar')
+  return { ok: true, message: amount === null ? 'Beca quitada: vuelve a la mensualidad de su nivel.' : 'Beca guardada.' }
+}

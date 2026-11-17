@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { alegraIsConfigured, fetchAlegraInvoicesSince, fetchAlegraInvoiceDetail, type AlegraInvoice } from './alegraClient'
-import { applyAnnualPrepayCredit } from './annualPrepayCredit'
-import { matchInvoice, mensualidadAmount, splitByTuition, type Candidate, type MatchReason, type StudentRow, type GuardianRow } from './alegraMatching'
+import { applyPrepayDiscountCredit } from './annualPrepayCredit'
+import { explicitPrepayDiscount, isMensualidadItem, matchInvoice, mensualidadAmount, splitByTuition, type Candidate, type MatchReason, type StudentRow, type GuardianRow } from './alegraMatching'
 import { syncStudentCodesFromAlegra, learnStudentCode } from './syncStudentCodes'
 
 /**
@@ -223,11 +223,28 @@ export async function reconcileAlegraPayments(options: {
         paid_at: new Date(`${invoice.date}T00:00:00`).toISOString(),
         notes: etiqueta || null,
       })
-      // Pago del año completo con descuento: el descuento cubre las cuotas
-      // que faltan (trato VIP, ver annualPrepayCredit.ts).
-      await applyAnnualPrepayCredit(admin, {
+      // Descuento por pago adelantado dado en caja: el que caja anotó en la
+      // línea de Alegra (exacto) o, si cobró el neto, el del año completo por
+      // la nota. Cubre cuotas sin efectivo (ver annualPrepayCredit.ts). En un
+      // comprobante repartido entre hermanos no se usa el descuento de la
+      // línea: es de todo el comprobante, no de este hijo.
+      const repartido = Math.abs(monto - mensualidadAmount(invoice)) > 0.01
+      const cuota = repartido ? null : await cuotaMensual(alumno.id)
+      let explicitDiscount = 0
+      if (cuota) {
+        // El listado de Alegra puede traer las líneas resumidas (sin precio
+        // ni descuento): en ese caso se pide el detalle de la factura.
+        let lineas = invoice.items
+        const resumidas = lineas.some((it) => isMensualidadItem(it.name) && it.price === undefined)
+        if (resumidas && invoice.id && invoice.id !== 'undefined') {
+          try { lineas = (await fetchAlegraInvoiceDetail(invoice.id)).items } catch { /* sin detalle: sin descuento explícito */ }
+        }
+        explicitDiscount = explicitPrepayDiscount(lineas, cuota)
+      }
+      await applyPrepayDiscountCredit(admin, {
         invoiceId: facturaCreada.id, studentId: alumno.id,
         invoiceDate: invoice.date, invoiceAmount: monto, note: invoice.note,
+        explicitDiscount,
       })
       return true
     }

@@ -8,7 +8,9 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { reconcileAlegraPayments } from '@/lib/accounting/reconcileAlegraPayments'
 import { syncStudentCodesFromAlegra, learnStudentCode } from '@/lib/accounting/syncStudentCodes'
 import { isStudentCode } from '@/lib/accounting/alegraStudentCodes'
-import { applyAnnualPrepayCredit } from '@/lib/accounting/annualPrepayCredit'
+import { applyPrepayDiscountCredit } from '@/lib/accounting/annualPrepayCredit'
+import { alegraIsConfigured, fetchAlegraInvoiceDetail } from '@/lib/accounting/alegraClient'
+import { explicitPrepayDiscount } from '@/lib/accounting/alegraMatching'
 
 /**
  * Bandeja de conciliación con Alegra.
@@ -114,7 +116,7 @@ export async function resolveAlegraMatch(
 
   const { data: match } = await admin
     .from('alegra_payment_matches')
-    .select('id, school_id, status, amount, assigned_amount, alegra_number, alegra_date, alegra_note, alegra_payment_method, alegra_client_identification, alegra_client_id_type')
+    .select('id, school_id, status, amount, assigned_amount, alegra_invoice_id, alegra_number, alegra_date, alegra_note, alegra_payment_method, alegra_client_identification, alegra_client_id_type')
     .eq('id', matchId)
     .eq('school_id', staff.schoolId)
     .single()
@@ -222,11 +224,28 @@ export async function resolveAlegraMatch(
   })
   if (paymentError) return { ok: false, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
 
-  // Pago del año completo con descuento: el descuento cubre las cuotas que
-  // faltan (trato VIP, ver annualPrepayCredit.ts).
-  await applyAnnualPrepayCredit(admin, {
+  // Descuento por pago adelantado dado en caja (ver annualPrepayCredit.ts).
+  // Si el comprobante entero es de este estudiante, se lee en Alegra el
+  // descuento que caja anotó en la línea; si se reparte entre hermanos, no
+  // (el descuento es del comprobante completo, no de este hijo).
+  let explicitDiscount = 0
+  const comprobanteEntero = Math.abs(roundedAmount - Number(match.amount)) < 0.01 && Number(match.assigned_amount) === 0
+  if (comprobanteEntero && match.alegra_invoice_id && alegraIsConfigured()) {
+    try {
+      const [detalle, { data: base }] = await Promise.all([
+        fetchAlegraInvoiceDetail(String(match.alegra_invoice_id)),
+        admin.rpc('student_tuition_basis', { p_student_id: student.id }).maybeSingle(),
+      ])
+      const cuota = Number((base as { monthly_amount?: number } | null)?.monthly_amount ?? 0)
+      explicitDiscount = explicitPrepayDiscount(detalle.items, cuota)
+    } catch (e) {
+      console.error('[resolveAlegraMatch] no se pudo leer el descuento en Alegra', e)
+    }
+  }
+  await applyPrepayDiscountCredit(admin, {
     invoiceId: invoice.id, studentId: student.id,
     invoiceDate: match.alegra_date, invoiceAmount: roundedAmount, note: match.alegra_note,
+    explicitDiscount,
   })
 
   // Aprende la matrícula: la próxima factura de este estudiante con esta

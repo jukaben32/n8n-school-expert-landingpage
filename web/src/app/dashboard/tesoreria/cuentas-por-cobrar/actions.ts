@@ -7,7 +7,7 @@ import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
 import { EXTERNAL_PAYMENT_SOURCE_LABELS } from '@/lib/receivables/externalPaymentSources'
-import { applyAnnualPrepayCredit } from '@/lib/accounting/annualPrepayCredit'
+import { applyPrepayDiscountCredit } from '@/lib/accounting/annualPrepayCredit'
 
 interface ActionResult {
   ok: boolean
@@ -133,7 +133,9 @@ export async function recordExternalPayment(
   lateFeeAmount: number,
   source: string,
   paidAt: string,
-  note: string
+  note: string,
+  /** Descuento por pago adelantado que caja hizo (RD$). Cubre cuotas sin efectivo. */
+  prepayDiscount: number = 0
 ): Promise<ActionResult> {
   const staff = await resolveTesoreriaStaff()
   if (!staff.ok) return { ok: false, error: staff.error }
@@ -145,6 +147,17 @@ export async function recordExternalPayment(
   if (roundedPrincipal <= 0 && roundedLateFee <= 0) return { ok: false, error: 'Indica un monto mayor a cero.' }
   if (!EXTERNAL_PAYMENT_SOURCE_LABELS[source]) return { ok: false, error: 'Fuente de pago inválida.' }
   if (!paidAt) return { ok: false, error: 'Indica la fecha del pago.' }
+  const roundedDiscount = Math.round((prepayDiscount || 0) * 100) / 100
+  if (roundedDiscount < 0) return { ok: false, error: 'El descuento no puede ser negativo.' }
+  if (roundedDiscount > 0 && roundedPrincipal <= 0) {
+    return { ok: false, error: 'El descuento por pronto pago solo aplica cuando se paga mensualidad.' }
+  }
+  // Tope de seguridad: el mayor descuento visto en caja fue ~20%. Más del 25%
+  // de lo que cubre el pago es un error de digitación o una beca (que va en
+  // la ficha del estudiante, no aquí).
+  if (roundedDiscount > (roundedPrincipal + roundedDiscount) * 0.25) {
+    return { ok: false, error: 'El descuento no puede pasar del 25% de lo que cubre el pago. Si es una beca, cárgala en la ficha del estudiante.' }
+  }
 
   const admin = createAdminClient()
 
@@ -224,11 +237,11 @@ export async function recordExternalPayment(
       amount: roundedPrincipal,
     })
     if (!result.ok) return result
-    // Si la nota dice que es el año completo (p. ej. "año completo con
-    // descuento"), el descuento cubre las cuotas que faltan: trato VIP.
-    await applyAnnualPrepayCredit(admin, {
+    // Descuento por pronto pago: el que anotó caja (exacto) o, si la nota
+    // dice "año completo", lo que falta para el año (ver annualPrepayCredit.ts).
+    await applyPrepayDiscountCredit(admin, {
       invoiceId: result.invoiceId, studentId, invoiceDate: paidAt,
-      invoiceAmount: roundedPrincipal, note,
+      invoiceAmount: roundedPrincipal, note, explicitDiscount: roundedDiscount,
     })
   }
 

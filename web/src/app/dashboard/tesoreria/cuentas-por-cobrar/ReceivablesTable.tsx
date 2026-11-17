@@ -95,6 +95,7 @@ export default function ReceivablesTable({
   const [paySource, setPaySource] = useState<string>(EXTERNAL_PAYMENT_SOURCES[0].value)
   const [payDate, setPayDate] = useState('')
   const [payNote, setPayNote] = useState('')
+  const [payDiscount, setPayDiscount] = useState('')
 
   const notConfigured = rows.filter((r) => r.aging_bucket === 'sin_configurar')
   // Todo estudiante con saldo por cobrar. El RPC nuevo ya separa principal
@@ -160,15 +161,23 @@ export default function ReceivablesTable({
     setPaySource(EXTERNAL_PAYMENT_SOURCES[0].value)
     setPayDate(new Date().toISOString().slice(0, 10))
     setPayNote('')
+    setPayDiscount('')
     setFeedback((prev) => ({ ...prev, [r.student_id]: '' }))
   }
 
   async function confirmPayment(studentId: string) {
     setBusyId(studentId)
-    const result = await recordExternalPayment(studentId, Number(payPrincipal), Number(payLateFee), paySource, payDate, payNote)
-    setBusyId(null)
-    if (result.ok) setPayingId(null)
-    setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Pago registrado.' : (result.error ?? 'No se pudo registrar.') }))
+    try {
+      const result = await recordExternalPayment(studentId, Number(payPrincipal), Number(payLateFee), paySource, payDate, payNote, Number(payDiscount) || 0)
+      if (result.ok) setPayingId(null)
+      setFeedback((prev) => ({ ...prev, [studentId]: result.ok ? 'Pago registrado.' : (result.error ?? 'No se pudo registrar.') }))
+    } catch {
+      // Sin esto el botón quedaba colgado sin mensaje (sesión vencida, red o
+      // despliegue nuevo). No se guardó nada a medias: se puede reintentar.
+      setFeedback((prev) => ({ ...prev, [studentId]: 'El servidor no respondió y no se registró nada. Recarga la página e inténtalo de nuevo.' }))
+    } finally {
+      setBusyId(null)
+    }
   }
 
   return (
@@ -301,6 +310,13 @@ export default function ReceivablesTable({
                             onChange={(e) => setPayLateFee(e.target.value)}
                             placeholder="Recargo"
                             className="rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
+                          />
+                          <input
+                            type="number" min="0" step="0.01" value={payDiscount}
+                            onChange={(e) => setPayDiscount(e.target.value)}
+                            placeholder="Descuento pronto pago"
+                            title="Solo si caja hizo descuento por pagar meses por adelantado. Cubre cuotas sin efectivo."
+                            className="col-span-2 rounded-md border border-slate-200 bg-white text-xs px-2 py-1"
                           />
                           <input
                             type="date" value={payDate}

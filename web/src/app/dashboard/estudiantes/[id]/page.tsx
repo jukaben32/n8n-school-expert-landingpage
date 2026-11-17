@@ -9,6 +9,8 @@ import GradeLevelInput from './GradeLevelInput'
 import EditStudentButton from './EditStudentButton'
 import DeleteStudentButton from './DeleteStudentButton'
 import MoveStudentFamilyButton from './MoveStudentFamilyButton'
+import TuitionScholarshipCard from './TuitionScholarshipCard'
+import { createAdminClient } from '@/lib/supabase/admin'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { schoolDateString } from '@/lib/schoolDate'
 
@@ -46,7 +48,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
 
   const { data: student, error: studentError } = await supabase
     .from('students')
-    .select('id, first_name, last_name, birth_date, gender, enrollment_status, grade_level, family_id, families(id, name)')
+    .select('id, first_name, last_name, birth_date, gender, enrollment_status, grade_level, family_id, tuition_override_amount, tuition_override_reason, tuition_override_set_at, families(id, name)')
     .eq('id', id)
     .eq('school_id', schoolId)
     .is('deleted_at', null)
@@ -55,6 +57,28 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
   if (!student) notFound()
 
   const family = student.families as unknown as { id: string; name: string } | null
+
+  // Mensualidad: de dónde sale su cuota (nivel, beca, hermanos). Se lee con el
+  // cliente admin porque el estudiante ya se verificó arriba con la sesión y
+  // acotado al colegio activo; así ningún rol ve la cuota vacía por RLS.
+  const tuitionAdmin = createAdminClient()
+  const [{ data: basisRaw }, { data: siblingRaw }, { data: schoolTuition }] = await Promise.all([
+    tuitionAdmin.rpc('student_tuition_basis', { p_student_id: student.id }).maybeSingle(),
+    tuitionAdmin.rpc('calculate_sibling_discount', { p_student_id: student.id }).maybeSingle(),
+    tuitionAdmin.from('schools')
+      .select('tuition_parvulo_amount, tuition_inicial_amount, tuition_primaria_amount, tuition_secundaria_amount')
+      .eq('id', schoolId).maybeSingle(),
+  ])
+  const basis = basisRaw as { school_level: string | null; monthly_amount: number | null; configured: boolean } | null
+  const sibling = siblingRaw as { discount_percent: number | null } | null
+  const levelAmounts: Record<string, number | null | undefined> = {
+    parvulo: schoolTuition?.tuition_parvulo_amount,
+    inicial: schoolTuition?.tuition_inicial_amount,
+    primaria: schoolTuition?.tuition_primaria_amount,
+    secundaria: schoolTuition?.tuition_secundaria_amount,
+  }
+  const levelAmount = basis?.school_level ? levelAmounts[basis.school_level] ?? null : null
+  const canEditScholarship = ['super_admin', 'school_admin', 'director'].includes(profile.role)
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -120,6 +144,20 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
           </div>
         </div>
       </div>
+
+      {/* Mensualidad: nivel, beca y descuento por hermanos */}
+      {student.enrollment_status === 'inscrito' && (
+        <TuitionScholarshipCard
+          studentId={student.id}
+          canEdit={canEditScholarship}
+          levelAmount={levelAmount != null ? Number(levelAmount) : null}
+          overrideAmount={student.tuition_override_amount != null ? Number(student.tuition_override_amount) : null}
+          overrideReason={student.tuition_override_reason ?? null}
+          overrideSetAt={student.tuition_override_set_at ?? null}
+          siblingPercent={Number(sibling?.discount_percent ?? 0)}
+          finalMonthly={basis?.configured && basis.monthly_amount != null ? Number(basis.monthly_amount) : null}
+        />
+      )}
 
       {/* Progreso en Academia */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">

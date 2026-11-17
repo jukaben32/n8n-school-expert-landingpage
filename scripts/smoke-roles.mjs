@@ -110,6 +110,7 @@ const CHECKS = {
     ['Incidencias: NO las ve (expediente interno)', 'INCIDENCIAS_INVISIBLES'],
   ],
   reception: [
+    ['Ficha del estudiante: mensualidad y beca', `select count(*) from students where deleted_at is null and (tuition_override_amount is null or tuition_override_reason is not null or tuition_override_set_at is null);`],
     ['Familias', `select count(*) from families where deleted_at is null;`],
     ['Estudiantes', `select count(*) from students where deleted_at is null;`],
     ['Asistencia', `select count(*) from attendance;`],
@@ -119,6 +120,7 @@ const CHECKS = {
     ['Justificaciones: REVISAR (update)', 'REVIEW_JUSTIFICATION'],
   ],
   director: [
+    ['Ficha del estudiante: mensualidad y beca', `select count(*) from students where deleted_at is null and (tuition_override_amount is null or tuition_override_reason is not null or tuition_override_set_at is null);`],
     ['Familias', `select count(*) from families where deleted_at is null;`],
     ['Estudiantes', `select count(*) from students where deleted_at is null;`],
     ['Asistencia', `select count(*) from attendance;`],

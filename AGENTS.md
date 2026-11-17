@@ -6390,3 +6390,33 @@ por pago adelantado** en Configuración → Operaciones (hoy los da a mano en ca
 Verificado: `tsc`, `eslint`, `next build` limpios; `npm run smoke` 69/69 (comprobación nueva
 del año pagado); pruebas de notas, contexto del asistente, plan de mensualidad, conciliación y
 recibo, todas OK. Datos corregidos con ensayo previo en transacción revertida.
+
+### Política de descuentos: mecanismos completos, valores por decidir (2026-11-17, misma tarde)
+
+Pedido del usuario: "que todas las situaciones estén previstas". Documento para el dueño:
+`docs/POLITICA_DESCUENTOS.md` (y la versión compartible en Claude Docs, "Política de
+mensualidades y descuentos"). Tabla de 7 decisiones con el valor que funciona hoy. **No se cambió
+ningún monto ni porcentaje de familias reales**: eso lo decide el dueño.
+
+Construido para que no haya lagunas:
+- **Descuento de pronto pago que da caja, exacto**: `explicitPrepayDiscount()` (`alegraMatching.ts`)
+  toma el descuento que caja anotó en la línea de Mensualidad de Alegra, solo si la línea cubre 2+
+  cuotas (la media cuota de agosto se factura "Mensualidad con 50%" y NO es descuento) y con tope 25%.
+  `alegraClient` ahora guarda `price`/`quantity`/`discountAmount` de cada línea y la conciliación
+  pide el detalle si el listado viene resumido. `applyPrepayDiscountCredit()` (antes
+  `applyAnnualPrepayCredit`) usa primero ese descuento explícito y, si no hay, la regla de "año
+  completo" por la nota. Prueba: `scripts/test-prepay-discount.mjs` (10 casos, 5 líneas reales).
+- **"Registrar pago"** (Cuentas por Cobrar) tiene campo "Descuento pronto pago", tope 25%; además
+  ganó el try/catch que le faltaba (el botón quedaba colgado ante un fallo de red).
+- **Becas con responsable**: migración `20261117010000_tuition_scholarship_audit.sql` (aplicada a
+  producción) agrega `students.tuition_override_reason/_set_by/_set_at`. Tarjeta "Mensualidad" en
+  la ficha del estudiante (`TuitionScholarshipCard.tsx`): muestra nivel, beca, % de hermanos y la
+  cuota final; solo super_admin/school_admin/director asignan o quitan (con motivo obligatorio),
+  Secretaría la ve. Finanzas no tiene acceso a la ficha del estudiante (permissions).
+- Smoke: comprobación "Ficha del estudiante: mensualidad y beca" para reception y director (71/71).
+
+**Hueco documentado, sin resolver (requiere decisión #3)**: `student_tuition_basis` calcula el
+rango de hermanos con los inscritos de HOY y lo aplica a TODO el año. Si un hermano se retira a
+mitad de año, el que queda pierde el descuento también en meses ya pagados y le aparece deuda.
+Lo mismo al revés (un hermano nuevo baja retroactivamente la cuota de meses ya cobrados). Beca +
+hermanos hoy se acumulan (decisión #4).

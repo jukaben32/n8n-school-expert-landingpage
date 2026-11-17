@@ -19,6 +19,11 @@ const ALEGRA_API = 'https://api.alegra.com/api/v1'
 export interface AlegraInvoiceItem {
   name: string | null
   total: number
+  /** Precio unitario antes del descuento (si Alegra lo trae). */
+  price?: number
+  quantity?: number
+  /** Descuento aplicado en la línea, en pesos (si Alegra lo trae). */
+  discountAmount?: number
 }
 
 export interface AlegraInvoice {
@@ -102,6 +107,9 @@ function normalizeInvoice(raw: any): AlegraInvoice {
     items: items.map((it: any) => ({
       name: it?.name ?? null,
       total: Number(it?.total ?? it?.price ?? 0),
+      price: it?.price != null ? Number(it.price) : undefined,
+      quantity: it?.quantity != null ? Number(it.quantity) : undefined,
+      discountAmount: it?.discountAmount != null ? Number(it.discountAmount) : undefined,
     })),
   }
 }
