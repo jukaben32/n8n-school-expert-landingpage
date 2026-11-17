@@ -8,6 +8,7 @@ import { getActiveSchool } from '@/lib/activeSchool'
 import { reconcileAlegraPayments } from '@/lib/accounting/reconcileAlegraPayments'
 import { syncStudentCodesFromAlegra, learnStudentCode } from '@/lib/accounting/syncStudentCodes'
 import { isStudentCode } from '@/lib/accounting/alegraStudentCodes'
+import { applyAnnualPrepayCredit } from '@/lib/accounting/annualPrepayCredit'
 
 /**
  * Bandeja de conciliación con Alegra.
@@ -47,12 +48,28 @@ async function resolveTesoreriaStaff() {
   return { ok: true as const, staffProfileId: profile.id as string, schoolId }
 }
 
-/** Dispara una conciliación a mano, sin esperar a la corrida de las 7pm. */
-export async function runAlegraSyncNow(): Promise<ActionResult & { resumen?: string }> {
+/**
+ * Dispara una conciliación a mano, sin esperar a la corrida de las 7pm.
+ * `sinceDate` (opcional, 'YYYY-MM-DD') vuelve a leer Alegra desde esa
+ * fecha para recuperar cobros que quedaron fuera de la ventana de 30 días.
+ */
+export async function runAlegraSyncNow(sinceDate?: string): Promise<ActionResult & { resumen?: string }> {
   const staff = await resolveTesoreriaStaff()
   if (!staff.ok) return { ok: false, error: staff.error }
 
-  const result = await reconcileAlegraPayments({ schoolId: staff.schoolId, trigger: 'manual' })
+  let desde: string | undefined
+  if (sinceDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(sinceDate)) return { ok: false, error: 'Fecha inválida.' }
+    const hoy = new Date().toISOString().slice(0, 10)
+    if (sinceDate > hoy) return { ok: false, error: 'La fecha no puede ser futura.' }
+    // Un año escolar hacia atrás como máximo: Alegra pagina de 30 en 30.
+    const tope = new Date()
+    tope.setFullYear(tope.getFullYear() - 1)
+    if (sinceDate < tope.toISOString().slice(0, 10)) return { ok: false, error: 'Elige una fecha de hace menos de un año.' }
+    desde = sinceDate
+  }
+
+  const result = await reconcileAlegraPayments({ schoolId: staff.schoolId, trigger: 'manual', sinceDate: desde })
 
   revalidatePath('/dashboard/tesoreria/alegra')
   revalidatePath('/dashboard/tesoreria/cuentas-por-cobrar')
@@ -119,6 +136,30 @@ export async function resolveAlegraMatch(
     .single()
   if (!student) return { ok: false, error: 'No se encontró el estudiante.' }
 
+  // Protección contra cargar el cobro al hermano equivocado (caso real
+  // 2026-09-15: el e-CF de Joandry, con su matrícula, se le cargó a su
+  // hermana y Joandry apareció en mora y con el portal bloqueado). Si el
+  // comprobante trae la matrícula de OTRO estudiante, se exige confirmarlo.
+  const matriculaComprobante = match.alegra_client_id_type === 'IE' && isStudentCode(match.alegra_client_identification)
+    ? String(match.alegra_client_identification).trim()
+    : null
+  if (matriculaComprobante && !/\bconfirmo\b/i.test(note)) {
+    const { data: dueno } = await admin
+      .from('students')
+      .select('id, first_name, last_name')
+      .eq('school_id', staff.schoolId)
+      .eq('student_code', matriculaComprobante)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (dueno && dueno.id !== student.id) {
+      return {
+        ok: false,
+        error: `Este comprobante trae la matrícula ${matriculaComprobante}, que es de ${dueno.first_name} ${dueno.last_name}. ` +
+          'Elige a ese estudiante. Si de verdad corresponde a otro, escribe "confirmo" en la nota.',
+      }
+    }
+  }
+
   let { data: concept } = await admin
     .from('billing_concepts')
     .select('id')
@@ -180,6 +221,13 @@ export async function resolveAlegraMatch(
     notes: etiqueta || null,
   })
   if (paymentError) return { ok: false, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
+
+  // Pago del año completo con descuento: el descuento cubre las cuotas que
+  // faltan (trato VIP, ver annualPrepayCredit.ts).
+  await applyAnnualPrepayCredit(admin, {
+    invoiceId: invoice.id, studentId: student.id,
+    invoiceDate: match.alegra_date, invoiceAmount: roundedAmount, note: match.alegra_note,
+  })
 
   // Aprende la matrícula: la próxima factura de este estudiante con esta
   // matrícula se emparejará sola, sin pasar por la bandeja.

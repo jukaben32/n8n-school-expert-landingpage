@@ -254,12 +254,13 @@ export default function AlegraMatchesReview({ matches, students }: { matches: Pe
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sinceDate, setSinceDate] = useState('')
 
   const syncNow = () => {
     setMessage(null); setError(null)
     startTransition(async () => {
       try {
-        const result = await runAlegraSyncNow()
+        const result = await runAlegraSyncNow(sinceDate || undefined)
         if (result.ok) setMessage(result.resumen ?? 'Conciliación completada.')
         else setError(result.error ?? 'No se pudo conciliar.')
       } catch {
@@ -277,8 +278,16 @@ export default function AlegraMatchesReview({ matches, students }: { matches: Pe
         >
           {pending ? 'Conciliando…' : 'Conciliar ahora'}
         </button>
+        <label className="flex items-center gap-2 text-xs text-slate-600">
+          Leer Alegra desde
+          <input
+            type="date" value={sinceDate} onChange={(e) => setSinceDate(e.target.value)}
+            className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800"
+          />
+        </label>
         <span className="text-xs text-slate-500">
-          La conciliación corre sola a las 7:00 pm, de lunes a viernes.
+          La conciliación corre sola a las 7:00 pm, de lunes a viernes, y revisa los últimos 30 días.
+          Para recuperar un cobro más viejo, elige la fecha. Lo ya cargado no se duplica.
         </span>
       </div>
 

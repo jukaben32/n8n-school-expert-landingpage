@@ -59,5 +59,13 @@ contiene('sin descuento: precio normal', sinDescuento, 'al precio normal')
 console.log('\n== Sin mensualidad configurada ==')
 contiene('mensaje claro', buildTuitionContextText({ ...base, students: [], cardMode: 'production' }), 'no hay mensualidad configurada')
 
+console.log('\n== Año escolar pagado por adelantado (familia VIP) ==')
+const vip = buildTuitionContextText({ ...base, students: [{ ...deudor, totalDue: 0, currentAmount: 0, overduePrincipal: 0, lateFee: 0, futureMonthNames: [], prepayExample: null, yearPaid: true, paidThroughName: 'junio 2027' }], cardMode: 'production' })
+contiene('dice año pagado', vip, 'AÑO ESCOLAR PAGADO COMPLETO')
+contiene('dice hasta cuándo', vip, 'junio 2027')
+contiene('no le cobra nada', vip, 'TOTAL A PAGAR', false)
+const alDiaConMes = buildTuitionContextText({ ...base, students: [{ ...deudor, totalDue: 0, currentAmount: 0, overduePrincipal: 0, lateFee: 0, paidThroughName: 'enero 2027' }], cardMode: 'production' })
+contiene('al día con mes', alDiaConMes, 'pagado hasta enero 2027')
+
 console.log(fallos ? `\n${fallos} prueba(s) fallaron.` : '\nTodas las pruebas pasaron.')
 process.exit(fallos ? 1 : 0)

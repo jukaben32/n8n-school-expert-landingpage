@@ -33,6 +33,14 @@ export interface StudentTuition {
   totalDue: number
   oldestReference: string | null
   future: FutureInstallment[]
+  /**
+   * Año escolar completo pagado (student_tuition_year_status, incluye el
+   * descuento por pago adelantado). Trato VIP: el portal lo celebra y el
+   * bloqueo por mora nunca le aplica.
+   */
+  yearPaid: boolean
+  /** Último mes cubierto por lo pagado ('YYYY-MM-DD', primer día del mes), o null. */
+  paidThroughMonth: string | null
 }
 
 export interface FamilyTuitionOverview {
@@ -62,6 +70,11 @@ interface BasisRow {
   configured: boolean
 }
 
+interface YearStatusRow {
+  year_paid: boolean | null
+  paid_through_month: string | null
+}
+
 interface ScheduleRow {
   period_month: string
   amount: number
@@ -72,12 +85,19 @@ async function loadStudentTuition(
   student: { id: string; first_name: string; last_name: string },
   asOf: string,
 ): Promise<StudentTuition | null> {
-  const [{ data: breakdown, error: breakdownError }, { data: basis, error: basisError }] = await Promise.all([
+  const [
+    { data: breakdown, error: breakdownError },
+    { data: basis, error: basisError },
+    { data: yearStatus, error: yearError },
+  ] = await Promise.all([
     admin.rpc('calculate_receivable_breakdown', { p_student_id: student.id, p_as_of: asOf }).maybeSingle(),
     admin.rpc('student_tuition_basis', { p_student_id: student.id }).maybeSingle(),
+    admin.rpc('student_tuition_year_status', { p_student_id: student.id }).maybeSingle(),
   ])
   if (breakdownError) console.error('[familyTuition] deuda', breakdownError.message)
   if (basisError) console.error('[familyTuition] base', basisError.message)
+  if (yearError) console.error('[familyTuition] año pagado', yearError.message)
+  const year = yearStatus as YearStatusRow | null
 
   const row = breakdown as BreakdownRow | null
   const base = basis as BasisRow | null
@@ -108,6 +128,8 @@ async function loadStudentTuition(
     totalDue: Number(row.total_due_amount ?? 0),
     oldestReference: row.oldest_overdue_reference,
     future: futureUnpaidInstallments(schedule, Number(row.collected_amount ?? 0), asOf),
+    yearPaid: year?.year_paid === true,
+    paidThroughMonth: year?.paid_through_month ? String(year.paid_through_month).slice(0, 10) : null,
   }
 }
 

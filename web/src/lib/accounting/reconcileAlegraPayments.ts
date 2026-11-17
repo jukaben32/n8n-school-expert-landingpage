@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { alegraIsConfigured, fetchAlegraInvoicesSince, fetchAlegraInvoiceDetail, type AlegraInvoice } from './alegraClient'
+import { applyAnnualPrepayCredit } from './annualPrepayCredit'
 import { matchInvoice, mensualidadAmount, splitByTuition, type Candidate, type MatchReason, type StudentRow, type GuardianRow } from './alegraMatching'
 import { syncStudentCodesFromAlegra, learnStudentCode } from './syncStudentCodes'
 
@@ -55,13 +56,23 @@ export async function reconcileAlegraPayments(options: {
   schoolId: string
   trigger?: 'cron' | 'manual'
   sinceDays?: number
+  /**
+   * Fecha exacta desde la que leer Alegra ('YYYY-MM-DD'). Para recuperar
+   * cobros que quedaron fuera de la ventana de 30 días: el 14-ago-2026 un
+   * pago anual nunca se importó porque la primera conciliación con
+   * credenciales (15-sep) miró solo desde el 16-ago. Volver a leer es
+   * inofensivo: lo ya cargado se salta por el e-CF.
+   */
+  sinceDate?: string
 }): Promise<ReconcileResult> {
   const { schoolId, trigger = 'cron', sinceDays = 30 } = options
   const admin = createAdminClient()
 
   const since = new Date()
   since.setDate(since.getDate() - sinceDays)
-  const sinceDate = since.toISOString().slice(0, 10)
+  const sinceDate = options.sinceDate && /^\d{4}-\d{2}-\d{2}$/.test(options.sinceDate)
+    ? options.sinceDate
+    : since.toISOString().slice(0, 10)
 
   const { data: run } = await admin
     .from('alegra_sync_runs')
@@ -117,7 +128,7 @@ export async function reconcileAlegraPayments(options: {
       console.error('[alegra] No se pudieron vincular matrículas:', syncError)
     }
 
-    const listado = await fetchAlegraInvoicesSince(sinceDate)
+    const listado = await fetchAlegraInvoicesSince(sinceDate, options.sinceDate ? 60 : 20)
     invoicesSeen = listado.length
 
     const [{ data: students }, { data: guardians }, { data: yaCargadas }, { data: enBandeja }] = await Promise.all([
@@ -211,6 +222,12 @@ export async function reconcileAlegraPayments(options: {
         payment_method: 'alegra',
         paid_at: new Date(`${invoice.date}T00:00:00`).toISOString(),
         notes: etiqueta || null,
+      })
+      // Pago del año completo con descuento: el descuento cubre las cuotas
+      // que faltan (trato VIP, ver annualPrepayCredit.ts).
+      await applyAnnualPrepayCredit(admin, {
+        invoiceId: facturaCreada.id, studentId: alumno.id,
+        invoiceDate: invoice.date, invoiceAmount: monto, note: invoice.note,
       })
       return true
     }

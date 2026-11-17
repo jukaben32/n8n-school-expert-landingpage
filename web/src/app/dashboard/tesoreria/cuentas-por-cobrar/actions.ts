@@ -7,6 +7,7 @@ import { canAccess } from '@/lib/permissions'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { notifyGuardianByEmail } from '@/lib/notifications/notifyGuardianByEmail'
 import { EXTERNAL_PAYMENT_SOURCE_LABELS } from '@/lib/receivables/externalPaymentSources'
+import { applyAnnualPrepayCredit } from '@/lib/accounting/annualPrepayCredit'
 
 interface ActionResult {
   ok: boolean
@@ -212,7 +213,7 @@ export async function recordExternalPayment(
       notes: note.trim() || null,
     })
     if (paymentError) return { ok: false as const, error: `Se registró la factura pero no el pago: ${paymentError.message}` }
-    return { ok: true as const }
+    return { ok: true as const, invoiceId: invoice.id as string }
   }
 
   if (roundedPrincipal > 0) {
@@ -223,6 +224,12 @@ export async function recordExternalPayment(
       amount: roundedPrincipal,
     })
     if (!result.ok) return result
+    // Si la nota dice que es el año completo (p. ej. "año completo con
+    // descuento"), el descuento cubre las cuotas que faltan: trato VIP.
+    await applyAnnualPrepayCredit(admin, {
+      invoiceId: result.invoiceId, studentId, invoiceDate: paidAt,
+      invoiceAmount: roundedPrincipal, note,
+    })
   }
 
   if (roundedLateFee > 0) {

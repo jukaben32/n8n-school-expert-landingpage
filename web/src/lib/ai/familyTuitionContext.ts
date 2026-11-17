@@ -33,6 +33,10 @@ export interface TuitionContextStudent {
   /** Meses que quedan por pagar este año, ya con nombre ("diciembre 2026"). */
   futureMonthNames: string[]
   prepayExample: PrepayExample | null
+  /** Año escolar completo pagado por adelantado (familia VIP). */
+  yearPaid?: boolean
+  /** Último mes cubierto, ya con nombre ("enero 2027"), o null. */
+  paidThroughName?: string | null
 }
 
 export interface TuitionContextInput {
@@ -47,9 +51,12 @@ export interface TuitionContextInput {
 const dop = (amount: number) => `RD$${amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 function studentLine(s: TuitionContextStudent): string {
+  if (s.yearPaid) {
+    return `- ${s.studentName}: AÑO ESCOLAR PAGADO COMPLETO por adelantado${s.paidThroughName ? ` (cubierto hasta ${s.paidThroughName})` : ''}; no debe nada de mensualidad. Agradécele a la familia haber pagado por adelantado.`
+  }
   const parts = [`cuota mensual ${dop(s.monthlyAmount)}`]
   if (s.totalDue <= 0) {
-    parts.push('está al día')
+    parts.push(s.paidThroughName ? `está al día (pagado hasta ${s.paidThroughName})` : 'está al día')
   } else {
     if (s.currentAmount > 0) parts.push(`cuota del mes pendiente ${dop(s.currentAmount)}`)
     if (s.overduePrincipal > 0) parts.push(`cuotas vencidas ${dop(s.overduePrincipal)}${s.oldestReference ? ` (desde ${s.oldestReference})` : ''}`)

@@ -139,6 +139,8 @@ const CHECKS = {
   finance: [
     ['Facturas', `select count(*) from invoices;`],
     ['Familias', `select count(*) from families where deleted_at is null;`],
+    // Año pagado / al día hasta (trato VIP a quien paga por adelantado, 2026-11-17).
+    ['Año escolar pagado por estudiante', `select count(*) from students s cross join lateral student_tuition_year_status(s.id) y where s.deleted_at is null and s.enrollment_status = 'inscrito';`],
   ],
   student: [
     ['Academia: sus lecciones', `select count(*) from lessons;`],

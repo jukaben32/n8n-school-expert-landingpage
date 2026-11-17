@@ -6323,3 +6323,70 @@ fallan al instante. `fetchAlegraStudentContacts()` pausa 700 ms entre páginas. 
 solo vuelve a pedir los contactos si queda algún inscrito sin matrícula. `alegra/page.tsx` declara
 `maxDuration = 300`. Probado con un fetch simulado: dos 429 seguidos y luego éxito -> 42/42
 contactos; un 401 no se reintenta.
+
+## Pago por adelantado = trato VIP; familias que pagaron el año aparecían bloqueadas (2026-11-17)
+
+Queja de los padres: "pagué el año por adelantado y la plataforma no lo refleja". Investigado
+contra producción y Alegra (PAT de un solo uso). **Dos familias que pagaron por adelantado
+estaban BLOQUEADAS en el portal (tramo 61+)**:
+
+1. **Haziel Ernesto Astacio Barbosa**: pagó RD$23,000 el 14-ago (e-CF E320000000378, ago-ene).
+   Nunca se importó: la primera conciliación con credenciales de Alegra fue el **15-sep** y miró
+   solo desde el **16-ago** (ventana de 30 días). Era el único cobro de mensualidad del 1 al 15
+   de agosto. Cargado a mano por `supabase/seeds/20261117_pagos_adelantados_vip.sql`.
+2. **Familia Arroyo Gomez**: el e-CF E310000000054 (RD$42,000, "AGO-JUN") está a nombre de
+   **Joandry** con su matrícula 17-0034, pero el 15-sep se le cargó en la bandeja a su hermana
+   **Chaimel** (la bandeja no ofreció a Joandry). Movido a Joandry. ⚠️ **Pendiente con
+   Secretaría**: Chaimel quedó sin ningún pago propio (RD$11,250 + recargo). Alegra no tiene
+   comprobantes a su nombre ni con su matrícula; el RD$31,500 "AGO-JUN" de la mamá está cargado a
+   Chanel. Confirmar con la mamá qué cubre ese pago. La familia ya **no** se bloquea (regla 3
+   de abajo).
+
+**Descuento por pago anual**: el colegio hace 5%-20% de descuento a quien paga el año. La
+plataforma convertía el dinero en cuotas a precio completo, así que en mayo de 2027 esas
+familias iban a aparecer con deuda. Ahora el faltante va en `invoices.prepay_discount_amount`
+(columna que ya existía por la rama `feat/portal-mensualidad-adelantos`, ver abajo). Se aplicó
+a 5 pagos anuales (Ellanyi, Xiomeilys, Julio Dairon, Jayden, Joandry) y queda automático:
+`lib/accounting/annualPrepayCredit.ts` lo aplica al cargar un cobro (conciliación, bandeja y
+"Registrar pago") solo si: la nota dice año completo / 10.5 meses / "AGO-JUN" / "hasta junio"
+(`annualPrepayNote.ts`, probado con 19 notas reales en `scripts/test-annual-prepay-note.mjs`),
+no había deuda vieja antes del pago (a lo sumo la cuota del mes en curso), y el faltante es
+≤ 25% del año. **Nunca perdona deuda real**; si no cumple, el pago entra igual sin crédito.
+
+**Migración `20261117000000_prepaid_year_vip.sql`** (aplicada a producción el 2026-11-17 por API;
+como las anteriores aplicadas así, no queda en `schema_migrations`):
+- `student_tuition_year_status(student)`: ÚNICA definición de "año pagado" y "pagado hasta el
+  mes X" (misma suma que el motor, incluye `prepay_discount_amount`).
+- `list_school_tuition_year_status(school)`: lo mismo para todo el colegio (security invoker).
+- `list_school_monthly_cashflow`: ahora también suma `prepay_discount_amount` (copia de la
+  versión viva en producción, que es `security definer` aunque el repo decía invoker).
+
+**Bloqueo por mora (`lib/receivables/guardianBlock.ts`)**: ahora solo bloquea si hay un hijo en
+61+ **y** (2) ningún hijo tiene el año pagado (VIP), (3) la familia en conjunto debe de verdad
+(un pago cargado al hermano equivocado ya no bloquea), y (4) no hay un cobro de Alegra de esa
+familia esperando en la bandeja. Simulado con datos reales: de 41 familias bloqueadas solo se
+libera Arroyo Gomez (Haziel ya se liberó con el dato). **Se cruzaron las 40 que siguen
+bloqueadas con las 238 cuentas de Alegra desde el 1-ago: ninguna tiene una mensualidad sin
+registrar** (lo que apareció era inscripción, recargo o ya estaba cargado). Rareza para
+Secretaría: Johanny Castro Polo solo pagó "Mora de sep" (RD$495), sin mensualidad.
+
+**Portal del padre**: la tarjeta de mensualidad de quien tenía el año pagado **desaparecía**
+(sin deuda y sin meses por adelantar). Ahora muestra "⭐ Familia VIP — Año escolar pagado
+completo", la portada del Portal Familiar lo anuncia, y quien está al día ve "Pagado hasta
+[mes]". El asistente de IA también lo sabe (`familyTuitionContext.ts`).
+
+**Conciliación**: "Conciliar ahora" acepta "Leer Alegra desde [fecha]" para recuperar cobros
+fuera de la ventana de 30 días (lo ya cargado no se duplica). En la bandeja, si el comprobante
+trae la matrícula de OTRO estudiante, no deja cargarlo salvo que se escriba "confirmo" en la nota.
+
+**Rama `feat/portal-mensualidad-adelantos` fusionada** (era del 2026-11-01 y nunca se había
+publicado, pero su migración `20261101000000_portal_tuition_prepay.sql` YA estaba aplicada en
+producción): el padre ve su mensualidad pendiente con la misma cuenta que Tesorería, puede
+adelantar meses con tarjeta (Azul, que sigue en modo prueba: solo correos de
+`AZUL_TEST_GUARDIAN_EMAILS`) y el asistente conoce la mensualidad.
+`schools.prepay_discount_tiers` está vacío: **el colegio debe definir sus niveles de descuento
+por pago adelantado** en Configuración → Operaciones (hoy los da a mano en caja: 5%, 10%, 20%).
+
+Verificado: `tsc`, `eslint`, `next build` limpios; `npm run smoke` 69/69 (comprobación nueva
+del año pagado); pruebas de notas, contexto del asistente, plan de mensualidad, conciliación y
+recibo, todas OK. Datos corregidos con ensayo previo en transacción revertida.

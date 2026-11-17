@@ -41,7 +41,51 @@ export default function TuitionDueCard({ student, prepayEnabled, prepayTiers, ca
   // El próximo nivel de descuento que todavía no alcanza, para animarlo.
   const nextTier = prepayTiers.find((t) => t.months > monthsAhead && t.months <= maxMonths && t.percent > prepayDiscountPercent(monthsAhead, prepayTiers))
 
-  if (principalDue <= 0 && student.lateFee <= 0 && !canPrepay) return null
+  // Trato VIP a quien pagó el año escolar completo por adelantado: antes
+  // esta tarjeta desaparecía (sin deuda y sin meses por adelantar) y el
+  // padre no veía en ningún lado que su año estaba pagado. Reporte real
+  // del colegio, 2026-11-17.
+  if (student.yearPaid) {
+    return (
+      <article className="rounded-2xl border border-amber-300 bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 text-slate-800 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-700">Mensualidad</p>
+            <h3 className="text-base font-bold text-slate-900 truncate">{student.studentName}</h3>
+          </div>
+          <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-400 text-amber-950">
+            ⭐ Familia VIP
+          </span>
+        </div>
+        <p className="mt-3 text-lg font-black text-emerald-800">✅ Año escolar pagado completo</p>
+        <p className="mt-1 text-sm text-slate-600">
+          Gracias por pagar por adelantado. Todas las mensualidades
+          {student.paidThroughMonth ? <> hasta <strong className="capitalize">{formatPeriodMonth(student.paidThroughMonth)}</strong></> : null} están
+          cubiertas: no tiene nada pendiente con el colegio por este concepto.
+        </p>
+      </article>
+    )
+  }
+
+  if (principalDue <= 0 && student.lateFee <= 0 && !canPrepay) {
+    // Al día y sin meses por adelantar (p. ej. sin pago con tarjeta): igual
+    // se le confirma hasta cuándo está cubierto, en vez de no mostrar nada.
+    if (!student.paidThroughMonth) return null
+    return (
+      <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 text-slate-800">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Mensualidad</p>
+            <h3 className="text-base font-bold text-slate-900 truncate">{student.studentName}</h3>
+          </div>
+          <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700">Al día</span>
+        </div>
+        <p className="mt-2 text-sm text-slate-600">
+          Mensualidades pagadas hasta <strong className="capitalize">{formatPeriodMonth(student.paidThroughMonth)}</strong>.
+        </p>
+      </article>
+    )
+  }
 
   async function handlePay() {
     setError(null)
@@ -76,6 +120,11 @@ export default function TuitionDueCard({ student, prepayEnabled, prepayTiers, ca
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mensualidad</p>
           <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">{student.studentName}</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cuota mensual: {formatDOP(student.monthlyAmount)}</p>
+          {isUpToDate && student.paidThroughMonth && (
+            <p className="text-xs font-medium text-green-700 dark:text-green-400 mt-0.5">
+              Pagado hasta <span className="capitalize">{formatPeriodMonth(student.paidThroughMonth)}</span>
+            </p>
+          )}
         </div>
         {isUpToDate ? (
           <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Al día</span>

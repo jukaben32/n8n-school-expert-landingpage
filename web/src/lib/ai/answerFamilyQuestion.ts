@@ -309,6 +309,8 @@ function toTuitionContextStudent(s: StudentTuition, tiers: PrepayTier[]): Tuitio
     oldestReference: s.oldestReference,
     futureMonthNames: s.future.map((m) => formatPeriodMonth(m.periodMonth)),
     prepayExample: quote,
+    yearPaid: s.yearPaid,
+    paidThroughName: s.paidThroughMonth ? formatPeriodMonth(s.paidThroughMonth) : null,
   }
 }
 

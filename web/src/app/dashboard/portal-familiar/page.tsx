@@ -98,6 +98,10 @@ export default async function PortalFamiliarPage() {
     : null
   const tuitionDue = (tuition?.students ?? []).reduce((sum, s) => sum + s.totalDue, 0)
   const tuitionHasOverdue = (tuition?.students ?? []).some((s) => s.overduePrincipal > 0)
+  // Hijos con el año escolar pagado por adelantado: trato VIP, se le
+  // reconoce arriba en vez de dejar que lo adivine (reporte del colegio,
+  // 2026-11-17: "pagué el año y la plataforma no lo refleja").
+  const prepaidNames = (tuition?.students ?? []).filter((s) => s.yearPaid).map((s) => s.studentName.split(' ')[0])
 
   // Doble rol: personal (profesor, dirección...) que también es tutor de
   // algún hijo aquí. Se les avisa que están en su Vista de Familia y se
@@ -151,6 +155,23 @@ export default async function PortalFamiliarPage() {
           <span className="font-semibold underline underline-offset-2 text-amber-800 dark:text-amber-300 shrink-0">
             Justificar
           </span>
+        </a>
+      )}
+
+      {prepaidNames.length > 0 && (
+        <a
+          href="/dashboard/pagos"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 to-emerald-50 px-4 py-3 text-sm text-slate-800 hover:from-amber-100 transition"
+        >
+          <span>
+            <strong className="font-bold text-emerald-800">
+              ⭐ Año escolar pagado{prepaidNames.length === (tuition?.students.length ?? 0) ? '' : ` — ${prepaidNames.join(', ')}`}
+            </strong>
+            <span className="block text-xs mt-0.5 text-slate-600">
+              Gracias por pagar por adelantado: las mensualidades de este año están cubiertas.
+            </span>
+          </span>
+          <span className="font-semibold underline underline-offset-2 shrink-0 text-emerald-800">Ver detalle</span>
         </a>
       )}
 
