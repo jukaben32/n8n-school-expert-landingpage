@@ -95,9 +95,17 @@ export function buildPolicy(slug: PolicySlug, c: SchoolContact): Policy {
             ],
           },
           {
-            heading: 'Cada pago corresponde a una factura',
+            heading: 'Qué se cobra en cada pago',
             paragraphs: [
-              'Antes de pagar, el Portal Familiar muestra la factura emitida por el colegio a nombre de la familia, con su descripción, monto y fecha de vencimiento. Solo se cobra el monto de esa factura.',
+              'Antes de pagar, el Portal Familiar muestra el detalle de lo que se va a cobrar: la factura emitida por el colegio o, en las mensualidades, la cuota del mes, las cuotas vencidas y el recargo por mora, si lo hay. Solo se cobra el total que se muestra en ese momento.',
+              'La cuota de cada mes aparece como pendiente a partir del día 25 de ese mes.',
+            ],
+          },
+          {
+            heading: 'Pago de meses por adelantado',
+            paragraphs: [
+              'Las familias pueden pagar con tarjeta meses futuros del año escolar en curso. Si el colegio ofrece un descuento por pago adelantado, el Portal Familiar lo muestra y lo aplica solo a esos meses, nunca a cuotas atrasadas ni al recargo.',
+              'Si la familia retira al estudiante, los meses adelantados que no se cursaron se tratan según la política de reembolsos.',
             ],
           },
           {

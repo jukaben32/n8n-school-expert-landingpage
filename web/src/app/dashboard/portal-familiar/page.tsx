@@ -11,6 +11,7 @@ import FloatingWhatsAppButton from '@/components/FloatingWhatsAppButton'
 import { getFamilyClassUpdates } from './actions'
 import { countAbsencesToJustify } from '@/app/dashboard/asistencia/actions'
 import FamilyAcademiaNotices from '@/components/portal/FamilyAcademiaNotices'
+import { getFamilyTuitionOverview } from '@/lib/payments/familyTuition'
 import PortalLegalFooter from '@/components/pagos/PortalLegalFooter'
 
 export const metadata: Metadata = {
@@ -87,6 +88,17 @@ export default async function PortalFamiliarPage() {
   // de vuelta, que antes ocurría por WhatsApp y sin dejar registro.
   const absencesToJustify = await countAbsencesToJustify()
 
+  // Mensualidad pendiente (desde el día 25, misma cuenta que Tesorería):
+  // aviso arriba con el monto y el camino directo a pagarla.
+  const { data: guardianRow } = profile?.guardian_id
+    ? await supabase.from('guardians').select('family_id').eq('id', profile.guardian_id).maybeSingle()
+    : { data: null }
+  const tuition = guardianRow?.family_id && profile?.school_id
+    ? await getFamilyTuitionOverview({ schoolId: profile.school_id, familyId: guardianRow.family_id })
+    : null
+  const tuitionDue = (tuition?.students ?? []).reduce((sum, s) => sum + s.totalDue, 0)
+  const tuitionHasOverdue = (tuition?.students ?? []).some((s) => s.overduePrincipal > 0)
+
   // Doble rol: personal (profesor, dirección...) que también es tutor de
   // algún hijo aquí. Se les avisa que están en su Vista de Familia y se
   // les da un camino de regreso a su panel de trabajo normal.
@@ -138,6 +150,27 @@ export default async function PortalFamiliarPage() {
           </span>
           <span className="font-semibold underline underline-offset-2 text-amber-800 dark:text-amber-300 shrink-0">
             Justificar
+          </span>
+        </a>
+      )}
+
+      {tuitionDue > 0 && (
+        <a
+          href="/dashboard/pagos"
+          className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm transition ${tuitionHasOverdue
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30'
+            : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/30'}`}
+        >
+          <span className={tuitionHasOverdue ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}>
+            <strong className="font-bold">
+              Mensualidad pendiente: {new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(tuitionDue)}
+            </strong>
+            <span className="block text-xs mt-0.5">
+              {tuitionHasOverdue ? 'Tiene cuotas vencidas. Puedes ver el detalle y pagar desde aquí.' : 'Puedes ver el detalle, pagar o adelantar meses.'}
+            </span>
+          </span>
+          <span className={`font-semibold underline underline-offset-2 shrink-0 ${tuitionHasOverdue ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}`}>
+            Ver y pagar
           </span>
         </a>
       )}

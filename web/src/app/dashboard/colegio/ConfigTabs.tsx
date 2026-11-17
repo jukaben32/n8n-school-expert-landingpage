@@ -33,6 +33,8 @@ interface School {
   late_fee_stage3_percent: number
   late_fee_stage4_days: number
   late_fee_stage4_percent: number
+  prepay_enabled: boolean
+  prepay_discount_tiers: unknown
 }
 
 const TABS = [

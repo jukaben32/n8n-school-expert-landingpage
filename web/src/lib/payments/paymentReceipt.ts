@@ -6,6 +6,50 @@ import { buildPaymentReceiptText, formatAzulDateTime } from './receiptText'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
+interface ReceiptSubject {
+  id: string
+  family_id: string
+  description: string
+  ncf: string | null
+  students: unknown
+}
+
+/**
+ * De qué trata el recibo: la factura pagada o, en un pago de mensualidad
+ * de prueba (sin factura), la familia y el estudiante de la transacción.
+ */
+async function loadReceiptSubject(admin: AdminClient, input: {
+  invoiceId: string | null
+  tuition?: { familyId: string; studentId: string; description: string }
+}): Promise<ReceiptSubject | null> {
+  if (input.invoiceId) {
+    const { data, error } = await admin
+      .from('invoices')
+      .select('id, family_id, description, ncf, students(first_name, last_name)')
+      .eq('id', input.invoiceId)
+      .single()
+    if (error || !data) {
+      console.error('[sendAzulPaymentReceipt] factura no encontrada', error?.message)
+      return null
+    }
+    return data
+  }
+  if (!input.tuition) return null
+  const { data: student } = await admin
+    .from('students')
+    .select('first_name, last_name')
+    .eq('id', input.tuition.studentId)
+    .maybeSingle()
+  return {
+    // Sin factura, la referencia del recibo sale del estudiante
+    id: input.tuition.studentId,
+    family_id: input.tuition.familyId,
+    description: input.tuition.description,
+    ncf: null,
+    students: student,
+  }
+}
+
 /**
  * Envía el recibo de un pago con tarjeta APROBADO y verificado por
  * processAzulResult(). Best-effort, igual que notifyGuardianByEmail: si
@@ -17,7 +61,10 @@ type AdminClient = ReturnType<typeof createAdminClient>
  */
 export async function sendAzulPaymentReceipt(admin: AdminClient, input: {
   schoolId: string
-  invoiceId: string
+  /** null solo en un pago de mensualidad en modo prueba (no se crea factura). */
+  invoiceId: string | null
+  /** Datos del pago de mensualidad cuando no hay factura (modo prueba). */
+  tuition?: { familyId: string; studentId: string; description: string }
   amount: number
   authorizationCode: string
   azulReference: string | null
@@ -25,15 +72,8 @@ export async function sendAzulPaymentReceipt(admin: AdminClient, input: {
   isTest?: boolean
 }): Promise<void> {
   try {
-    const { data: invoice, error: invoiceError } = await admin
-      .from('invoices')
-      .select('id, family_id, description, ncf, students(first_name, last_name)')
-      .eq('id', input.invoiceId)
-      .single()
-    if (invoiceError || !invoice) {
-      console.error('[sendAzulPaymentReceipt] factura no encontrada', invoiceError?.message)
-      return
-    }
+    const invoice = await loadReceiptSubject(admin, input)
+    if (!invoice) return
 
     const [{ data: school }, { data: guardians }] = await Promise.all([
       admin.from('schools').select('name, subdomain, address, phone, email').eq('id', input.schoolId).single(),

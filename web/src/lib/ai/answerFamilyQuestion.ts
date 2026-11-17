@@ -13,6 +13,10 @@ import {
   type StudentRef,
 } from './secretariaNotice'
 import { deliverSecretariaNotice, findFamilyProfileId } from './deliverSecretariaNotice'
+import { buildTuitionContextText, type TuitionContextStudent } from './familyTuitionContext'
+import { getFamilyTuitionOverview, type StudentTuition } from '@/lib/payments/familyTuition'
+import { buildTuitionQuote, formatPeriodMonth, type PrepayTier } from '@/lib/payments/tuitionPlan'
+import { schoolCardPaymentMode } from '@/lib/payments/azul'
 
 /**
  * "Un solo cerebro, dos salidas" — núcleo del asistente de IA de MentorIApp.
@@ -286,6 +290,28 @@ async function fetchRecentHistory(admin: AdminClient, familyId: string, channel:
   return rows.reverse().map((r) => ({ role: r.role, content: r.content }))
 }
 
+// Mensualidad de un hijo en el formato del texto del asistente, con un
+// ejemplo de adelanto calculado con las mismas reglas del portal (el nivel
+// de descuento más alto que todavía alcanza con los meses que le quedan).
+function toTuitionContextStudent(s: StudentTuition, tiers: PrepayTier[]): TuitionContextStudent {
+  const reachable = tiers.filter((t) => t.months <= s.future.length)
+  const best = reachable[reachable.length - 1]
+  const quote = best
+    ? buildTuitionQuote({ principalDue: 0, lateFee: 0, future: s.future, monthsAhead: best.months, tiers })
+    : null
+  return {
+    studentName: s.studentName,
+    monthlyAmount: s.monthlyAmount,
+    currentAmount: s.currentAmount,
+    overduePrincipal: s.overduePrincipal,
+    lateFee: s.lateFee,
+    totalDue: s.totalDue,
+    oldestReference: s.oldestReference,
+    futureMonthNames: s.future.map((m) => formatPeriodMonth(m.periodMonth)),
+    prepayExample: quote,
+  }
+}
+
 export interface FamilyContext {
   ok: true
   schoolName: string
@@ -301,7 +327,7 @@ export interface FamilyContextError {
 // Exportada para que voiceCallSession.ts arme las mismas "instructions"
 // que el chat de texto sin repetir estas 5 consultas.
 export async function gatherFamilyContext(admin: AdminClient, schoolId: string, familyId: string): Promise<FamilyContext | FamilyContextError> {
-  const [schoolRes, familyRes, studentsRes, invoicesRes, messagesRes] = await Promise.all([
+  const [schoolRes, familyRes, studentsRes, invoicesRes, messagesRes, tuition, cardMode] = await Promise.all([
     admin.from('schools').select('name, faq_document').eq('id', schoolId).single(),
     admin.from('families').select('name').eq('id', familyId).eq('school_id', schoolId).single(),
     admin
@@ -327,6 +353,10 @@ export async function gatherFamilyContext(admin: AdminClient, schoolId: string, 
       .is('deleted_at', null)
       .order('published_at', { ascending: false })
       .limit(5),
+    // Mensualidad de cada hijo: la misma cuenta que ve el padre en Pagos
+    // (desde el día 25) y el colegio en Cuentas por Cobrar.
+    getFamilyTuitionOverview({ schoolId, familyId }),
+    schoolCardPaymentMode(schoolId),
   ])
 
   if (familyRes.error || !familyRes.data) {
@@ -394,7 +424,15 @@ ${amcoText ? `\nCorreo de Amco de cada hijo (es su usuario en la plataforma Exce
 Asistencia reciente (últimos registros):
 ${attendanceText}
 
-Facturas de esta familia:
+${buildTuitionContextText({
+  students: tuition.students.map((s) => toTuitionContextStudent(s, tuition.prepayTiers)),
+  prepayEnabled: tuition.prepayEnabled,
+  prepayTiers: tuition.prepayTiers,
+  cardMode,
+  asOf: tuition.asOf,
+})}
+
+Facturas de esta familia (cobros ya registrados y otros cargos; la mensualidad pendiente está arriba, no aquí):
 ${invoicesText}
 
 Últimos comunicados generales del colegio:

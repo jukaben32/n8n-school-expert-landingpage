@@ -7,6 +7,8 @@ import AccountSummary from '@/components/pagos/AccountSummary'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import { schoolCardPaymentAvailableFor } from '@/lib/payments/azul'
 import PortalLegalFooter from '@/components/pagos/PortalLegalFooter'
+import TuitionDueCard from '@/components/pagos/TuitionDueCard'
+import { getFamilyTuitionOverview } from '@/lib/payments/familyTuition'
 
 export const metadata: Metadata = {
   title: 'Estado de Cuenta — MentorIApp',
@@ -124,6 +126,16 @@ export default async function PagosPage({
     ? await schoolCardPaymentAvailableFor(profile.school_id, user.email)
     : false
 
+  // Mensualidad de cada hijo, con la MISMA cuenta que Tesorería → Cuentas
+  // por Cobrar: la cuota del mes aparece desde el día 25. Antes el padre
+  // veía RD$0 a pagar porque el colegio no factura por adelantado y esta
+  // página solo miraba facturas.
+  const tuition = familyId && profile?.school_id
+    ? await getFamilyTuitionOverview({ schoolId: profile.school_id, familyId })
+    : { students: [], prepayEnabled: false, prepayTiers: [], asOf: '' }
+  const tuitionCurrent = tuition.students.reduce((sum, s) => sum + s.currentAmount, 0)
+  const tuitionOverdue = tuition.students.reduce((sum, s) => sum + s.overduePrincipal + s.lateFee, 0)
+
   // Último comprobante subido por factura (para no dejar que la familia
   // suba dos veces mientras uno ya está en revisión, y para mostrar si
   // uno fue rechazado).
@@ -182,10 +194,30 @@ export default async function PagosPage({
 
       {/* Resumen financiero */}
       <AccountSummary
-        totalPendiente={totalPendiente}
-        totalVencido={totalVencido}
+        totalPendiente={totalPendiente + tuitionCurrent}
+        totalVencido={totalVencido + tuitionOverdue}
         totalPagado={totalPagado}
       />
+
+      {/* Mensualidades: lo pendiente desde el día 25 y la opción de adelantar meses */}
+      {tuition.students.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
+            Mensualidades
+          </h2>
+          <div className="space-y-3">
+            {tuition.students.map((student) => (
+              <TuitionDueCard
+                key={student.studentId}
+                student={student}
+                prepayEnabled={tuition.prepayEnabled}
+                prepayTiers={tuition.prepayTiers}
+                cardPaymentEnabled={cardPaymentEnabled}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Facturas pendientes / vencidas */}
       {pendientes.length > 0 && (
@@ -216,7 +248,7 @@ export default async function PagosPage({
       )}
 
       {/* Estado vacío */}
-      {invoices.length === 0 && (
+      {invoices.length === 0 && tuition.students.length === 0 && (
         <div className="dash-card border-dashed p-12 text-center">
           <p className="text-4xl mb-3" aria-hidden="true">💳</p>
           <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
