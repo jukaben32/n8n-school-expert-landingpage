@@ -6459,3 +6459,21 @@ becados al 50% estaban en el tramo 31-60 e iban a quedar bloqueados el 1-dic.
 confirme; no está en el repo (repo público, datos de menores). Las becas se cargan desde la
 ficha o con un UPDATE aprobado.
 
+
+### Becas provisionales cargadas en producción (2026-11-25)
+
+Con aprobación del usuario se cargaron 12 becas **provisionales** mientras el colegio confirma
+(9 en %, 3 con cuota fija), todas con `tuition_override_reason` que empieza por
+`PROVISIONAL 2026-11-25`. Para listarlas:
+`select student_code, tuition_discount_percent, tuition_override_amount from students where tuition_override_reason like 'PROVISIONAL 2026-11-25%'`.
+
+Regla usada para decidir (indicación del usuario): **hay padres que pagan medio mes cuando no
+les alcanza**, así que un 50% aislado no prueba beca. Solo se cargó beca cuando el monto
+rebajado se repite en 2+ pagos distintos que cubren meses completos (o un pago que cubre varios
+meses con el % anotado en Alegra). El recargo calculado por caja sobre la cuota rebajada también
+lo confirma. Se descartaron: un 25% de un solo mes, abonos y un pago con el recargo separado.
+
+Antes de cargar: prueba en `begin … rollback`. Resultado: los 6 que iban a bloquearse el 1-dic
+quedan en "corriente" o 20-30 días; ninguno tiene además descuento por hermanos. La lista con
+nombres se entregó al colegio fuera del repo (repo público). Si el colegio corrige una, se cambia
+desde la ficha del estudiante (Mensualidad) y el motivo provisional se reemplaza.
