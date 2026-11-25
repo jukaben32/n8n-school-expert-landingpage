@@ -41,6 +41,13 @@ export interface StudentTuition {
   yearPaid: boolean
   /** Último mes cubierto por lo pagado ('YYYY-MM-DD', primer día del mes), o null. */
   paidThroughMonth: string | null
+  /**
+   * Mensualidad normal del nivel (sin beca ni hermanos), solo si la cuota del
+   * estudiante es distinta; null si paga la cuota normal.
+   */
+  regularMonthly: number | null
+  /** Descuentos que explican su cuota ("Beca 50%", "Hermanos 10%"), vacío si no tiene. */
+  discountLabels: string[]
 }
 
 export interface FamilyTuitionOverview {
@@ -62,6 +69,7 @@ interface BreakdownRow {
 }
 
 interface BasisRow {
+  school_level: string | null
   monthly_amount: number | null
   installments: number | null
   due_day: number | null
@@ -80,19 +88,35 @@ interface ScheduleRow {
   amount: number
 }
 
+interface StudentRow {
+  id: string
+  first_name: string
+  last_name: string
+  tuition_discount_percent: number | null
+  tuition_override_amount: number | null
+}
+
+/** Mensualidad de cada nivel del colegio (schools.tuition_*_amount). */
+type LevelAmounts = Record<string, number | null | undefined>
+
+const pct = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(2)}%`
+
 async function loadStudentTuition(
   admin: ReturnType<typeof createAdminClient>,
-  student: { id: string; first_name: string; last_name: string },
+  student: StudentRow,
   asOf: string,
+  levelAmounts: LevelAmounts,
 ): Promise<StudentTuition | null> {
   const [
     { data: breakdown, error: breakdownError },
     { data: basis, error: basisError },
     { data: yearStatus, error: yearError },
+    { data: sibling },
   ] = await Promise.all([
     admin.rpc('calculate_receivable_breakdown', { p_student_id: student.id, p_as_of: asOf }).maybeSingle(),
     admin.rpc('student_tuition_basis', { p_student_id: student.id }).maybeSingle(),
     admin.rpc('student_tuition_year_status', { p_student_id: student.id }).maybeSingle(),
+    admin.rpc('calculate_sibling_discount', { p_student_id: student.id }).maybeSingle(),
   ])
   if (breakdownError) console.error('[familyTuition] deuda', breakdownError.message)
   if (basisError) console.error('[familyTuition] base', basisError.message)
@@ -118,10 +142,23 @@ async function loadStudentTuition(
     amount: Number(c.amount),
   }))
 
+  // De dónde sale su cuota, para que el padre vea su beca en vez de una
+  // cuota "normal" que no es la suya (reporte del colegio, 2026-11-25).
+  const monthlyAmount = Number(row.monthly_amount ?? 0)
+  const levelRaw = base.school_level ? levelAmounts[base.school_level] : null
+  const levelAmount = levelRaw != null ? Number(levelRaw) : null
+  const discountLabels: string[] = []
+  const scholarshipPct = student.tuition_discount_percent != null ? Number(student.tuition_discount_percent) : 0
+  if (scholarshipPct > 0) discountLabels.push(`Beca ${pct(scholarshipPct)}`)
+  else if (student.tuition_override_amount != null) discountLabels.push('Cuota especial')
+  const siblingPct = Number((sibling as { discount_percent: number | null } | null)?.discount_percent ?? 0)
+  if (siblingPct > 0) discountLabels.push(`Descuento por hermanos ${pct(siblingPct)}`)
+  const regularMonthly = levelAmount != null && Math.abs(levelAmount - monthlyAmount) > 0.009 ? levelAmount : null
+
   return {
     studentId: student.id,
     studentName: `${student.first_name} ${student.last_name}`.trim(),
-    monthlyAmount: Number(row.monthly_amount ?? 0),
+    monthlyAmount,
     currentAmount: Number(row.current_amount ?? 0),
     overduePrincipal: Number(row.overdue_principal_amount ?? 0),
     lateFee: Number(row.late_fee_amount ?? 0),
@@ -130,6 +167,8 @@ async function loadStudentTuition(
     future: futureUnpaidInstallments(schedule, Number(row.collected_amount ?? 0), asOf),
     yearPaid: year?.year_paid === true,
     paidThroughMonth: year?.paid_through_month ? String(year.paid_through_month).slice(0, 10) : null,
+    regularMonthly,
+    discountLabels,
   }
 }
 
@@ -144,7 +183,7 @@ export async function getFamilyTuitionOverview(params: {
 
   let studentsQuery = admin
     .from('students')
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, tuition_discount_percent, tuition_override_amount')
     .eq('school_id', params.schoolId)
     .eq('family_id', params.familyId)
     .eq('enrollment_status', 'inscrito')
@@ -154,12 +193,20 @@ export async function getFamilyTuitionOverview(params: {
 
   const [{ data: studentsRaw, error: studentsError }, { data: school }] = await Promise.all([
     studentsQuery,
-    admin.from('schools').select('prepay_enabled, prepay_discount_tiers').eq('id', params.schoolId).maybeSingle(),
+    admin.from('schools')
+      .select('prepay_enabled, prepay_discount_tiers, tuition_parvulo_amount, tuition_inicial_amount, tuition_primaria_amount, tuition_secundaria_amount')
+      .eq('id', params.schoolId).maybeSingle(),
   ])
   if (studentsError) console.error('[familyTuition] estudiantes', studentsError.message)
+  const levelAmounts: LevelAmounts = {
+    parvulo: school?.tuition_parvulo_amount,
+    inicial: school?.tuition_inicial_amount,
+    primaria: school?.tuition_primaria_amount,
+    secundaria: school?.tuition_secundaria_amount,
+  }
 
   const students = (
-    await Promise.all((studentsRaw ?? []).map((s) => loadStudentTuition(admin, s, asOf)))
+    await Promise.all(((studentsRaw ?? []) as StudentRow[]).map((s) => loadStudentTuition(admin, s, asOf, levelAmounts)))
   ).filter((s): s is StudentTuition => s !== null)
 
   return {

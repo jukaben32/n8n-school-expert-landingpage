@@ -10,7 +10,7 @@ import { syncStudentCodesFromAlegra, learnStudentCode } from '@/lib/accounting/s
 import { isStudentCode } from '@/lib/accounting/alegraStudentCodes'
 import { applyPrepayDiscountCredit } from '@/lib/accounting/annualPrepayCredit'
 import { alegraIsConfigured, fetchAlegraInvoiceDetail } from '@/lib/accounting/alegraClient'
-import { explicitPrepayDiscount } from '@/lib/accounting/alegraMatching'
+import { cashierTuitionDiscountPercent, explicitPrepayDiscount } from '@/lib/accounting/alegraMatching'
 
 /**
  * Bandeja de conciliación con Alegra.
@@ -232,12 +232,20 @@ export async function resolveAlegraMatch(
   const comprobanteEntero = Math.abs(roundedAmount - Number(match.amount)) < 0.01 && Number(match.assigned_amount) === 0
   if (comprobanteEntero && match.alegra_invoice_id && alegraIsConfigured()) {
     try {
-      const [detalle, { data: base }] = await Promise.all([
+      const [detalle, { data: base }, { data: becaRow }] = await Promise.all([
         fetchAlegraInvoiceDetail(String(match.alegra_invoice_id)),
         admin.rpc('student_tuition_basis', { p_student_id: student.id }).maybeSingle(),
+        admin.from('students').select('tuition_discount_percent').eq('id', student.id).maybeSingle(),
       ])
       const cuota = Number((base as { monthly_amount?: number } | null)?.monthly_amount ?? 0)
-      explicitDiscount = explicitPrepayDiscount(detalle.items, cuota)
+      const beca = Number(becaRow?.tuition_discount_percent ?? 0)
+      explicitDiscount = explicitPrepayDiscount(detalle.items, cuota, beca)
+      // Beca dada en caja: se anota para el aviso de Cuentas por Cobrar.
+      const cuotaNivel = beca > 0 && beca < 100 ? cuota / (1 - beca / 100) : cuota
+      const becaCaja = cashierTuitionDiscountPercent(detalle.items, cuotaNivel, match.alegra_note ?? null)
+      if (becaCaja !== null) {
+        await admin.from('invoices').update({ discount_percent: becaCaja }).eq('id', invoice.id)
+      }
     } catch (e) {
       console.error('[resolveAlegraMatch] no se pudo leer el descuento en Alegra', e)
     }

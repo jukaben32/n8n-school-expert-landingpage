@@ -119,7 +119,21 @@ export default function TuitionDueCard({ student, prepayEnabled, prepayTiers, ca
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mensualidad</p>
           <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">{student.studentName}</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cuota mensual: {formatDOP(student.monthlyAmount)}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Cuota mensual: <strong className="text-slate-700 dark:text-slate-200">{formatDOP(student.monthlyAmount)}</strong>
+            {student.regularMonthly != null && (
+              <> <span className="line-through text-slate-400">{formatDOP(student.regularMonthly)}</span></>
+            )}
+          </p>
+          {student.discountLabels.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {student.discountLabels.map((label) => (
+                <span key={label} className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
           {isUpToDate && student.paidThroughMonth && (
             <p className="text-xs font-medium text-green-700 dark:text-green-400 mt-0.5">
               Pagado hasta <span className="capitalize">{formatPeriodMonth(student.paidThroughMonth)}</span>

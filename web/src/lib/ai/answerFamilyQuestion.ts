@@ -311,6 +311,8 @@ function toTuitionContextStudent(s: StudentTuition, tiers: PrepayTier[]): Tuitio
     prepayExample: quote,
     yearPaid: s.yearPaid,
     paidThroughName: s.paidThroughMonth ? formatPeriodMonth(s.paidThroughMonth) : null,
+    regularMonthly: s.regularMonthly,
+    discountLabels: s.discountLabels,
   }
 }
 

@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import QueryErrorBanner from '@/components/dashboard/QueryErrorBanner'
 import ReceivablesTable, { type ReceivableRow } from './ReceivablesTable'
 import AlegraSyncBanner, { type AlegraSyncRun } from '@/components/tesoreria/AlegraSyncBanner'
+import CashierDiscountAlert, { type CashierDiscountMismatch } from './CashierDiscountAlert'
 
 export const metadata: Metadata = {
   title: 'Cuentas por Cobrar — MentorIApp',
@@ -37,6 +38,7 @@ export default async function CuentasPorCobrarPage() {
     { data: receivablesRaw, error: receivablesError },
     { data: lastRunRaw, error: lastRunError },
     { count: pendingReview },
+    { data: discountedRaw },
   ] = await Promise.all([
       supabase.from('schools').select('tuition_grace_days').eq('id', schoolId).single(),
       supabase.from('families').select('id, name').eq('school_id', schoolId).is('deleted_at', null),
@@ -54,7 +56,47 @@ export default async function CuentasPorCobrarPage() {
         .select('id', { count: 'exact', head: true })
         .eq('school_id', schoolId)
         .eq('status', 'pendiente'),
+      // Cobros de Alegra en los que caja dio un descuento que no es pronto
+      // pago ni el medio mes de agosto (la conciliación lo anota en
+      // discount_percent). Desde agosto del año anterior basta: es solo para
+      // el aviso de becas sin registrar.
+      supabase.from('invoices')
+        .select('student_id, discount_percent, paid_at, students(first_name, last_name, tuition_discount_percent, tuition_override_amount, enrollment_status)')
+        .eq('school_id', schoolId)
+        .gt('discount_percent', 0)
+        .like('description', 'Mensualidad — cobro ya registrado%')
+        .is('deleted_at', null)
+        .gte('paid_at', `${new Date().getFullYear() - 1}-08-01`)
+        .order('paid_at', { ascending: false })
+        .limit(500),
     ])
+
+  // Último descuento de caja por estudiante contra la beca registrada.
+  type DiscountedRow = {
+    student_id: string | null
+    discount_percent: number | null
+    paid_at: string | null
+    students: { first_name: string; last_name: string | null; tuition_discount_percent: number | null; tuition_override_amount: number | null; enrollment_status: string | null } | null
+  }
+  const mismatches: CashierDiscountMismatch[] = []
+  const seenStudents = new Set<string>()
+  for (const r of (discountedRaw ?? []) as unknown as DiscountedRow[]) {
+    if (!r.student_id || seenStudents.has(r.student_id) || !r.students) continue
+    seenStudents.add(r.student_id)
+    // Cuota fija registrada: es un plan especial conocido, no se compara.
+    if (r.students.tuition_override_amount != null || r.students.enrollment_status !== 'inscrito') continue
+    const cashierPercent = Number(r.discount_percent ?? 0)
+    const platformPercent = r.students.tuition_discount_percent != null ? Number(r.students.tuition_discount_percent) : null
+    if (Math.abs(cashierPercent - (platformPercent ?? 0)) < 0.5) continue
+    mismatches.push({
+      studentId: r.student_id,
+      studentName: `${r.students.first_name} ${r.students.last_name ?? ''}`.trim(),
+      cashierPercent,
+      platformPercent,
+      lastDate: r.paid_at ?? '',
+    })
+  }
+  mismatches.sort((a, b) => a.studentName.localeCompare(b.studentName, 'es'))
 
   const familyNames = new Map((familiesRaw ?? []).map((f) => [f.id as string, f.name as string]))
 
@@ -81,6 +123,8 @@ export default async function CuentasPorCobrarPage() {
       </div>
 
       <AlegraSyncBanner run={(lastRunRaw as AlegraSyncRun | null) ?? null} pendingReview={pendingReview ?? 0} />
+
+      <CashierDiscountAlert items={mismatches} />
 
       <ReceivablesTable
         rows={rows}

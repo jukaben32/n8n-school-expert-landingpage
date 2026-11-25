@@ -48,7 +48,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
 
   const { data: student, error: studentError } = await supabase
     .from('students')
-    .select('id, first_name, last_name, birth_date, gender, enrollment_status, grade_level, family_id, tuition_override_amount, tuition_override_reason, tuition_override_set_at, families(id, name)')
+    .select('id, first_name, last_name, birth_date, gender, enrollment_status, grade_level, family_id, tuition_override_amount, tuition_discount_percent, tuition_override_reason, tuition_override_set_at, families(id, name)')
     .eq('id', id)
     .eq('school_id', schoolId)
     .is('deleted_at', null)
@@ -152,6 +152,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
           canEdit={canEditScholarship}
           levelAmount={levelAmount != null ? Number(levelAmount) : null}
           overrideAmount={student.tuition_override_amount != null ? Number(student.tuition_override_amount) : null}
+          discountPercent={student.tuition_discount_percent != null ? Number(student.tuition_discount_percent) : null}
           overrideReason={student.tuition_override_reason ?? null}
           overrideSetAt={student.tuition_override_set_at ?? null}
           siblingPercent={Number(sibling?.discount_percent ?? 0)}

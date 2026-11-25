@@ -130,19 +130,73 @@ export function isMensualidadItem(name: string | null | undefined): boolean {
  * descuento visto en caja fue ~20%); un descuento mayor es un error de
  * digitación o una beca, y eso lo decide una persona.
  */
-export function explicitPrepayDiscount(items: AlegraInvoice['items'], monthlyAmount: number): number {
+export function explicitPrepayDiscount(
+  items: AlegraInvoice['items'],
+  monthlyAmount: number,
+  /**
+   * Beca en % que el estudiante ya tiene en la plataforma. Su cuota
+   * (`monthlyAmount`) ya la trae descontada, así que la parte del descuento
+   * de la línea que es la beca NO es pronto pago: contarla otra vez
+   * regalaría meses (2026-11-25).
+   */
+  scholarshipPercent = 0,
+): number {
   if (!(monthlyAmount > 0)) return 0
+  const sp = scholarshipPercent > 0 && scholarshipPercent < 100 ? scholarshipPercent / 100 : 0
+  // Cuota del nivel (antes de la beca): la línea de caja va a precio de nivel.
+  const levelMonthly = monthlyAmount / (1 - sp)
   let credit = 0
   for (const item of items) {
     if (!isMensualidadItem(item.name)) continue
     const discount = Number(item.discountAmount ?? 0)
     if (!(discount > 0)) continue
     const gross = Number(item.price ?? 0) * Number(item.quantity ?? 1)
-    if (!(gross >= 2 * monthlyAmount - 0.01)) continue
-    if (discount > gross * 0.25) continue
-    credit += discount
+    if (!(gross >= 2 * levelMonthly - 0.01)) continue
+    const prepay = discount - gross * sp
+    if (!(prepay > 0.01)) continue
+    if (prepay > gross * (1 - sp) * 0.25) continue
+    credit += prepay
   }
   return Math.round(credit * 100) / 100
+}
+
+/**
+ * Descuento que caja le hizo a la MENSUALIDAD que NO es pronto pago ni el
+ * medio mes de agosto: en la práctica, una beca (ej. "Mensualidad RD$4,500
+ * con 50%" en el mes de octubre). Devuelve el % de la primera línea así, o
+ * null.
+ *
+ * Para qué: si el estudiante no tiene esa beca cargada en la plataforma, el
+ * cobro neto entra contra la cuota completa y al padre le aparece deuda que
+ * no existe (reporte del colegio, 2026-11-25). La conciliación lo anota en la
+ * factura (invoices.discount_percent) y Cuentas por Cobrar avisa a Dirección.
+ * No cambia ningún monto por su cuenta: la beca la decide una persona.
+ *
+ * Se ignoran:
+ *   - descuentos ≤ 25% en líneas de 2+ cuotas (pronto pago, ver arriba);
+ *   - el 50% de una sola cuota con nota que dice agosto (medio mes);
+ *   - descuentos de menos de 1% (redondeos de caja).
+ */
+export function cashierTuitionDiscountPercent(
+  items: AlegraInvoice['items'],
+  levelMonthly: number | null,
+  note: string | null,
+): number | null {
+  for (const item of items) {
+    if (!isMensualidadItem(item.name)) continue
+    const quantity = Number(item.quantity ?? 1)
+    const gross = Number(item.price ?? 0) * quantity
+    if (!(gross > 0)) continue
+    const discount = item.discountAmount != null ? Number(item.discountAmount) : gross - Number(item.total ?? gross)
+    if (!(discount > 0.01)) continue
+    const percent = Math.round((discount / gross) * 10000) / 100
+    if (percent < 1) continue
+    if (levelMonthly && levelMonthly > 0 && gross >= 2 * levelMonthly - 0.01 && percent <= 25) continue
+    const halfAugust = Math.abs(percent - 50) < 0.01 && quantity <= 1 && /(^| )ago/.test(normalizeName(note))
+    if (halfAugust) continue
+    return percent
+  }
+  return null
 }
 
 export function mensualidadAmount(invoice: AlegraInvoice): number {
