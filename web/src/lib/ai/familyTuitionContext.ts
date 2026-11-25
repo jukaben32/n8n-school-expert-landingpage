@@ -37,6 +37,10 @@ export interface TuitionContextStudent {
   yearPaid?: boolean
   /** Último mes cubierto, ya con nombre ("enero 2027"), o null. */
   paidThroughName?: string | null
+  /** Mensualidad normal del nivel si la suya es distinta (beca / hermanos). */
+  regularMonthly?: number | null
+  /** Descuentos que explican su cuota ("Beca 50%", "Descuento por hermanos 10%"). */
+  discountLabels?: string[]
 }
 
 export interface TuitionContextInput {
@@ -54,7 +58,10 @@ function studentLine(s: TuitionContextStudent): string {
   if (s.yearPaid) {
     return `- ${s.studentName}: AÑO ESCOLAR PAGADO COMPLETO por adelantado${s.paidThroughName ? ` (cubierto hasta ${s.paidThroughName})` : ''}; no debe nada de mensualidad. Agradécele a la familia haber pagado por adelantado.`
   }
-  const parts = [`cuota mensual ${dop(s.monthlyAmount)}`]
+  const labels = s.discountLabels ?? []
+  const parts = [labels.length > 0
+    ? `cuota mensual ${dop(s.monthlyAmount)} (ya con ${labels.join(' y ')}${s.regularMonthly != null ? `; la cuota normal del nivel es ${dop(s.regularMonthly)}` : ''}; cobra SIEMPRE la cuota con descuento)`
+    : `cuota mensual ${dop(s.monthlyAmount)}`]
   if (s.totalDue <= 0) {
     parts.push(s.paidThroughName ? `está al día (pagado hasta ${s.paidThroughName})` : 'está al día')
   } else {

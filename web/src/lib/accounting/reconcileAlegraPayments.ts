@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { alegraIsConfigured, fetchAlegraInvoicesSince, fetchAlegraInvoiceDetail, type AlegraInvoice } from './alegraClient'
 import { applyPrepayDiscountCredit } from './annualPrepayCredit'
-import { explicitPrepayDiscount, isMensualidadItem, matchInvoice, mensualidadAmount, splitByTuition, type Candidate, type MatchReason, type StudentRow, type GuardianRow } from './alegraMatching'
+import { cashierTuitionDiscountPercent, explicitPrepayDiscount, isMensualidadItem, matchInvoice, mensualidadAmount, splitByTuition, type Candidate, type MatchReason, type StudentRow, type GuardianRow } from './alegraMatching'
 import { syncStudentCodesFromAlegra, learnStudentCode } from './syncStudentCodes'
 
 /**
@@ -180,6 +180,16 @@ export async function reconcileAlegraPayments(options: {
       return valor
     }
 
+    // Beca en % que el estudiante ya tiene en la plataforma (0 si no tiene).
+    const becaCache = new Map<string, number>()
+    const becaDe = async (studentId: string): Promise<number> => {
+      if (becaCache.has(studentId)) return becaCache.get(studentId)!
+      const { data } = await admin.from('students').select('tuition_discount_percent').eq('id', studentId).maybeSingle()
+      const valor = Number(data?.tuition_discount_percent ?? 0)
+      becaCache.set(studentId, valor)
+      return valor
+    }
+
     // Guarda para los cobros cargados a mano ANTES de que existiera
     // `external_reference` (los 72 de septiembre 2026): si ese estudiante
     // ya tiene una factura pagada del mismo monto y la misma fecha sin
@@ -239,7 +249,16 @@ export async function reconcileAlegraPayments(options: {
         if (resumidas && invoice.id && invoice.id !== 'undefined') {
           try { lineas = (await fetchAlegraInvoiceDetail(invoice.id)).items } catch { /* sin detalle: sin descuento explícito */ }
         }
-        explicitDiscount = explicitPrepayDiscount(lineas, cuota)
+        const beca = await becaDe(alumno.id)
+        explicitDiscount = explicitPrepayDiscount(lineas, cuota, beca)
+        // Beca dada en caja (ej. 50% en octubre): se anota en la factura para
+        // que Cuentas por Cobrar avise si no coincide con la beca registrada.
+        // Solo informativo: no cambia lo cobrado ni la cuota.
+        const cuotaNivel = beca > 0 && beca < 100 ? cuota / (1 - beca / 100) : cuota
+        const becaCaja = cashierTuitionDiscountPercent(lineas, cuotaNivel, invoice.note)
+        if (becaCaja !== null) {
+          await admin.from('invoices').update({ discount_percent: becaCaja }).eq('id', facturaCreada.id)
+        }
       }
       await applyPrepayDiscountCredit(admin, {
         invoiceId: facturaCreada.id, studentId: alumno.id,

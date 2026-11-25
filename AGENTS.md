@@ -6420,3 +6420,42 @@ rango de hermanos con los inscritos de HOY y lo aplica a TODO el año. Si un her
 mitad de año, el que queda pierde el descuento también en meses ya pagados y le aparece deuda.
 Lo mismo al revés (un hermano nuevo baja retroactivamente la cuota de meses ya cobrados). Beca +
 hermanos hoy se acumulan (decisión #4).
+
+## Becas en porcentaje: el padre con beca aparecía debiendo lo que caja le descontó (2026-11-25)
+
+Reporte del colegio: "los estudiantes que tienen un porcentaje de descuento no se les visualiza,
+aparecen con la cuota normal y cuando un padre hace un pago queda debiendo el resto".
+
+**Causa:** caja cobra la beca en Alegra como descuento en la línea (Mensualidad RD$4,500 con
+50% = RD$2,250). `student_tuition_basis` solo conocía nivel, cuota fija
+(`tuition_override_amount`, **ningún estudiante la tenía cargada**) y hermanos. El cobro neto
+entraba contra la cuota completa y el resto quedaba como deuda con recargo. Revisados los 565
+comprobantes de Alegra desde el 15-jul: ~120 líneas con 50% son el medio mes de agosto (normal);
+las becas reales que se repiten mes a mes son pocas (50%, 25% y 10%). Al 2026-11-25 cuatro
+becados al 50% estaban en el tramo 31-60 e iban a quedar bloqueados el 1-dic.
+
+**Cambios:**
+- Migración `20261125000000_tuition_discount_percent.sql`: `students.tuition_discount_percent`
+  (0-100], excluyente con `tuition_override_amount` (constraint). `student_tuition_basis` (única
+  fuente; la usan calendario, mora, bloqueo, portal, año pagado y flujo de caja):
+  `coalesce(cuota_fija, nivel × (1 − beca%)) × (1 − hermanos%)`. Copiada de la versión viva
+  (idéntica a 20260907000000). Probada contra producción dentro de `begin … rollback`.
+- Ficha del estudiante: tarjeta Mensualidad con "Porcentaje (%)" o "Cuota fija (RD$)";
+  `setStudentScholarshipAction(studentId, {kind, value} | null, motivo)`.
+- Portal (`TuitionDueCard`): cuota con beca, cuota normal tachada y chips "Beca 50%" /
+  "Descuento por hermanos 10%". El asistente recibe lo mismo (`familyTuitionContext.ts`).
+- `explicitPrepayDiscount(items, cuota, beca%)`: la parte del descuento de la línea que es la
+  beca ya no se cuenta como pronto pago (si no, una línea de 2 meses con 50% de un becado se
+  habría acreditado otra vez).
+- `cashierTuitionDiscountPercent()`: la conciliación (cron y bandeja) anota en
+  `invoices.discount_percent` el % de beca que dio caja (ignora pronto pago ≤25% en 2+ cuotas y
+  el 50% de una cuota con nota de agosto). Cuentas por Cobrar muestra
+  `CashierDiscountAlert` cuando ese % no coincide con la beca registrada. Solo avisa: la beca la
+  decide Dirección. Los cobros cargados antes de este cambio no tienen el % anotado.
+- Pruebas: `scripts/test-cashier-discount.mjs` (11, casos reales) y 4 casos con beca en
+  `scripts/test-prepay-discount.mjs` (14).
+
+**Datos:** la lista de becados detectada en Alegra se entregó al usuario para que el colegio la
+confirme; no está en el repo (repo público, datos de menores). Las becas se cargan desde la
+ficha o con un UPDATE aprobado.
+

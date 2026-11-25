@@ -263,22 +263,34 @@ export async function moveStudentToFamilyAction(studentId: string, targetFamilyI
   return { ok: true, message: avisos.join(' ') }
 }
 
+/** Beca de un estudiante: en porcentaje sobre la cuota del nivel, o cuota mensual fija. */
+export type ScholarshipInput =
+  | { kind: 'percent'; value: number }
+  | { kind: 'amount'; value: number }
+  | null
+
 /**
- * Beca / cuota especial de un estudiante (students.tuition_override_amount).
+ * Beca / cuota especial de un estudiante.
+ *
+ * Dos formas, excluyentes (constraint students_tuition_override_xor_percent):
+ *   - `percent`: beca en % sobre la mensualidad del nivel
+ *     (students.tuition_discount_percent). Es como la da el colegio en caja
+ *     (ej. 50%), y sigue sola si cambia la mensualidad del nivel.
+ *   - `amount`: cuota mensual fija (students.tuition_override_amount), para
+ *     planes especiales que no son un porcentaje.
+ * `null` quita la beca y el estudiante vuelve a la mensualidad de su nivel.
+ * El descuento por hermanos se sigue aplicando encima (student_tuition_basis).
  *
  * Es dinero que el colegio deja de cobrar, así que la decide Dirección
  * (director, administración del colegio o súper admin), no Secretaría ni
  * Finanzas, y siempre con motivo escrito: queda quién la autorizó y cuándo.
- * `monthlyAmount = null` quita la beca y el estudiante vuelve a la
- * mensualidad de su nivel. El descuento por hermanos se sigue aplicando
- * encima (comportamiento vigente de student_tuition_basis).
  *
  * Cliente admin: students no tiene policy de update para estos campos desde
  * la sesión de dirección en todos los casos; la autorización se repite aquí.
  */
 export async function setStudentScholarshipAction(
   studentId: string,
-  monthlyAmount: number | null,
+  scholarship: ScholarshipInput,
   reason: string,
 ): Promise<ActionResult> {
   const supabase = await createClient()
@@ -297,11 +309,20 @@ export async function setStudentScholarshipAction(
 
   const motivo = reason.trim()
   let amount: number | null = null
-  if (monthlyAmount !== null) {
-    if (!Number.isFinite(monthlyAmount) || monthlyAmount < 0) {
-      return { ok: false, message: 'La cuota debe ser un monto igual o mayor a cero.' }
+  let percent: number | null = null
+  if (scholarship !== null) {
+    const value = Math.round(Number(scholarship.value) * 100) / 100
+    if (scholarship.kind === 'percent') {
+      if (!Number.isFinite(value) || value <= 0 || value > 100) {
+        return { ok: false, message: 'El porcentaje de beca debe ser mayor que 0 y hasta 100.' }
+      }
+      percent = value
+    } else {
+      if (!Number.isFinite(value) || value < 0) {
+        return { ok: false, message: 'La cuota debe ser un monto igual o mayor a cero.' }
+      }
+      amount = value
     }
-    amount = Math.round(monthlyAmount * 100) / 100
     if (motivo.length < 5) return { ok: false, message: 'Escribe el motivo de la beca (quién la aprobó y por qué).' }
   }
 
@@ -319,7 +340,8 @@ export async function setStudentScholarshipAction(
     .from('students')
     .update({
       tuition_override_amount: amount,
-      tuition_override_reason: amount === null ? (motivo || null) : motivo,
+      tuition_discount_percent: percent,
+      tuition_override_reason: scholarship === null ? (motivo || null) : motivo,
       tuition_override_set_by: profile.id,
       tuition_override_set_at: new Date().toISOString(),
     })
@@ -329,5 +351,8 @@ export async function setStudentScholarshipAction(
 
   revalidatePath(`/dashboard/estudiantes/${studentId}`)
   revalidatePath('/dashboard/tesoreria/cuentas-por-cobrar')
-  return { ok: true, message: amount === null ? 'Beca quitada: vuelve a la mensualidad de su nivel.' : 'Beca guardada.' }
+  revalidatePath('/dashboard/pagos')
+  revalidatePath('/dashboard/portal-familiar')
+  if (scholarship === null) return { ok: true, message: 'Beca quitada: vuelve a la mensualidad de su nivel.' }
+  return { ok: true, message: percent !== null ? `Beca del ${percent}% guardada.` : 'Cuota especial guardada.' }
 }

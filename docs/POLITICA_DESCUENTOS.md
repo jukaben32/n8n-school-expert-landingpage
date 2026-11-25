@@ -52,11 +52,20 @@ como deuda hasta que se pague o Dirección lo exonere por escrito?
    respeta para los meses ya transcurridos y se ajusta solo desde el mes siguiente al retiro.
    *(Esto sí requiere programación; se hará cuando la dirección lo confirme.)*
 
-## 4. Becas y cuotas especiales (vigente desde hoy)
+## 4. Becas y cuotas especiales (vigente; beca en % desde el 2026-11-25)
 
-- En la ficha del estudiante, **Dirección** (directora, administración, dueño) puede fijarle
-  una **cuota mensual propia**, con **motivo obligatorio**. Queda registrado quién y cuándo.
+- En la ficha del estudiante, **Dirección** (directora, administración, dueño) le asigna la
+  beca de una de dos formas, con **motivo obligatorio**. Queda registrado quién y cuándo.
   Secretaría la ve en la ficha pero no la cambia.
+  - **Porcentaje** (lo normal: "beca 50%"): se descuenta de la mensualidad del nivel y sigue
+    sola si el colegio cambia la mensualidad.
+  - **Cuota fija**: para planes especiales que no son un porcentaje.
+- La cuota con beca es la que se ve en el portal del padre ("Beca 50%", con la cuota normal
+  tachada), en Cuentas por Cobrar, en el asistente y la que cuenta para mora y bloqueo.
+- **Caja tiene que cobrar con el mismo %** que está en la plataforma. Si caja cobra en Alegra
+  con un descuento que el estudiante no tiene registrado, Cuentas por Cobrar lo avisa
+  ("Caja cobra con descuento… sin esa beca en la plataforma"): o se registra la beca o se
+  corrige el cobro. Antes de esto, ese descuento aparecía como deuda del padre.
 - **Regla actual:** si ese estudiante además tiene descuento por hermanos, el 10% se aplica
   **encima** de la beca.
 
