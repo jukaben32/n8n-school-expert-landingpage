@@ -6477,3 +6477,10 @@ Antes de cargar: prueba en `begin … rollback`. Resultado: los 6 que iban a blo
 quedan en "corriente" o 20-30 días; ninguno tiene además descuento por hermanos. La lista con
 nombres se entregó al colegio fuera del repo (repo público). Si el colegio corrige una, se cambia
 desde la ficha del estudiante (Mensualidad) y el motivo provisional se reemplaza.
+
+## 2026-11-26 — Se levanta el bloqueo por mora: solo alerta
+
+Decisión del usuario: la mora de 61+ ya no confina al tutor a Pagos. Ve una alerta fija en el
+panel con enlace a Pagos y conserva todo el portal (incluidos los avisos de Academia). Las
+condiciones de la alerta son las mismas de `checkGuardianOverdueBlock`. El bloqueo quedó apagado,
+no borrado: `OVERDUE_PORTAL_BLOCK_ENABLED` en `web/src/lib/receivables/guardianBlock.ts`.

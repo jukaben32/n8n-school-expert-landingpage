@@ -5,7 +5,8 @@ import TopBar from '@/components/dashboard/TopBar'
 import { MobileNavProvider } from '@/components/dashboard/MobileNavContext'
 import { getActiveSchool } from '@/lib/activeSchool'
 import { exitSchoolView } from './plataforma/actions'
-import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
+import Link from 'next/link'
+import { checkGuardianOverdueBlock, OVERDUE_PORTAL_BLOCK_ENABLED } from '@/lib/receivables/guardianBlock'
 import UnlinkedAccountNotice from '@/components/dashboard/UnlinkedAccountNotice'
 
 // La redirección dura (Fase 2 de Cuentas por Cobrar) vive en el middleware
@@ -15,9 +16,8 @@ import UnlinkedAccountNotice from '@/components/dashboard/UnlinkedAccountNotice'
 // Router resuelve esa redirección: se comprobó en producción que deja al
 // tutor bloqueado con la pantalla en blanco, atrapado en un bucle infinito
 // de refetch RSC que solo se cura con un recargo manual de la página.
-// Aquí solo se usa el resultado para el banner y el menú restringido de la
-// página en la que el middleware ya decidió dejarlo entrar (siempre
-// /dashboard/pagos si está bloqueado).
+// Aquí el resultado se usa para la alerta de atraso y, si el bloqueo está
+// activo, para el menú restringido.
 
 /**
  * Layout del Dashboard — MentorIApp
@@ -59,9 +59,10 @@ export default async function DashboardLayout({
   // Fase 2 de Cuentas por Cobrar: solo aplica a tutores puros -- un perfil
   // de personal con doble rol (guardian_id secundario) tiene `role` distinto
   // a 'guardian', así que nunca cae aquí.
-  const isBlockedByOverdue = role === 'guardian' && profile.guardian_id
+  const hasSeriousOverdue = role === 'guardian' && profile.guardian_id
     ? await checkGuardianOverdueBlock(profile.guardian_id)
     : false
+  const isBlockedByOverdue = OVERDUE_PORTAL_BLOCK_ENABLED && hasSeriousOverdue
 
   // Leads nuevos sin atender, solo relevante para el súper administrador
   let newLeadsCount = 0
@@ -140,11 +141,14 @@ export default async function DashboardLayout({
                 </form>
               </div>
             )}
-            {isBlockedByOverdue && (
-              <div className="bg-red-900/20 border-b border-red-800 px-4 sm:px-6 py-2 text-sm">
+            {hasSeriousOverdue && (
+              <div role="alert" className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 bg-red-900/20 border-b border-red-800 px-4 sm:px-6 py-2 text-sm">
                 <span className="text-red-300 font-medium">
-                  ⚠️ Tienes una mensualidad vencida hace más de 60 días. Ponte al día en Pagos para volver a ver el resto del portal.
+                  ⚠️ <strong className="font-bold">Tienes mensualidades con más de 60 días de atraso.</strong> Te agradecemos ponerte al día. Si ya pagaste o crees que hay un error, comunícate con la administración del colegio.
                 </span>
+                <Link href="/dashboard/pagos" className="text-red-300 font-semibold underline underline-offset-2 hover:no-underline shrink-0">
+                  Ver mis pagos
+                </Link>
               </div>
             )}
             <TopBar user={user} role={role} schoolName={schoolName} unreadMessagesCount={newMessagesCount} hasFamilyAccess={!!profile.guardian_id && !isBlockedByOverdue} />

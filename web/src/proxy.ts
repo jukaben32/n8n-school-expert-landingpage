@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
+import { checkGuardianOverdueBlock, OVERDUE_PORTAL_BLOCK_ENABLED } from '@/lib/receivables/guardianBlock'
 
 /**
  * Middleware de Autenticación — MentorIApp
@@ -94,8 +94,9 @@ export async function proxy(request: NextRequest) {
     return redirectTo(dashboardUrl)
   }
 
-  // Fase 2 de Cuentas por Cobrar: un tutor (guardian) con algún hijo con más
-  // de 60 días de mora queda confinado a /dashboard/pagos. Se resuelve aquí
+  // Fase 2 de Cuentas por Cobrar: con OVERDUE_PORTAL_BLOCK_ENABLED activo,
+  // un tutor con mora de 61+ queda confinado a /dashboard/pagos (hoy está
+  // apagado: solo ve la alerta del layout). Se resuelve aquí
   // (middleware, un 307 HTTP normal, antes de que arranque el árbol de
   // Server Components) y NO dentro de dashboard/layout.tsx -- un redirect()
   // lanzado desde dentro de ese árbol durante la navegación de cliente que
@@ -106,7 +107,7 @@ export async function proxy(request: NextRequest) {
   // Consulta el perfil solo cuando hace falta (rutas /dashboard/* que no
   // sean ya /dashboard/pagos) para no gastar una consulta extra en cada
   // petición de cada rol.
-  if (user && pathname.startsWith('/dashboard/') && !pathname.startsWith('/dashboard/pagos')) {
+  if (OVERDUE_PORTAL_BLOCK_ENABLED && user && pathname.startsWith('/dashboard/') && !pathname.startsWith('/dashboard/pagos')) {
     const { data: profile } = await supabase
       .from('users_profiles')
       .select('role, guardian_id')

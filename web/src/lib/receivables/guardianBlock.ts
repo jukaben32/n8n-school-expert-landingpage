@@ -1,11 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
- * Fase 2 de Cuentas por Cobrar: ¿hay que confinar a este tutor a
- * /dashboard/pagos por mora de 61 días o más? Usado tanto por el middleware
- * (redirección dura, ver proxy.ts) como por dashboard/layout.tsx (banner
- * rojo + menú restringido) -- importa desde este único lugar para no
- * duplicar la lógica entre los dos.
+ * Fase 2 de Cuentas por Cobrar: ¿tiene este tutor mora de 61 días o más?
+ * Usado por dashboard/layout.tsx (alerta roja) y, solo si
+ * OVERDUE_PORTAL_BLOCK_ENABLED está activo, por proxy.ts (redirección a
+ * /dashboard/pagos), el menú reducido y los avisos de Academia. Importar
+ * desde este único lugar para no duplicar la lógica.
  *
  * Trato VIP a quien paga por adelantado (decisión del colegio, 2026-11-17):
  * el bloqueo es una medida de castigo y NUNCA debe caerle a una familia que
@@ -28,6 +28,15 @@ import { createAdminClient } from '@/lib/supabase/admin'
  * billing_concepts no tienen política RLS para tutores; el resultado nunca
  * se expone al cliente, solo decide la redirección/el banner server-side.
  */
+
+/**
+ * Interruptor del confinamiento a Pagos (decisión del colegio, 2026-11-26:
+ * se levanta la restricción). En `false`, la mora de 61+ solo muestra una
+ * alerta fija en el panel; el tutor conserva todo el portal. Ponerlo en
+ * `true` vuelve a activar la redirección, el menú reducido y el corte de los
+ * avisos de Academia, sin tocar nada más.
+ */
+export const OVERDUE_PORTAL_BLOCK_ENABLED: boolean = false
 
 interface StatusRow {
   aging_bucket?: string | null

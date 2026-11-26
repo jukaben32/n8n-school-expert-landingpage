@@ -28,9 +28,10 @@ es configuración (no programación), salvo donde se dice lo contrario.
 - Desde el **día 6** esa cuota tiene recargo: **5%**, y luego **+3%, +3% y +3%**, sumados.
   **Máximo 14% por cuota**, nunca interés sobre interés. Cada cuota lleva su propio recargo.
 - Un pago cubre siempre **la cuota más vieja primero**.
-- Con una cuota de más de **60 días** vencida, el padre queda limitado a la pantalla de Pagos del
-  portal. **Nunca se bloquea** a una familia que pagó el año, que en conjunto no debe nada, o
-  cuyo pago está esperando que el colegio lo revise.
+- Con una cuota de más de **60 días** vencida, el padre ve una **alerta fija** en el portal y
+  **conserva el acceso completo** (decisión del colegio, 2026-11-26; antes quedaba limitado a
+  Pagos). La alerta no sale a una familia que pagó el año, que en conjunto no debe nada, o cuyo
+  pago está esperando que el colegio lo revise.
 
 **Por confirmar — exoneración del recargo:** hoy el recargo se cobra en caja. Si la familia
 paga solo la mensualidad, la plataforma deja de mostrar el recargo de esa cuota (no queda como

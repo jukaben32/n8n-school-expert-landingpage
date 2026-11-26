@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { checkGuardianOverdueBlock } from '@/lib/receivables/guardianBlock'
+import { checkGuardianOverdueBlock, OVERDUE_PORTAL_BLOCK_ENABLED } from '@/lib/receivables/guardianBlock'
 
 async function context() {
   const db = await createClient()
@@ -7,7 +7,7 @@ async function context() {
   if (!user) return null
   const { data: profile, error } = await db.from('users_profiles').select('role,guardian_id,school_id').eq('auth_id', user.id).single()
   if (error || !profile?.guardian_id || !profile.school_id) return null
-  if (profile.role === 'guardian' && await checkGuardianOverdueBlock(profile.guardian_id)) return null
+  if (OVERDUE_PORTAL_BLOCK_ENABLED && profile.role === 'guardian' && await checkGuardianOverdueBlock(profile.guardian_id)) return null
   return { db, profile }
 }
 
